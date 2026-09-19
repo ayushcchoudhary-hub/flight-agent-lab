@@ -9,6 +9,28 @@ The live demonstration is deployed as an invite-protected Cloud Run service.
 The repository is intentionally limited to the independent agent layer. It does
 not contain or require the underlying product codebase.
 
+## Project context and authorship
+
+This is a product-led learning project, not a claim that I independently wrote
+every line of production code. I am not a software engineer. I started with a
+real product problem, read *Building AI Agents: From Design Patterns to
+Production*, and used Codex to help design, implement, test and document the
+prototype.
+
+I directed the work and made the product decisions: what the agent should do,
+what should stay out of scope, which failures matter, how the conversation
+should feel, what evidence would support a model choice, and where security and
+human approval boundaries belong. I reviewed the behavior through the live
+demo and evaluation dashboard, challenged confusing or incorrect outputs, and
+iterated on the architecture with Codex.
+
+The goal is to understand and communicate the system honestly. The code is
+included so the decisions can be inspected and reproduced, not to imply that I
+implemented it without AI assistance.
+
+The [learning guide](LEARNING-GUIDE.md) is the plain-language walkthrough I use
+to make sure I can explain every major component and tradeoff.
+
 ## What the system does
 
 ```mermaid
@@ -97,3 +119,25 @@ selection, but bounded enough that an autonomous planning loop would add risk
 without adding value. Multi-agent coordination, chain-of-thought capture,
 automatic retries and MCP are absent by design. New capabilities require a
 clear user need, a tool contract and regression cases before they enter scope.
+
+## What I should be able to explain
+
+- Why this uses an LLM for language interpretation while keeping execution in
+  deterministic application code
+- The difference between the agent, its harness, the model and the external
+  flight-search backend
+- Why live flight availability uses a tool call and policy questions use
+  retrieval-augmented generation
+- How session state differs from persistent preferences and why preferences
+  require explicit confirmation
+- How context precedence prevents old state or saved defaults from overriding
+  the traveler’s latest request
+- Why the model proposes one structured action and cannot call arbitrary APIs
+- How response validation, endpoint allowlists, call limits and no automatic
+  search retries reduce risk
+- What the frozen scope and regression suite establish, and what a passing test
+  does not prove
+- Why Terra medium was selected from the observed quality, latency and token
+  tradeoff
+- Why booking, payment, autonomous planning, multi-agent coordination and MCP
+  remain outside the current version
