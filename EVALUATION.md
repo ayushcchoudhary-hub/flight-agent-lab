@@ -24,7 +24,7 @@ identifiers and private model thread identifiers.
 
 Current results for prompt `flight-search-v1.1.0`:
 
-- **62 of 62 deterministic checks pass**
+- **66 of 66 deterministic checks pass**
 - **18 of 18 agent acceptance cases pass**
 - **4 of 4 policy cases pass**
 - **2 of 2 preference cases pass**

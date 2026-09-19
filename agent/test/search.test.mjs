@@ -214,7 +214,7 @@ test('malformed/multiple model calls do not execute and fabricated plain text is
   }
 });
 
-test('OpenRouter call has explicit model, response/call limits, no automatic retries', async () => {
+test('OpenRouter call has explicit model, response limits and bounded temporary-status retries', async () => {
   let count = 0;
   const model = new OpenRouterModel({ apiKey: 'fake-test-key', model: 'test/model', reasoningEffort: 'medium', maxCalls: 1, fetchImpl: async (url, options) => {
     count++;
@@ -229,10 +229,23 @@ test('OpenRouter call has explicit model, response/call limits, no automatic ret
   await model.complete([{ role: 'user', content: 'Search' }]);
   await assert.rejects(model.complete([]), /limit reached/);
   assert.equal(count, 1);
-  let failed = 0;
-  const bad = new OpenRouterModel({ apiKey: 'fake', model: 'test/model', fetchImpl: async () => { failed++; return new Response('', { status: 429 }); } });
-  await assert.rejects(bad.complete([]), /429/);
-  assert.equal(failed, 1);
+  let attempts = 0;
+  const recovered = new OpenRouterModel({ apiKey: 'fake', model: 'test/model', retryWait: async () => {}, fetchImpl: async () => {
+    attempts++;
+    return attempts === 1 ? new Response('', { status: 429 }) : Response.json({ choices: [{ message: toolMessage('find_flights', route) }] });
+  } });
+  await recovered.complete([]);
+  assert.equal(attempts, 2);
+
+  let permanent = 0;
+  const bad = new OpenRouterModel({ apiKey: 'fake', model: 'test/model', fetchImpl: async () => { permanent++; return new Response('', { status: 400 }); } });
+  await assert.rejects(bad.complete([]), /400/);
+  assert.equal(permanent, 1);
+
+  let uncertain = 0;
+  const network = new OpenRouterModel({ apiKey: 'fake', model: 'test/model', fetchImpl: async () => { uncertain++; throw new Error('timeout'); } });
+  await assert.rejects(network.complete([]), /not retried/);
+  assert.equal(uncertain, 1);
 });
 
 test('trace redacts common credentials and personal identifiers', () => {

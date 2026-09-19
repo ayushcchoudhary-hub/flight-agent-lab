@@ -54,11 +54,9 @@ const assets={
  '/login.js':['login.js','text/javascript'],
 };
 const htmlPaths=new Set(Object.entries(assets).filter(([,asset])=>asset[1]==='text/html').map(([path])=>path));
-const liveOrigin='https://commonswyft-agent-experiment-868895912650.europe-west2.run.app/';
 const hostedHtml=html=>html
  .replaceAll('<a href="/chat">Try models</a>','')
  .replaceAll('<a href="/chat">Try different models</a>','')
- .replaceAll(liveOrigin,'/agent')
  .replaceAll('href="/chat"','href="/agent"');
 const equal=(a,b)=>{const x=Buffer.from(a),y=Buffer.from(b);return x.length===y.length&&timingSafeEqual(x,y);};
 const sessionCookie='commonswyft_demo';

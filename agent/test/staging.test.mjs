@@ -66,8 +66,29 @@ test('grounding catches price corruption; staging messages never claim synthetic
 test('staging network errors are sanitized, with no automatic search retry', async () => {
   let calls = 0;
   const adapter = makeStagingAdapter({ getToken: async () => 'secret-token', fetchImpl: async () => { calls++; throw new Error('secret-token'); } });
-  await assert.rejects(adapter.search(query), error => /connection failed/.test(error.message) && !error.message.includes('secret-token'));
+  await assert.rejects(adapter.search(query), error => /creation failed/.test(error.message) && !error.message.includes('secret-token'));
   assert.equal(calls, 1);
+});
+test('safe status reads retry temporary failures but search creation never does', async () => {
+  const snapshot = await makeFixtureAdapter().search(query);
+  let posts = 0, gets = 0;
+  const adapter = makeStagingAdapter({ getToken: async () => 'token', wait: async () => {}, fetchImpl: async request => {
+    if (request.method === 'POST') { posts++; return Response.json(snapshot); }
+    gets++;
+    return gets === 1 ? Response.json({}, { status: 503 }) : Response.json(snapshot);
+  }});
+  const result = await adapter.search(query);
+  assert.equal(result.searchId, snapshot.searchId);
+  assert.equal(posts, 1);
+  assert.equal(gets, 2);
+
+  let failedPosts = 0;
+  const creationFailure = makeStagingAdapter({ getToken: async () => 'token', wait: async () => {}, fetchImpl: async () => {
+    failedPosts++;
+    return Response.json({}, { status: 503 });
+  }});
+  await assert.rejects(creationFailure.search(query), /HTTP 503/);
+  assert.equal(failedPosts, 1);
 });
 test('staging malformed response is rejected by the existing frontend validator', async () => {
   const { snapshot } = await mockTransport();

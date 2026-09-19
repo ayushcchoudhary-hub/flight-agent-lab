@@ -1,5 +1,6 @@
 import { readFile, stat } from 'node:fs/promises';
 import { createApiClient, flightSearchStatusQueryOptions } from './shared.mjs';
+import { requestWithRetry } from './retry.mjs';
 
 export const STAGING_BASE = 'https://api.staging.commonswyft.com/v1';
 export async function readStagingToken(path = process.env.AGENT_STAGING_TOKEN_FILE) {
@@ -31,9 +32,19 @@ export function makeStagingAdapter({ authMode = 'session', getToken = readStagin
       const started = Date.now();
       let response;
       try {
-        response = await fetchImpl(new Request(request, { headers, redirect: 'error', signal: AbortSignal.timeout(45000) }));
+        response = await requestWithRetry(
+          () => fetchImpl(new Request(request, { headers, redirect: 'error', signal: AbortSignal.timeout(45000) })),
+          {
+            maxRetries: isGet ? 2 : 0,
+            retryTransportErrors: Boolean(isGet),
+            wait,
+            onRetry: event => trace('flight_api_retry', { method: request.method, path: url.pathname, ...event }),
+          },
+        );
       } catch {
-        throw new Error('Staging search connection failed or timed out. No automatic search retry was made.');
+        throw new Error(isGet
+          ? 'Flight search status could not be retrieved after bounded retries.'
+          : 'Staging search creation failed or timed out. It was not retried because the outcome may be unknown.');
       }
       const event = { mode: 'staging', authMode, method: request.method, path: url.pathname, ...(body ? { body } : {}), status: response.status, latencyMs: Date.now() - started };
       calls.push(event); trace('flight_api', event);

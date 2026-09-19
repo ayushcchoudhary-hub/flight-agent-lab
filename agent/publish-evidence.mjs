@@ -12,9 +12,11 @@ const root=fileURLToPath(new URL('.',import.meta.url));
 const source=`${root}eval-results/`,target=`${root}published-eval-results/`;
 
 function sanitizeEvent(event){
-  if(!['model_usage','model_failure','tool_call'].includes(event?.type))return null;
+  if(!['model_usage','model_failure','model_retry','tool_call','flight_api_retry'].includes(event?.type))return null;
   if(event.type==='tool_call')return {type:'tool_call',data:{name:event.data?.name,arguments:event.data?.arguments}};
   const data=event.data??{};
+  if(event.type==='model_retry')return {type:event.type,data:{model:data.model,attempt:data.attempt,reason:data.reason,delayMs:data.delayMs}};
+  if(event.type==='flight_api_retry')return {type:event.type,data:{method:data.method,path:data.path,attempt:data.attempt,reason:data.reason,delayMs:data.delayMs}};
   return {type:event.type,data:{
     ...(data.adapter?{adapter:data.adapter}:{}),...(data.promptVersion?{promptVersion:data.promptVersion}:{}),
     model:data.model,effort:data.effort,latencyMs:data.latencyMs,usage:data.usage??null,

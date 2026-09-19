@@ -1,5 +1,5 @@
-// Resolve the reference repo's extensionless TS imports without copying or
-// altering its source. Node 24 strips types; workspace dependencies stay there.
+// Allow optional extensionless TypeScript imports in local development tools.
+// The deployed agent does not import code from another repository.
 import { registerHooks } from 'node:module';
 import { existsSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';

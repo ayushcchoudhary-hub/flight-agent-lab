@@ -3,7 +3,6 @@ import { MODEL_OPTIONS,modelSettings } from './model-options.mjs';
 import { randomUUID } from 'node:crypto';
 import { Agent } from './model.mjs';
 import { SearchConversation,isoToday,welcomeFor,fullAirport } from './search.mjs';
-import { CodexModel } from './codex-model.mjs';
 import { makeStagingAdapter,readStagingToken } from './staging.mjs';
 import { loadCaptures,makeReplayAdapter } from './replay.mjs';
 import { verifyFlightData } from './verify-flight-data.mjs';
@@ -14,7 +13,11 @@ export async function connectionStatus() {
   return {reason:Number.isFinite(expiresAt)&&expiresAt>Date.now()+10000?'connected':'expired',connected:Number.isFinite(expiresAt)&&expiresAt>Date.now()+10000,expiresAt:Number.isFinite(expiresAt)?new Date(expiresAt).toISOString():null};
  } catch {return {connected:false,reason:'disconnected',expiresAt:null};}
 }
-export function createChatService({modelFactory=(trace,settings)=>new CodexModel({...settings,maxCalls:15,trace}),capturesLoader=loadCaptures,status=connectionStatus,stagingFactory=makeStagingAdapter,preferenceStore=localPreferenceStore(),maxTotalTurns=40,maxSessions=8,maxSessionTurns=15,idleMs=3600000}={}) {
+const defaultModelFactory=async(trace,settings)=>{
+ const {CodexModel}=await import('./codex-model.mjs');
+ return new CodexModel({...settings,maxCalls:15,trace});
+};
+export function createChatService({modelFactory=defaultModelFactory,capturesLoader=loadCaptures,status=connectionStatus,stagingFactory=makeStagingAdapter,preferenceStore=localPreferenceStore(),maxTotalTurns=40,maxSessions=8,maxSessionTurns=15,idleMs=3600000}={}) {
  const sessions=new Map();let turns=0,active=false;
  const prune=()=>{for(const [id,s] of sessions)if(!s.busy&&Date.now()-s.updated>idleMs)sessions.delete(id);};
  return {
@@ -32,7 +35,7 @@ export function createChatService({modelFactory=(trace,settings)=>new CodexModel
   const adapter=mode==='replay'?makeReplayAdapter({captures,trace}):stagingFactory({trace,maxSearches:12,authMode:mode==='staging-public'?'public':'session'});
   const conversation=new SearchConversation({adapter,today:()=>clock,trace});
   const preferences=await preferenceStore.read();applyPreferences(conversation,preferences);
-  const agent=new Agent({conversation,preferences,model:modelFactory(trace,settings),trace});
+  const agent=new Agent({conversation,preferences,model:await modelFactory(trace,settings),trace});
   const id=randomUUID();sessions.set(id,{agent,adapter,conversation,events,mode,settings,updated:Date.now(),busy:false,turns:0});
   const savedLabels=[
    preferences.homeAirport ? 'Home airport: '+fullAirport(preferences.homeAirport) : null,
@@ -50,7 +53,7 @@ export function createChatService({modelFactory=(trace,settings)=>new CodexModel
   s.busy=true;active=true;turns++;s.turns++;s.updated=Date.now();
   try{
    const from=s.events.length,start=performance.now();const result=await s.agent.respond(text);
-   const events=s.events.slice(from).filter(e=>['model_usage','tool_call','flight_api','search_result','policy_retrieval','policy_answer','policy_failure'].includes(e.type));
+   const events=s.events.slice(from).filter(e=>['model_usage','model_retry','tool_call','flight_api','flight_api_retry','search_result','policy_retrieval','policy_answer','policy_failure'].includes(e.type));
    const snapshot=s.adapter.snapshots.at(-1),query=s.adapter.calls.filter(c=>c.method==='POST').at(-1)?.body;
    const grounding=result.status==='results'&&snapshot?verifyFlightData(result,snapshot,query):null;
    return {result,settings:s.settings,state:s.conversation.publicState(),events,grounding,latencyMs:Math.round(performance.now()-start),remainingTurns:maxTotalTurns-turns};

@@ -88,7 +88,7 @@ formatting and call limits. See [ARCHITECTURE-DECISIONS.md](ARCHITECTURE-DECISIO
 
 ## Evidence
 
-- **62 of 62 deterministic checks pass** across routing, state, policy
+- **66 of 66 deterministic checks pass** across routing, state, policy
   retrieval, preferences, output grounding, security and adapter behavior.
 - The regression suite separates deterministic checks, model acceptance cases
   and one bounded live-search verification.
@@ -96,6 +96,8 @@ formatting and call limits. See [ARCHITECTURE-DECISIONS.md](ARCHITECTURE-DECISIO
   methodology and sanitized aggregate evidence only.
 
 See [EVALUATION.md](EVALUATION.md) for what a pass does and does not prove.
+The [`evaluation/`](evaluation/) folder documents the test matrix, comparison
+protocol, published evidence and limits of the conclusions.
 
 ## Security boundary
 
@@ -124,8 +126,11 @@ deployment secret manager. Credentials must never be added to this repository.
 The flow is dynamic enough to benefit from language interpretation and tool
 selection, but bounded enough that an autonomous planning loop would add risk
 without adding value. Multi-agent coordination, chain-of-thought capture,
-automatic retries and MCP are absent by design. New capabilities require a
-clear user need, a tool contract and regression cases before they enter scope.
+open-ended retries and MCP are absent by design. Safe reads receive bounded
+retries, temporary model HTTP failures receive one budgeted retry, and
+operations with uncertain side effects are not retried. See
+[RESILIENCE.md](RESILIENCE.md). New capabilities require a clear user need, a
+tool contract and regression cases before they enter scope.
 
 ## What I should be able to explain
 

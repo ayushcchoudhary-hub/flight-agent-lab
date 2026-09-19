@@ -120,6 +120,41 @@ function resolveDates(input, today) {
   return { mode, from, to, selected, strict: input.strict ?? false };
 }
 
+function normalizePatch(patch) {
+  if (!object(patch)) return patch;
+  const normalized = { ...patch };
+  for (const field of ['origin', 'destination']) {
+    const value = normalized[field];
+    if (field in normalized && (value == null || (typeof value === 'string' && !value.trim()))) {
+      delete normalized[field];
+    }
+  }
+  return normalized;
+}
+
+function mergeTripState(current, patch, today) {
+  const next = { ...current };
+  if (patch.dates) next.dates = resolveDates(patch.dates, today);
+
+  for (const field of ['cabin', 'cabinOnly', 'sort', 'maxPriceUsd', 'nonstopOnly']) {
+    if (field in patch) next[field] = patch[field];
+  }
+
+  let unresolved = null;
+  for (const field of ['origin', 'destination']) {
+    if (!(field in patch)) continue;
+    const choices = resolveLocation(patch[field]);
+    if (choices.length === 1) {
+      next[field] = choices[0];
+      next.pending = null;
+    } else {
+      next[field] = null;
+      unresolved ??= { field, choices, query: patch[field] };
+    }
+  }
+  return { next, unresolved };
+}
+
 export class SearchConversation {
   constructor({ adapter, today = () => isoToday(), trace = () => {} }) {
     this.adapter = adapter; this.today = today; this.trace = trace; this.state = newState();
@@ -133,52 +168,66 @@ export class SearchConversation {
   }
   async find(patch) {
     try {
-      // Some providers serialize an unknown optional location as null or an
-      // empty string instead of omitting it. Treat that as missing information
-      // so the traveler gets a useful follow-up rather than a validator error.
-      if (object(patch)) {
-        patch = { ...patch };
-        for (const field of ['origin', 'destination']) {
-          if (field in patch && (patch[field] == null || (typeof patch[field] === 'string' && !patch[field].trim()))) delete patch[field];
-        }
-      }
+      // 1. Normalize and validate only the fields supplied in this turn.
+      patch = normalizePatch(patch);
       validatePatch(patch);
       const today = this.today();
       if (!validDate(today)) throw new Error('Invalid test clock.');
-      const next = { ...this.state };
-      if (patch.dates) next.dates = resolveDates(patch.dates, today);
-      for (const k of ['cabin', 'cabinOnly', 'sort', 'maxPriceUsd', 'nonstopOnly']) if (k in patch) next[k] = patch[k];
-      let unresolved = null;
-      for (const field of ['origin', 'destination']) {
-        if (!(field in patch)) continue;
-        const choices = resolveLocation(patch[field]);
-        if (choices.length === 1) { next[field] = choices[0]; next.pending = null; }
-        else { next[field] = null; unresolved ??= { field, choices, query: patch[field] }; }
-      }
+
+      // 2. Merge the follow-up into a copy. Omitted fields remain unchanged.
+      const { next, unresolved } = mergeTripState(this.state, patch, today);
       this.state = next;
-      if (unresolved) return this.ask(unresolved.field, unresolved.choices, unresolved.choices.length ? `Which ${unresolved.field} did you mean?` : `I couldn't resolve “${unresolved.query}”. Type a city or airport code.`);
+
+      // 3. Resolve ambiguity or request the one route endpoint still missing.
+      if (unresolved) {
+        const heading = unresolved.choices.length
+          ? `Which ${unresolved.field} did you mean?`
+          : `I couldn't resolve “${unresolved.query}”. Type a city or airport code.`;
+        return this.ask(unresolved.field, unresolved.choices, heading);
+      }
       if (!next.origin || !next.destination) {
         const field = !next.destination ? 'destination' : 'origin';
         const opposite = next[field === 'origin' ? 'destination' : 'origin'];
-        const choices = starterCities.flatMap(resolveLocation).filter(c => !opposite || !expandMetro(c.code).some(code => expandMetro(opposite.code).includes(code)));
+        const choices = starterCities
+          .flatMap(resolveLocation)
+          .filter(choice => !opposite || !expandMetro(choice.code)
+            .some(code => expandMetro(opposite.code).includes(code)));
         const heading = field === 'origin'
           ? 'Sounds good. Where are you flying from?'
           : 'Where would you like to fly?';
         return this.ask(field, choices, heading);
       }
+
+      // 4. Apply deterministic defaults and reject conflicting state.
       next.pending = null;
-      const origins = expandMetro(next.origin.code), destinations = expandMetro(next.destination.code);
-      if (origins.some(c => destinations.includes(c))) return { status: 'clarify', text: 'Departure and destination overlap. Please choose a different city or non-overlapping airports.' };
+      const origins = expandMetro(next.origin.code);
+      const destinations = expandMetro(next.destination.code);
+      if (origins.some(code => destinations.includes(code))) {
+        return { status: 'clarify', text: 'Departure and destination overlap. Please choose a different city or non-overlapping airports.' };
+      }
       if (!next.dates) next.dates = resolveDates({ mode: 'rolling' }, today);
-      if (next.dates.from < today) return { status: 'clarify', text: 'The saved date range now includes past dates. Say “use the coming week” or give new dates.' };
-      const d = next.dates;
-      // Reuse the website's exact-date nearby search behavior.
-      const range = d.mode === 'exact' ? flexRange(d.selected, 1) : { dateFrom: d.from, dateTo: d.to };
-      const query = { origin: next.origin.code, destination: next.destination.code, dateFrom: range.dateFrom < today ? today : range.dateFrom, dateTo: range.dateTo, selectedDate: d.selected, cabin: next.cabin };
+      if (next.dates.from < today) {
+        return { status: 'clarify', text: 'The saved date range now includes past dates. Say “use the coming week” or give new dates.' };
+      }
+
+      // 5. Search only when the effective query changed or refresh was explicit.
+      const dates = next.dates;
+      const range = dates.mode === 'exact'
+        ? flexRange(dates.selected, 1)
+        : { dateFrom: dates.from, dateTo: dates.to };
+      const query = {
+        origin: next.origin.code,
+        destination: next.destination.code,
+        dateFrom: range.dateFrom < today ? today : range.dateFrom,
+        dateTo: range.dateTo,
+        selectedDate: dates.selected,
+        cabin: next.cabin,
+      };
       const key = JSON.stringify(query);
       const cached = !patch.refresh && next.lastQuery === key && next.snapshot;
       const response = cached ? next.snapshot : await this.adapter.search(query);
-      next.snapshot = response; next.lastQuery = key;
+      next.snapshot = response;
+      next.lastQuery = key;
       this.trace('search_result', { query, cached: Boolean(cached), count: response.totalFound, searchId: response.searchId });
       return present(next, response, Boolean(cached), this.adapter.mode);
     } catch (error) {

@@ -27,8 +27,9 @@ preference. Current instructions override saved defaults.
 ## Deterministic safety controls
 
 Tool allowlists, JSON schemas, endpoint allowlists, response validation, call
-caps, timeouts, no automatic search retries and customer-copy filters are code,
-not prompt suggestions.
+caps, timeouts, operation-specific retry bounds and customer-copy filters are
+code, not prompt suggestions. Safe reads may retry. Search creation does not
+retry without an idempotency key. See [RESILIENCE.md](RESILIENCE.md).
 
 ## Evaluation strategy
 
