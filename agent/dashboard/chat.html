@@ -1,0 +1,266 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Try models · Flight agent lab</title>
+    <link rel="stylesheet" href="/dashboard.css" />
+    <link rel="stylesheet" href="/chat.css" />
+    <script type="module" src="/chat.js"></script>
+  </head>
+  <body>
+    <header>
+      <div class="brand">
+        <span class="mark">↗</span> Flight agent
+        <span class="quiet">/ lab</span>
+      </div>
+      <nav class="lab-nav" aria-label="Flight agent lab">
+        <div class="nav-cluster"><span class="nav-parent">Project</span><a href="/">Overview</a><a href="/scope">Scope</a></div>
+        <div class="nav-cluster"><span class="nav-parent">Evaluate</span><a href="/evals">Evals</a><a href="/compare">Model comparison</a><a class="active" href="/chat">Try models</a></div>
+        <div class="nav-cluster"><span class="nav-parent">Live prototype</span><a href="https://commonswyft-agent-experiment-868895912650.europe-west2.run.app/" target="_blank" rel="noreferrer">Try agent ↗</a></div>
+        <button id="theme" class="secondary">Dark mode</button>
+      </nav>
+    </header>
+    <main>
+      <p class="eyebrow">TRY → INSPECT → IMPROVE</p>
+      <h1>Try the harness across models.</h1>
+      <p><a href="/reply-preview">Preview the updated flight reply →</a></p>
+      <p class="intro">
+        Change the model, reasoning level or data source, then inspect the reply,
+        action and result. For the fixed deployed experience, use Try agent.
+      </p>
+      <details class="method" open>
+        <summary>
+          Saved preferences · <span id="preference-profile">checking…</span>
+        </summary>
+        <p id="preference-description">
+          Loading the active preference store. Explicit trip requests override
+          defaults. Save applies to new conversations.
+        </p>
+        <form id="preferences-form" class="chat-controls">
+          <label
+            >Home airport
+            <input
+              id="home-airport"
+              placeholder="e.g. LHR"
+              maxlength="3"
+              aria-label="Home airport" /></label
+          ><label
+            >Usual cabin
+            <select id="saved-cabin">
+              <option value="">App default (business)</option>
+              <option value="economy">Economy</option>
+              <option value="premium_economy">Premium economy</option>
+              <option value="business">Business</option>
+              <option value="first">First</option>
+            </select></label
+          ><label
+            ><input type="checkbox" id="saved-nonstop" /> Prefer nonstop (not a
+            hard filter)</label
+          ><button type="submit" id="save-defaults">Save defaults</button
+          ><button type="button" id="forget-defaults" class="secondary">
+            Forget all
+          </button>
+        </form>
+        <p id="preference-note" aria-live="polite"></p>
+      </details>
+      <p>
+        <a href="/policy-examples"
+          >See saved policy and memory test conversations →</a
+        >
+      </p>
+      <section class="examples" id="policy-examples">
+        <button type="button">Do you store my card details?</button
+        ><button type="button">
+          If I close my account, is my analytics profile automatically deleted?</button
+        ><button type="button">Can I get a refund on any ticket?</button
+        ><button type="button">Write me a poem about dinosaurs.</button
+        ><button type="button">Remember Heathrow as my home airport.</button>
+      </section>
+      <div class="chat-controls">
+        <label for="mode"
+          >Flight data
+          <select id="mode">
+            <option value="replay">Recorded staging responses</option>
+            <option value="staging-public">Live staging · public search</option>
+            <option value="staging">
+              Live staging · temporary account connection
+            </option>
+          </select></label
+        ><button id="reset" class="secondary">New conversation</button
+        ><label for="model"
+          >Model<select id="model">
+            <option value="gpt-6-astra">Astra</option>
+            <option value="gpt-5.6-luna">Luna</option>
+            <option value="gpt-5.6-sol">Sol</option>
+            <option value="gpt-5.6-terra" selected>Terra</option>
+          </select></label
+        ><label for="effort"
+          >Reasoning<select id="effort">
+            <option value="low">Low</option>
+            <option value="medium" selected>Medium</option>
+            <option value="high">High</option>
+          </select></label
+        >
+      </div>
+      <p class="quiet">
+        Changing model, reasoning or data starts a fresh conversation. Terra
+        medium is the starting choice: you chose its faster observed responses
+        over Luna low’s lower estimated API cost. Astra low remains the
+        comparison baseline; all settings are available to try.
+      </p>
+      <details class="method">
+        <summary>Next: review the replies together</summary>
+        <p>
+          Keep Terra medium. Try a complete flight request, a destination-only
+          request, then a change of airport, date or cabin. The conversation
+          shows the actual reply from this agent. Recorded mode uses saved
+          staging data; live public search fetches fresh staging data. This is a
+          text preview, not a connected WhatsApp conversation.
+        </p>
+        <ul>
+          <li>
+            <b>Tone:</b> brief, helpful, one clear next question; no repeated
+            boilerplate.
+          </li>
+          <li>
+            <b>Information:</b> actual airports, departure and arrival
+            times/dates, duration, stops, cabin and currency/price when
+            supplied. State defaults and flag alternatives. Only show discounts
+            when the backend provides a trustworthy comparison.
+          </li>
+          <li>
+            <b>Formatting:</b> a short search summary, up to three clearly
+            separated options, then one useful next step.
+          </li>
+        </ul>
+        <p>
+          Current flight cards are formatted by code, so we can improve their
+          wording without changing the model. Conversations are currently
+          session-only; keep a copy of examples you want to review. Formatting
+          problems call for a renderer change; misunderstandings become eval
+          cases before we consider more reasoning or a stronger model.
+        </p>
+      </details>
+      <details class="method">
+        <summary>What have we actually compared?</summary>
+        <p>
+          Original synthetic-data suite: Astra low 75/75, Luna low 74/75. After
+          fixing an airport-name parsing issue, both passed 5/5 repeats of that
+          follow-up case. Median model times in the original run: Astra 4.63s,
+          Luna 4.19s. Real staging: Astra low passed 6/6 flows in one run. The
+          12-setting screening passed all 180 attempts. We stopped repeated
+          validation at your request after at least three complete repetitions
+          per finalist; all 151 completed attempts passed (Luna low 50/50, Astra
+          low 50/50, Terra medium 51/51). Five repetitions were not completed.
+          The expanded comparison covers all four models at low, medium and high
+          effort; <a href="/compare">see its live status and repetitions</a>.
+          These are development checks, not production accuracy estimates.
+        </p>
+        <p>
+          Replay uses real model interpretation and saved flight data. It
+          isolates intent, tool arguments and state handling from changing
+          inventory. The application—not the model—formats the flight cards, so
+          changing models will not automatically change their style.
+        </p>
+      </details>
+      <p id="connection-note" class="notice" role="status">
+        Checking the local connection…
+      </p>
+      <details class="method">
+        <summary>Search access and account sign-in</summary>
+        <p>
+          <b>For flight-search experiments:</b> choose “Live staging · public
+          search.” No short-lived account token is required. This is anonymous
+          search access, not a signed-in CommonSwyft account.
+        </p>
+        <p>
+          <b>For account-linked features:</b>
+          <a
+            href="https://staging.commonswyft.com/sign-in"
+            target="_blank"
+            rel="noreferrer"
+            >sign in to the CommonSwyft staging website</a
+          >. That signs you into the website only. This local lab does not yet
+          have its own approved, automatically renewing Clerk sign-in
+          connection. The temporary connection is a development aid and can
+          expire.
+        </p>
+        <p>
+          A lasting account connection needs an approved local authentication
+          setup from the CommonSwyft owner. Future WhatsApp account linking
+          belongs in that flow. Checkout and account endpoints are outside this
+          agent’s search-only tools.
+        </p>
+      </details>
+      <div class="chat-layout">
+        <section class="chat-panel" aria-label="Flight conversation">
+          <div id="messages" role="log" aria-live="polite">
+            <div class="empty">
+              Choose an example below or type your own request.
+            </div>
+          </div>
+          <form id="composer">
+            <label for="message">Your message</label
+            ><textarea
+              id="message"
+              maxlength="2000"
+              rows="3"
+              placeholder="For example: London to New York on 3 October"
+            ></textarea>
+            <div class="composer-bottom">
+              <span id="activity" role="status"
+                >Sending a message uses your Codex allowance.</span
+              ><button id="send" type="submit">Send message →</button>
+            </div>
+          </form>
+        </section>
+        <aside class="inspect-panel">
+          <h2>What just happened?</h2>
+          <div id="inspect">
+            <p class="quiet">
+              After a reply, inspect the model’s proposed action, saved trip and
+              flight checks here.
+            </p>
+          </div>
+        </aside>
+      </div>
+      <section class="explanation">
+        <div>
+          <h2>Recorded examples</h2>
+          <p>
+            These requests have captured backend responses. Follow-ups work when
+            the resulting search was also captured; an unrecorded route is
+            explicitly rejected.
+          </p>
+          <div id="examples" class="examples"></div>
+        </div>
+      </section>
+      <details class="method">
+        <summary>What this playground does—and what it doesn’t</summary>
+        <p>
+          <b>Recorded mode:</b> a real model interprets your message, then the
+          application uses a saved staging response for the exact search. No
+          fresh availability check. The clock is frozen to the capture date so
+          defaults are reproducible.
+        </p>
+        <p>
+          <b>Live mode:</b> public search sends search-only requests to the
+          CommonSwyft staging endpoint without an account token. The repository
+          explicitly permits this and a staging search was verified on 19
+          September. Account-linked mode remains a separate, temporary
+          connection; it never silently downgrades to public search if
+          authentication fails.
+        </p>
+        <p>
+          This is the actual agent reply in a plain text chat, not an official
+          WhatsApp preview. One-way, one traveler; business and today through
+          seven days ahead are defaults. No booking, checkout or production
+          changes. Forty messages per server run, fifteen per conversation; only
+          one message runs at a time. Do not paste passwords or tokens into this
+          chat.
+        </p>
+      </details>
+    </main>
+  </body>
+</html>

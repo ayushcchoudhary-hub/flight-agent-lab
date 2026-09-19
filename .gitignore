@@ -1,0 +1,35 @@
+.DS_Store
+**/node_modules/
+**/.env
+**/.env.*
+!**/.env.example
+**/*.pem
+**/*.key
+**/*credentials*
+**/*secret*
+
+# Private product repositories and local tooling are outside this project.
+/reference/
+/flyai-agent-preferences/
+/tooling/
+
+# Runtime state, raw traces, captured backend responses and model transcripts.
+/agent/local-state/
+/agent/traces/
+/agent/eval-results/
+*.log
+
+# Local launchers contain machine-specific paths.
+*.command
+
+# Earlier internal planning notes are not part of the reviewable agent layer.
+/AGENT-SPEC.md
+/BACKLOG.md
+/SEARCH-SCOPE.md
+/DEPLOYMENT.md
+/agent/README.md
+
+
+# Historical internal verification notes are retained locally only.
+/agent/OUTPUT-REVIEW.md
+/agent/POLICY-MEMORY-VERIFICATION.md

@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Sign in · CommonSwyft experiment</title>
+    <link rel="stylesheet" href="/dashboard.css" />
+    <link rel="stylesheet" href="/chat.css" />
+    <script type="module" src="/login.js"></script>
+  </head>
+  <body>
+    <header><div class="brand"><span class="mark">↗</span> CommonSwyft <span class="quiet">/ experiment</span></div><div class="header-right"><span class="badge">Invite only</span></div></header>
+    <main class="login-main">
+      <section class="chat-panel login-panel">
+        <p class="eyebrow">PRIVATE FLIGHT SEARCH PROTOTYPE</p>
+        <h1>Welcome.</h1>
+        <p class="intro">Enter the experiment password to continue. Search only; nothing can be booked.</p>
+        <form id="login-form">
+          <label for="username">Username</label>
+          <input id="username" autocomplete="username" value="demo" />
+          <label for="password">Password</label>
+          <input id="password" type="password" autocomplete="current-password" autofocus />
+          <p id="error" class="notice" role="alert" hidden></p>
+          <div class="composer-bottom"><span>Access expires after one day.</span><button id="login-button" type="submit">Continue →</button></div>
+        </form>
+      </section>
+    </main>
+  </body>
+</html>

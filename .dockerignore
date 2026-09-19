@@ -1,0 +1,16 @@
+**/node_modules
+**/.git
+**/.env*
+**/*.pem
+**/*.key
+agent/traces
+agent/local-state
+agent/eval-results
+reference
+flyai-agent-preferences
+tooling
+*.command
+AGENT-SPEC.md
+BACKLOG.md
+DEPLOYMENT.md
+SEARCH-SCOPE.md

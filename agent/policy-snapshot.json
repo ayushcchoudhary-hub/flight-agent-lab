@@ -1,0 +1,78 @@
+{
+  "source": "Policy-page text snapshot for deterministic evaluation",
+  "capturedAt": "2026-09-19",
+  "chunks": [
+    {
+      "id": "privacy-1",
+      "document": "privacy",
+      "text": "Our full privacy policy is being finalized by our Launch & Business Ops team and will appear here before Commonswyft opens to the public.",
+      "url": "https://staging.commonswyft.com/privacy"
+    },
+    {
+      "id": "privacy-2",
+      "document": "privacy",
+      "text": "Until then, in plain language: we store the details you give us (waitlist contact details, profile, and \u2014 only if you save them \u2014 encrypted passport details for bookings), we use them solely to provide the service, we do not sell them, and card details are handled by our payment provider and never stored by us.",
+      "url": "https://staging.commonswyft.com/privacy"
+    },
+    {
+      "id": "privacy-3",
+      "document": "privacy",
+      "text": "To help our team understand and support member activity, we keep the latest approximate city, region and country observed during signed-in visits, and a location snapshot with submitted searches. This uses network metadata without a GPS prompt. These records contain no raw IP addresses or coordinates, are not sent to PostHog, and are removed when your account is erased.",
+      "url": "https://staging.commonswyft.com/privacy"
+    },
+    {
+      "id": "privacy-4",
+      "document": "privacy",
+      "text": "During our friends-and-family pilot, we use PostHog to understand how signed-in members use Commonswyft and to help with individual support requests. Analytics profiles include your account name and email address. Actions from your signed-in visits are linked to that profile, so this activity is identifiable.",
+      "url": "https://staging.commonswyft.com/privacy"
+    },
+    {
+      "id": "privacy-5",
+      "document": "privacy",
+      "text": "We record which parts of the app you visit and events such as starting a search, changing a filter, selecting an offer, moving through checkout, retrying a failed action, and updating settings. We also record broad error categories and sampled page performance measurements. Our own payment system reports payment milestones; analytics does not receive card details.",
+      "url": "https://staging.commonswyft.com/privacy"
+    },
+    {
+      "id": "privacy-6",
+      "document": "privacy",
+      "text": "Some search-page visits may have a masked replay showing page layout, standard interface labels, and interactions to help us understand friction. Replays exclude sign-in, account, settings, checkout, payment, booking, and admin pages. Typed values and other page text are masked. Images, link destinations, console messages, and network request contents are not included.",
+      "url": "https://staging.commonswyft.com/privacy"
+    },
+    {
+      "id": "privacy-7",
+      "document": "privacy",
+      "text": "Apart from the account name and email in your analytics profile, analytics excludes passenger and passport details, contact-form values, search terms and travel details, payment credentials, and booking references. We do not combine anonymous browsing history with your account profile.",
+      "url": "https://staging.commonswyft.com/privacy"
+    },
+    {
+      "id": "privacy-8",
+      "document": "privacy",
+      "text": "Our pilot uses a one-year retention period for analytics events and performance measurements, and 30 days for masked replays. Analytics profiles are retained separately from these event and replay periods and are not automatically removed when you close your account. Provider expiry is asynchronous, so stored copies may remain briefly after their retention period ends.",
+      "url": "https://staging.commonswyft.com/privacy"
+    },
+    {
+      "id": "privacy-9",
+      "document": "privacy",
+      "text": "You can contact us to ask about your analytics information, request that we stop collecting it for your account, or request deletion. These requests are reviewed manually. We will discuss the scope and status of your request, including any records needed to operate your account and bookings. A request does not trigger automatic or immediate deletion of analytics information.",
+      "url": "https://staging.commonswyft.com/privacy"
+    },
+    {
+      "id": "privacy-10",
+      "document": "privacy",
+      "text": "Questions or deletion requests: support@commonswyft.com .",
+      "url": "https://staging.commonswyft.com/privacy"
+    },
+    {
+      "id": "terms-1",
+      "document": "terms",
+      "text": "Final Terms & Conditions copy is being finalized by our Launch & Business Ops team and will appear here before Commonswyft opens to the public.",
+      "url": "https://staging.commonswyft.com/terms"
+    },
+    {
+      "id": "terms-2",
+      "document": "terms",
+      "text": "By joining the waitlist you agree to be contacted about Commonswyft and to these terms once published.",
+      "url": "https://staging.commonswyft.com/terms"
+    }
+  ]
+}

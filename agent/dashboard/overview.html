@@ -1,0 +1,474 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta
+      name="description"
+      content="CommonSwyft flight-agent prototype: architecture, evidence, current scope and next steps."
+    />
+    <title>Flight agent lab · Project overview</title>
+    <link rel="stylesheet" href="/dashboard.css" />
+    <link rel="stylesheet" href="/overview.css" />
+    <script type="module" src="/overview.js"></script>
+  </head>
+  <body>
+    <header>
+      <div class="brand">
+        <span class="mark">↗</span> Flight agent
+        <span class="quiet">/ lab</span>
+      </div>
+      <nav class="lab-nav" aria-label="Flight agent lab">
+        <div class="nav-cluster"><span class="nav-parent">Project</span><a class="active" href="/">Overview</a><a href="/scope">Scope</a></div>
+        <div class="nav-cluster"><span class="nav-parent">Evaluate</span><a href="/evals">Evals</a><a href="/compare">Model comparison</a><a href="/chat">Try models</a></div>
+        <div class="nav-cluster"><span class="nav-parent">Live prototype</span><a href="https://commonswyft-agent-experiment-868895912650.europe-west2.run.app/" target="_blank" rel="noreferrer">Try agent ↗</a></div>
+        <button id="theme" class="secondary">Dark mode</button>
+      </nav>
+    </header>
+    <main class="overview">
+      <section class="hero">
+        <div>
+          <p class="eyebrow">COMMONSWYFT LEARNING PROTOTYPE</p>
+          <h1>From flight website to conversational agent.</h1>
+          <p class="intro">
+            A search-only agent that turns natural-language requests into
+            validated CommonSwyft searches, remembers explicit preferences, and
+            answers policy questions from repository reference text.
+          </p>
+          <div class="hero-actions">
+            <a class="primary-link" href="https://commonswyft-agent-experiment-868895912650.europe-west2.run.app/" target="_blank" rel="noreferrer">Try the deployed agent</a
+            ><a href="/chat">Try different models</a><a href="/evals">Inspect evaluation results</a>
+          </div>
+        </div>
+        <aside class="demo-note">
+          <span class="status-dot"></span>
+          <div>
+            <b>Current build</b>
+            <p>
+              Deployed on Cloud Run · Terra medium through OpenRouter · live
+              public staging search · invite-protected web chat
+            </p>
+          </div>
+        </aside>
+      </section>
+      <nav class="submodules" aria-label="Project sections">
+        <a href="#progress"><b>01</b> Progress</a
+        ><a href="#system"><b>02</b> How it works</a
+        ><a href="#decision"><b>03</b> Model choice</a
+        ><a href="#baseline"><b>04</b> Baseline</a
+        ><a href="#scope"><b>05</b> Scope</a><a href="#next"><b>06</b> Next</a>
+      </nav>
+
+      <section id="progress" class="module">
+        <div class="module-kicker">01 · PROGRESS</div>
+        <div class="module-head">
+          <div>
+            <h2>What we built</h2>
+            <p>
+              A working vertical slice, followed by evaluation and product
+              hardening.
+            </p>
+          </div>
+          <span class="badge good">Prototype working</span>
+        </div>
+        <div class="milestones">
+          <article class="done">
+            <span>1</span>
+            <h3>Reuse the product</h3>
+            <p>
+              Mapped the existing airport and flight-search behavior instead of
+              rebuilding inventory logic.
+            </p>
+          </article>
+          <article class="done">
+            <span>2</span>
+            <h3>Build the harness</h3>
+            <p>
+              Natural language → structured tool call → validation → CommonSwyft
+              search → deterministic reply.
+            </p>
+          </article>
+          <article class="done">
+            <span>3</span>
+            <h3>Compare models</h3>
+            <p>
+              Screened Astra, Luna, Sol and Terra across reasoning settings,
+              then repeated three finalists.
+            </p>
+          </article>
+          <article class="done">
+            <span>4</span>
+            <h3>Connect real data</h3>
+            <p>
+              Verified public staging search and compared displayed flight
+              fields against backend responses.
+            </p>
+          </article>
+          <article class="done">
+            <span>5</span>
+            <h3>Add agent capabilities</h3>
+            <p>
+              Policy retrieval, explicit preference memory, professional
+              boundaries and clearer replies.
+            </p>
+          </article>
+          <article class="done">
+            <span>6</span>
+            <h3>Freeze and baseline</h3>
+            <p>
+              Froze the V1 contract and passed 24/24 current Terra-medium
+              scenarios in 30 bounded model calls.
+            </p>
+          </article>
+          <article class="done">
+            <span>7</span>
+            <h3>Deploy the experiment</h3>
+            <p>
+              Shipped the search-only harness to Cloud Run with Secret Manager,
+              an invite login, hard usage limits and a live staging smoke test.
+            </p>
+          </article>
+        </div>
+      </section>
+
+      <section id="system" class="module">
+        <div class="module-kicker">02 · HOW IT WORKS</div>
+        <div class="module-head">
+          <div>
+            <h2>The model proposes; the application decides.</h2>
+            <p>
+              The CommonSwyft Harness is the channel-independent conversation
+              service. Terra is one component inside it.
+            </p>
+          </div>
+        </div>
+        <div class="system-flow">
+          <article>
+            <small>1 · CHANNEL</small><b>Web or WhatsApp</b>
+            <p>The channel transports messages; it does not own travel logic.</p>
+          </article>
+          <i>→</i>
+          <article>
+            <small>2 · MODEL</small><b>Terra interprets</b>
+            <p>
+              Produces one structured action. It does not call the backend
+              directly.
+            </p>
+          </article>
+          <i>→</i>
+          <article>
+            <small>3 · COMMONSWYFT HARNESS</small><b>Validate + execute</b>
+            <p>
+              Maintains trip state, enforces scope and calls an allowed tool.
+            </p>
+          </article>
+          <i>→</i>
+          <article>
+            <small>4 · SOURCE</small><b>Flights or policy</b>
+            <p>
+              CommonSwyft API for live inventory; saved policy text for general
+              questions.
+            </p>
+          </article>
+          <i>→</i>
+          <article>
+            <small>5 · RENDERER</small><b>Useful reply</b>
+            <p>
+              Application code formats flight cards; sourced policy replies use
+              the model.
+            </p>
+          </article>
+        </div>
+        <div class="callouts">
+          <article>
+            <h3>Where it runs now</h3>
+            <p>
+              The demo harness runs on Google Cloud Run, Terra is called through
+              OpenRouter, and flight search runs against CommonSwyft staging.
+            </p>
+          </article>
+          <article>
+            <h3>What remains separate</h3>
+            <p>
+              The model and flight API remain external services. This personal
+              experiment is not deployed inside CommonSwyft's production stack.
+            </p>
+          </article>
+          <article>
+            <h3>Memory ownership</h3>
+            <p>
+              CommonSwyft should own account preferences. The harness loads them
+              as context; the model does not independently remember customers.
+            </p>
+          </article>
+        </div>
+      </section>
+
+      <section id="decision" class="module">
+        <div class="module-kicker">03 · MODEL CHOICE</div>
+        <div class="module-head">
+          <div>
+            <h2>Why Terra medium is the default</h2>
+            <p>
+              Correctness was the gate. Speed and estimated API-equivalent cost
+              were tie-breakers.
+            </p>
+          </div>
+          <a href="/compare">Open full comparison →</a>
+        </div>
+        <div class="decision-grid">
+          <article class="selected">
+            <span class="badge">Selected</span>
+            <h3>Terra · medium</h3>
+            <strong>4.07 s</strong
+            ><small>median model time in the stopped finalist validation</small>
+            <p>
+              51/51 completed attempts passed. Fastest observed finalist;
+              mid-range estimated cost.
+            </p>
+          </article>
+          <article>
+            <h3>Luna · low</h3>
+            <strong>4.73 s</strong><small>median model time</small>
+            <p>
+              50/50 completed attempts passed. Lowest estimated API-equivalent
+              cost.
+            </p>
+          </article>
+          <article>
+            <h3>Astra · low</h3>
+            <strong>5.30 s</strong><small>median model time</small>
+            <p>
+              50/50 completed attempts passed. No correctness advantage on these
+              development cases and highest estimated cost.
+            </p>
+          </article>
+        </div>
+        <p class="evidence-note">
+          The finalist run stopped at the shared 250-call cap before all planned
+          repetitions completed. These were repeated development cases, not
+          held-out production traffic. “Best balance” is the supported
+          conclusion; Terra was not the cheapest.
+        </p>
+      </section>
+
+      <section id="baseline" class="module">
+        <div class="module-kicker">04 · CURRENT BASELINE</div>
+        <div class="module-head">
+          <div>
+            <h2>What has been tested</h2>
+            <p>
+              Separate evidence layers make it clear what each result actually
+              proves.
+            </p>
+          </div>
+          <span class="badge good">Frozen baseline passed</span>
+        </div>
+        <div class="baseline-grid">
+          <article>
+            <strong>24 / 24</strong>
+            <h3>Current Terra baseline</h3>
+            <p>
+              Eighteen search and boundary scenarios, four policy scenarios,
+              and two preference/memory scenarios. One attempt each.
+            </p>
+            <a href="/evals?run=live-2026-09-19T17-14-33.969Z"
+              >Inspect conversations →</a
+            >
+          </article>
+          <article>
+            <strong>30 calls</strong>
+            <h3>Bounded model usage</h3>
+            <p>
+              Twenty calls for search and edge cases, seven for policy, and
+              three for the preference-plus-policy detour. Passing cases were
+              not repeated.
+            </p>
+            <a href="/policy-examples">See saved replies →</a>
+          </article>
+          <article>
+            <strong>59 / 59</strong>
+            <h3>Deterministic code tests</h3>
+            <p>
+              No model calls. Covers tools, dates, state, API validation, policy
+              citations, persistent preferences, grounding and security
+              boundaries.
+            </p>
+          </article>
+          <article>
+            <strong>V1</strong>
+            <h3>Scope frozen</h3>
+            <p>
+              The behavior contract and source hashes were saved with the run.
+              Future product changes start a new baseline version.
+            </p>
+          </article>
+        </div>
+      </section>
+
+      <section id="scope" class="module">
+        <div class="module-kicker">05 · SCOPE</div>
+        <div class="module-head">
+          <div>
+            <h2>Done, local, and deliberately deferred</h2>
+            <p>This is a search assistant prototype, not a booking product.</p>
+          </div>
+        </div>
+        <div class="scope-columns">
+          <article>
+            <h3><span class="check">✓</span> Working now</h3>
+            <ul>
+              <li>One-way, one-traveler flight search</li>
+              <li>City groups and explicit airports</li>
+              <li>Flexible/default dates and cabin</li>
+              <li>Follow-up changes within a conversation</li>
+              <li>Actual public staging search</li>
+              <li>Deterministic flight-card formatting</li>
+              <li>General privacy-policy retrieval with sources</li>
+              <li>
+                Persistent home airport, cabin and nonstop preference behind a
+                local authenticated service
+              </li>
+              <li>Support handoff and off-topic boundaries</li>
+              <li>Invite-protected Cloud Run web chat</li>
+              <li>Secret Manager for hosted credentials</li>
+              <li>Usage and infrastructure limits for the experiment</li>
+            </ul>
+          </article>
+          <article>
+            <h3>
+              <span class="local">◐</span> Production-shaped, not deployed
+            </h3>
+            <ul>
+              <li>
+                Optional account preference fields in the authenticated Go
+                profile API
+              </li>
+              <li>Read, replace and forget semantics</li>
+              <li>Backward-compatible generated client and server contract</li>
+              <li>Two-user isolation and persistence tests</li>
+            </ul>
+            <p class="scope-note">
+              The playground uses an account-shaped local development service.
+              The real Go/PostgreSQL change remains on a separate local branch;
+              nothing was pushed or deployed.
+            </p>
+          </article>
+          <article>
+            <h3><span class="todo">○</span> Backlog</h3>
+            <ul>
+              <li>Real Clerk account linking for WhatsApp or other channels</li>
+              <li>Production monitoring, alerts and operational ownership</li>
+              <li>MCP tools for compatible external assistants</li>
+              <li>Round trip, multi-city and multiple travelers</li>
+              <li>“Take me anywhere” and richer discovery</li>
+              <li>Booking, checkout and payments</li>
+              <li>Ticket-specific refunds and booking lookup</li>
+              <li>Human approval and idempotency for consequential actions</li>
+              <li>Live policy publishing/synchronization</li>
+              <li>Broader safety, privacy and adversarial evaluation</li>
+            </ul>
+          </article>
+        </div>
+      </section>
+
+      <section id="next" class="module">
+        <div class="module-kicker">06 · WHAT NEXT</div>
+        <div class="module-head">
+          <div>
+            <h2>The best learning path from here</h2>
+            <p>
+              Finish one credible product loop before adding more architecture.
+            </p>
+          </div>
+        </div>
+        <ol class="next-list">
+          <li>
+            <b>Connect an authenticated account safely.</b
+            ><span
+              >Use Clerk account linking and a real per-user store for travel
+              preferences; the hosted demo currently uses a temporary profile.</span
+            >
+          </li>
+          <li>
+            <b>Run the frozen baseline against the deployed build.</b
+            ><span
+              >Repeat the search, policy and boundary cases through Cloud Run so
+              the deployment itself is part of the evidence.</span
+            >
+          </li>
+          <li>
+            <b>Add one durable workflow.</b
+            ><span
+              >A saved-search alert is safer than payment and teaches queues,
+              scheduled work, retries and idempotency.</span
+            >
+          </li>
+          <li>
+            <b>Then test another model provider.</b
+            ><span
+              >Add OpenRouter only after the evaluation contract is stable, so
+              the comparison measures the model rather than changing product
+              behavior.</span
+            >
+          </li>
+        </ol>
+        <div class="monday">
+          <h3>How the deployed experiment works</h3>
+          <div class="system-flow">
+            <article>
+              <small>1 · PHONE</small><b>Open an HTTPS chat</b>
+              <p>Open the invite-protected Cloud Run URL from a phone or laptop.</p>
+            </article>
+            <i>→</i>
+            <article>
+              <small>2 · HARNESS</small><b>Cloud Run executes</b>
+              <p>The personal experiment runs one bounded container in europe-west2.</p>
+            </article>
+            <i>→</i>
+            <article>
+              <small>3 · ACCESS</small><b>Experiment login</b>
+              <p>A secure session cookie protects the demo; Clerk linking is backlog.</p>
+            </article>
+            <i>→</i>
+            <article>
+              <small>4 · SERVICES</small><b>Call model + flights</b>
+              <p>The harness calls an API-hosted model and the existing CommonSwyft API.</p>
+            </article>
+          </div>
+          <p class="scope-note">
+            The current deployment uses Cloud Run, Secret Manager and OpenRouter.
+            It intentionally does not connect to Clerk, production account data,
+            booking, checkout or payments. Flight searches use the public staging API.
+          </p>
+        </div>
+        <div class="monday">
+          <h3>A five-minute Monday walkthrough</h3>
+          <ol>
+            <li>Start with the user problem and the search-only scope.</li>
+            <li>
+              Show the architecture: model proposes, harness validates, product
+              API executes.
+            </li>
+            <li>
+              Open the model comparison and explain why Terra medium won the
+              trade-off.
+            </li>
+            <li>
+              Try one live flight request, one follow-up, one policy question
+              and one saved preference.
+            </li>
+            <li>
+              End with the deployed live-search demo, then distinguish the
+              recorded evaluation lab from the production backlog.
+            </li>
+          </ol>
+        </div>
+      </section>
+    </main>
+    <footer>
+      CommonSwyft learning prototype
+      <span>Local evaluation lab · deployed Cloud Run experiment · no booking</span>
+    </footer>
+  </body>
+</html>
