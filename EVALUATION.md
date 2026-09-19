@@ -12,9 +12,15 @@ The suite separates three kinds of evidence:
    response received by the adapter
 
 Raw staging captures, credentials and full local transcripts are excluded from
-version control. Reports identify the prompt version, model, reasoning effort,
-source hashes, call count, latency and token usage. A pass means the recorded
-case met its assertions once. It is not a production reliability estimate.
+version control. Local reports identify the prompt version, model, reasoning
+effort, source hashes, call count, latency and token usage. A pass means the
+recorded case met its assertions once. It is not a production reliability
+estimate.
+
+The deployed dashboard uses an allowlisted, sanitized evidence bundle. It keeps
+the scenarios, customer-facing replies, grading, latency and token usage while
+removing raw backend captures, source snapshots, source hashes, request
+identifiers and private model thread identifiers.
 
 Current results for prompt `flight-search-v1.1.0`:
 

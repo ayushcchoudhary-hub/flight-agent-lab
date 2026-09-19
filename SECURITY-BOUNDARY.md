@@ -9,7 +9,8 @@ partial export of the flight product.
 - A narrow adapter contract for an externally supplied flight-search API
 - Synthetic fixtures created for this project
 - Prompt and behavior specifications
-- Aggregate evaluation methods and sanitized results
+- Aggregate evaluation methods, sanitized results and selected customer-facing
+  outputs that contain no private backend data
 - Deployment files for the independent agent service
 
 ## Never allowed in this repository
@@ -20,7 +21,7 @@ partial export of the flight product.
 - Raw production or staging logs
 - Undocumented private endpoints or implementation details learned from the
   product repository
-- Model transcripts that contain private backend responses
+- Raw model transcripts or any transcript containing private backend responses
 
 The local folders `reference/` and `flyai-agent-preferences/` are explicitly
 ignored. The container build no longer imports from either folder. The agent
