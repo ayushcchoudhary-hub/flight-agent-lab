@@ -11,18 +11,25 @@ not contain or require the underlying product codebase.
 
 ## Project context and authorship
 
-This is a product-led learning project, not a claim that I independently wrote
-every line of production code. I am not a software engineer. I started with a
-real product problem, read *Building AI Agents: From Design Patterns to
-Production*, and used Codex to help design, implement, test and document the
-prototype.
+I help with CommonSwyft as a side project. The existing product offers web-based
+flight search, and I wanted to explore another way for travelers to access that
+capability: a conversational agent that could eventually work through web chat,
+WhatsApp or another messaging surface. I used the existing search API boundary
+and extended the agent-facing layer around it rather than rebuilding or
+publishing the underlying product.
 
-I directed the work and made the product decisions: what the agent should do,
-what should stay out of scope, which failures matter, how the conversation
-should feel, what evidence would support a model choice, and where security and
-human approval boundaries belong. I reviewed the behavior through the live
-demo and evaluation dashboard, challenged confusing or incorrect outputs, and
-iterated on the architecture with Codex.
+This is a product-led learning project, not a claim that I independently wrote
+every line of production code. I am not a software engineer. I framed the
+problem, read *Building AI Agents: From Design Patterns to Production*, and used
+Codex to help design, implement, test and document the prototype.
+
+I directed the work and made the product decisions: why an agent could improve
+access to flight search, what it should do, what should stay out of scope, which
+failures matter, how the conversation should feel, what evidence would support
+a model choice, and where security and human approval boundaries belong. I
+reviewed the behavior through the live demo and evaluation dashboard,
+challenged confusing or incorrect outputs, and iterated on the architecture
+with Codex.
 
 The goal is to understand and communicate the system honestly. The code is
 included so the decisions can be inspected and reproduced, not to imply that I

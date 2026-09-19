@@ -10,6 +10,14 @@ The flight agent uses a language model to interpret a traveler’s request, whil
 ordinary application code controls state, calls an allowlisted search API,
 validates the response and formats the result.
 
+## The product problem
+
+CommonSwyft already provides flight search through a web product. The experiment
+asks whether the same capability can be made easier to access through natural
+conversation and eventually through channels such as web chat or WhatsApp. The
+agent layer interprets requests and orchestrates the existing API. It does not
+replace the flight-search backend or expose the product codebase.
+
 ## Components
 
 | Component | What it does | Why it exists |
