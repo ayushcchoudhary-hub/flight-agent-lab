@@ -27,7 +27,7 @@ test('conversations do not share preferences, and unknown replay query never fal
  const svc=chatService({capturesLoader:async()=>captures,modelFactory:()=>new ScriptedDemoModel()});
  const a=await svc.start('replay'),b=await svc.start('replay');await svc.turn(a.id,'London to New York');
  const r=await svc.turn(b.id,'economy instead');assert.equal(r.state.origin,null);assert.equal(r.state.cabin,'economy');
- const missing=await svc.turn(a.id,'economy instead');assert.equal(missing.result.status,'error');assert.match(missing.result.text,/not recorded/);
+ const missing=await svc.turn(a.id,'economy instead');assert.equal(missing.result.status,'error');assert.match(missing.result.text,/couldn't check flights/i);assert.doesNotMatch(missing.result.text,/recorded|staging|fallback/i);
 });
 test('concurrent sends are rejected before an additional model call',async()=>{
  let release,entered;const ready=new Promise(r=>entered=r);let calls=0;

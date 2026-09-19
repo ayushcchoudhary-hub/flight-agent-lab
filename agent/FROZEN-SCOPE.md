@@ -22,7 +22,9 @@ starts a new baseline version.
 - Explicit saved defaults for home airport, usual cabin, and a soft preference
   for nonstop flights. A proposed change is saved only after user action.
 - Professional handling of frustration, prompt injection, unrelated requests,
-  and attempted purchase instructions.
+  and attempted purchase instructions. User profanity does not block a valid
+  search. Generated copy cannot mirror abuse, insult, threaten, sexualize,
+  expose secrets or claim a consequential action was completed.
 
 ## Deliberately unsupported
 

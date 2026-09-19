@@ -63,7 +63,7 @@ flowchart LR
 ## Current product contract
 
 Supported behavior is frozen in [FROZEN-SCOPE.md](agent/FROZEN-SCOPE.md). The
-current prompt is `flight-search-v1.1.0`, described in
+current prompt is `flight-search-v1.2.0`, described in
 [PROMPT-ARCHITECTURE.md](PROMPT-ARCHITECTURE.md).
 
 The assistant is a calm, concise and knowledgeable flight-search concierge. It
@@ -88,7 +88,7 @@ formatting and call limits. See [ARCHITECTURE-DECISIONS.md](ARCHITECTURE-DECISIO
 
 ## Evidence
 
-- **66 of 66 deterministic checks pass** across routing, state, policy
+- **73 of 73 deterministic checks pass** across routing, state, policy
   retrieval, preferences, output grounding, security and adapter behavior.
 - The regression suite separates deterministic checks, model acceptance cases
   and one bounded live-search verification.
@@ -105,7 +105,9 @@ The project owns a narrow adapter contract and synthetic fixtures. It does not
 import from the private product repository. Secrets, account data, raw backend
 captures, internal documentation and source snapshots are excluded from Git.
 See [SECURITY-BOUNDARY.md](SECURITY-BOUNDARY.md) and the
-[publication checklist](PUBLICATION-CHECKLIST.md).
+[publication checklist](PUBLICATION-CHECKLIST.md). The layered conduct,
+grounding, error and cost controls are documented in
+[GUARDRAILS.md](GUARDRAILS.md).
 
 ## Run locally
 

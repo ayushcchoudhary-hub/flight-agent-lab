@@ -1,0 +1,139 @@
+{
+  "runId": "2026-09-19T21-50-01.448Z",
+  "label": "Guardrails targeted regression v1.2.0",
+  "promptVersion": "flight-search-v1.2.0",
+  "clock": "2026-09-18",
+  "effort": "medium",
+  "models": [
+    "gpt-5.6-terra"
+  ],
+  "repeats": 1,
+  "concurrency": 1,
+  "adapter": "Codex SDK structured action; ChatGPT authentication; synthetic flight API",
+  "limitations": [
+    "Five repetitions are a small reliability sample, not a production accuracy estimate.",
+    "Same prompts repeated; not a held-out benchmark.",
+    "Latency includes SDK/CLI startup, network and model generation.",
+    "Cached input may affect latency across repeats.",
+    "Token counts include Codex overhead; they are not a dollar bill.",
+    "Model selects an action; application generates flight-result wording."
+  ],
+  "results": [
+    {
+      "caseId": "E1",
+      "name": "Inventory outage is not “no flights”",
+      "model": "gpt-5.6-terra",
+      "repeat": 1,
+      "steps": [
+        {
+          "input": "London to New York October 1, 2026.",
+          "expected": {
+            "status": "error",
+            "posts": 1,
+            "mentions": "couldn't check flights"
+          },
+          "result": {
+            "status": "error",
+            "text": "I couldn't check flights right now. Please try again."
+          },
+          "latencyMs": 4984,
+          "grade": {
+            "pass": true,
+            "actual": {
+              "status": "error",
+              "origin": "LHR|LGW|LCY|STN|LTN",
+              "destination": "JFK|EWR|LGA",
+              "cabin": "business",
+              "from": "2026-10-01",
+              "to": "2026-10-01",
+              "budget": null,
+              "pending": null,
+              "menuCount": 0,
+              "posts": 1,
+              "resultCount": 0
+            },
+            "checks": [
+              {
+                "name": "status",
+                "expected": "error",
+                "actual": "error",
+                "pass": true
+              },
+              {
+                "name": "posts",
+                "expected": 1,
+                "actual": 1,
+                "pass": true
+              },
+              {
+                "name": "mentions",
+                "expected": "couldn't check flights",
+                "actual": "I couldn't check flights right now. Please try again.",
+                "pass": true
+              },
+              {
+                "name": "model completed or was not needed",
+                "pass": true
+              }
+            ]
+          }
+        }
+      ],
+      "events": [
+        {
+          "type": "model_usage",
+          "data": {
+            "adapter": "codex-chatgpt-structured-action",
+            "promptVersion": "flight-search-v1.2.0",
+            "model": "gpt-5.6-terra",
+            "effort": "medium",
+            "latencyMs": 4960,
+            "usage": {
+              "input_tokens": 9983,
+              "cached_input_tokens": 5888,
+              "cache_write_input_tokens": 0,
+              "output_tokens": 74,
+              "reasoning_output_tokens": 26
+            }
+          }
+        },
+        {
+          "type": "tool_call",
+          "data": {
+            "name": "find_flights",
+            "arguments": {
+              "origin": "London",
+              "destination": "New York",
+              "dates": {
+                "mode": "exact",
+                "start": "2026-10-01"
+              }
+            }
+          }
+        }
+      ],
+      "pass": true
+    }
+  ],
+  "summary": [
+    {
+      "model": "gpt-5.6-terra",
+      "passed": 1,
+      "total": 1,
+      "modelCalls": 1,
+      "medianModelMs": 4960,
+      "inputTokens": 9983,
+      "cachedInputTokens": 5888,
+      "outputTokens": 74,
+      "perCase": [
+        {
+          "id": "E1",
+          "passed": 1,
+          "total": 1,
+          "distinctActions": 1
+        }
+      ]
+    }
+  ],
+  "publication": "Sanitized review copy. Credentials, backend captures, source snapshots, request IDs and model thread IDs are excluded."
+}

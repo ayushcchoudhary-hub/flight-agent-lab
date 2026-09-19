@@ -38,7 +38,7 @@ export const EVAL_CASES = [
     { text:'London to New York October 1, 2026, for two adults.', expected:{ status:'clarify', posts:0, mentions:'traveler|traveller|passenger|adult|one person|single' } },
   ] },
   { id:'E1', name:'Inventory outage is not “no flights”', scenario:'unavailable', steps:[
-    { text:'London to New York October 1, 2026.', expected:{ status:'error', posts:1, mentions:'unavailable' } },
+    { text:'London to New York October 1, 2026.', expected:{ status:'error', posts:1, mentions:"couldn't check flights" } },
   ] },
   { id:'E2', name:'Empty inventory is not an outage', scenario:'empty', steps:[
     { text:'London to New York October 1, 2026.', expected:{ ...complete('London','New York'), minResults:0, resultCount:0 } },

@@ -5,6 +5,8 @@ import {fileURLToPath} from 'node:url';
 const runs=[
   'live-2026-09-18T22-21-35.141Z',
   'live-2026-09-19T20-42-55.300Z',
+  'live-2026-09-19T21-48-02.128Z',
+  'live-2026-09-19T21-50-01.448Z',
   'compare-2026-09-19T10-06-49.201Z',
   'compare-2026-09-19T10-24-41.767Z',
 ];

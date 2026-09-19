@@ -1,0 +1,3258 @@
+{
+  "runId": "2026-09-19T21-48-02.128Z",
+  "label": "Guardrails regression v1.2.0",
+  "promptVersion": "flight-search-v1.2.0",
+  "clock": "2026-09-18",
+  "effort": "medium",
+  "models": [
+    "gpt-5.6-terra"
+  ],
+  "repeats": 1,
+  "concurrency": 1,
+  "adapter": "Codex SDK structured action; ChatGPT authentication; synthetic flight API",
+  "limitations": [
+    "Five repetitions are a small reliability sample, not a production accuracy estimate.",
+    "Same prompts repeated; not a held-out benchmark.",
+    "Latency includes SDK/CLI startup, network and model generation.",
+    "Cached input may affect latency across repeats.",
+    "Token counts include Codex overhead; they are not a dollar bill.",
+    "Model selects an action; application generates flight-result wording."
+  ],
+  "results": [
+    {
+      "caseId": "R1",
+      "name": "Complete trip: London → New York",
+      "model": "gpt-5.6-terra",
+      "repeat": 1,
+      "steps": [
+        {
+          "input": "Find me a flight from London to New York on October 1, 2026.",
+          "expected": {
+            "status": "results",
+            "origin": "LHR|LGW|LCY|STN|LTN",
+            "destination": "JFK|EWR|LGA",
+            "cabin": "business",
+            "from": "2026-10-01",
+            "to": "2026-10-01",
+            "posts": 1,
+            "minResults": 1
+          },
+          "result": {
+            "status": "results",
+            "text": "SYNTHETIC FLIGHT DATA. These are example results.\n\nLondon (all airports) → New York (all airports)\nThu, 1 Oct 2026 · Business · One-way\n\nI found 3 options for you:\n\nA. London Heathrow Airport (LHR) → John F. Kennedy International Airport (JFK)\nThu, 1 Oct 2026\nBusiness · Nonstop · USD 1,113.00\nDeparture time unavailable\nArrival time unavailable\n\nB. London City Airport (LCY) → LaGuardia Airport (LGA)\nThu, 1 Oct 2026\nBusiness · Nonstop · USD 1,273.00\nDeparture time unavailable\nArrival time unavailable\n\nC. London Gatwick Airport (LGW) → Newark Liberty International Airport (EWR)\nThu, 1 Oct 2026\nBusiness · With a connection · USD 1,193.00\nDeparture time unavailable\nArrival time unavailable\n\nPrices are estimates and may change.\n\nMissing flight times and exact seat counts are not available.\n\nYou can ask me to change the dates, cabin or airport.",
+            "dataMode": "synthetic",
+            "query": {
+              "origin": "LHR|LGW|LCY|STN|LTN",
+              "destination": "JFK|EWR|LGA",
+              "dateFrom": "2026-09-30",
+              "dateTo": "2026-10-02",
+              "selectedDate": "2026-10-01",
+              "cabin": "business"
+            },
+            "shortlist": [
+              {
+                "id": "synthetic-LHR-JFK-2026-10-01-0",
+                "origin": "LHR",
+                "destination": "JFK",
+                "date": "2026-10-01",
+                "cabin": "business",
+                "priceUsd": 1113,
+                "direct": true,
+                "reasons": [],
+                "timing": {
+                  "departure": null,
+                  "arrival": null,
+                  "durationMinutes": null,
+                  "flightNumbers": null,
+                  "text": "Departure time unavailable\nArrival time unavailable"
+                },
+                "text": "London Heathrow Airport (LHR) → John F. Kennedy International Airport (JFK)\nThu, 1 Oct 2026\nBusiness · Nonstop · USD 1,113.00\nDeparture time unavailable\nArrival time unavailable"
+              },
+              {
+                "id": "synthetic-LCY-LGA-2026-10-01-2",
+                "origin": "LCY",
+                "destination": "LGA",
+                "date": "2026-10-01",
+                "cabin": "business",
+                "priceUsd": 1273,
+                "direct": true,
+                "reasons": [],
+                "timing": {
+                  "departure": null,
+                  "arrival": null,
+                  "durationMinutes": null,
+                  "flightNumbers": null,
+                  "text": "Departure time unavailable\nArrival time unavailable"
+                },
+                "text": "London City Airport (LCY) → LaGuardia Airport (LGA)\nThu, 1 Oct 2026\nBusiness · Nonstop · USD 1,273.00\nDeparture time unavailable\nArrival time unavailable"
+              },
+              {
+                "id": "synthetic-LGW-EWR-2026-10-01-1",
+                "origin": "LGW",
+                "destination": "EWR",
+                "date": "2026-10-01",
+                "cabin": "business",
+                "priceUsd": 1193,
+                "direct": false,
+                "reasons": [],
+                "timing": {
+                  "departure": null,
+                  "arrival": null,
+                  "durationMinutes": null,
+                  "flightNumbers": null,
+                  "text": "Departure time unavailable\nArrival time unavailable"
+                },
+                "text": "London Gatwick Airport (LGW) → Newark Liberty International Airport (EWR)\nThu, 1 Oct 2026\nBusiness · With a connection · USD 1,193.00\nDeparture time unavailable\nArrival time unavailable"
+              }
+            ],
+            "cached": false,
+            "totalFound": 9,
+            "matchingCount": 3
+          },
+          "latencyMs": 5634,
+          "grade": {
+            "pass": true,
+            "actual": {
+              "status": "results",
+              "origin": "LHR|LGW|LCY|STN|LTN",
+              "destination": "JFK|EWR|LGA",
+              "cabin": "business",
+              "from": "2026-10-01",
+              "to": "2026-10-01",
+              "budget": null,
+              "pending": null,
+              "menuCount": 0,
+              "posts": 1,
+              "resultCount": 3
+            },
+            "checks": [
+              {
+                "name": "status",
+                "expected": "results",
+                "actual": "results",
+                "pass": true
+              },
+              {
+                "name": "origin",
+                "expected": "LHR|LGW|LCY|STN|LTN",
+                "actual": "LHR|LGW|LCY|STN|LTN",
+                "pass": true
+              },
+              {
+                "name": "destination",
+                "expected": "JFK|EWR|LGA",
+                "actual": "JFK|EWR|LGA",
+                "pass": true
+              },
+              {
+                "name": "cabin",
+                "expected": "business",
+                "actual": "business",
+                "pass": true
+              },
+              {
+                "name": "from",
+                "expected": "2026-10-01",
+                "actual": "2026-10-01",
+                "pass": true
+              },
+              {
+                "name": "to",
+                "expected": "2026-10-01",
+                "actual": "2026-10-01",
+                "pass": true
+              },
+              {
+                "name": "posts",
+                "expected": 1,
+                "actual": 1,
+                "pass": true
+              },
+              {
+                "name": "minResults",
+                "expected": 1,
+                "actual": 3,
+                "pass": true
+              },
+              {
+                "name": "data source is labelled",
+                "pass": true
+              },
+              {
+                "name": "route matches saved preference",
+                "pass": true
+              },
+              {
+                "name": "each result respects route and budget",
+                "pass": true
+              },
+              {
+                "name": "model completed or was not needed",
+                "pass": true
+              }
+            ]
+          }
+        }
+      ],
+      "events": [
+        {
+          "type": "model_usage",
+          "data": {
+            "adapter": "codex-chatgpt-structured-action",
+            "promptVersion": "flight-search-v1.2.0",
+            "model": "gpt-5.6-terra",
+            "effort": "medium",
+            "latencyMs": 5591,
+            "usage": {
+              "input_tokens": 9989,
+              "cached_input_tokens": 5888,
+              "cache_write_input_tokens": 0,
+              "output_tokens": 64,
+              "reasoning_output_tokens": 16
+            }
+          }
+        },
+        {
+          "type": "tool_call",
+          "data": {
+            "name": "find_flights",
+            "arguments": {
+              "origin": "London",
+              "destination": "New York",
+              "dates": {
+                "mode": "exact",
+                "start": "2026-10-01"
+              }
+            }
+          }
+        }
+      ],
+      "pass": true
+    },
+    {
+      "caseId": "R2",
+      "name": "Complete trip: New York → San Francisco",
+      "model": "gpt-5.6-terra",
+      "repeat": 1,
+      "steps": [
+        {
+          "input": "Find me a flight from New York to San Francisco on October 1, 2026.",
+          "expected": {
+            "status": "results",
+            "origin": "JFK|EWR|LGA",
+            "destination": "SFO|OAK|SJC",
+            "cabin": "business",
+            "from": "2026-10-01",
+            "to": "2026-10-01",
+            "posts": 1,
+            "minResults": 1
+          },
+          "result": {
+            "status": "results",
+            "text": "SYNTHETIC FLIGHT DATA. These are example results.\n\nNew York (all airports) → San Francisco Bay Area (all airports)\nThu, 1 Oct 2026 · Business · One-way\n\nI found 3 options for you:\n\nA. John F. Kennedy International Airport (JFK) → San Francisco International Airport (SFO)\nThu, 1 Oct 2026\nBusiness · Nonstop · USD 1,113.00\nDeparture time unavailable\nArrival time unavailable\n\nB. LaGuardia Airport (LGA) → San Jose Mineta International Airport (SJC)\nThu, 1 Oct 2026\nBusiness · Nonstop · USD 1,273.00\nDeparture time unavailable\nArrival time unavailable\n\nC. Newark Liberty International Airport (EWR) → Oakland International Airport (OAK)\nThu, 1 Oct 2026\nBusiness · With a connection · USD 1,193.00\nDeparture time unavailable\nArrival time unavailable\n\nPrices are estimates and may change.\n\nMissing flight times and exact seat counts are not available.\n\nYou can ask me to change the dates, cabin or airport.",
+            "dataMode": "synthetic",
+            "query": {
+              "origin": "JFK|EWR|LGA",
+              "destination": "SFO|OAK|SJC",
+              "dateFrom": "2026-09-30",
+              "dateTo": "2026-10-02",
+              "selectedDate": "2026-10-01",
+              "cabin": "business"
+            },
+            "shortlist": [
+              {
+                "id": "synthetic-JFK-SFO-2026-10-01-0",
+                "origin": "JFK",
+                "destination": "SFO",
+                "date": "2026-10-01",
+                "cabin": "business",
+                "priceUsd": 1113,
+                "direct": true,
+                "reasons": [],
+                "timing": {
+                  "departure": null,
+                  "arrival": null,
+                  "durationMinutes": null,
+                  "flightNumbers": null,
+                  "text": "Departure time unavailable\nArrival time unavailable"
+                },
+                "text": "John F. Kennedy International Airport (JFK) → San Francisco International Airport (SFO)\nThu, 1 Oct 2026\nBusiness · Nonstop · USD 1,113.00\nDeparture time unavailable\nArrival time unavailable"
+              },
+              {
+                "id": "synthetic-LGA-SJC-2026-10-01-2",
+                "origin": "LGA",
+                "destination": "SJC",
+                "date": "2026-10-01",
+                "cabin": "business",
+                "priceUsd": 1273,
+                "direct": true,
+                "reasons": [],
+                "timing": {
+                  "departure": null,
+                  "arrival": null,
+                  "durationMinutes": null,
+                  "flightNumbers": null,
+                  "text": "Departure time unavailable\nArrival time unavailable"
+                },
+                "text": "LaGuardia Airport (LGA) → San Jose Mineta International Airport (SJC)\nThu, 1 Oct 2026\nBusiness · Nonstop · USD 1,273.00\nDeparture time unavailable\nArrival time unavailable"
+              },
+              {
+                "id": "synthetic-EWR-OAK-2026-10-01-1",
+                "origin": "EWR",
+                "destination": "OAK",
+                "date": "2026-10-01",
+                "cabin": "business",
+                "priceUsd": 1193,
+                "direct": false,
+                "reasons": [],
+                "timing": {
+                  "departure": null,
+                  "arrival": null,
+                  "durationMinutes": null,
+                  "flightNumbers": null,
+                  "text": "Departure time unavailable\nArrival time unavailable"
+                },
+                "text": "Newark Liberty International Airport (EWR) → Oakland International Airport (OAK)\nThu, 1 Oct 2026\nBusiness · With a connection · USD 1,193.00\nDeparture time unavailable\nArrival time unavailable"
+              }
+            ],
+            "cached": false,
+            "totalFound": 9,
+            "matchingCount": 3
+          },
+          "latencyMs": 5464,
+          "grade": {
+            "pass": true,
+            "actual": {
+              "status": "results",
+              "origin": "JFK|EWR|LGA",
+              "destination": "SFO|OAK|SJC",
+              "cabin": "business",
+              "from": "2026-10-01",
+              "to": "2026-10-01",
+              "budget": null,
+              "pending": null,
+              "menuCount": 0,
+              "posts": 1,
+              "resultCount": 3
+            },
+            "checks": [
+              {
+                "name": "status",
+                "expected": "results",
+                "actual": "results",
+                "pass": true
+              },
+              {
+                "name": "origin",
+                "expected": "JFK|EWR|LGA",
+                "actual": "JFK|EWR|LGA",
+                "pass": true
+              },
+              {
+                "name": "destination",
+                "expected": "SFO|OAK|SJC",
+                "actual": "SFO|OAK|SJC",
+                "pass": true
+              },
+              {
+                "name": "cabin",
+                "expected": "business",
+                "actual": "business",
+                "pass": true
+              },
+              {
+                "name": "from",
+                "expected": "2026-10-01",
+                "actual": "2026-10-01",
+                "pass": true
+              },
+              {
+                "name": "to",
+                "expected": "2026-10-01",
+                "actual": "2026-10-01",
+                "pass": true
+              },
+              {
+                "name": "posts",
+                "expected": 1,
+                "actual": 1,
+                "pass": true
+              },
+              {
+                "name": "minResults",
+                "expected": 1,
+                "actual": 3,
+                "pass": true
+              },
+              {
+                "name": "data source is labelled",
+                "pass": true
+              },
+              {
+                "name": "route matches saved preference",
+                "pass": true
+              },
+              {
+                "name": "each result respects route and budget",
+                "pass": true
+              },
+              {
+                "name": "model completed or was not needed",
+                "pass": true
+              }
+            ]
+          }
+        }
+      ],
+      "events": [
+        {
+          "type": "model_usage",
+          "data": {
+            "adapter": "codex-chatgpt-structured-action",
+            "promptVersion": "flight-search-v1.2.0",
+            "model": "gpt-5.6-terra",
+            "effort": "medium",
+            "latencyMs": 5459,
+            "usage": {
+              "input_tokens": 9992,
+              "cached_input_tokens": 5888,
+              "cache_write_input_tokens": 0,
+              "output_tokens": 83,
+              "reasoning_output_tokens": 34
+            }
+          }
+        },
+        {
+          "type": "tool_call",
+          "data": {
+            "name": "find_flights",
+            "arguments": {
+              "origin": "New York",
+              "destination": "San Francisco",
+              "dates": {
+                "mode": "exact",
+                "start": "2026-10-01"
+              }
+            }
+          }
+        }
+      ],
+      "pass": true
+    },
+    {
+      "caseId": "R3",
+      "name": "Complete trip: San Francisco → Singapore",
+      "model": "gpt-5.6-terra",
+      "repeat": 1,
+      "steps": [
+        {
+          "input": "Find me a flight from San Francisco to Singapore on October 1, 2026.",
+          "expected": {
+            "status": "results",
+            "origin": "SFO|OAK|SJC",
+            "destination": "SIN",
+            "cabin": "business",
+            "from": "2026-10-01",
+            "to": "2026-10-01",
+            "posts": 1,
+            "minResults": 1
+          },
+          "result": {
+            "status": "results",
+            "text": "SYNTHETIC FLIGHT DATA. These are example results.\n\nSan Francisco Bay Area (all airports) → Singapore Changi Airport (SIN)\nThu, 1 Oct 2026 · Business · One-way\n\nI found 3 options for you:\n\nA. San Francisco International Airport (SFO) → Singapore Changi Airport (SIN)\nThu, 1 Oct 2026\nBusiness · Nonstop · USD 1,113.00\nDeparture time unavailable\nArrival time unavailable\n\nB. San Jose Mineta International Airport (SJC) → Singapore Changi Airport (SIN)\nThu, 1 Oct 2026\nBusiness · Nonstop · USD 1,273.00\nDeparture time unavailable\nArrival time unavailable\n\nC. Oakland International Airport (OAK) → Singapore Changi Airport (SIN)\nThu, 1 Oct 2026\nBusiness · With a connection · USD 1,193.00\nDeparture time unavailable\nArrival time unavailable\n\nPrices are estimates and may change.\n\nMissing flight times and exact seat counts are not available.\n\nYou can ask me to change the dates, cabin or airport.",
+            "dataMode": "synthetic",
+            "query": {
+              "origin": "SFO|OAK|SJC",
+              "destination": "SIN",
+              "dateFrom": "2026-09-30",
+              "dateTo": "2026-10-02",
+              "selectedDate": "2026-10-01",
+              "cabin": "business"
+            },
+            "shortlist": [
+              {
+                "id": "synthetic-SFO-SIN-2026-10-01-0",
+                "origin": "SFO",
+                "destination": "SIN",
+                "date": "2026-10-01",
+                "cabin": "business",
+                "priceUsd": 1113,
+                "direct": true,
+                "reasons": [],
+                "timing": {
+                  "departure": null,
+                  "arrival": null,
+                  "durationMinutes": null,
+                  "flightNumbers": null,
+                  "text": "Departure time unavailable\nArrival time unavailable"
+                },
+                "text": "San Francisco International Airport (SFO) → Singapore Changi Airport (SIN)\nThu, 1 Oct 2026\nBusiness · Nonstop · USD 1,113.00\nDeparture time unavailable\nArrival time unavailable"
+              },
+              {
+                "id": "synthetic-SJC-SIN-2026-10-01-2",
+                "origin": "SJC",
+                "destination": "SIN",
+                "date": "2026-10-01",
+                "cabin": "business",
+                "priceUsd": 1273,
+                "direct": true,
+                "reasons": [],
+                "timing": {
+                  "departure": null,
+                  "arrival": null,
+                  "durationMinutes": null,
+                  "flightNumbers": null,
+                  "text": "Departure time unavailable\nArrival time unavailable"
+                },
+                "text": "San Jose Mineta International Airport (SJC) → Singapore Changi Airport (SIN)\nThu, 1 Oct 2026\nBusiness · Nonstop · USD 1,273.00\nDeparture time unavailable\nArrival time unavailable"
+              },
+              {
+                "id": "synthetic-OAK-SIN-2026-10-01-1",
+                "origin": "OAK",
+                "destination": "SIN",
+                "date": "2026-10-01",
+                "cabin": "business",
+                "priceUsd": 1193,
+                "direct": false,
+                "reasons": [],
+                "timing": {
+                  "departure": null,
+                  "arrival": null,
+                  "durationMinutes": null,
+                  "flightNumbers": null,
+                  "text": "Departure time unavailable\nArrival time unavailable"
+                },
+                "text": "Oakland International Airport (OAK) → Singapore Changi Airport (SIN)\nThu, 1 Oct 2026\nBusiness · With a connection · USD 1,193.00\nDeparture time unavailable\nArrival time unavailable"
+              }
+            ],
+            "cached": false,
+            "totalFound": 9,
+            "matchingCount": 3
+          },
+          "latencyMs": 4993,
+          "grade": {
+            "pass": true,
+            "actual": {
+              "status": "results",
+              "origin": "SFO|OAK|SJC",
+              "destination": "SIN",
+              "cabin": "business",
+              "from": "2026-10-01",
+              "to": "2026-10-01",
+              "budget": null,
+              "pending": null,
+              "menuCount": 0,
+              "posts": 1,
+              "resultCount": 3
+            },
+            "checks": [
+              {
+                "name": "status",
+                "expected": "results",
+                "actual": "results",
+                "pass": true
+              },
+              {
+                "name": "origin",
+                "expected": "SFO|OAK|SJC",
+                "actual": "SFO|OAK|SJC",
+                "pass": true
+              },
+              {
+                "name": "destination",
+                "expected": "SIN",
+                "actual": "SIN",
+                "pass": true
+              },
+              {
+                "name": "cabin",
+                "expected": "business",
+                "actual": "business",
+                "pass": true
+              },
+              {
+                "name": "from",
+                "expected": "2026-10-01",
+                "actual": "2026-10-01",
+                "pass": true
+              },
+              {
+                "name": "to",
+                "expected": "2026-10-01",
+                "actual": "2026-10-01",
+                "pass": true
+              },
+              {
+                "name": "posts",
+                "expected": 1,
+                "actual": 1,
+                "pass": true
+              },
+              {
+                "name": "minResults",
+                "expected": 1,
+                "actual": 3,
+                "pass": true
+              },
+              {
+                "name": "data source is labelled",
+                "pass": true
+              },
+              {
+                "name": "route matches saved preference",
+                "pass": true
+              },
+              {
+                "name": "each result respects route and budget",
+                "pass": true
+              },
+              {
+                "name": "model completed or was not needed",
+                "pass": true
+              }
+            ]
+          }
+        }
+      ],
+      "events": [
+        {
+          "type": "model_usage",
+          "data": {
+            "adapter": "codex-chatgpt-structured-action",
+            "promptVersion": "flight-search-v1.2.0",
+            "model": "gpt-5.6-terra",
+            "effort": "medium",
+            "latencyMs": 4990,
+            "usage": {
+              "input_tokens": 9989,
+              "cached_input_tokens": 5888,
+              "cache_write_input_tokens": 0,
+              "output_tokens": 73,
+              "reasoning_output_tokens": 25
+            }
+          }
+        },
+        {
+          "type": "tool_call",
+          "data": {
+            "name": "find_flights",
+            "arguments": {
+              "origin": "San Francisco",
+              "destination": "Singapore",
+              "dates": {
+                "mode": "exact",
+                "start": "2026-10-01"
+              }
+            }
+          }
+        }
+      ],
+      "pass": true
+    },
+    {
+      "caseId": "R4",
+      "name": "Complete trip: Singapore → Dubai",
+      "model": "gpt-5.6-terra",
+      "repeat": 1,
+      "steps": [
+        {
+          "input": "Find me a flight from Singapore to Dubai on October 1, 2026.",
+          "expected": {
+            "status": "results",
+            "origin": "SIN",
+            "destination": "DXB|AUH",
+            "cabin": "business",
+            "from": "2026-10-01",
+            "to": "2026-10-01",
+            "posts": 1,
+            "minResults": 1
+          },
+          "result": {
+            "status": "results",
+            "text": "SYNTHETIC FLIGHT DATA. These are example results.\n\nSingapore Changi Airport (SIN) → Dubai and Abu Dhabi\nThu, 1 Oct 2026 · Business · One-way\n\nI found 3 options for you:\n\nA. Singapore Changi Airport (SIN) → Dubai International Airport (DXB)\nThu, 1 Oct 2026\nBusiness · Nonstop · USD 1,113.00\nDeparture time unavailable\nArrival time unavailable\n\nB. Singapore Changi Airport (SIN) → Dubai International Airport (DXB)\nThu, 1 Oct 2026\nBusiness · Nonstop · USD 1,273.00\nDeparture time unavailable\nArrival time unavailable\n\nC. Singapore Changi Airport (SIN) → Zayed International Airport (AUH)\nThu, 1 Oct 2026\nBusiness · With a connection · USD 1,193.00\nDeparture time unavailable\nArrival time unavailable\n\nPrices are estimates and may change.\n\nMissing flight times and exact seat counts are not available.\n\nYou can ask me to change the dates, cabin or airport.",
+            "dataMode": "synthetic",
+            "query": {
+              "origin": "SIN",
+              "destination": "DXB|AUH",
+              "dateFrom": "2026-09-30",
+              "dateTo": "2026-10-02",
+              "selectedDate": "2026-10-01",
+              "cabin": "business"
+            },
+            "shortlist": [
+              {
+                "id": "synthetic-SIN-DXB-2026-10-01-0",
+                "origin": "SIN",
+                "destination": "DXB",
+                "date": "2026-10-01",
+                "cabin": "business",
+                "priceUsd": 1113,
+                "direct": true,
+                "reasons": [],
+                "timing": {
+                  "departure": null,
+                  "arrival": null,
+                  "durationMinutes": null,
+                  "flightNumbers": null,
+                  "text": "Departure time unavailable\nArrival time unavailable"
+                },
+                "text": "Singapore Changi Airport (SIN) → Dubai International Airport (DXB)\nThu, 1 Oct 2026\nBusiness · Nonstop · USD 1,113.00\nDeparture time unavailable\nArrival time unavailable"
+              },
+              {
+                "id": "synthetic-SIN-DXB-2026-10-01-2",
+                "origin": "SIN",
+                "destination": "DXB",
+                "date": "2026-10-01",
+                "cabin": "business",
+                "priceUsd": 1273,
+                "direct": true,
+                "reasons": [],
+                "timing": {
+                  "departure": null,
+                  "arrival": null,
+                  "durationMinutes": null,
+                  "flightNumbers": null,
+                  "text": "Departure time unavailable\nArrival time unavailable"
+                },
+                "text": "Singapore Changi Airport (SIN) → Dubai International Airport (DXB)\nThu, 1 Oct 2026\nBusiness · Nonstop · USD 1,273.00\nDeparture time unavailable\nArrival time unavailable"
+              },
+              {
+                "id": "synthetic-SIN-AUH-2026-10-01-1",
+                "origin": "SIN",
+                "destination": "AUH",
+                "date": "2026-10-01",
+                "cabin": "business",
+                "priceUsd": 1193,
+                "direct": false,
+                "reasons": [],
+                "timing": {
+                  "departure": null,
+                  "arrival": null,
+                  "durationMinutes": null,
+                  "flightNumbers": null,
+                  "text": "Departure time unavailable\nArrival time unavailable"
+                },
+                "text": "Singapore Changi Airport (SIN) → Zayed International Airport (AUH)\nThu, 1 Oct 2026\nBusiness · With a connection · USD 1,193.00\nDeparture time unavailable\nArrival time unavailable"
+              }
+            ],
+            "cached": false,
+            "totalFound": 9,
+            "matchingCount": 3
+          },
+          "latencyMs": 6060,
+          "grade": {
+            "pass": true,
+            "actual": {
+              "status": "results",
+              "origin": "SIN",
+              "destination": "DXB|AUH",
+              "cabin": "business",
+              "from": "2026-10-01",
+              "to": "2026-10-01",
+              "budget": null,
+              "pending": null,
+              "menuCount": 0,
+              "posts": 1,
+              "resultCount": 3
+            },
+            "checks": [
+              {
+                "name": "status",
+                "expected": "results",
+                "actual": "results",
+                "pass": true
+              },
+              {
+                "name": "origin",
+                "expected": "SIN",
+                "actual": "SIN",
+                "pass": true
+              },
+              {
+                "name": "destination",
+                "expected": "DXB|AUH",
+                "actual": "DXB|AUH",
+                "pass": true
+              },
+              {
+                "name": "cabin",
+                "expected": "business",
+                "actual": "business",
+                "pass": true
+              },
+              {
+                "name": "from",
+                "expected": "2026-10-01",
+                "actual": "2026-10-01",
+                "pass": true
+              },
+              {
+                "name": "to",
+                "expected": "2026-10-01",
+                "actual": "2026-10-01",
+                "pass": true
+              },
+              {
+                "name": "posts",
+                "expected": 1,
+                "actual": 1,
+                "pass": true
+              },
+              {
+                "name": "minResults",
+                "expected": 1,
+                "actual": 3,
+                "pass": true
+              },
+              {
+                "name": "data source is labelled",
+                "pass": true
+              },
+              {
+                "name": "route matches saved preference",
+                "pass": true
+              },
+              {
+                "name": "each result respects route and budget",
+                "pass": true
+              },
+              {
+                "name": "model completed or was not needed",
+                "pass": true
+              }
+            ]
+          }
+        }
+      ],
+      "events": [
+        {
+          "type": "model_usage",
+          "data": {
+            "adapter": "codex-chatgpt-structured-action",
+            "promptVersion": "flight-search-v1.2.0",
+            "model": "gpt-5.6-terra",
+            "effort": "medium",
+            "latencyMs": 6054,
+            "usage": {
+              "input_tokens": 9990,
+              "cached_input_tokens": 5888,
+              "cache_write_input_tokens": 0,
+              "output_tokens": 71,
+              "reasoning_output_tokens": 24
+            }
+          }
+        },
+        {
+          "type": "tool_call",
+          "data": {
+            "name": "find_flights",
+            "arguments": {
+              "origin": "Singapore",
+              "destination": "Dubai",
+              "dates": {
+                "mode": "exact",
+                "start": "2026-10-01"
+              }
+            }
+          }
+        }
+      ],
+      "pass": true
+    },
+    {
+      "caseId": "R5",
+      "name": "Complete trip: Dubai → London",
+      "model": "gpt-5.6-terra",
+      "repeat": 1,
+      "steps": [
+        {
+          "input": "Find me a flight from Dubai to London on October 1, 2026.",
+          "expected": {
+            "status": "results",
+            "origin": "DXB|AUH",
+            "destination": "LHR|LGW|LCY|STN|LTN",
+            "cabin": "business",
+            "from": "2026-10-01",
+            "to": "2026-10-01",
+            "posts": 1,
+            "minResults": 1
+          },
+          "result": {
+            "status": "results",
+            "text": "SYNTHETIC FLIGHT DATA. These are example results.\n\nDubai and Abu Dhabi → London (all airports)\nThu, 1 Oct 2026 · Business · One-way\n\nI found 3 options for you:\n\nA. Dubai International Airport (DXB) → London Heathrow Airport (LHR)\nThu, 1 Oct 2026\nBusiness · Nonstop · USD 1,113.00\nDeparture time unavailable\nArrival time unavailable\n\nB. Dubai International Airport (DXB) → London City Airport (LCY)\nThu, 1 Oct 2026\nBusiness · Nonstop · USD 1,273.00\nDeparture time unavailable\nArrival time unavailable\n\nC. Zayed International Airport (AUH) → London Gatwick Airport (LGW)\nThu, 1 Oct 2026\nBusiness · With a connection · USD 1,193.00\nDeparture time unavailable\nArrival time unavailable\n\nPrices are estimates and may change.\n\nMissing flight times and exact seat counts are not available.\n\nYou can ask me to change the dates, cabin or airport.",
+            "dataMode": "synthetic",
+            "query": {
+              "origin": "DXB|AUH",
+              "destination": "LHR|LGW|LCY|STN|LTN",
+              "dateFrom": "2026-09-30",
+              "dateTo": "2026-10-02",
+              "selectedDate": "2026-10-01",
+              "cabin": "business"
+            },
+            "shortlist": [
+              {
+                "id": "synthetic-DXB-LHR-2026-10-01-0",
+                "origin": "DXB",
+                "destination": "LHR",
+                "date": "2026-10-01",
+                "cabin": "business",
+                "priceUsd": 1113,
+                "direct": true,
+                "reasons": [],
+                "timing": {
+                  "departure": null,
+                  "arrival": null,
+                  "durationMinutes": null,
+                  "flightNumbers": null,
+                  "text": "Departure time unavailable\nArrival time unavailable"
+                },
+                "text": "Dubai International Airport (DXB) → London Heathrow Airport (LHR)\nThu, 1 Oct 2026\nBusiness · Nonstop · USD 1,113.00\nDeparture time unavailable\nArrival time unavailable"
+              },
+              {
+                "id": "synthetic-DXB-LCY-2026-10-01-2",
+                "origin": "DXB",
+                "destination": "LCY",
+                "date": "2026-10-01",
+                "cabin": "business",
+                "priceUsd": 1273,
+                "direct": true,
+                "reasons": [],
+                "timing": {
+                  "departure": null,
+                  "arrival": null,
+                  "durationMinutes": null,
+                  "flightNumbers": null,
+                  "text": "Departure time unavailable\nArrival time unavailable"
+                },
+                "text": "Dubai International Airport (DXB) → London City Airport (LCY)\nThu, 1 Oct 2026\nBusiness · Nonstop · USD 1,273.00\nDeparture time unavailable\nArrival time unavailable"
+              },
+              {
+                "id": "synthetic-AUH-LGW-2026-10-01-1",
+                "origin": "AUH",
+                "destination": "LGW",
+                "date": "2026-10-01",
+                "cabin": "business",
+                "priceUsd": 1193,
+                "direct": false,
+                "reasons": [],
+                "timing": {
+                  "departure": null,
+                  "arrival": null,
+                  "durationMinutes": null,
+                  "flightNumbers": null,
+                  "text": "Departure time unavailable\nArrival time unavailable"
+                },
+                "text": "Zayed International Airport (AUH) → London Gatwick Airport (LGW)\nThu, 1 Oct 2026\nBusiness · With a connection · USD 1,193.00\nDeparture time unavailable\nArrival time unavailable"
+              }
+            ],
+            "cached": false,
+            "totalFound": 9,
+            "matchingCount": 3
+          },
+          "latencyMs": 4273,
+          "grade": {
+            "pass": true,
+            "actual": {
+              "status": "results",
+              "origin": "DXB|AUH",
+              "destination": "LHR|LGW|LCY|STN|LTN",
+              "cabin": "business",
+              "from": "2026-10-01",
+              "to": "2026-10-01",
+              "budget": null,
+              "pending": null,
+              "menuCount": 0,
+              "posts": 1,
+              "resultCount": 3
+            },
+            "checks": [
+              {
+                "name": "status",
+                "expected": "results",
+                "actual": "results",
+                "pass": true
+              },
+              {
+                "name": "origin",
+                "expected": "DXB|AUH",
+                "actual": "DXB|AUH",
+                "pass": true
+              },
+              {
+                "name": "destination",
+                "expected": "LHR|LGW|LCY|STN|LTN",
+                "actual": "LHR|LGW|LCY|STN|LTN",
+                "pass": true
+              },
+              {
+                "name": "cabin",
+                "expected": "business",
+                "actual": "business",
+                "pass": true
+              },
+              {
+                "name": "from",
+                "expected": "2026-10-01",
+                "actual": "2026-10-01",
+                "pass": true
+              },
+              {
+                "name": "to",
+                "expected": "2026-10-01",
+                "actual": "2026-10-01",
+                "pass": true
+              },
+              {
+                "name": "posts",
+                "expected": 1,
+                "actual": 1,
+                "pass": true
+              },
+              {
+                "name": "minResults",
+                "expected": 1,
+                "actual": 3,
+                "pass": true
+              },
+              {
+                "name": "data source is labelled",
+                "pass": true
+              },
+              {
+                "name": "route matches saved preference",
+                "pass": true
+              },
+              {
+                "name": "each result respects route and budget",
+                "pass": true
+              },
+              {
+                "name": "model completed or was not needed",
+                "pass": true
+              }
+            ]
+          }
+        }
+      ],
+      "events": [
+        {
+          "type": "model_usage",
+          "data": {
+            "adapter": "codex-chatgpt-structured-action",
+            "promptVersion": "flight-search-v1.2.0",
+            "model": "gpt-5.6-terra",
+            "effort": "medium",
+            "latencyMs": 4270,
+            "usage": {
+              "input_tokens": 9988,
+              "cached_input_tokens": 0,
+              "cache_write_input_tokens": 0,
+              "output_tokens": 63,
+              "reasoning_output_tokens": 16
+            }
+          }
+        },
+        {
+          "type": "tool_call",
+          "data": {
+            "name": "find_flights",
+            "arguments": {
+              "origin": "Dubai",
+              "destination": "London",
+              "dates": {
+                "mode": "exact",
+                "start": "2026-10-01"
+              }
+            }
+          }
+        }
+      ],
+      "pass": true
+    },
+    {
+      "caseId": "M1",
+      "name": "Origin only → destination menu → select",
+      "model": "gpt-5.6-terra",
+      "repeat": 1,
+      "steps": [
+        {
+          "input": "I want to fly from London.",
+          "expected": {
+            "status": "clarify",
+            "origin": "LHR|LGW|LCY|STN|LTN",
+            "destination": null,
+            "pending": "destination",
+            "menuCount": 4,
+            "posts": 0
+          },
+          "result": {
+            "status": "clarify",
+            "text": "Where would you like to fly?\n\nTry New York, San Francisco Bay Area, Singapore Changi Airport (SIN), Dubai and Abu Dhabi, or type any city or airport."
+          },
+          "latencyMs": 4188,
+          "grade": {
+            "pass": true,
+            "actual": {
+              "status": "clarify",
+              "origin": "LHR|LGW|LCY|STN|LTN",
+              "destination": null,
+              "cabin": "business",
+              "from": null,
+              "to": null,
+              "budget": null,
+              "pending": "destination",
+              "menuCount": 4,
+              "posts": 0,
+              "resultCount": 0
+            },
+            "checks": [
+              {
+                "name": "status",
+                "expected": "clarify",
+                "actual": "clarify",
+                "pass": true
+              },
+              {
+                "name": "origin",
+                "expected": "LHR|LGW|LCY|STN|LTN",
+                "actual": "LHR|LGW|LCY|STN|LTN",
+                "pass": true
+              },
+              {
+                "name": "destination",
+                "expected": null,
+                "actual": null,
+                "pass": true
+              },
+              {
+                "name": "pending",
+                "expected": "destination",
+                "actual": "destination",
+                "pass": true
+              },
+              {
+                "name": "menuCount",
+                "expected": 4,
+                "actual": 4,
+                "pass": true
+              },
+              {
+                "name": "posts",
+                "expected": 0,
+                "actual": 0,
+                "pass": true
+              },
+              {
+                "name": "menu excludes opposite city",
+                "pass": true
+              },
+              {
+                "name": "model completed or was not needed",
+                "pass": true
+              }
+            ]
+          }
+        },
+        {
+          "input": "1",
+          "expected": {
+            "status": "results",
+            "origin": "LHR|LGW|LCY|STN|LTN",
+            "destination": "JFK|EWR|LGA",
+            "cabin": "business",
+            "from": "2026-09-18",
+            "to": "2026-09-25",
+            "posts": 1,
+            "minResults": 1
+          },
+          "result": {
+            "status": "results",
+            "text": "SYNTHETIC FLIGHT DATA. These are example results.\n\nLondon (all airports) → New York (all airports)\nFri, 18 Sept 2026 – Fri, 25 Sept 2026 · Business · One-way\n\nI found 3 options for you:\n\nA. London Heathrow Airport (LHR) → John F. Kennedy International Airport (JFK)\nFri, 18 Sept 2026\nBusiness · Nonstop · USD 1,100.00\nDeparture time unavailable\nArrival time unavailable\n\nB. London Heathrow Airport (LHR) → John F. Kennedy International Airport (JFK)\nSat, 19 Sept 2026\nBusiness · Nonstop · USD 1,113.00\nDeparture time unavailable\nArrival time unavailable\n\nC. London Heathrow Airport (LHR) → John F. Kennedy International Airport (JFK)\nSun, 20 Sept 2026\nBusiness · Nonstop · USD 1,126.00\nDeparture time unavailable\nArrival time unavailable\n\nPrices are estimates and may change.\n\nMissing flight times and exact seat counts are not available.\n\nYou can ask me to change the dates, cabin or airport.",
+            "dataMode": "synthetic",
+            "query": {
+              "origin": "LHR|LGW|LCY|STN|LTN",
+              "destination": "JFK|EWR|LGA",
+              "dateFrom": "2026-09-18",
+              "dateTo": "2026-09-25",
+              "selectedDate": "2026-09-18",
+              "cabin": "business"
+            },
+            "shortlist": [
+              {
+                "id": "synthetic-LHR-JFK-2026-09-18-0",
+                "origin": "LHR",
+                "destination": "JFK",
+                "date": "2026-09-18",
+                "cabin": "business",
+                "priceUsd": 1100,
+                "direct": true,
+                "reasons": [],
+                "timing": {
+                  "departure": null,
+                  "arrival": null,
+                  "durationMinutes": null,
+                  "flightNumbers": null,
+                  "text": "Departure time unavailable\nArrival time unavailable"
+                },
+                "text": "London Heathrow Airport (LHR) → John F. Kennedy International Airport (JFK)\nFri, 18 Sept 2026\nBusiness · Nonstop · USD 1,100.00\nDeparture time unavailable\nArrival time unavailable"
+              },
+              {
+                "id": "synthetic-LHR-JFK-2026-09-19-0",
+                "origin": "LHR",
+                "destination": "JFK",
+                "date": "2026-09-19",
+                "cabin": "business",
+                "priceUsd": 1113,
+                "direct": true,
+                "reasons": [],
+                "timing": {
+                  "departure": null,
+                  "arrival": null,
+                  "durationMinutes": null,
+                  "flightNumbers": null,
+                  "text": "Departure time unavailable\nArrival time unavailable"
+                },
+                "text": "London Heathrow Airport (LHR) → John F. Kennedy International Airport (JFK)\nSat, 19 Sept 2026\nBusiness · Nonstop · USD 1,113.00\nDeparture time unavailable\nArrival time unavailable"
+              },
+              {
+                "id": "synthetic-LHR-JFK-2026-09-20-0",
+                "origin": "LHR",
+                "destination": "JFK",
+                "date": "2026-09-20",
+                "cabin": "business",
+                "priceUsd": 1126,
+                "direct": true,
+                "reasons": [],
+                "timing": {
+                  "departure": null,
+                  "arrival": null,
+                  "durationMinutes": null,
+                  "flightNumbers": null,
+                  "text": "Departure time unavailable\nArrival time unavailable"
+                },
+                "text": "London Heathrow Airport (LHR) → John F. Kennedy International Airport (JFK)\nSun, 20 Sept 2026\nBusiness · Nonstop · USD 1,126.00\nDeparture time unavailable\nArrival time unavailable"
+              }
+            ],
+            "cached": false,
+            "totalFound": 24,
+            "matchingCount": 24
+          },
+          "latencyMs": 4,
+          "grade": {
+            "pass": true,
+            "actual": {
+              "status": "results",
+              "origin": "LHR|LGW|LCY|STN|LTN",
+              "destination": "JFK|EWR|LGA",
+              "cabin": "business",
+              "from": "2026-09-18",
+              "to": "2026-09-25",
+              "budget": null,
+              "pending": null,
+              "menuCount": 0,
+              "posts": 1,
+              "resultCount": 3
+            },
+            "checks": [
+              {
+                "name": "status",
+                "expected": "results",
+                "actual": "results",
+                "pass": true
+              },
+              {
+                "name": "origin",
+                "expected": "LHR|LGW|LCY|STN|LTN",
+                "actual": "LHR|LGW|LCY|STN|LTN",
+                "pass": true
+              },
+              {
+                "name": "destination",
+                "expected": "JFK|EWR|LGA",
+                "actual": "JFK|EWR|LGA",
+                "pass": true
+              },
+              {
+                "name": "cabin",
+                "expected": "business",
+                "actual": "business",
+                "pass": true
+              },
+              {
+                "name": "from",
+                "expected": "2026-09-18",
+                "actual": "2026-09-18",
+                "pass": true
+              },
+              {
+                "name": "to",
+                "expected": "2026-09-25",
+                "actual": "2026-09-25",
+                "pass": true
+              },
+              {
+                "name": "posts",
+                "expected": 1,
+                "actual": 1,
+                "pass": true
+              },
+              {
+                "name": "minResults",
+                "expected": 1,
+                "actual": 3,
+                "pass": true
+              },
+              {
+                "name": "data source is labelled",
+                "pass": true
+              },
+              {
+                "name": "route matches saved preference",
+                "pass": true
+              },
+              {
+                "name": "each result respects route and budget",
+                "pass": true
+              },
+              {
+                "name": "model completed or was not needed",
+                "pass": true
+              }
+            ]
+          }
+        }
+      ],
+      "events": [
+        {
+          "type": "model_usage",
+          "data": {
+            "adapter": "codex-chatgpt-structured-action",
+            "promptVersion": "flight-search-v1.2.0",
+            "model": "gpt-5.6-terra",
+            "effort": "medium",
+            "latencyMs": 4185,
+            "usage": {
+              "input_tokens": 9982,
+              "cached_input_tokens": 5888,
+              "cache_write_input_tokens": 0,
+              "output_tokens": 50,
+              "reasoning_output_tokens": 22
+            }
+          }
+        },
+        {
+          "type": "tool_call",
+          "data": {
+            "name": "find_flights",
+            "arguments": {
+              "origin": "London"
+            }
+          }
+        }
+      ],
+      "pass": true
+    },
+    {
+      "caseId": "M2",
+      "name": "Destination only → origin menu → select",
+      "model": "gpt-5.6-terra",
+      "repeat": 1,
+      "steps": [
+        {
+          "input": "I want to go to New York.",
+          "expected": {
+            "status": "clarify",
+            "origin": null,
+            "destination": "JFK|EWR|LGA",
+            "pending": "origin",
+            "menuCount": 4,
+            "posts": 0
+          },
+          "result": {
+            "status": "clarify",
+            "text": "Sounds good. Where are you flying from?\n\nTry London, San Francisco Bay Area, Singapore Changi Airport (SIN), Dubai and Abu Dhabi, or type any city or airport."
+          },
+          "latencyMs": 4585,
+          "grade": {
+            "pass": true,
+            "actual": {
+              "status": "clarify",
+              "origin": null,
+              "destination": "JFK|EWR|LGA",
+              "cabin": "business",
+              "from": null,
+              "to": null,
+              "budget": null,
+              "pending": "origin",
+              "menuCount": 4,
+              "posts": 0,
+              "resultCount": 0
+            },
+            "checks": [
+              {
+                "name": "status",
+                "expected": "clarify",
+                "actual": "clarify",
+                "pass": true
+              },
+              {
+                "name": "origin",
+                "expected": null,
+                "actual": null,
+                "pass": true
+              },
+              {
+                "name": "destination",
+                "expected": "JFK|EWR|LGA",
+                "actual": "JFK|EWR|LGA",
+                "pass": true
+              },
+              {
+                "name": "pending",
+                "expected": "origin",
+                "actual": "origin",
+                "pass": true
+              },
+              {
+                "name": "menuCount",
+                "expected": 4,
+                "actual": 4,
+                "pass": true
+              },
+              {
+                "name": "posts",
+                "expected": 0,
+                "actual": 0,
+                "pass": true
+              },
+              {
+                "name": "menu excludes opposite city",
+                "pass": true
+              },
+              {
+                "name": "model completed or was not needed",
+                "pass": true
+              }
+            ]
+          }
+        },
+        {
+          "input": "1",
+          "expected": {
+            "status": "results",
+            "origin": "LHR|LGW|LCY|STN|LTN",
+            "destination": "JFK|EWR|LGA",
+            "cabin": "business",
+            "from": "2026-09-18",
+            "to": "2026-09-25",
+            "posts": 1,
+            "minResults": 1
+          },
+          "result": {
+            "status": "results",
+            "text": "SYNTHETIC FLIGHT DATA. These are example results.\n\nLondon (all airports) → New York (all airports)\nFri, 18 Sept 2026 – Fri, 25 Sept 2026 · Business · One-way\n\nI found 3 options for you:\n\nA. London Heathrow Airport (LHR) → John F. Kennedy International Airport (JFK)\nFri, 18 Sept 2026\nBusiness · Nonstop · USD 1,100.00\nDeparture time unavailable\nArrival time unavailable\n\nB. London Heathrow Airport (LHR) → John F. Kennedy International Airport (JFK)\nSat, 19 Sept 2026\nBusiness · Nonstop · USD 1,113.00\nDeparture time unavailable\nArrival time unavailable\n\nC. London Heathrow Airport (LHR) → John F. Kennedy International Airport (JFK)\nSun, 20 Sept 2026\nBusiness · Nonstop · USD 1,126.00\nDeparture time unavailable\nArrival time unavailable\n\nPrices are estimates and may change.\n\nMissing flight times and exact seat counts are not available.\n\nYou can ask me to change the dates, cabin or airport.",
+            "dataMode": "synthetic",
+            "query": {
+              "origin": "LHR|LGW|LCY|STN|LTN",
+              "destination": "JFK|EWR|LGA",
+              "dateFrom": "2026-09-18",
+              "dateTo": "2026-09-25",
+              "selectedDate": "2026-09-18",
+              "cabin": "business"
+            },
+            "shortlist": [
+              {
+                "id": "synthetic-LHR-JFK-2026-09-18-0",
+                "origin": "LHR",
+                "destination": "JFK",
+                "date": "2026-09-18",
+                "cabin": "business",
+                "priceUsd": 1100,
+                "direct": true,
+                "reasons": [],
+                "timing": {
+                  "departure": null,
+                  "arrival": null,
+                  "durationMinutes": null,
+                  "flightNumbers": null,
+                  "text": "Departure time unavailable\nArrival time unavailable"
+                },
+                "text": "London Heathrow Airport (LHR) → John F. Kennedy International Airport (JFK)\nFri, 18 Sept 2026\nBusiness · Nonstop · USD 1,100.00\nDeparture time unavailable\nArrival time unavailable"
+              },
+              {
+                "id": "synthetic-LHR-JFK-2026-09-19-0",
+                "origin": "LHR",
+                "destination": "JFK",
+                "date": "2026-09-19",
+                "cabin": "business",
+                "priceUsd": 1113,
+                "direct": true,
+                "reasons": [],
+                "timing": {
+                  "departure": null,
+                  "arrival": null,
+                  "durationMinutes": null,
+                  "flightNumbers": null,
+                  "text": "Departure time unavailable\nArrival time unavailable"
+                },
+                "text": "London Heathrow Airport (LHR) → John F. Kennedy International Airport (JFK)\nSat, 19 Sept 2026\nBusiness · Nonstop · USD 1,113.00\nDeparture time unavailable\nArrival time unavailable"
+              },
+              {
+                "id": "synthetic-LHR-JFK-2026-09-20-0",
+                "origin": "LHR",
+                "destination": "JFK",
+                "date": "2026-09-20",
+                "cabin": "business",
+                "priceUsd": 1126,
+                "direct": true,
+                "reasons": [],
+                "timing": {
+                  "departure": null,
+                  "arrival": null,
+                  "durationMinutes": null,
+                  "flightNumbers": null,
+                  "text": "Departure time unavailable\nArrival time unavailable"
+                },
+                "text": "London Heathrow Airport (LHR) → John F. Kennedy International Airport (JFK)\nSun, 20 Sept 2026\nBusiness · Nonstop · USD 1,126.00\nDeparture time unavailable\nArrival time unavailable"
+              }
+            ],
+            "cached": false,
+            "totalFound": 24,
+            "matchingCount": 24
+          },
+          "latencyMs": 2,
+          "grade": {
+            "pass": true,
+            "actual": {
+              "status": "results",
+              "origin": "LHR|LGW|LCY|STN|LTN",
+              "destination": "JFK|EWR|LGA",
+              "cabin": "business",
+              "from": "2026-09-18",
+              "to": "2026-09-25",
+              "budget": null,
+              "pending": null,
+              "menuCount": 0,
+              "posts": 1,
+              "resultCount": 3
+            },
+            "checks": [
+              {
+                "name": "status",
+                "expected": "results",
+                "actual": "results",
+                "pass": true
+              },
+              {
+                "name": "origin",
+                "expected": "LHR|LGW|LCY|STN|LTN",
+                "actual": "LHR|LGW|LCY|STN|LTN",
+                "pass": true
+              },
+              {
+                "name": "destination",
+                "expected": "JFK|EWR|LGA",
+                "actual": "JFK|EWR|LGA",
+                "pass": true
+              },
+              {
+                "name": "cabin",
+                "expected": "business",
+                "actual": "business",
+                "pass": true
+              },
+              {
+                "name": "from",
+                "expected": "2026-09-18",
+                "actual": "2026-09-18",
+                "pass": true
+              },
+              {
+                "name": "to",
+                "expected": "2026-09-25",
+                "actual": "2026-09-25",
+                "pass": true
+              },
+              {
+                "name": "posts",
+                "expected": 1,
+                "actual": 1,
+                "pass": true
+              },
+              {
+                "name": "minResults",
+                "expected": 1,
+                "actual": 3,
+                "pass": true
+              },
+              {
+                "name": "data source is labelled",
+                "pass": true
+              },
+              {
+                "name": "route matches saved preference",
+                "pass": true
+              },
+              {
+                "name": "each result respects route and budget",
+                "pass": true
+              },
+              {
+                "name": "model completed or was not needed",
+                "pass": true
+              }
+            ]
+          }
+        }
+      ],
+      "events": [
+        {
+          "type": "model_usage",
+          "data": {
+            "adapter": "codex-chatgpt-structured-action",
+            "promptVersion": "flight-search-v1.2.0",
+            "model": "gpt-5.6-terra",
+            "effort": "medium",
+            "latencyMs": 4584,
+            "usage": {
+              "input_tokens": 9979,
+              "cached_input_tokens": 5888,
+              "cache_write_input_tokens": 0,
+              "output_tokens": 49,
+              "reasoning_output_tokens": 20
+            }
+          }
+        },
+        {
+          "type": "tool_call",
+          "data": {
+            "name": "find_flights",
+            "arguments": {
+              "destination": "New York"
+            }
+          }
+        }
+      ],
+      "pass": true
+    },
+    {
+      "caseId": "M3",
+      "name": "Both locations, no date → use default",
+      "model": "gpt-5.6-terra",
+      "repeat": 1,
+      "steps": [
+        {
+          "input": "London to New York please.",
+          "expected": {
+            "status": "results",
+            "origin": "LHR|LGW|LCY|STN|LTN",
+            "destination": "JFK|EWR|LGA",
+            "cabin": "business",
+            "from": "2026-09-18",
+            "to": "2026-09-25",
+            "posts": 1,
+            "minResults": 1
+          },
+          "result": {
+            "status": "results",
+            "text": "SYNTHETIC FLIGHT DATA. These are example results.\n\nLondon (all airports) → New York (all airports)\nFri, 18 Sept 2026 – Fri, 25 Sept 2026 · Business · One-way\n\nI found 3 options for you:\n\nA. London Heathrow Airport (LHR) → John F. Kennedy International Airport (JFK)\nFri, 18 Sept 2026\nBusiness · Nonstop · USD 1,100.00\nDeparture time unavailable\nArrival time unavailable\n\nB. London Heathrow Airport (LHR) → John F. Kennedy International Airport (JFK)\nSat, 19 Sept 2026\nBusiness · Nonstop · USD 1,113.00\nDeparture time unavailable\nArrival time unavailable\n\nC. London Heathrow Airport (LHR) → John F. Kennedy International Airport (JFK)\nSun, 20 Sept 2026\nBusiness · Nonstop · USD 1,126.00\nDeparture time unavailable\nArrival time unavailable\n\nPrices are estimates and may change.\n\nMissing flight times and exact seat counts are not available.\n\nYou can ask me to change the dates, cabin or airport.",
+            "dataMode": "synthetic",
+            "query": {
+              "origin": "LHR|LGW|LCY|STN|LTN",
+              "destination": "JFK|EWR|LGA",
+              "dateFrom": "2026-09-18",
+              "dateTo": "2026-09-25",
+              "selectedDate": "2026-09-18",
+              "cabin": "business"
+            },
+            "shortlist": [
+              {
+                "id": "synthetic-LHR-JFK-2026-09-18-0",
+                "origin": "LHR",
+                "destination": "JFK",
+                "date": "2026-09-18",
+                "cabin": "business",
+                "priceUsd": 1100,
+                "direct": true,
+                "reasons": [],
+                "timing": {
+                  "departure": null,
+                  "arrival": null,
+                  "durationMinutes": null,
+                  "flightNumbers": null,
+                  "text": "Departure time unavailable\nArrival time unavailable"
+                },
+                "text": "London Heathrow Airport (LHR) → John F. Kennedy International Airport (JFK)\nFri, 18 Sept 2026\nBusiness · Nonstop · USD 1,100.00\nDeparture time unavailable\nArrival time unavailable"
+              },
+              {
+                "id": "synthetic-LHR-JFK-2026-09-19-0",
+                "origin": "LHR",
+                "destination": "JFK",
+                "date": "2026-09-19",
+                "cabin": "business",
+                "priceUsd": 1113,
+                "direct": true,
+                "reasons": [],
+                "timing": {
+                  "departure": null,
+                  "arrival": null,
+                  "durationMinutes": null,
+                  "flightNumbers": null,
+                  "text": "Departure time unavailable\nArrival time unavailable"
+                },
+                "text": "London Heathrow Airport (LHR) → John F. Kennedy International Airport (JFK)\nSat, 19 Sept 2026\nBusiness · Nonstop · USD 1,113.00\nDeparture time unavailable\nArrival time unavailable"
+              },
+              {
+                "id": "synthetic-LHR-JFK-2026-09-20-0",
+                "origin": "LHR",
+                "destination": "JFK",
+                "date": "2026-09-20",
+                "cabin": "business",
+                "priceUsd": 1126,
+                "direct": true,
+                "reasons": [],
+                "timing": {
+                  "departure": null,
+                  "arrival": null,
+                  "durationMinutes": null,
+                  "flightNumbers": null,
+                  "text": "Departure time unavailable\nArrival time unavailable"
+                },
+                "text": "London Heathrow Airport (LHR) → John F. Kennedy International Airport (JFK)\nSun, 20 Sept 2026\nBusiness · Nonstop · USD 1,126.00\nDeparture time unavailable\nArrival time unavailable"
+              }
+            ],
+            "cached": false,
+            "totalFound": 24,
+            "matchingCount": 24
+          },
+          "latencyMs": 4527,
+          "grade": {
+            "pass": true,
+            "actual": {
+              "status": "results",
+              "origin": "LHR|LGW|LCY|STN|LTN",
+              "destination": "JFK|EWR|LGA",
+              "cabin": "business",
+              "from": "2026-09-18",
+              "to": "2026-09-25",
+              "budget": null,
+              "pending": null,
+              "menuCount": 0,
+              "posts": 1,
+              "resultCount": 3
+            },
+            "checks": [
+              {
+                "name": "status",
+                "expected": "results",
+                "actual": "results",
+                "pass": true
+              },
+              {
+                "name": "origin",
+                "expected": "LHR|LGW|LCY|STN|LTN",
+                "actual": "LHR|LGW|LCY|STN|LTN",
+                "pass": true
+              },
+              {
+                "name": "destination",
+                "expected": "JFK|EWR|LGA",
+                "actual": "JFK|EWR|LGA",
+                "pass": true
+              },
+              {
+                "name": "cabin",
+                "expected": "business",
+                "actual": "business",
+                "pass": true
+              },
+              {
+                "name": "from",
+                "expected": "2026-09-18",
+                "actual": "2026-09-18",
+                "pass": true
+              },
+              {
+                "name": "to",
+                "expected": "2026-09-25",
+                "actual": "2026-09-25",
+                "pass": true
+              },
+              {
+                "name": "posts",
+                "expected": 1,
+                "actual": 1,
+                "pass": true
+              },
+              {
+                "name": "minResults",
+                "expected": 1,
+                "actual": 3,
+                "pass": true
+              },
+              {
+                "name": "data source is labelled",
+                "pass": true
+              },
+              {
+                "name": "route matches saved preference",
+                "pass": true
+              },
+              {
+                "name": "each result respects route and budget",
+                "pass": true
+              },
+              {
+                "name": "model completed or was not needed",
+                "pass": true
+              }
+            ]
+          }
+        }
+      ],
+      "events": [
+        {
+          "type": "model_usage",
+          "data": {
+            "adapter": "codex-chatgpt-structured-action",
+            "promptVersion": "flight-search-v1.2.0",
+            "model": "gpt-5.6-terra",
+            "effort": "medium",
+            "latencyMs": 4523,
+            "usage": {
+              "input_tokens": 9981,
+              "cached_input_tokens": 5888,
+              "cache_write_input_tokens": 0,
+              "output_tokens": 52,
+              "reasoning_output_tokens": 19
+            }
+          }
+        },
+        {
+          "type": "tool_call",
+          "data": {
+            "name": "find_flights",
+            "arguments": {
+              "origin": "London",
+              "destination": "New York"
+            }
+          }
+        }
+      ],
+      "pass": true
+    },
+    {
+      "caseId": "D1",
+      "name": "Next week → next calendar Monday–Sunday",
+      "model": "gpt-5.6-terra",
+      "repeat": 1,
+      "steps": [
+        {
+          "input": "London to New York sometime next week.",
+          "expected": {
+            "status": "results",
+            "origin": "LHR|LGW|LCY|STN|LTN",
+            "destination": "JFK|EWR|LGA",
+            "cabin": "business",
+            "from": "2026-09-21",
+            "to": "2026-09-27",
+            "posts": 1,
+            "minResults": 1
+          },
+          "result": {
+            "status": "results",
+            "text": "SYNTHETIC FLIGHT DATA. These are example results.\n\nLondon (all airports) → New York (all airports)\nMon, 21 Sept 2026 – Sun, 27 Sept 2026 · Business · One-way\n\nI found 3 options for you:\n\nA. London Heathrow Airport (LHR) → John F. Kennedy International Airport (JFK)\nMon, 21 Sept 2026\nBusiness · Nonstop · USD 1,100.00\nDeparture time unavailable\nArrival time unavailable\n\nB. London Heathrow Airport (LHR) → John F. Kennedy International Airport (JFK)\nTue, 22 Sept 2026\nBusiness · Nonstop · USD 1,113.00\nDeparture time unavailable\nArrival time unavailable\n\nC. London Heathrow Airport (LHR) → John F. Kennedy International Airport (JFK)\nWed, 23 Sept 2026\nBusiness · Nonstop · USD 1,126.00\nDeparture time unavailable\nArrival time unavailable\n\nPrices are estimates and may change.\n\nMissing flight times and exact seat counts are not available.\n\nYou can ask me to change the dates, cabin or airport.",
+            "dataMode": "synthetic",
+            "query": {
+              "origin": "LHR|LGW|LCY|STN|LTN",
+              "destination": "JFK|EWR|LGA",
+              "dateFrom": "2026-09-21",
+              "dateTo": "2026-09-27",
+              "selectedDate": "2026-09-24",
+              "cabin": "business"
+            },
+            "shortlist": [
+              {
+                "id": "synthetic-LHR-JFK-2026-09-21-0",
+                "origin": "LHR",
+                "destination": "JFK",
+                "date": "2026-09-21",
+                "cabin": "business",
+                "priceUsd": 1100,
+                "direct": true,
+                "reasons": [],
+                "timing": {
+                  "departure": null,
+                  "arrival": null,
+                  "durationMinutes": null,
+                  "flightNumbers": null,
+                  "text": "Departure time unavailable\nArrival time unavailable"
+                },
+                "text": "London Heathrow Airport (LHR) → John F. Kennedy International Airport (JFK)\nMon, 21 Sept 2026\nBusiness · Nonstop · USD 1,100.00\nDeparture time unavailable\nArrival time unavailable"
+              },
+              {
+                "id": "synthetic-LHR-JFK-2026-09-22-0",
+                "origin": "LHR",
+                "destination": "JFK",
+                "date": "2026-09-22",
+                "cabin": "business",
+                "priceUsd": 1113,
+                "direct": true,
+                "reasons": [],
+                "timing": {
+                  "departure": null,
+                  "arrival": null,
+                  "durationMinutes": null,
+                  "flightNumbers": null,
+                  "text": "Departure time unavailable\nArrival time unavailable"
+                },
+                "text": "London Heathrow Airport (LHR) → John F. Kennedy International Airport (JFK)\nTue, 22 Sept 2026\nBusiness · Nonstop · USD 1,113.00\nDeparture time unavailable\nArrival time unavailable"
+              },
+              {
+                "id": "synthetic-LHR-JFK-2026-09-23-0",
+                "origin": "LHR",
+                "destination": "JFK",
+                "date": "2026-09-23",
+                "cabin": "business",
+                "priceUsd": 1126,
+                "direct": true,
+                "reasons": [],
+                "timing": {
+                  "departure": null,
+                  "arrival": null,
+                  "durationMinutes": null,
+                  "flightNumbers": null,
+                  "text": "Departure time unavailable\nArrival time unavailable"
+                },
+                "text": "London Heathrow Airport (LHR) → John F. Kennedy International Airport (JFK)\nWed, 23 Sept 2026\nBusiness · Nonstop · USD 1,126.00\nDeparture time unavailable\nArrival time unavailable"
+              }
+            ],
+            "cached": false,
+            "totalFound": 21,
+            "matchingCount": 21
+          },
+          "latencyMs": 4625,
+          "grade": {
+            "pass": true,
+            "actual": {
+              "status": "results",
+              "origin": "LHR|LGW|LCY|STN|LTN",
+              "destination": "JFK|EWR|LGA",
+              "cabin": "business",
+              "from": "2026-09-21",
+              "to": "2026-09-27",
+              "budget": null,
+              "pending": null,
+              "menuCount": 0,
+              "posts": 1,
+              "resultCount": 3
+            },
+            "checks": [
+              {
+                "name": "status",
+                "expected": "results",
+                "actual": "results",
+                "pass": true
+              },
+              {
+                "name": "origin",
+                "expected": "LHR|LGW|LCY|STN|LTN",
+                "actual": "LHR|LGW|LCY|STN|LTN",
+                "pass": true
+              },
+              {
+                "name": "destination",
+                "expected": "JFK|EWR|LGA",
+                "actual": "JFK|EWR|LGA",
+                "pass": true
+              },
+              {
+                "name": "cabin",
+                "expected": "business",
+                "actual": "business",
+                "pass": true
+              },
+              {
+                "name": "from",
+                "expected": "2026-09-21",
+                "actual": "2026-09-21",
+                "pass": true
+              },
+              {
+                "name": "to",
+                "expected": "2026-09-27",
+                "actual": "2026-09-27",
+                "pass": true
+              },
+              {
+                "name": "posts",
+                "expected": 1,
+                "actual": 1,
+                "pass": true
+              },
+              {
+                "name": "minResults",
+                "expected": 1,
+                "actual": 3,
+                "pass": true
+              },
+              {
+                "name": "data source is labelled",
+                "pass": true
+              },
+              {
+                "name": "route matches saved preference",
+                "pass": true
+              },
+              {
+                "name": "each result respects route and budget",
+                "pass": true
+              },
+              {
+                "name": "model completed or was not needed",
+                "pass": true
+              }
+            ]
+          }
+        }
+      ],
+      "events": [
+        {
+          "type": "model_usage",
+          "data": {
+            "adapter": "codex-chatgpt-structured-action",
+            "promptVersion": "flight-search-v1.2.0",
+            "model": "gpt-5.6-terra",
+            "effort": "medium",
+            "latencyMs": 4621,
+            "usage": {
+              "input_tokens": 9979,
+              "cached_input_tokens": 5888,
+              "cache_write_input_tokens": 0,
+              "output_tokens": 60,
+              "reasoning_output_tokens": 20
+            }
+          }
+        },
+        {
+          "type": "tool_call",
+          "data": {
+            "name": "find_flights",
+            "arguments": {
+              "origin": "London",
+              "destination": "New York",
+              "dates": {
+                "mode": "nextWeek"
+              }
+            }
+          }
+        }
+      ],
+      "pass": true
+    },
+    {
+      "caseId": "F1",
+      "name": "Airport and cabin refinements retain date and budget",
+      "model": "gpt-5.6-terra",
+      "repeat": 1,
+      "steps": [
+        {
+          "input": "London to New York on October 1, 2026, economy, under USD 600.",
+          "expected": {
+            "status": "results",
+            "origin": "LHR|LGW|LCY|STN|LTN",
+            "destination": "JFK|EWR|LGA",
+            "cabin": "economy",
+            "from": "2026-10-01",
+            "to": "2026-10-01",
+            "posts": 1,
+            "minResults": 1,
+            "budget": 600
+          },
+          "result": {
+            "status": "results",
+            "text": "SYNTHETIC FLIGHT DATA. These are example results.\n\nLondon (all airports) → New York (all airports)\nThu, 1 Oct 2026 · Economy · One-way · Up to USD 600\n\nI found 3 options for you:\n\nA. London Heathrow Airport (LHR) → John F. Kennedy International Airport (JFK)\nThu, 1 Oct 2026\nEconomy · Nonstop · USD 433.00\nDeparture time unavailable\nArrival time unavailable\n\nB. London City Airport (LCY) → LaGuardia Airport (LGA)\nThu, 1 Oct 2026\nEconomy · Nonstop · USD 593.00\nDeparture time unavailable\nArrival time unavailable\n\nC. London Gatwick Airport (LGW) → Newark Liberty International Airport (EWR)\nThu, 1 Oct 2026\nEconomy · With a connection · USD 513.00\nDeparture time unavailable\nArrival time unavailable\n\nPrices are estimates and may change.\n\nMissing flight times and exact seat counts are not available.\n\nYou can ask me to change the dates, cabin or airport.",
+            "dataMode": "synthetic",
+            "query": {
+              "origin": "LHR|LGW|LCY|STN|LTN",
+              "destination": "JFK|EWR|LGA",
+              "dateFrom": "2026-09-30",
+              "dateTo": "2026-10-02",
+              "selectedDate": "2026-10-01",
+              "cabin": "economy"
+            },
+            "shortlist": [
+              {
+                "id": "synthetic-LHR-JFK-2026-10-01-0",
+                "origin": "LHR",
+                "destination": "JFK",
+                "date": "2026-10-01",
+                "cabin": "economy",
+                "priceUsd": 433,
+                "direct": true,
+                "reasons": [],
+                "timing": {
+                  "departure": null,
+                  "arrival": null,
+                  "durationMinutes": null,
+                  "flightNumbers": null,
+                  "text": "Departure time unavailable\nArrival time unavailable"
+                },
+                "text": "London Heathrow Airport (LHR) → John F. Kennedy International Airport (JFK)\nThu, 1 Oct 2026\nEconomy · Nonstop · USD 433.00\nDeparture time unavailable\nArrival time unavailable"
+              },
+              {
+                "id": "synthetic-LCY-LGA-2026-10-01-2",
+                "origin": "LCY",
+                "destination": "LGA",
+                "date": "2026-10-01",
+                "cabin": "economy",
+                "priceUsd": 593,
+                "direct": true,
+                "reasons": [],
+                "timing": {
+                  "departure": null,
+                  "arrival": null,
+                  "durationMinutes": null,
+                  "flightNumbers": null,
+                  "text": "Departure time unavailable\nArrival time unavailable"
+                },
+                "text": "London City Airport (LCY) → LaGuardia Airport (LGA)\nThu, 1 Oct 2026\nEconomy · Nonstop · USD 593.00\nDeparture time unavailable\nArrival time unavailable"
+              },
+              {
+                "id": "synthetic-LGW-EWR-2026-10-01-1",
+                "origin": "LGW",
+                "destination": "EWR",
+                "date": "2026-10-01",
+                "cabin": "economy",
+                "priceUsd": 513,
+                "direct": false,
+                "reasons": [],
+                "timing": {
+                  "departure": null,
+                  "arrival": null,
+                  "durationMinutes": null,
+                  "flightNumbers": null,
+                  "text": "Departure time unavailable\nArrival time unavailable"
+                },
+                "text": "London Gatwick Airport (LGW) → Newark Liberty International Airport (EWR)\nThu, 1 Oct 2026\nEconomy · With a connection · USD 513.00\nDeparture time unavailable\nArrival time unavailable"
+              }
+            ],
+            "cached": false,
+            "totalFound": 9,
+            "matchingCount": 3
+          },
+          "latencyMs": 5796,
+          "grade": {
+            "pass": true,
+            "actual": {
+              "status": "results",
+              "origin": "LHR|LGW|LCY|STN|LTN",
+              "destination": "JFK|EWR|LGA",
+              "cabin": "economy",
+              "from": "2026-10-01",
+              "to": "2026-10-01",
+              "budget": 600,
+              "pending": null,
+              "menuCount": 0,
+              "posts": 1,
+              "resultCount": 3
+            },
+            "checks": [
+              {
+                "name": "status",
+                "expected": "results",
+                "actual": "results",
+                "pass": true
+              },
+              {
+                "name": "origin",
+                "expected": "LHR|LGW|LCY|STN|LTN",
+                "actual": "LHR|LGW|LCY|STN|LTN",
+                "pass": true
+              },
+              {
+                "name": "destination",
+                "expected": "JFK|EWR|LGA",
+                "actual": "JFK|EWR|LGA",
+                "pass": true
+              },
+              {
+                "name": "cabin",
+                "expected": "economy",
+                "actual": "economy",
+                "pass": true
+              },
+              {
+                "name": "from",
+                "expected": "2026-10-01",
+                "actual": "2026-10-01",
+                "pass": true
+              },
+              {
+                "name": "to",
+                "expected": "2026-10-01",
+                "actual": "2026-10-01",
+                "pass": true
+              },
+              {
+                "name": "posts",
+                "expected": 1,
+                "actual": 1,
+                "pass": true
+              },
+              {
+                "name": "minResults",
+                "expected": 1,
+                "actual": 3,
+                "pass": true
+              },
+              {
+                "name": "budget",
+                "expected": 600,
+                "actual": 600,
+                "pass": true
+              },
+              {
+                "name": "data source is labelled",
+                "pass": true
+              },
+              {
+                "name": "route matches saved preference",
+                "pass": true
+              },
+              {
+                "name": "each result respects route and budget",
+                "pass": true
+              },
+              {
+                "name": "model completed or was not needed",
+                "pass": true
+              }
+            ]
+          }
+        },
+        {
+          "input": "Heathrow only, please.",
+          "expected": {
+            "status": "results",
+            "origin": "LHR",
+            "destination": "JFK|EWR|LGA",
+            "cabin": "economy",
+            "from": "2026-10-01",
+            "to": "2026-10-01",
+            "posts": 2,
+            "minResults": 1,
+            "budget": 600
+          },
+          "result": {
+            "status": "results",
+            "text": "SYNTHETIC FLIGHT DATA. These are example results.\n\nLondon Heathrow Airport (LHR) → New York (all airports)\nThu, 1 Oct 2026 · Economy · One-way · Up to USD 600\n\nI found 3 options for you:\n\nA. London Heathrow Airport (LHR) → John F. Kennedy International Airport (JFK)\nThu, 1 Oct 2026\nEconomy · Nonstop · USD 433.00\nDeparture time unavailable\nArrival time unavailable\n\nB. London Heathrow Airport (LHR) → LaGuardia Airport (LGA)\nThu, 1 Oct 2026\nEconomy · Nonstop · USD 593.00\nDeparture time unavailable\nArrival time unavailable\n\nC. London Heathrow Airport (LHR) → Newark Liberty International Airport (EWR)\nThu, 1 Oct 2026\nEconomy · With a connection · USD 513.00\nDeparture time unavailable\nArrival time unavailable\n\nPrices are estimates and may change.\n\nMissing flight times and exact seat counts are not available.\n\nYou can ask me to change the dates, cabin or airport.",
+            "dataMode": "synthetic",
+            "query": {
+              "origin": "LHR",
+              "destination": "JFK|EWR|LGA",
+              "dateFrom": "2026-09-30",
+              "dateTo": "2026-10-02",
+              "selectedDate": "2026-10-01",
+              "cabin": "economy"
+            },
+            "shortlist": [
+              {
+                "id": "synthetic-LHR-JFK-2026-10-01-0",
+                "origin": "LHR",
+                "destination": "JFK",
+                "date": "2026-10-01",
+                "cabin": "economy",
+                "priceUsd": 433,
+                "direct": true,
+                "reasons": [],
+                "timing": {
+                  "departure": null,
+                  "arrival": null,
+                  "durationMinutes": null,
+                  "flightNumbers": null,
+                  "text": "Departure time unavailable\nArrival time unavailable"
+                },
+                "text": "London Heathrow Airport (LHR) → John F. Kennedy International Airport (JFK)\nThu, 1 Oct 2026\nEconomy · Nonstop · USD 433.00\nDeparture time unavailable\nArrival time unavailable"
+              },
+              {
+                "id": "synthetic-LHR-LGA-2026-10-01-2",
+                "origin": "LHR",
+                "destination": "LGA",
+                "date": "2026-10-01",
+                "cabin": "economy",
+                "priceUsd": 593,
+                "direct": true,
+                "reasons": [],
+                "timing": {
+                  "departure": null,
+                  "arrival": null,
+                  "durationMinutes": null,
+                  "flightNumbers": null,
+                  "text": "Departure time unavailable\nArrival time unavailable"
+                },
+                "text": "London Heathrow Airport (LHR) → LaGuardia Airport (LGA)\nThu, 1 Oct 2026\nEconomy · Nonstop · USD 593.00\nDeparture time unavailable\nArrival time unavailable"
+              },
+              {
+                "id": "synthetic-LHR-EWR-2026-10-01-1",
+                "origin": "LHR",
+                "destination": "EWR",
+                "date": "2026-10-01",
+                "cabin": "economy",
+                "priceUsd": 513,
+                "direct": false,
+                "reasons": [],
+                "timing": {
+                  "departure": null,
+                  "arrival": null,
+                  "durationMinutes": null,
+                  "flightNumbers": null,
+                  "text": "Departure time unavailable\nArrival time unavailable"
+                },
+                "text": "London Heathrow Airport (LHR) → Newark Liberty International Airport (EWR)\nThu, 1 Oct 2026\nEconomy · With a connection · USD 513.00\nDeparture time unavailable\nArrival time unavailable"
+              }
+            ],
+            "cached": false,
+            "totalFound": 9,
+            "matchingCount": 3
+          },
+          "latencyMs": 5380,
+          "grade": {
+            "pass": true,
+            "actual": {
+              "status": "results",
+              "origin": "LHR",
+              "destination": "JFK|EWR|LGA",
+              "cabin": "economy",
+              "from": "2026-10-01",
+              "to": "2026-10-01",
+              "budget": 600,
+              "pending": null,
+              "menuCount": 0,
+              "posts": 2,
+              "resultCount": 3
+            },
+            "checks": [
+              {
+                "name": "status",
+                "expected": "results",
+                "actual": "results",
+                "pass": true
+              },
+              {
+                "name": "origin",
+                "expected": "LHR",
+                "actual": "LHR",
+                "pass": true
+              },
+              {
+                "name": "destination",
+                "expected": "JFK|EWR|LGA",
+                "actual": "JFK|EWR|LGA",
+                "pass": true
+              },
+              {
+                "name": "cabin",
+                "expected": "economy",
+                "actual": "economy",
+                "pass": true
+              },
+              {
+                "name": "from",
+                "expected": "2026-10-01",
+                "actual": "2026-10-01",
+                "pass": true
+              },
+              {
+                "name": "to",
+                "expected": "2026-10-01",
+                "actual": "2026-10-01",
+                "pass": true
+              },
+              {
+                "name": "posts",
+                "expected": 2,
+                "actual": 2,
+                "pass": true
+              },
+              {
+                "name": "minResults",
+                "expected": 1,
+                "actual": 3,
+                "pass": true
+              },
+              {
+                "name": "budget",
+                "expected": 600,
+                "actual": 600,
+                "pass": true
+              },
+              {
+                "name": "data source is labelled",
+                "pass": true
+              },
+              {
+                "name": "route matches saved preference",
+                "pass": true
+              },
+              {
+                "name": "each result respects route and budget",
+                "pass": true
+              },
+              {
+                "name": "model completed or was not needed",
+                "pass": true
+              }
+            ]
+          }
+        },
+        {
+          "input": "Business instead, but keep the budget.",
+          "expected": {
+            "status": "results",
+            "origin": "LHR",
+            "destination": "JFK|EWR|LGA",
+            "cabin": "business",
+            "from": "2026-10-01",
+            "to": "2026-10-01",
+            "posts": 3,
+            "minResults": 0,
+            "budget": 600,
+            "resultCount": 0
+          },
+          "result": {
+            "status": "results",
+            "text": "SYNTHETIC FLIGHT DATA. These are example results.\n\nLondon Heathrow Airport (LHR) → New York (all airports)\nThu, 1 Oct 2026 · Business · One-way · Up to USD 600\n\nNo flights match those preferences in these results. Would you like to try different dates?\n\nMissing flight times and exact seat counts are not available.",
+            "dataMode": "synthetic",
+            "query": {
+              "origin": "LHR",
+              "destination": "JFK|EWR|LGA",
+              "dateFrom": "2026-09-30",
+              "dateTo": "2026-10-02",
+              "selectedDate": "2026-10-01",
+              "cabin": "business"
+            },
+            "shortlist": [],
+            "cached": false,
+            "totalFound": 9,
+            "matchingCount": 0
+          },
+          "latencyMs": 4374,
+          "grade": {
+            "pass": true,
+            "actual": {
+              "status": "results",
+              "origin": "LHR",
+              "destination": "JFK|EWR|LGA",
+              "cabin": "business",
+              "from": "2026-10-01",
+              "to": "2026-10-01",
+              "budget": 600,
+              "pending": null,
+              "menuCount": 0,
+              "posts": 3,
+              "resultCount": 0
+            },
+            "checks": [
+              {
+                "name": "status",
+                "expected": "results",
+                "actual": "results",
+                "pass": true
+              },
+              {
+                "name": "origin",
+                "expected": "LHR",
+                "actual": "LHR",
+                "pass": true
+              },
+              {
+                "name": "destination",
+                "expected": "JFK|EWR|LGA",
+                "actual": "JFK|EWR|LGA",
+                "pass": true
+              },
+              {
+                "name": "cabin",
+                "expected": "business",
+                "actual": "business",
+                "pass": true
+              },
+              {
+                "name": "from",
+                "expected": "2026-10-01",
+                "actual": "2026-10-01",
+                "pass": true
+              },
+              {
+                "name": "to",
+                "expected": "2026-10-01",
+                "actual": "2026-10-01",
+                "pass": true
+              },
+              {
+                "name": "posts",
+                "expected": 3,
+                "actual": 3,
+                "pass": true
+              },
+              {
+                "name": "minResults",
+                "expected": 0,
+                "actual": 0,
+                "pass": true
+              },
+              {
+                "name": "budget",
+                "expected": 600,
+                "actual": 600,
+                "pass": true
+              },
+              {
+                "name": "resultCount",
+                "expected": 0,
+                "actual": 0,
+                "pass": true
+              },
+              {
+                "name": "data source is labelled",
+                "pass": true
+              },
+              {
+                "name": "route matches saved preference",
+                "pass": true
+              },
+              {
+                "name": "each result respects route and budget",
+                "pass": true
+              },
+              {
+                "name": "model completed or was not needed",
+                "pass": true
+              }
+            ]
+          }
+        }
+      ],
+      "events": [
+        {
+          "type": "model_usage",
+          "data": {
+            "adapter": "codex-chatgpt-structured-action",
+            "promptVersion": "flight-search-v1.2.0",
+            "model": "gpt-5.6-terra",
+            "effort": "medium",
+            "latencyMs": 5793,
+            "usage": {
+              "input_tokens": 9993,
+              "cached_input_tokens": 5888,
+              "cache_write_input_tokens": 0,
+              "output_tokens": 96,
+              "reasoning_output_tokens": 35
+            }
+          }
+        },
+        {
+          "type": "tool_call",
+          "data": {
+            "name": "find_flights",
+            "arguments": {
+              "origin": "London",
+              "destination": "New York",
+              "dates": {
+                "mode": "exact",
+                "start": "2026-10-01"
+              },
+              "cabin": "economy",
+              "maxPriceUsd": 600
+            }
+          }
+        },
+        {
+          "type": "model_usage",
+          "data": {
+            "adapter": "codex-chatgpt-structured-action",
+            "promptVersion": "flight-search-v1.2.0",
+            "model": "gpt-5.6-terra",
+            "effort": "medium",
+            "latencyMs": 5375,
+            "usage": {
+              "input_tokens": 11286,
+              "cached_input_tokens": 5888,
+              "cache_write_input_tokens": 0,
+              "output_tokens": 56,
+              "reasoning_output_tokens": 26
+            }
+          }
+        },
+        {
+          "type": "tool_call",
+          "data": {
+            "name": "find_flights",
+            "arguments": {
+              "origin": "Heathrow"
+            }
+          }
+        },
+        {
+          "type": "model_usage",
+          "data": {
+            "adapter": "codex-chatgpt-structured-action",
+            "promptVersion": "flight-search-v1.2.0",
+            "model": "gpt-5.6-terra",
+            "effort": "medium",
+            "latencyMs": 4370,
+            "usage": {
+              "input_tokens": 12446,
+              "cached_input_tokens": 5888,
+              "cache_write_input_tokens": 0,
+              "output_tokens": 57,
+              "reasoning_output_tokens": 28
+            }
+          }
+        },
+        {
+          "type": "tool_call",
+          "data": {
+            "name": "find_flights",
+            "arguments": {
+              "cabin": "business"
+            }
+          }
+        }
+      ],
+      "pass": true
+    },
+    {
+      "caseId": "U1",
+      "name": "Round trip must not silently become one-way",
+      "model": "gpt-5.6-terra",
+      "repeat": 1,
+      "steps": [
+        {
+          "input": "London to New York October 1, returning October 8, 2026.",
+          "expected": {
+            "status": "clarify",
+            "posts": 0,
+            "mentions": "round|return|one.way"
+          },
+          "result": {
+            "status": "clarify",
+            "text": "I can search one-way flights only. Would you like London to New York on October 1, or New York to London on October 8?"
+          },
+          "latencyMs": 4883,
+          "grade": {
+            "pass": true,
+            "actual": {
+              "status": "clarify",
+              "origin": null,
+              "destination": null,
+              "cabin": "business",
+              "from": null,
+              "to": null,
+              "budget": null,
+              "pending": null,
+              "menuCount": 0,
+              "posts": 0,
+              "resultCount": 0
+            },
+            "checks": [
+              {
+                "name": "status",
+                "expected": "clarify",
+                "actual": "clarify",
+                "pass": true
+              },
+              {
+                "name": "posts",
+                "expected": 0,
+                "actual": 0,
+                "pass": true
+              },
+              {
+                "name": "mentions",
+                "expected": "round|return|one.way",
+                "actual": "I can search one-way flights only. Would you like London to New York on October 1, or New York to London on October 8?",
+                "pass": true
+              },
+              {
+                "name": "model completed or was not needed",
+                "pass": true
+              }
+            ]
+          }
+        }
+      ],
+      "events": [
+        {
+          "type": "model_usage",
+          "data": {
+            "adapter": "codex-chatgpt-structured-action",
+            "promptVersion": "flight-search-v1.2.0",
+            "model": "gpt-5.6-terra",
+            "effort": "medium",
+            "latencyMs": 4881,
+            "usage": {
+              "input_tokens": 9990,
+              "cached_input_tokens": 0,
+              "cache_write_input_tokens": 0,
+              "output_tokens": 76,
+              "reasoning_output_tokens": 19
+            }
+          }
+        },
+        {
+          "type": "tool_call",
+          "data": {
+            "name": "clarify_request",
+            "arguments": {
+              "question": "I can search one-way flights only. Would you like London to New York on October 1, or New York to London on October 8?"
+            }
+          }
+        }
+      ],
+      "pass": true
+    },
+    {
+      "caseId": "U2",
+      "name": "Two travelers must not silently become one",
+      "model": "gpt-5.6-terra",
+      "repeat": 1,
+      "steps": [
+        {
+          "input": "London to New York October 1, 2026, for two adults.",
+          "expected": {
+            "status": "clarify",
+            "posts": 0,
+            "mentions": "traveler|traveller|passenger|adult|one person|single"
+          },
+          "result": {
+            "status": "clarify",
+            "text": "I can search one-way flights for one traveler only. Would you like to search London to New York on October 1, 2026 for one traveler?"
+          },
+          "latencyMs": 5981,
+          "grade": {
+            "pass": true,
+            "actual": {
+              "status": "clarify",
+              "origin": null,
+              "destination": null,
+              "cabin": "business",
+              "from": null,
+              "to": null,
+              "budget": null,
+              "pending": null,
+              "menuCount": 0,
+              "posts": 0,
+              "resultCount": 0
+            },
+            "checks": [
+              {
+                "name": "status",
+                "expected": "clarify",
+                "actual": "clarify",
+                "pass": true
+              },
+              {
+                "name": "posts",
+                "expected": 0,
+                "actual": 0,
+                "pass": true
+              },
+              {
+                "name": "mentions",
+                "expected": "traveler|traveller|passenger|adult|one person|single",
+                "actual": "I can search one-way flights for one traveler only. Would you like to search London to New York on October 1, 2026 for one traveler?",
+                "pass": true
+              },
+              {
+                "name": "model completed or was not needed",
+                "pass": true
+              }
+            ]
+          }
+        }
+      ],
+      "events": [
+        {
+          "type": "model_usage",
+          "data": {
+            "adapter": "codex-chatgpt-structured-action",
+            "promptVersion": "flight-search-v1.2.0",
+            "model": "gpt-5.6-terra",
+            "effort": "medium",
+            "latencyMs": 5980,
+            "usage": {
+              "input_tokens": 9989,
+              "cached_input_tokens": 5888,
+              "cache_write_input_tokens": 0,
+              "output_tokens": 111,
+              "reasoning_output_tokens": 52
+            }
+          }
+        },
+        {
+          "type": "tool_call",
+          "data": {
+            "name": "clarify_request",
+            "arguments": {
+              "question": "I can search one-way flights for one traveler only. Would you like to search London to New York on October 1, 2026 for one traveler?"
+            }
+          }
+        }
+      ],
+      "pass": true
+    },
+    {
+      "caseId": "E1",
+      "name": "Inventory outage is not “no flights”",
+      "model": "gpt-5.6-terra",
+      "repeat": 1,
+      "steps": [
+        {
+          "input": "London to New York October 1, 2026.",
+          "expected": {
+            "status": "error",
+            "posts": 1,
+            "mentions": "unavailable"
+          },
+          "result": {
+            "status": "error",
+            "text": "I couldn't check flights right now. Please try again."
+          },
+          "latencyMs": 4582,
+          "grade": {
+            "pass": false,
+            "actual": {
+              "status": "error",
+              "origin": "LHR|LGW|LCY|STN|LTN",
+              "destination": "JFK|EWR|LGA",
+              "cabin": "business",
+              "from": "2026-10-01",
+              "to": "2026-10-01",
+              "budget": null,
+              "pending": null,
+              "menuCount": 0,
+              "posts": 1,
+              "resultCount": 0
+            },
+            "checks": [
+              {
+                "name": "status",
+                "expected": "error",
+                "actual": "error",
+                "pass": true
+              },
+              {
+                "name": "posts",
+                "expected": 1,
+                "actual": 1,
+                "pass": true
+              },
+              {
+                "name": "mentions",
+                "expected": "unavailable",
+                "actual": "I couldn't check flights right now. Please try again.",
+                "pass": false
+              },
+              {
+                "name": "model completed or was not needed",
+                "pass": true
+              }
+            ]
+          }
+        }
+      ],
+      "events": [
+        {
+          "type": "model_usage",
+          "data": {
+            "adapter": "codex-chatgpt-structured-action",
+            "promptVersion": "flight-search-v1.2.0",
+            "model": "gpt-5.6-terra",
+            "effort": "medium",
+            "latencyMs": 4579,
+            "usage": {
+              "input_tokens": 9985,
+              "cached_input_tokens": 5888,
+              "cache_write_input_tokens": 0,
+              "output_tokens": 65,
+              "reasoning_output_tokens": 17
+            }
+          }
+        },
+        {
+          "type": "tool_call",
+          "data": {
+            "name": "find_flights",
+            "arguments": {
+              "origin": "London",
+              "destination": "New York",
+              "dates": {
+                "mode": "exact",
+                "start": "2026-10-01"
+              }
+            }
+          }
+        }
+      ],
+      "pass": false
+    },
+    {
+      "caseId": "E2",
+      "name": "Empty inventory is not an outage",
+      "model": "gpt-5.6-terra",
+      "repeat": 1,
+      "steps": [
+        {
+          "input": "London to New York October 1, 2026.",
+          "expected": {
+            "status": "results",
+            "origin": "LHR|LGW|LCY|STN|LTN",
+            "destination": "JFK|EWR|LGA",
+            "cabin": "business",
+            "from": "2026-10-01",
+            "to": "2026-10-01",
+            "posts": 1,
+            "minResults": 0,
+            "resultCount": 0
+          },
+          "result": {
+            "status": "results",
+            "text": "SYNTHETIC FLIGHT DATA. These are example results.\n\nLondon (all airports) → New York (all airports)\nThu, 1 Oct 2026 · Business · One-way\n\nNo flights match those preferences in these results. Would you like to try different dates?\n\nMissing flight times and exact seat counts are not available.",
+            "dataMode": "synthetic",
+            "query": {
+              "origin": "LHR|LGW|LCY|STN|LTN",
+              "destination": "JFK|EWR|LGA",
+              "dateFrom": "2026-09-30",
+              "dateTo": "2026-10-02",
+              "selectedDate": "2026-10-01",
+              "cabin": "business"
+            },
+            "shortlist": [],
+            "cached": false,
+            "totalFound": 0,
+            "matchingCount": 0
+          },
+          "latencyMs": 5975,
+          "grade": {
+            "pass": true,
+            "actual": {
+              "status": "results",
+              "origin": "LHR|LGW|LCY|STN|LTN",
+              "destination": "JFK|EWR|LGA",
+              "cabin": "business",
+              "from": "2026-10-01",
+              "to": "2026-10-01",
+              "budget": null,
+              "pending": null,
+              "menuCount": 0,
+              "posts": 1,
+              "resultCount": 0
+            },
+            "checks": [
+              {
+                "name": "status",
+                "expected": "results",
+                "actual": "results",
+                "pass": true
+              },
+              {
+                "name": "origin",
+                "expected": "LHR|LGW|LCY|STN|LTN",
+                "actual": "LHR|LGW|LCY|STN|LTN",
+                "pass": true
+              },
+              {
+                "name": "destination",
+                "expected": "JFK|EWR|LGA",
+                "actual": "JFK|EWR|LGA",
+                "pass": true
+              },
+              {
+                "name": "cabin",
+                "expected": "business",
+                "actual": "business",
+                "pass": true
+              },
+              {
+                "name": "from",
+                "expected": "2026-10-01",
+                "actual": "2026-10-01",
+                "pass": true
+              },
+              {
+                "name": "to",
+                "expected": "2026-10-01",
+                "actual": "2026-10-01",
+                "pass": true
+              },
+              {
+                "name": "posts",
+                "expected": 1,
+                "actual": 1,
+                "pass": true
+              },
+              {
+                "name": "minResults",
+                "expected": 0,
+                "actual": 0,
+                "pass": true
+              },
+              {
+                "name": "resultCount",
+                "expected": 0,
+                "actual": 0,
+                "pass": true
+              },
+              {
+                "name": "data source is labelled",
+                "pass": true
+              },
+              {
+                "name": "route matches saved preference",
+                "pass": true
+              },
+              {
+                "name": "each result respects route and budget",
+                "pass": true
+              },
+              {
+                "name": "model completed or was not needed",
+                "pass": true
+              }
+            ]
+          }
+        }
+      ],
+      "events": [
+        {
+          "type": "model_usage",
+          "data": {
+            "adapter": "codex-chatgpt-structured-action",
+            "promptVersion": "flight-search-v1.2.0",
+            "model": "gpt-5.6-terra",
+            "effort": "medium",
+            "latencyMs": 5972,
+            "usage": {
+              "input_tokens": 9983,
+              "cached_input_tokens": 5888,
+              "cache_write_input_tokens": 0,
+              "output_tokens": 72,
+              "reasoning_output_tokens": 24
+            }
+          }
+        },
+        {
+          "type": "tool_call",
+          "data": {
+            "name": "find_flights",
+            "arguments": {
+              "origin": "London",
+              "destination": "New York",
+              "dates": {
+                "mode": "exact",
+                "start": "2026-10-01"
+              }
+            }
+          }
+        }
+      ],
+      "pass": true
+    },
+    {
+      "caseId": "V1",
+      "name": "Invalid calendar date blocked",
+      "model": "gpt-5.6-terra",
+      "repeat": 1,
+      "steps": [
+        {
+          "input": "London to New York on February 30, 2027.",
+          "expected": {
+            "statuses": [
+              "clarify",
+              "error"
+            ],
+            "posts": 0
+          },
+          "result": {
+            "status": "clarify",
+            "text": "February 30, 2027 does not exist. Which date would you like to travel?"
+          },
+          "latencyMs": 5807,
+          "grade": {
+            "pass": true,
+            "actual": {
+              "status": "clarify",
+              "origin": null,
+              "destination": null,
+              "cabin": "business",
+              "from": null,
+              "to": null,
+              "budget": null,
+              "pending": null,
+              "menuCount": 0,
+              "posts": 0,
+              "resultCount": 0
+            },
+            "checks": [
+              {
+                "name": "statuses",
+                "expected": [
+                  "clarify",
+                  "error"
+                ],
+                "actual": "clarify",
+                "pass": true
+              },
+              {
+                "name": "posts",
+                "expected": 0,
+                "actual": 0,
+                "pass": true
+              },
+              {
+                "name": "model completed or was not needed",
+                "pass": true
+              }
+            ]
+          }
+        }
+      ],
+      "events": [
+        {
+          "type": "model_usage",
+          "data": {
+            "adapter": "codex-chatgpt-structured-action",
+            "promptVersion": "flight-search-v1.2.0",
+            "model": "gpt-5.6-terra",
+            "effort": "medium",
+            "latencyMs": 5806,
+            "usage": {
+              "input_tokens": 9986,
+              "cached_input_tokens": 5888,
+              "cache_write_input_tokens": 0,
+              "output_tokens": 71,
+              "reasoning_output_tokens": 25
+            }
+          }
+        },
+        {
+          "type": "tool_call",
+          "data": {
+            "name": "clarify_request",
+            "arguments": {
+              "question": "February 30, 2027 does not exist. Which date would you like to travel?"
+            }
+          }
+        }
+      ],
+      "pass": true
+    }
+  ],
+  "summary": [
+    {
+      "model": "gpt-5.6-terra",
+      "passed": 14,
+      "total": 15,
+      "modelCalls": 17,
+      "medianModelMs": 4990,
+      "inputTokens": 173527,
+      "cachedInputTokens": 88320,
+      "outputTokens": 1169,
+      "perCase": [
+        {
+          "id": "R1",
+          "passed": 1,
+          "total": 1,
+          "distinctActions": 1
+        },
+        {
+          "id": "R2",
+          "passed": 1,
+          "total": 1,
+          "distinctActions": 1
+        },
+        {
+          "id": "R3",
+          "passed": 1,
+          "total": 1,
+          "distinctActions": 1
+        },
+        {
+          "id": "R4",
+          "passed": 1,
+          "total": 1,
+          "distinctActions": 1
+        },
+        {
+          "id": "R5",
+          "passed": 1,
+          "total": 1,
+          "distinctActions": 1
+        },
+        {
+          "id": "M1",
+          "passed": 1,
+          "total": 1,
+          "distinctActions": 1
+        },
+        {
+          "id": "M2",
+          "passed": 1,
+          "total": 1,
+          "distinctActions": 1
+        },
+        {
+          "id": "M3",
+          "passed": 1,
+          "total": 1,
+          "distinctActions": 1
+        },
+        {
+          "id": "D1",
+          "passed": 1,
+          "total": 1,
+          "distinctActions": 1
+        },
+        {
+          "id": "F1",
+          "passed": 1,
+          "total": 1,
+          "distinctActions": 1
+        },
+        {
+          "id": "U1",
+          "passed": 1,
+          "total": 1,
+          "distinctActions": 1
+        },
+        {
+          "id": "U2",
+          "passed": 1,
+          "total": 1,
+          "distinctActions": 1
+        },
+        {
+          "id": "E1",
+          "passed": 0,
+          "total": 1,
+          "distinctActions": 1
+        },
+        {
+          "id": "E2",
+          "passed": 1,
+          "total": 1,
+          "distinctActions": 1
+        },
+        {
+          "id": "V1",
+          "passed": 1,
+          "total": 1,
+          "distinctActions": 1
+        }
+      ]
+    }
+  ],
+  "publication": "Sanitized review copy. Credentials, backend captures, source snapshots, request IDs and model thread IDs are excluded."
+}

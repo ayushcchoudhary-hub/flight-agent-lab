@@ -23,6 +23,12 @@ test('customer-facing policy copy rejects internal implementation language',()=>
  const r=renderPolicyAnswer({answer:'The local copy says card details are not stored.',citations:[{id:p.id,quote:'card details are handled by our payment provider and never stored by us.'}],needsSupport:false},evidence);
  assert.equal(r.text,supportReply);assert.equal(r.sources.length,0);
 });
+test('customer-facing policy copy rejects abusive or consequential claims',()=>{
+ const p=evidence.chunks.find(p=>p.text.includes('card details'));
+ const citation=[{id:p.id,quote:'card details are handled by our payment provider and never stored by us.'}];
+ assert.equal(renderPolicyAnswer({answer:'You are an idiot.',citations:citation,needsSupport:false},evidence).text,supportReply);
+ assert.equal(renderPolicyAnswer({answer:'I refunded your card.',citations:citation,needsSupport:false},evidence).text,supportReply);
+});
 test('policy turn uses restricted generation tool and preserves trip and history',async()=>{
  const state={origin:'London',destination:'New York'};let calls=0;
  const model={async complete(messages,options){calls++;if(calls===1)return call('lookup_policy',{query:'card details'});

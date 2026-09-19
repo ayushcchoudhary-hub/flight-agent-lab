@@ -1,0 +1,17 @@
+[
+  {
+    "id": "E1",
+    "name": "Inventory outage is not “no flights”",
+    "scenario": "unavailable",
+    "steps": [
+      {
+        "text": "London to New York October 1, 2026.",
+        "expected": {
+          "status": "error",
+          "posts": 1,
+          "mentions": "couldn't check flights"
+        }
+      }
+    ]
+  }
+]

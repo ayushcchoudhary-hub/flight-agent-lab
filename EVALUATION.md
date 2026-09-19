@@ -1,7 +1,7 @@
 # Evaluation contract
 
 The frozen baseline uses Terra at medium reasoning against the behavior in
-`agent/FROZEN-SCOPE.md` and prompt `flight-search-v1.1.0`.
+`agent/FROZEN-SCOPE.md` and prompt `flight-search-v1.2.0`.
 
 The suite separates three kinds of evidence:
 
@@ -22,10 +22,13 @@ the scenarios, customer-facing replies, grading, latency and token usage while
 removing raw backend captures, source snapshots, source hashes, request
 identifiers and private model thread identifiers.
 
-Current results for prompt `flight-search-v1.1.0`:
+Current results for prompt `flight-search-v1.2.0`:
 
-- **66 of 66 deterministic checks pass**
-- **18 of 18 agent acceptance cases pass**
+- **73 of 73 deterministic checks pass**
+- **14 of 15 agent acceptance cases passed in the bounded baseline**
+- **The sole mismatch was an obsolete wording assertion. Its targeted replacement passed 1 of 1**
 - **4 of 4 policy cases pass**
 - **2 of 2 preference cases pass**
-- **30 model calls total**, with one attempt per case
+
+The v1.2 baseline used 17 model calls. The targeted correction used one more.
+We did not repeat the other 14 passing cases merely to improve the headline.

@@ -33,6 +33,22 @@ Terra medium had the fastest observed median in the shortlisted run at about
 Terra medium was selected because the project prioritized the observed response
 speed while retaining full correctness on completed development cases.
 
+## Decision rule
+
+1. **Correctness gate:** exclude configurations that do not pass every completed
+   development check.
+2. **Responsiveness:** compare median elapsed time and the middle 80 percent
+   range. Faster typical replies matter in a conversational interface.
+3. **Efficiency:** compare observed tokens and estimated API-equivalent cost per
+   scenario. Cost is considered only after the correctness gate.
+4. **Complexity:** prefer one stable default unless additional reasoning effort
+   produces a measured benefit.
+
+The full 12-configuration measurement table is in
+[TEST-MATRIX.md](TEST-MATRIX.md). The interactive dashboard adds a speed-versus-
+cost plot, latency ranges, token bars and scenario-level conversations. It also
+preserves stopped and incomplete runs instead of hiding them.
+
 ## Interpretation limits
 
 - These are development cases, not held-out tests.

@@ -1,5 +1,6 @@
 import { flightDetails,readableDate } from './flight-details.mjs';
 import { AIRPORTS, METRO_GROUPS, expandMetro, labelForValue, rankAirportSearch, shiftIso, flexRange, getResultsView, displayPriceUsd } from './shared.mjs';
+import { safeSearchError } from './customer-copy.mjs';
 
 export const WELCOME = 'Where would you like to fly?\n\nTry “To New York”, “London to Singapore”, or “Dubai to London, economy”.\n\nDefaults: one-way · business class · today through the next 7 days.\nSearch only. There is no booking or checkout.';
 const cabins = ['business', 'economy', 'premium', 'first', 'any'];
@@ -231,9 +232,9 @@ export class SearchConversation {
       this.trace('search_result', { query, cached: Boolean(cached), count: response.totalFound, searchId: response.searchId });
       return present(next, response, Boolean(cached), this.adapter.mode);
     } catch (error) {
-      const text = error instanceof Error ? error.message : 'Search failed.';
-      this.trace('error', { text });
-      return { status: 'error', text };
+      const internal = error instanceof Error ? error.message : String(error);
+      this.trace('error', { text: internal });
+      return { status: 'error', text: safeSearchError(error) };
     }
   }
   ask(field, choices, heading) {

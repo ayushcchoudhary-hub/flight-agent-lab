@@ -24,9 +24,19 @@ test('versioned prompt separates identity, behavior, authority, context and outp
   assert.match(prompt,/Preserve previously supplied details/);
   assert.match(prompt,/Acknowledge limitations plainly/);
   assert.match(prompt,/Always help the traveler reach the next useful step/);
+  assert.match(prompt,/Never mirror profanity/);
   assert.match(prompt,/"homeAirport":"LHR"/);
   assert.match(prompt,/"destination":\{"code":"JFK\|EWR\|LGA"/);
   assert.match(prompt,/explicitly supplied in the latest user request overrides the current trip/);
+});
+
+test('unsafe model-written clarification is replaced with a safe redirect',async()=>{
+  const {c}=setup();
+  const model={complete:async()=>toolMessage('clarify_request',{question:'You are fucking useless.'})};
+  const result=await new Agent({conversation:c,model}).respond('Insult me.');
+  assert.equal(result.status,'clarify');
+  assert.match(result.text,/help with flight searches/i);
+  assert.doesNotMatch(result.text,/fuck|useless/i);
 });
 
 test('destination-only -> numbered origin -> all-airport business search, no model needed for number', async () => {
@@ -131,14 +141,16 @@ test('sorting/filtering reuse cached snapshot, explicit refresh repeats search',
   assert.equal(postCount(adapter), 2);
 });
 
-test('no match, outage, and invalid response are distinct', async () => {
+test('no match stays distinct while operational failures use safe customer copy', async () => {
   const empty = await setup('empty').c.find(route);
   assert.equal(empty.status, 'results');
   assert.equal(empty.shortlist.length, 0);
   const outage = await setup('unavailable').c.find(route);
   assert.equal(outage.status, 'error');
-  assert.match(outage.text, /unavailable/);
-  assert.equal((await setup('malformed').c.find(route)).status, 'error');
+  assert.match(outage.text, /couldn't check flights/i);
+  const malformed = await setup('malformed').c.find(route);
+  assert.equal(malformed.status, 'error');
+  assert.equal(malformed.text, outage.text);
 });
 
 test('unavailable cash comparison retains awards; no departure times or exact seat counts invented', async () => {
