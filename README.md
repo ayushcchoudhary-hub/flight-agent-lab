@@ -88,16 +88,26 @@ formatting and call limits. See [ARCHITECTURE-DECISIONS.md](ARCHITECTURE-DECISIO
 
 ## Evidence
 
-- **73 of 73 deterministic checks pass** across routing, state, policy
+- **76 of 76 deterministic checks pass** across routing, state, policy
   retrieval, preferences, output grounding, security and adapter behavior.
 - The regression suite separates deterministic checks, model acceptance cases
   and one bounded live-search verification.
 - Raw staging captures and transcripts stay local. Version control contains the
   methodology and sanitized aggregate evidence only.
+- A bounded OpenRouter screen compared Terra medium with DeepSeek, Mistral,
+  Qwen and GLM configurations. Terra medium, DeepSeek V4.1 Flash low and GLM
+  5.3 high passed all 15 cases once. DeepSeek low is the next candidate for
+  repeated validation. The deployed default remains Terra medium.
 
 See [EVALUATION.md](EVALUATION.md) for what a pass does and does not prove.
 The [`evaluation/`](evaluation/) folder documents the test matrix, comparison
 protocol, published evidence and limits of the conclusions.
+
+![OpenRouter model screen showing latency against observed cost](evaluation/openrouter-tradeoff.svg)
+
+The chart shows the current OpenRouter screen only, which keeps the serving path
+consistent. The deployed dashboard also provides a labelled cross-path view of
+the historical Astra, Luna, Sol and Terra runs.
 
 ## Security boundary
 
@@ -153,5 +163,7 @@ tool contract and regression cases before they enter scope.
   does not prove
 - Why Terra medium was selected from the observed quality, latency and token
   tradeoff
+- Why a one-repeat open-weight screen can nominate a candidate but cannot
+  justify changing the deployed default
 - Why booking, payment, autonomous planning, multi-agent coordination and MCP
   remain outside the current version

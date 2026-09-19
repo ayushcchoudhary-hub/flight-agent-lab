@@ -33,6 +33,18 @@ Terra medium had the fastest observed median in the shortlisted run at about
 Terra medium was selected because the project prioritized the observed response
 speed while retaining full correctness on completed development cases.
 
+The later OpenRouter screen compared Terra medium with nine open-weight model
+and effort configurations. It used one attempt per scenario and a four-case
+smoke gate. Terra medium, DeepSeek V4.1 Flash low and GLM 5.3 high passed all 15
+cases. GLM high had the fastest median at 1.40 seconds. DeepSeek low followed at
+1.45 seconds and had the lowest observed cost at $0.00018 per scenario. It is
+the strongest candidate for repeated validation, not a new deployed default.
+
+The historical Codex and current OpenRouter measurements use different serving
+paths and prompt wrappers. The combined dashboard labels that distinction.
+Cross-path latency is directional and must not be presented as a controlled
+model-only comparison.
+
 ## Decision rule
 
 1. **Correctness gate:** exclude configurations that do not pass every completed
@@ -57,6 +69,9 @@ preserves stopped and incomplete runs instead of hiding them.
 - Dollar figures apply published token rates to observed usage. They are not
   the bill for the Codex subscription used to produce the run.
 - A model passing these cases can still fail on unseen requests.
+- OpenRouter screening used one attempt per case. Provider names and request
+  costs were recorded, fallbacks were disabled, and missing usage was reserved
+  conservatively rather than treated as free.
 
 The appropriate next experiment is a small held-out set with new phrasings and
 new edge cases. It is more informative than automatically running ten repeats

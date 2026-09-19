@@ -15,6 +15,12 @@ demo.
 3. **Model comparisons** run the same scenarios and fixtures across model and
    reasoning configurations, recording correctness, elapsed time and tokens.
 
+The latest comparison adds an OpenRouter screen for DeepSeek, Mistral, Qwen and
+GLM, with Terra medium as the control. It first runs four smoke cases, then
+continues only configurations that pass all four. Provider fallback and model
+substitution are disabled. A $5 application cap and 200-call cap are checked
+before every request.
+
 The current sanitized reports are under
 [`agent/published-eval-results`](../agent/published-eval-results). They retain
 test inputs, visible replies, grading, latency and token usage. They exclude
@@ -32,3 +38,7 @@ human review.
 See [TEST-MATRIX.md](TEST-MATRIX.md) for coverage and
 [MODEL-COMPARISON.md](MODEL-COMPARISON.md) for the experiment design and model
 choice.
+
+The generated [cost-versus-latency chart](openrouter-tradeoff.svg) is the static
+GitHub view. The interactive dashboard includes the complete table, token view,
+scenario matrix and underlying conversations.

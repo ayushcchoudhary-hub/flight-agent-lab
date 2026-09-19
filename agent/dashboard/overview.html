@@ -92,8 +92,8 @@
             <span>3</span>
             <h3>Compare models</h3>
             <p>
-              Screened Astra, Luna, Sol and Terra across reasoning settings,
-              then repeated three finalists.
+              Screened Astra, Luna, Sol and Terra, then compared Terra with
+              DeepSeek, Mistral, Qwen and GLM through OpenRouter.
             </p>
           </article>
           <article class="done">
@@ -208,47 +208,48 @@
         <div class="module-kicker">03 · MODEL CHOICE</div>
         <div class="module-head">
           <div>
-            <h2>Why Terra medium is the default</h2>
+            <h2>Terra is the baseline. DeepSeek is the next candidate.</h2>
             <p>
               Correctness was the gate. Speed and estimated API-equivalent cost
-              were tie-breakers.
+              were tie-breakers. A new candidate must also prove consistency.
             </p>
           </div>
           <a href="/compare">Open full comparison →</a>
         </div>
         <div class="decision-grid">
           <article class="selected">
-            <span class="badge">Selected</span>
+            <span class="badge">Deployed baseline</span>
             <h3>Terra · medium</h3>
-            <strong>4.07 s</strong
-            ><small>median model time in the stopped finalist validation</small>
+            <strong>15 / 15</strong
+            ><small>passed in the current OpenRouter screen</small>
             <p>
-              51/51 completed attempts passed. Fastest observed finalist;
-              mid-range estimated cost.
+              Also passed 51/51 completed attempts in historical finalist
+              validation. It stays deployed while candidates are repeated.
             </p>
           </article>
           <article>
-            <h3>Luna · low</h3>
-            <strong>4.73 s</strong><small>median model time</small>
+            <span class="badge">Best candidate</span>
+            <h3>DeepSeek V4.1 Flash · low</h3>
+            <strong>1.45 s</strong><small>median scenario time</small>
             <p>
-              50/50 completed attempts passed. Lowest estimated API-equivalent
-              cost.
+              15/15 passed once. Lowest observed passing cost at about
+              $0.00018 per scenario. Repeat validation is still required.
             </p>
           </article>
           <article>
-            <h3>Astra · low</h3>
-            <strong>5.30 s</strong><small>median model time</small>
+            <h3>GLM 5.3 · high</h3>
+            <strong>1.40 s</strong><small>median scenario time</small>
             <p>
-              50/50 completed attempts passed. No correctness advantage on these
-              development cases and highest estimated cost.
+              15/15 passed once and was marginally fastest. Its observed cost
+              was about five times DeepSeek low on this screen.
             </p>
           </article>
         </div>
         <p class="evidence-note">
-          The finalist run stopped at the shared 250-call cap before all planned
-          repetitions completed. These were repeated development cases, not
-          held-out production traffic. “Best balance” is the supported
-          conclusion; Terra was not the cheapest.
+          The OpenRouter screen used one attempt per scenario. Historical Codex
+          and current OpenRouter latency use different serving paths. The
+          combined graph is directional, and no model change is justified until
+          the candidate passes repeated and held-out checks.
         </p>
       </section>
 
@@ -287,7 +288,7 @@
             <a href="/policy-examples">See saved replies →</a>
           </article>
           <article>
-            <strong>59 / 59</strong>
+            <strong>76 / 76</strong>
             <h3>Deterministic code tests</h3>
             <p>
               No model calls. Covers tools, dates, state, API validation, policy
@@ -405,11 +406,10 @@
             >
           </li>
           <li>
-            <b>Then test another model provider.</b
+            <b>Repeat the strongest open-weight candidate.</b
             ><span
-              >Add OpenRouter only after the evaluation contract is stable, so
-              the comparison measures the model rather than changing product
-              behavior.</span
+              >Run DeepSeek low on repeated and held-out language. Keep Terra
+              deployed unless the advantage survives that test.</span
             >
           </li>
         </ol>
@@ -451,8 +451,8 @@
               API executes.
             </li>
             <li>
-              Open the model comparison and explain why Terra medium won the
-              trade-off.
+              Open the model comparison and explain why Terra remains the
+              baseline while DeepSeek low is the next candidate.
             </li>
             <li>
               Try one live flight request, one follow-up, one policy question

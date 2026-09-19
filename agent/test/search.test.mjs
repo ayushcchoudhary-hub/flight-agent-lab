@@ -233,6 +233,7 @@ test('OpenRouter call has explicit model, response limits and bounded temporary-
     assert.equal(url, 'https://openrouter.ai/api/v1/chat/completions');
     const body = JSON.parse(options.body);
     assert.equal(body.max_tokens, 800);
+    assert.deepEqual(body.usage, { include: true });
     assert.equal('parallel_tool_calls' in body, false);
     assert.deepEqual(body.reasoning, { effort: 'medium' });
     assert.equal(body.provider.allow_fallbacks, false);

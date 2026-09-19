@@ -52,27 +52,29 @@ ${JSON.stringify(context)}`;
 }
 
 export class OpenRouterModel {
-  constructor({ apiKey, model, reasoningEffort, fetchImpl = fetch, maxCalls = 30, trace = () => {}, retryWait } = {}) {
+  constructor({ apiKey, model, reasoningEffort, fetchImpl = fetch, maxCalls = 30, trace = () => {}, retryWait, maxTemporaryRetries = 1, provider = {}, beforeRequest = () => {} } = {}) {
     if (!apiKey) throw new Error('Add OPENROUTER_API_KEY locally, or use --demo for the free scripted simulation.');
     if (!model || model === 'openrouter/auto' || !model.includes('/')) throw new Error('Set AGENT_MODEL to an explicit OpenRouter model ID that supports tools. Auto-routing is disabled.');
     if (reasoningEffort && !['none', 'minimal', 'low', 'medium', 'high', 'xhigh'].includes(reasoningEffort)) throw new Error('Choose a supported reasoning effort.');
-    this.apiKey = apiKey; this.model = model; this.reasoningEffort = reasoningEffort; this.fetchImpl = fetchImpl; this.maxCalls = maxCalls; this.calls = 0; this.trace = trace; this.retryWait = retryWait;
+    if (!Number.isInteger(maxTemporaryRetries) || maxTemporaryRetries < 0 || maxTemporaryRetries > 1) throw new Error('Choose zero or one temporary model retry.');
+    this.apiKey = apiKey; this.model = model; this.reasoningEffort = reasoningEffort; this.fetchImpl = fetchImpl; this.maxCalls = maxCalls; this.calls = 0; this.trace = trace; this.retryWait = retryWait; this.maxTemporaryRetries = maxTemporaryRetries; this.provider = provider; this.beforeRequest = beforeRequest;
     this.mode = 'openrouter-live-model';
   }
   async complete(messages, { tools = TOOLS } = {}) {
     if (this.calls >= this.maxCalls) throw new Error('Session model-call limit reached. No further paid calls were made.');
     if (JSON.stringify(messages).length > 24000) throw new Error('Context size limit reached. Start a new session to continue.');
-    const retries = Math.min(1, Math.max(0, this.maxCalls - this.calls - 1));
+    const retries = Math.min(this.maxTemporaryRetries, Math.max(0, this.maxCalls - this.calls - 1));
     const started = Date.now();
     let response;
     try {
       response = await requestWithRetry(async () => {
         if (this.calls >= this.maxCalls) throw new Error('Session model-call limit reached.');
+        await this.beforeRequest({ model: this.model, inputCharacters: JSON.stringify(messages).length, maxOutputTokens: 800 });
         this.calls++;
         return this.fetchImpl('https://openrouter.ai/api/v1/chat/completions', {
           method: 'POST', signal: AbortSignal.timeout(30000),
           headers: { Authorization: `Bearer ${this.apiKey}`, 'Content-Type': 'application/json' },
-          body: JSON.stringify({ model: this.model, messages, tools, tool_choice: 'required', max_tokens: 800, ...(this.reasoningEffort ? { reasoning: { effort: this.reasoningEffort } } : {}), provider: { require_parameters: true, allow_fallbacks: false } }),
+          body: JSON.stringify({ model: this.model, messages, tools, tool_choice: 'required', max_tokens: 800, usage: { include: true }, ...(this.reasoningEffort ? { reasoning: { effort: this.reasoningEffort } } : {}), provider: { require_parameters: true, allow_fallbacks: false, ...this.provider } }),
         });
       }, {
         maxRetries: retries,
@@ -80,14 +82,15 @@ export class OpenRouterModel {
         ...(this.retryWait ? { wait: this.retryWait } : {}),
         onRetry: event => this.trace('model_retry', { model: this.model, ...event }),
       });
-    } catch {
+    } catch (error) {
+      if (error?.code === 'EVAL_BUDGET') throw error;
       throw new Error('Model request failed or timed out. Transport failures are not retried because an uncertain request may still be billed.');
     }
     if (!response.ok) throw new Error(`OpenRouter returned HTTP ${response.status}. Temporary HTTP failures receive at most one budgeted retry.`);
     let data;
     try { data = await response.json(); } catch { throw new Error('OpenRouter returned an unreadable response.'); }
     if (data.error) throw new Error('OpenRouter reported a model error. No tools were executed.');
-    this.trace('model_usage', { promptVersion: PROMPT_VERSION, model: data.model ?? this.model, latencyMs: Date.now() - started, usage: data.usage ?? null, requestId: data.id ?? null });
+    this.trace('model_usage', { adapter: this.mode, promptVersion: PROMPT_VERSION, requestedModel: this.model, model: data.model ?? this.model, provider: data.provider ?? null, serviceTier: data.service_tier ?? null, latencyMs: Date.now() - started, usage: data.usage ?? null, cost: Number.isFinite(data.usage?.cost) ? data.usage.cost : null, requestId: data.id ?? null });
     const message = data.choices?.[0]?.message;
     if (!message) throw new Error('The model returned no usable message.');
     return message;

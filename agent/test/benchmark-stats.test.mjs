@@ -15,3 +15,13 @@ test('ranking excludes incomplete and failed runs, retains timeouts, and makes f
  report.results[1]=row(false,60000,true);summary=summarize(report)[0];assert.equal(summary.eligible,false);assert.equal(summary.meanCost,null);assert.equal(summary.meanTokens,null);assert.equal(summary.medianMs,30500);assert.equal(summary.perCase[0].passed,1);
 });
 test('quantiles preserve observed variation, including one-item and empty populations',()=>{assert.equal(quantile([], .5),null);assert.equal(quantile([42],.9),42);assert.equal(quantile([100,5,10],.5),10);});
+test('OpenRouter usage prefers the exact reported request cost',()=>{
+ const rates={models:{'open/model':{input:.1,cached:.01,output:.5}}};
+ const usage={prompt_tokens:1000,completion_tokens:100,prompt_tokens_details:{cached_tokens:200},cost:.00042};
+ assert.equal(estimateCost('open/model',usage,rates),.00042);
+ const report={configs:[{id:'open',model:'open/model'}],cases:[{id:'A'}],repeats:1,rates,results:[{configId:'open',caseId:'A',pass:true,steps:[{latencyMs:900}],events:[{type:'model_usage',data:{usage}}]}]};
+ const summary=summarize(report)[0];
+ assert.equal(summary.meanTokens,1100);
+ assert.equal(summary.meanCost,.00042);
+ assert.equal(summary.eligible,true);
+});
