@@ -100,7 +100,7 @@ SDK dependency has been removed.
 
 ## Evidence
 
-- **105 of 105 deterministic checks pass** across routing, state, policy
+- **106 of 106 deterministic checks pass** across routing, state, policy
   retrieval, preferences, output grounding, security and adapter behavior.
 - The regression suite separates deterministic checks, model acceptance cases
   and one bounded live-search verification.
