@@ -5,7 +5,7 @@ import { requestWithRetry } from './retry.mjs';
 import { SAFE_FAILURE, SAFE_REDIRECT, safeCustomerCopy } from './customer-copy.mjs';
 
 const clarificationTool = { type: 'function', function: {
-  name: 'clarify_request', description: 'Ask one short clarification when the requested date/currency is genuinely ambiguous, or explain a limitation (e.g. checkout/round trips unavailable). Do not ask for missing dates or cabin: those have defaults. Never state flight availability or prices.',
+  name: 'clarify_request', description: 'Ask one short clarification when the requested date is genuinely ambiguous, or explain a limitation (e.g. checkout/round trips unavailable). Do not ask for missing dates or cabin: those have defaults. Never state flight availability or prices.',
   parameters: { type: 'object', additionalProperties: false, required: ['question'], properties: { question: { type: 'string', maxLength: 400 } } },
 } };
 export const TOOLS = [findTool, clarificationTool, policyTool, preferencesTool];
@@ -97,7 +97,7 @@ Use travel_preferences only to show or propose an explicitly requested persisten
 For an unrelated request, use clarify_request with a brief, friendly redirect to finding flights. Preserve the existing trip. For an unsupported or unresolved request, use clarify_request to explain the limitation and offer the next supported step.
 
 TRIP INTERPRETATION
-City names mean all airports in the existing group. Explicit airport names or codes override the city group. Do not silently drop or replace constraints. "Economy instead" changes only cabin. For "business only" also set cabinOnly. "Direct only" sets nonstopOnly. "Prefer nonstop" sets sort=nonstop without creating a hard constraint. Budget is USD only, so clarify ambiguous currency. Clear a budget with maxPriceUsd=null when asked.
+City names mean all airports in the existing group. Explicit airport names or codes override the city group. Do not silently drop or replace constraints. "Economy instead" changes only cabin. For "business only" also set cabinOnly. "Direct only" sets nonstopOnly. "Prefer nonstop" sets sort=nonstop without creating a hard constraint. Budget is always USD. Treat a bare budget number as USD and never ask which currency the traveler means. Clear a budget with maxPriceUsd=null when asked.
 Dates: "next week" means dates.mode=nextWeek. "Coming week" or "next seven days" means rolling. An explicit day means exact. Two dates mean range. Plus or minus 1, 3 or 7 days means flex. "Three days later" shifts the currently selected date and is not a plus-or-minus window. Resolve named weekdays against the injected current date. Clarify genuinely ambiguous wording. Do not create a range over 31 dates.
 
 ACTION CHECK BEFORE find_flights
