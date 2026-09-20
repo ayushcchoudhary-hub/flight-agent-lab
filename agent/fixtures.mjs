@@ -1,7 +1,9 @@
 import { createApiClient, shiftIso, flightSearchStatusQueryOptions } from './shared.mjs';
 
 // Deliberately synthetic records. Never calls an airline, payment processor or
-// CommonSwyft environment. Shapes are checked by the app's own response parser.
+// external environment. Records carry only the fields the agent validates and
+// renders (see validateSearchResponse in shared.mjs) plus the status fields the
+// adapter polls. The live API may return more; the agent ignores extra fields.
 export function makeFixtureAdapter(scenario = 'normal', trace = () => {}) {
   const snapshots = new Map();
   const calls = [];
@@ -44,8 +46,8 @@ export function makeFixtureAdapter(scenario = 'normal', trace = () => {}) {
     async search(body) {
       const { data, error, response } = await api.POST('/flight-searches', { body });
       if (error || !data) throw new Error(`Flight search unavailable (HTTP ${response.status}). This is not a no-results response.`);
-      // The existing GET query validates SearchResponse internally. Importing it
-      // avoids duplicating the private response validator or changing the repo.
+      // Same read path as the live adapter, so fixtures exercise the agent-owned
+      // response validation in shared.mjs.
       return flightSearchStatusQueryOptions(api, data).queryFn();
     },
   };
@@ -66,11 +68,10 @@ function fixtureResults(body, scenario) {
       const price = (cabin === 'economy' ? 420 : 1100) + day * 13 + variant * 80;
       results.push({
         availabilityId: `synthetic-${origin}-${destination}-${date}-${variant}`, date, origin, destination,
-        program: 'fixture', programName: 'Synthetic award program', cabin, miles: 50000,
-        taxesUsd: 80, arbPriceUsd: price, direct: variant !== 1, stops: variant === 1 ? 1 : 0,
-        remainingSeats: 0, airlines: ['Demo Air'], type: 'award', bookingCapability: 'mock',
+        cabin, direct: variant !== 1, stops: variant === 1 ? 1 : 0,
+        airlines: ['Demo Air'],
         source: { id: 'fixture', label: 'Synthetic inventory' },
-        pricing: { currency: 'USD', customerAmountUsd: price, unmarkedAmountUsd: price, markupPercentage: 0, basis: 'awardMilesEstimate' },
+        pricing: { currency: 'USD', customerAmountUsd: price },
         retailComparison: { status: 'unavailable', currency: 'USD', source: { id: 'fixture-comparison', label: 'Synthetic comparison' } },
         // Intentionally omit times. The agent must not invent missing fields.
       });
