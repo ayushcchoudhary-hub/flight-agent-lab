@@ -11,12 +11,15 @@ const defaultMethod=$('#run-method').innerHTML;
 const defaultExplanation=$('#run-explanation').textContent;
 function render(){
  const isStaging=data.report.flightData==='staging';
+ $('#judge-banner').hidden=true;
  $('#data-intro').textContent=isStaging?'Real model interpretation and real authenticated CommonSwyft staging search. These are integration checks, not a production reliability score.':'Recorded model acceptance checks with controlled flight fixtures. Every result shown comes from a preserved run.';
  $('#flight-source').textContent=isStaging?'Staging API returns flights':'Simulated API returns flights';
  $('#run-explanation').textContent=isStaging?`Your sentence is interpreted by ${short(data.report.models?.[0]??'the selected model')}. The application sends an authenticated search to CommonSwyft staging, validates the response and formats the shortlist. The login token is excluded from model prompts and this report. Opening this page only reads saved results.`:defaultExplanation;
  $('#run-method').innerHTML=isStaging?'<summary>What this staging test proves</summary><p><b>S = staging routes · M = missing details · F = follow-up changes.</b> Real model calls and authenticated staging searches. We check the route, date, cabin, defaults and retained preferences against expected behavior, then compare each displayed flight against the captured backend snapshot. An empty result can pass the flow checks but does not test displayed offer fields.</p><p>This is not a repeated accuracy benchmark. Staging can return cached availability; a price is not a checkout quote. No checkout or booking was attempted. Nearby-date alternatives can appear and are explicitly labelled. The conversation shows actual reply text, not a WhatsApp preview.</p>':defaultMethod;
 
  if(data.report.evaluationKind==='llm-judge-hardening'){
+ $('#judge-banner').hidden=false;
+ $('#judge-banner-copy').textContent=`${data.report.results.filter(row=>row.communicationPass).length} of ${data.report.results.length} replies cleared the judge threshold in this saved run. Exact checks still decide whether routes, dates, state and tool behavior are correct.`;
  $('#data-intro').textContent='Held-out Terra conversations graded with exact checks and an independent LLM judge.';
  $('#flight-source').textContent='Controlled fixtures and policy evidence';
  $('#run-explanation').textContent='Terra proposes each action. Code checks routes, dates, state and tool behavior. Claude Sonnet independently scores the visible reply. A judge score cannot override an exact failure.';
@@ -29,7 +32,8 @@ function render(){
  $('#run-method').innerHTML='<summary>What this acceptance test proves</summary><p>18 scenarios, 20 model calls, Terra medium. Missing details, follow-ups, ambiguity, nearby results, unsupported requests and conversation boundaries. G1 allows a legitimate request with swearing; G2–G4 check insult bait, injection and purchase requests. L1 compares displayed flight details with the live response.</p><p>One pass per case is diagnostic evidence only. Tone also received human review; lexical checks are not a moderation service. The live response was verified in memory but its raw snapshot was not saved for replay.</p>';
  }
  const {report:r,cases}=data;const total=cases.length*r.models.length*r.repeats,completed=r.results.length,passed=r.results.filter(x=>x.pass).length;
- $('#summary').innerHTML=`<article class="stat"><small>Scenarios checked</small><div class="value">${completed}<span class="quiet"> / ${total}</span></div><div class="sub">${passed} passed · ${completed-passed} failed · ${total-completed} pending</div></article>`+r.models.map(m=>{
+ const judgeRows=r.results.filter(row=>row.judge),judgeStat=judgeRows.length?`<article class="stat"><small>Independent LLM judge</small><div class="value">${judgeRows.filter(row=>row.communicationPass).length}<span class="quiet"> / ${judgeRows.length}</span></div><div class="sub">Replies cleared · ${esc(short(r.judge?.model||'Independent judge'))}<br>Open a case to read its audit</div></article>`:'';
+ $('#summary').innerHTML=`<article class="stat"><small>Scenarios checked</small><div class="value">${completed}<span class="quiet"> / ${total}</span></div><div class="sub">${passed} passed · ${completed-passed} failed · ${total-completed} pending</div></article>`+judgeStat+r.models.map(m=>{
    const rows=r.results.filter(x=>x.model===m),calls=rows.flatMap(x=>x.events.filter(e=>e.type==='model_usage').map(e=>e.data));
    const tokens=calls.reduce((n,c)=>n+(c.usage?.prompt_tokens??c.usage?.input_tokens??0)+(c.usage?.completion_tokens??c.usage?.output_tokens??0),0);
    return `<article class="stat"><small>${esc(short(m))} · ${esc(r.effort)} reasoning</small><div class="value">${calls.length?(median(calls.map(c=>c.latencyMs))/1000).toFixed(2)+' s':'—'}</div><div class="sub">Median model time · ${rows.filter(x=>x.pass).length}/${rows.length} cases passed<br>${tokens.toLocaleString()} tokens · ${calls.length} model calls</div></article>`;
@@ -43,7 +47,7 @@ function render(){
    const runs=r.results.filter(x=>x.caseId===c.id&&x.model===m),n=runs.filter(x=>x.pass).length;
    return `<td><button class="score ${!runs.length?'pending':n===runs.length?'good':'bad'} ${chosen?.caseId===c.id&&chosen?.model===m?'selected':''}" data-case="${esc(c.id)}" data-model="${esc(m)}" aria-label="${esc(c.name)}, ${esc(short(m))}: ${n} of ${runs.length} passed, ${r.repeats} planned"><strong>${n}<span class="quiet"> / ${r.repeats}</span></strong><span class="dots">${Array.from({length:r.repeats},(_,i)=>{const run=runs.find(x=>x.repeat===i+1);return run?(run.pass?'✓':'×'):'·';}).join(' ')}</span></button></td>`;
  }).join('')}</tr>`).join('')}</tbody></table>`:'<div class="empty">No failed cases in the recorded results.</div>';
- $('#matrix').querySelectorAll('button').forEach(b=>b.onclick=()=>{const firstFailure=r.results.find(x=>x.caseId===b.dataset.case&&x.model===b.dataset.model&&!x.pass);chosen={caseId:b.dataset.case,model:b.dataset.model,repeat:firstFailure?.repeat??1};render();});
+ $('#matrix').querySelectorAll('button').forEach(b=>b.onclick=()=>{const firstFailure=r.results.find(x=>x.caseId===b.dataset.case&&x.model===b.dataset.model&&!x.pass);chosen={caseId:b.dataset.case,model:b.dataset.model,repeat:firstFailure?.repeat??1};if(r.evaluationKind==='llm-judge-hardening')tab='judge';render();});
  renderDetail();
 }
 function renderDetail(){
@@ -73,7 +77,7 @@ async function refresh(){
   $('#run').value=activeRun;
   const res=await fetch('/api/report?id='+encodeURIComponent(activeRun));if(!res.ok)throw new Error('Report is updating; keeping the last results.');
   data=await res.json();const sig=activeRun+data.updatedAt;
-  if(data.report.label)$('#run').selectedOptions[0].textContent=data.report.label;
+  if(data.report.label)$('#run').selectedOptions[0].textContent=(data.report.evaluationKind==='llm-judge-hardening'?'LLM judge · ':'')+data.report.label;
   $('#progress-meta').title=data.report.label||activeRun;
   if(!chosen||!data.cases.some(c=>c.id===chosen.caseId))chosen={caseId:data.cases[0].id,model:data.report.models[0],repeat:1};
   if(sig!==lastSignature){render();lastSignature=sig;}
