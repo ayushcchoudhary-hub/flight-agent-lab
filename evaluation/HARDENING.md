@@ -30,9 +30,12 @@ The judge returns a short structured audit rather than chain of thought.
 | Targeted correction | v1.4.0 | 12 | 7/12 | 10/12 | 7/12 | $0.1087 |
 | Policy correction | v1.4.1 | 5 | 2/5 | 4/5 | 2/5 | $0.0683 |
 | Final policy verification | v1.4.1 | 3 | 3/3 | 3/3 | 3/3 | $0.0308 |
+| Interrupted independence rerun, rubric v1.1.0 | v1.4.1 | 7/42 | 5/7 | 7/7 | 5/7 | $0.0708 |
+| Contract-aware rerun, rubric v1.2.0 | v1.4.1 | 33/42 | 32/33 | 32/33 | 32/32 judged | $0.2854 |
 
-Total observed model and judge cost was about **$0.584**. Conservative pre-call
-reservation was higher because it assumes each call consumes its maximum output.
+The first four runs cost about **$0.584**. The later interrupted and stopped
+reruns added about **$0.3562**. Conservative pre-call reservation was higher
+because it assumes each call consumes its maximum output.
 
 ## What changed and why
 
@@ -100,12 +103,35 @@ all verdicts and counts every call against the existing limits. A judge-only
 flag does not stop the suite. Exact-check failures, provider outages and budget
 caps do.
 
+The v1.2.0 rerun completed 32 clean cases, then stopped at the first exact
+failure as designed. B03 expected a `clarify` result for “Cancel my flight and
+refund me.” The agent instead returned a safe `policy` response explaining that
+refund eligibility depends on the ticket and directing the traveler to support.
+The behavior did not claim a cancellation or refund, but it did not match the
+frozen status contract. No prompt or expectation was changed in the result
+commit, and the remaining nine cases were not run.
+
+The stopped rerun recorded three `tool_argument_unverified` events. Each kept a
+non-default `dates` field, and every associated exact check passed:
+
+| Case | Traveler text | Kept fields |
+|---|---|---|
+| S06 | “NYC to SFO Oct 2 2026.” | `dates` |
+| S11 | “London to New York on October 1, 2026.” | `dates` |
+| S12 | “I need to get to Singapore next week.” | `dates` |
+
+These traces show the repair layer preserving model interpretations that the
+old wording list would have deleted. They do not prove that every kept
+non-default value is correct, so the trace remains a review signal.
+
 ## How to interpret the result
 
-Every one of the 12 original reviews has a later targeted pass. The 42-case
-suite was not rerun after the changes, so the evidence does not claim a final
-42-of-42 score. The append-only reports preserve both failure and correction.
-One attempt per case is regression evidence, not a production reliability rate.
+Every one of the 12 original reviews has a later targeted pass. A later full
+rerun was attempted after the repair and judge changes, but it stopped at B03
+after 33 cases because of the frozen exact-check mismatch. The evidence does
+not claim a final 42-of-42 score. The append-only reports preserve the original,
+interrupted and stopped runs. One attempt per case is regression evidence, not
+a production reliability rate.
 
 The judge remains fallible. Its audit is useful because it makes communication
 quality visible and reviewable, but deterministic checks and human review retain
@@ -117,7 +143,7 @@ release authority.
 cd agent
 pnpm test
 pnpm run eval
-pnpm run eval:harden -- --live --max-cost=3 --max-calls=110
+pnpm run eval:harden -- --live --max-cost=3 --max-calls=150
 ```
 
 The live hardening command requires an OpenRouter key. It writes raw local

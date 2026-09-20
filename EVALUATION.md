@@ -60,9 +60,11 @@ answer as its own next step and accepts only source URLs explicitly supplied as
 approved evidence.
 
 The 12 reviewed cases were rerun, then only the five still unresolved, then the
-last three. Every original issue has a later passing verification. The original
-42-case report remains unchanged and the entire suite has not been rerun, so the
-claim is targeted correction evidence, not a 42-of-42 reliability estimate.
+last three. Every original issue has a later passing verification. A later full
+rerun under the independent v1.2.0 judge contract passed 32 cases, then stopped
+at B03 because a safe policy handoff did not match the frozen expected status.
+Nine cases were not run. This remains regression evidence, not a 42-of-42
+reliability estimate.
 
 Across the baseline and three correction runs, candidate and judge calls cost
 about **$0.584** in total. Reports remain visible on the Evals page, including

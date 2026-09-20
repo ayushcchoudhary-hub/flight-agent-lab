@@ -29,8 +29,10 @@ customer data or raw backend captures.
   remain outside the implemented scope.
 - The deterministic suite currently contains 101 passing checks.
 - The first 42-case Terra hardening run passed 30 cases. Every observed issue
-  later received a focused passing verification. The full 42-case suite has not
-  been rerun, so do not describe the result as 42 of 42.
+  later received a focused passing verification. A later full rerun passed 32
+  cases, then stopped at B03 after a safe policy handoff failed the frozen
+  expected status. Nine cases were not run. Do not describe the result as 42 of
+  42.
 
 Read these files in order when more detail is needed:
 

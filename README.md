@@ -118,9 +118,11 @@ The latest Terra hardening phase added 42 held-out conversations and an
 independent Claude Sonnet judge for customer experience. The frozen first run
 passed 30 of 42. Its 12 reviews exposed lost dates, ignored baggage constraints
 and weak policy or servicing handoffs. Focused corrections then produced a
-passing verification for every one of those 12 cases. The original failures
-remain published, and the full 42-case suite has not been rerun, so this is
-targeted regression evidence rather than a rewritten perfect baseline.
+passing verification for every one of those 12 cases. A later full rerun passed
+32 cases, then stopped at B03 when a safe policy handoff did not match the
+frozen expected status. Nine cases were not run. The original, interrupted and
+stopped evidence remains published, so there is no rewritten perfect baseline
+or 42-of-42 claim.
 
 See [EVALUATION.md](EVALUATION.md) for what a pass does and does not prove.
 The [`evaluation/`](evaluation/) folder documents the test matrix, comparison
