@@ -9,7 +9,29 @@ const clarificationTool = { type: 'function', function: {
   parameters: { type: 'object', additionalProperties: false, required: ['question'], properties: { question: { type: 'string', maxLength: 400 } } },
 } };
 export const TOOLS = [findTool, clarificationTool, policyTool, preferencesTool];
-export const PROMPT_VERSION = 'flight-search-v1.3.0';
+export const PROMPT_VERSION = 'flight-search-v1.4.1';
+
+const supportEmail='support@commonswyft.com';
+function deterministicBoundary(text) {
+  if (/\b(?:my|this)\b.{0,30}\b(?:ticket|flight|booking)\b.{0,30}\b(?:refund|refundable)\b|\b(?:refund|refundable)\b.{0,30}\b(?:my|this)\b.{0,30}\b(?:ticket|flight|booking)\b/i.test(text)) return {status:'policy',text:`Refund eligibility depends on the fare rules for the specific ticket. Please contact CommonSwyft support at ${supportEmail} with the booking reference.`};
+  // Policy questions that happen to mention tickets or purchases still belong
+  // to grounded policy retrieval. Consequential action requests stay below.
+  if (/\b(?:refund|refundable|terms?|legal|privacy|personal data|analytics)\b/i.test(text)) return null;
+  if (/\b(?:checked bags?|baggage|luggage)\b/i.test(text)) return {status:'clarify',text:'I can’t guarantee baggage inclusion from these search results. Please confirm baggage directly with the airline before booking. I can still search the route and cabin for you.'};
+  if (/\b(?:my|existing|booked)\b.{0,30}\b(?:ticket|flight|booking)\b|\b(?:cancel|rebook|check me in|passenger name)\b/i.test(text)) return {status:'clarify',text:`I can’t access or change an existing booking here. Please contact CommonSwyft support at ${supportEmail} with your booking reference.`};
+  if (/\b(?:book|buy|purchase|charge)\b.{0,40}\b(?:option|flight|ticket|card)\b|\bsaved card\b/i.test(text)) return {status:'clarify',text:'I can’t book or charge a card here. Complete the purchase through CommonSwyft’s website checkout. I can keep refining the flight search before you continue.'};
+  return null;
+}
+
+function explicitNamedDate(text) {
+  const months={jan:1,january:1,feb:2,february:2,mar:3,march:3,apr:4,april:4,may:5,jun:6,june:6,jul:7,july:7,aug:8,august:8,sep:9,sept:9,september:9,oct:10,october:10,nov:11,november:11,dec:12,december:12};
+  const name='(?:jan(?:uary)?|feb(?:ruary)?|mar(?:ch)?|apr(?:il)?|may|jun(?:e)?|jul(?:y)?|aug(?:ust)?|sep(?:t(?:ember)?)?|oct(?:ober)?|nov(?:ember)?|dec(?:ember)?)';
+  const match=text.match(new RegExp(`\\b(${name})\\s+(\\d{1,2})(?:st|nd|rd|th)?[,]?\\s+(\\d{4})\\b`,'i'))||text.match(new RegExp(`\\b(\\d{1,2})(?:st|nd|rd|th)?\\s+(${name})[,]?\\s+(\\d{4})\\b`,'i'));
+  if(!match)return null;
+  const monthFirst=/^[A-Za-z]/.test(match[1]),month=months[(monthFirst?match[1]:match[2]).toLowerCase()],day=Number(monthFirst?match[2]:match[1]),year=Number(match[3]);
+  const iso=`${year}-${String(month).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+  return validDate(iso)?iso:null;
+}
 
 export function repairExplicitToolArguments(text,name,args,trace=()=>{}) {
   if(name!=='find_flights'||!args||Array.isArray(args))return args;
@@ -26,10 +48,10 @@ export function repairExplicitToolArguments(text,name,args,trace=()=>{}) {
   for(const [field,pattern] of Object.entries(rules))if(field in repaired&&!pattern.test(text)){delete repaired[field];removed.push(field);}
   if(removed.length)trace('tool_argument_repair',{fields:removed,reason:'removed fields not explicitly changed in the current request'});
   if(repaired.dates||/\b(return|returning|round[ -]?trip)\b/i.test(text))return repaired;
-  const dates=[...new Set((text.match(/\b\d{4}-\d{2}-\d{2}\b/g)??[]).filter(validDate))];
+  const dates=[...new Set([...(text.match(/\b\d{4}-\d{2}-\d{2}\b/g)??[]).filter(validDate),explicitNamedDate(text)].filter(Boolean))];
   if(dates.length!==1)return repaired;
   repaired.dates={mode:'exact',start:dates[0]};
-  trace('tool_argument_repair',{field:'dates',reason:'copied one explicit ISO date from the current request'});
+  trace('tool_argument_repair',{field:'dates',reason:'preserved one explicit calendar date from the current request'});
   return repaired;
 }
 
@@ -137,6 +159,8 @@ export class Agent {
       this.trace('reply', result);
       return result;
     }
+    const boundary=deterministicBoundary(text);
+    if(boundary){const result=boundary;this.record([{role:'user',content:text},{role:'assistant',content:result.text}]);this.trace('boundary_reply',{kind:'unsupported_consequential_request'});this.trace('reply',result);return result;}
     try {
       const user = { role: 'user', content: text };
       const answer = await this.model.complete([{ role: 'system', content: systemPrompt(this.conversation, this.timezone, this.preferences) }, ...this.turns.flat(), user]);

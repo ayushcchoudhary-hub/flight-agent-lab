@@ -38,6 +38,19 @@ interpretation and end-to-end behavior. One baseline attempt per case detects
 regressions without pretending to estimate production reliability. Repeats are
 reserved for failures and high-risk behavior.
 
+An independent LLM judge reviews only communication quality. Exact checks retain
+authority over facts and actions. Judge disagreements remain visible and receive
+human review before they motivate a change.
+
+## Channel and transaction sequencing
+
+Web and future WhatsApp clients call the same harness. A channel transports
+messages and identity context but does not own travel logic or memory.
+
+The first transactional expansion is offer selection followed by an
+authenticated CommonSwyft checkout handoff. Direct payment, agent wallets and
+autonomous purchase remain deferred. See [PRODUCT-ROADMAP.md](PRODUCT-ROADMAP.md).
+
 ## Deliberate non-goals
 
 The current release does not book, pay, cancel, inspect accounts, support round

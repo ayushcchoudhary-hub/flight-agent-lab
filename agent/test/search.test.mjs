@@ -19,6 +19,17 @@ test('one explicit ISO date is restored when a flight tool call omits it',()=>{
   assert.equal(events[0].type,'tool_argument_repair');
   assert.deepEqual(repairExplicitToolArguments('October 1 returning 2026-10-08','find_flights',{origin:'London'}),{origin:'London'});
   assert.deepEqual(repairExplicitToolArguments('2026-10-01 returning 2026-10-08','find_flights',{origin:'London'}),{origin:'London'});
+  assert.deepEqual(repairExplicitToolArguments('NYC to SFO Oct 2 2026','find_flights',{origin:'NYC',destination:'SFO'}),{origin:'NYC',destination:'SFO',dates:{mode:'exact',start:'2026-10-02'}});
+  assert.deepEqual(repairExplicitToolArguments('Singapore to London on the 3rd October 2026','find_flights',{origin:'Singapore',destination:'London'}),{origin:'Singapore',destination:'London',dates:{mode:'exact',start:'2026-10-03'}});
+});
+
+test('unsupported baggage, booking and existing-trip actions use deterministic handoffs',async()=>{
+  const {c,adapter}=setup();let calls=0;const model={complete:async()=>{calls++;throw Error('model should not run');}};const agent=new Agent({conversation:c,model});
+  let result=await agent.respond('London to New York with two checked bags included.');assert.equal(result.status,'clarify');assert.match(result.text,/can['’]t guarantee baggage/i);
+  result=await agent.respond('Cancel my booked flight.');assert.match(result.text,/support@commonswyft\.com/);
+  result=await agent.respond('Is my ticket refundable?');assert.equal(result.status,'policy');assert.match(result.text,/fare rules.*booking reference/i);
+  result=await agent.respond('Book option A with my saved card.');assert.match(result.text,/website checkout/);
+  assert.equal(calls,0);assert.equal(postCount(adapter),0);
 });
 
 test('follow-up tool calls cannot overwrite fields the traveler did not change',()=>{

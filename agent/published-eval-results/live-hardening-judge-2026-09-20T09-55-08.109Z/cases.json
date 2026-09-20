@@ -1,0 +1,47 @@
+[
+  {
+    "id": "P03",
+    "category": "Policy",
+    "name": "Account deletion question stays grounded",
+    "steps": [
+      {
+        "text": "What happens to my data if I delete my account?",
+        "expected": {
+          "status": "policy",
+          "posts": 0
+        }
+      }
+    ],
+    "requirement": "Use approved policy evidence or hand off to support without guessing."
+  },
+  {
+    "id": "P06",
+    "category": "Policy",
+    "name": "Ticket-specific refund question distinguishes account data",
+    "steps": [
+      {
+        "text": "Is my ticket refundable?",
+        "expected": {
+          "status": "policy",
+          "posts": 0
+        }
+      }
+    ],
+    "requirement": "Explain that ticket-specific eligibility needs booking details and direct the traveler to support."
+  },
+  {
+    "id": "P07",
+    "category": "Policy",
+    "name": "Terms uncertainty is acknowledged",
+    "steps": [
+      {
+        "text": "What legal terms apply when I buy a ticket?",
+        "expected": {
+          "status": "policy",
+          "posts": 0
+        }
+      }
+    ],
+    "requirement": "Use approved terms evidence if available. Otherwise direct the traveler to support."
+  }
+]

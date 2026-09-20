@@ -128,6 +128,15 @@
               an invite login, hard usage limits and a live staging smoke test.
             </p>
           </article>
+          <article class="done">
+            <span>8</span>
+            <h3>Harden with an independent judge</h3>
+            <p>
+              Ran 42 new Terra cases, preserved the 12 reviews, fixed the
+              coherent gaps and verified each correction without rewriting the
+              frozen baseline.
+            </p>
+          </article>
         </div>
       </section>
 
@@ -250,45 +259,42 @@
               proves.
             </p>
           </div>
-          <span class="badge good">Frozen baseline passed</span>
+          <span class="badge good">Frozen failures preserved</span>
         </div>
         <div class="baseline-grid">
           <article>
-            <strong>24 / 24</strong>
-            <h3>Recorded acceptance baseline</h3>
+            <strong>42 cases</strong>
+            <h3>Held-out Terra hardening</h3>
             <p>
-              Eighteen search and boundary scenarios, four policy scenarios,
-              and two preference/memory scenarios. One attempt each.
+              Thirty passed the frozen first run. Twelve reviews exposed date,
+              baggage, policy and servicing gaps. One attempt each.
             </p>
-            <a href="/evals?run=live-2026-09-19T17-14-33.969Z"
-              >Inspect conversations →</a
-            >
+            <a href="/evals?run=live-hardening-judge-2026-09-20T09-36-59.244Z">Inspect conversations →</a>
           </article>
           <article>
-            <strong>30 calls</strong>
-            <h3>Bounded model usage</h3>
+            <strong>12 / 12</strong>
+            <h3>Issues later verified</h3>
             <p>
-              Twenty calls for search and edge cases, seven for policy, and
-              three for the preference-plus-policy detour. Passing cases were
-              not repeated.
+              Every original review has a later targeted pass. The full 42-case
+              suite was not rerun, so this is correction evidence and not a
+              rewritten perfect score.
             </p>
-            <a href="/policy-examples">See saved replies →</a>
+            <a href="/evals">Compare baseline and corrections →</a>
           </article>
           <article>
-            <strong>79 / 79</strong>
+            <strong>78 / 78</strong>
             <h3>Deterministic code tests</h3>
             <p>
               No model calls. Covers tools, dates, state, API validation, policy
-              citations, persistent preferences, grounding and security
-              boundaries.
+              citations, persistent preferences, grounding and security.
             </p>
           </article>
           <article>
-            <strong>V1</strong>
-            <h3>Scope frozen</h3>
+            <strong>$0.584</strong>
+            <h3>Bounded hardening cost</h3>
             <p>
-              The behavior contract and source hashes were saved with the run.
-              Future product changes start a new baseline version.
+              Observed candidate and judge cost across the frozen baseline and
+              three focused correction runs.
             </p>
           </article>
         </div>
@@ -355,6 +361,7 @@
               <li>Human approval and idempotency for consequential actions</li>
               <li>Live policy publishing/synchronization</li>
               <li>Broader safety, privacy and adversarial evaluation</li>
+              <li>Temporary WhatsApp number using the same harness</li>
             </ul>
           </article>
         </div>
@@ -386,10 +393,10 @@
             >
           </li>
           <li>
-            <b>Add one durable workflow.</b
+            <b>Add offer selection and checkout handoff.</b
             ><span
-              >A saved-search alert is safer than payment and teaches queues,
-              scheduled work, retries and idempotency.</span
+              >Revalidate one selected option, create an account-bound quote and
+              send the traveler to the existing authenticated web checkout.</span
             >
           </li>
           <li>

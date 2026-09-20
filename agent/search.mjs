@@ -183,7 +183,7 @@ export class SearchConversation {
       if (unresolved) {
         const heading = unresolved.choices.length
           ? `Which ${unresolved.field} did you mean?`
-          : `I couldn't resolve “${unresolved.query}”. Type a city or airport code.`;
+          : `I couldn't resolve “${unresolved.query}”. Which ${unresolved.field} did you mean?`;
         return this.ask(unresolved.field, unresolved.choices, heading);
       }
       if (!next.origin || !next.destination) {

@@ -63,7 +63,7 @@ flowchart LR
 ## Current product contract
 
 Supported behavior is frozen in [FROZEN-SCOPE.md](agent/FROZEN-SCOPE.md). The
-current prompt is `flight-search-v1.3.0`, described in
+current prompt is `flight-search-v1.4.1`, described in
 [PROMPT-ARCHITECTURE.md](PROMPT-ARCHITECTURE.md).
 
 The assistant is a calm, concise and knowledgeable flight-search concierge. It
@@ -94,7 +94,7 @@ SDK dependency has been removed.
 
 ## Evidence
 
-- **75 of 75 deterministic checks pass** across routing, state, policy
+- **78 of 78 deterministic checks pass** across routing, state, policy
   retrieval, preferences, output grounding, security and adapter behavior.
 - The regression suite separates deterministic checks, model acceptance cases
   and one bounded live-search verification.
@@ -108,9 +108,19 @@ SDK dependency has been removed.
   therefore defaults to Terra medium, with DeepSeek and GLM available for
   controlled exploration.
 
+The latest Terra hardening phase added 42 held-out conversations and an
+independent Claude Sonnet judge for customer experience. The frozen first run
+passed 30 of 42. Its 12 reviews exposed lost dates, ignored baggage constraints
+and weak policy or servicing handoffs. Focused corrections then produced a
+passing verification for every one of those 12 cases. The original failures
+remain published, and the full 42-case suite has not been rerun, so this is
+targeted regression evidence rather than a rewritten perfect baseline.
+
 See [EVALUATION.md](EVALUATION.md) for what a pass does and does not prove.
 The [`evaluation/`](evaluation/) folder documents the test matrix, comparison
 protocol, published evidence and limits of the conclusions.
+The [product roadmap](PRODUCT-ROADMAP.md) explains why checkout handoff comes
+before autonomous payment and how WhatsApp can reuse the same harness.
 
 ![OpenRouter model screen showing latency against observed cost](evaluation/openrouter-tradeoff.svg)
 

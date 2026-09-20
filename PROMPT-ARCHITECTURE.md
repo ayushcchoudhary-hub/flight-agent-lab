@@ -1,6 +1,6 @@
 # Prompt architecture
 
-Current prompt: `flight-search-v1.3.0`
+Current prompt: `flight-search-v1.4.1`
 
 The prompt is a routing and interpretation contract. It does not ask the model
 to perform searches, calculate prices or write the final flight cards.
@@ -32,9 +32,15 @@ are authoritative for availability and prices. The model cannot override either.
 
 Prompting improved open-weight model behavior but did not make it perfectly
 consistent. The harness therefore enforces facts it can verify without model
-judgment. It restores one valid ISO date when the model omits it, and it removes
+judgment. It restores one valid ISO or named calendar date when the model omits it, and it removes
 date, cabin, budget, sorting and constraint updates that were not mentioned in
 the latest message. It does not infer ambiguous natural-language dates.
+
+The harness also handles a small set of consequential or unsupported requests
+deterministically. Baggage guarantees, existing-booking actions and checkout
+requests receive a stable limitation and next step. Ticket-specific refund and
+legal-terms questions still route through the policy boundary so a generic
+booking rule cannot swallow them.
 
 This split is intentional. The model handles language and tool selection. Code
 protects explicit user input and state precedence. The same rule applies to

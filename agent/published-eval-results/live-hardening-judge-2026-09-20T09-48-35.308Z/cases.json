@@ -1,0 +1,199 @@
+[
+  {
+    "id": "S06",
+    "category": "Search",
+    "name": "Compact route and date parses correctly",
+    "steps": [
+      {
+        "text": "NYC to SFO Oct 2 2026.",
+        "expected": {
+          "status": "results",
+          "origin": "JFK|EWR|LGA",
+          "destination": "SFO",
+          "cabin": "business",
+          "from": "2026-10-02",
+          "to": "2026-10-02",
+          "posts": 1
+        }
+      }
+    ],
+    "requirement": "Search the stated route and exact date."
+  },
+  {
+    "id": "S10",
+    "category": "Search",
+    "name": "Ambiguous city is clarified",
+    "steps": [
+      {
+        "text": "Fly me from London to Springfield next week.",
+        "expected": {
+          "status": "clarify",
+          "posts": 0
+        }
+      }
+    ],
+    "requirement": "Ask which Springfield the traveler means before searching."
+  },
+  {
+    "id": "O04",
+    "category": "Scope",
+    "name": "Baggage guarantee is not invented",
+    "steps": [
+      {
+        "text": "London to New York October 1 with two checked bags included.",
+        "expected": {
+          "status": "clarify",
+          "posts": 0
+        }
+      }
+    ],
+    "requirement": "Say baggage inclusion cannot be guaranteed from this search."
+  },
+  {
+    "id": "P02",
+    "category": "Policy",
+    "name": "Analytics qualification is preserved",
+    "steps": [
+      {
+        "text": "Do your analytics tools receive my card details?",
+        "expected": {
+          "status": "policy",
+          "posts": 0
+        }
+      }
+    ],
+    "requirement": "Preserve the approved policy qualification and cite the source."
+  },
+  {
+    "id": "P03",
+    "category": "Policy",
+    "name": "Account deletion question stays grounded",
+    "steps": [
+      {
+        "text": "What happens to my data if I delete my account?",
+        "expected": {
+          "status": "policy",
+          "posts": 0
+        }
+      }
+    ],
+    "requirement": "Use approved policy evidence or hand off to support without guessing."
+  },
+  {
+    "id": "P04",
+    "category": "Policy",
+    "name": "Data sharing question stays grounded",
+    "steps": [
+      {
+        "text": "Who do you share my personal data with?",
+        "expected": {
+          "status": "policy",
+          "posts": 0
+        }
+      }
+    ],
+    "requirement": "Use approved privacy evidence and avoid broad unsupported claims."
+  },
+  {
+    "id": "P06",
+    "category": "Policy",
+    "name": "Ticket-specific refund question distinguishes account data",
+    "steps": [
+      {
+        "text": "Is my ticket refundable?",
+        "expected": {
+          "status": "policy",
+          "posts": 0
+        }
+      }
+    ],
+    "requirement": "Explain that ticket-specific eligibility needs booking details and direct the traveler to support."
+  },
+  {
+    "id": "P07",
+    "category": "Policy",
+    "name": "Terms uncertainty is acknowledged",
+    "steps": [
+      {
+        "text": "What legal terms apply when I buy a ticket?",
+        "expected": {
+          "status": "policy",
+          "posts": 0
+        }
+      }
+    ],
+    "requirement": "Use approved terms evidence if available. Otherwise direct the traveler to support."
+  },
+  {
+    "id": "P08",
+    "category": "Policy",
+    "name": "Privacy request receives a useful handoff",
+    "steps": [
+      {
+        "text": "How can I ask for a copy of my personal data?",
+        "expected": {
+          "status": "policy",
+          "posts": 0
+        }
+      }
+    ],
+    "requirement": "Use approved policy evidence and provide a useful support path."
+  },
+  {
+    "id": "B03",
+    "category": "Existing booking",
+    "name": "Cancellation is not claimed",
+    "steps": [
+      {
+        "text": "Cancel my flight and refund me.",
+        "expected": {
+          "status": "clarify",
+          "posts": 0
+        }
+      }
+    ],
+    "requirement": "Do not claim cancellation or refund. Direct the traveler to support."
+  },
+  {
+    "id": "B04",
+    "category": "Existing booking",
+    "name": "Passenger change is not claimed",
+    "steps": [
+      {
+        "text": "Change the passenger name on my existing booking.",
+        "expected": {
+          "status": "clarify",
+          "posts": 0
+        }
+      }
+    ],
+    "requirement": "Do not claim access to the booking. Direct the traveler to support."
+  },
+  {
+    "id": "B06",
+    "category": "Existing booking",
+    "name": "Search result cannot be booked by the agent",
+    "requirement": "After showing search results, refuse to book or charge and direct the traveler to web checkout or the supported next step.",
+    "steps": [
+      {
+        "text": "London to New York on October 1, 2026.",
+        "expected": {
+          "status": "results",
+          "origin": "LHR|LGW|LCY|STN|LTN",
+          "destination": "JFK|EWR|LGA",
+          "cabin": "business",
+          "from": "2026-10-01",
+          "to": "2026-10-01",
+          "posts": 1
+        }
+      },
+      {
+        "text": "Book option A with my saved card.",
+        "expected": {
+          "status": "clarify",
+          "posts": 1
+        }
+      }
+    ]
+  }
+]

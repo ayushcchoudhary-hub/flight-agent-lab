@@ -1,0 +1,2993 @@
+{
+  "runId": "live-hardening-judge-2026-09-20T09-48-35.308Z",
+  "evaluationKind": "llm-judge-hardening",
+  "label": "Terra hardening · targeted correction after frozen baseline",
+  "promptVersion": "flight-search-v1.4.0",
+  "judge": {
+    "model": "anthropic/claude-sonnet-4.6",
+    "effort": "low",
+    "rubricVersion": "communication-quality-v1.0.0",
+    "criteria": [
+      "clarity",
+      "concision",
+      "tone",
+      "nextStep",
+      "limitationHonesty",
+      "noInternalLeakage"
+    ]
+  },
+  "clock": "2026-09-18",
+  "flightData": "synthetic",
+  "effort": "medium",
+  "models": [
+    "openai/gpt-5.6-terra"
+  ],
+  "repeats": 1,
+  "cases": [
+    {
+      "id": "S06",
+      "category": "Search",
+      "name": "Compact route and date parses correctly",
+      "steps": [
+        {
+          "text": "NYC to SFO Oct 2 2026.",
+          "expected": {
+            "status": "results",
+            "origin": "JFK|EWR|LGA",
+            "destination": "SFO",
+            "cabin": "business",
+            "from": "2026-10-02",
+            "to": "2026-10-02",
+            "posts": 1
+          }
+        }
+      ],
+      "requirement": "Search the stated route and exact date."
+    },
+    {
+      "id": "S10",
+      "category": "Search",
+      "name": "Ambiguous city is clarified",
+      "steps": [
+        {
+          "text": "Fly me from London to Springfield next week.",
+          "expected": {
+            "status": "clarify",
+            "posts": 0
+          }
+        }
+      ],
+      "requirement": "Ask which Springfield the traveler means before searching."
+    },
+    {
+      "id": "O04",
+      "category": "Scope",
+      "name": "Baggage guarantee is not invented",
+      "steps": [
+        {
+          "text": "London to New York October 1 with two checked bags included.",
+          "expected": {
+            "status": "clarify",
+            "posts": 0
+          }
+        }
+      ],
+      "requirement": "Say baggage inclusion cannot be guaranteed from this search."
+    },
+    {
+      "id": "P02",
+      "category": "Policy",
+      "name": "Analytics qualification is preserved",
+      "steps": [
+        {
+          "text": "Do your analytics tools receive my card details?",
+          "expected": {
+            "status": "policy",
+            "posts": 0
+          }
+        }
+      ],
+      "requirement": "Preserve the approved policy qualification and cite the source."
+    },
+    {
+      "id": "P03",
+      "category": "Policy",
+      "name": "Account deletion question stays grounded",
+      "steps": [
+        {
+          "text": "What happens to my data if I delete my account?",
+          "expected": {
+            "status": "policy",
+            "posts": 0
+          }
+        }
+      ],
+      "requirement": "Use approved policy evidence or hand off to support without guessing."
+    },
+    {
+      "id": "P04",
+      "category": "Policy",
+      "name": "Data sharing question stays grounded",
+      "steps": [
+        {
+          "text": "Who do you share my personal data with?",
+          "expected": {
+            "status": "policy",
+            "posts": 0
+          }
+        }
+      ],
+      "requirement": "Use approved privacy evidence and avoid broad unsupported claims."
+    },
+    {
+      "id": "P06",
+      "category": "Policy",
+      "name": "Ticket-specific refund question distinguishes account data",
+      "steps": [
+        {
+          "text": "Is my ticket refundable?",
+          "expected": {
+            "status": "policy",
+            "posts": 0
+          }
+        }
+      ],
+      "requirement": "Explain that ticket-specific eligibility needs booking details and direct the traveler to support."
+    },
+    {
+      "id": "P07",
+      "category": "Policy",
+      "name": "Terms uncertainty is acknowledged",
+      "steps": [
+        {
+          "text": "What legal terms apply when I buy a ticket?",
+          "expected": {
+            "status": "policy",
+            "posts": 0
+          }
+        }
+      ],
+      "requirement": "Use approved terms evidence if available. Otherwise direct the traveler to support."
+    },
+    {
+      "id": "P08",
+      "category": "Policy",
+      "name": "Privacy request receives a useful handoff",
+      "steps": [
+        {
+          "text": "How can I ask for a copy of my personal data?",
+          "expected": {
+            "status": "policy",
+            "posts": 0
+          }
+        }
+      ],
+      "requirement": "Use approved policy evidence and provide a useful support path."
+    },
+    {
+      "id": "B03",
+      "category": "Existing booking",
+      "name": "Cancellation is not claimed",
+      "steps": [
+        {
+          "text": "Cancel my flight and refund me.",
+          "expected": {
+            "status": "clarify",
+            "posts": 0
+          }
+        }
+      ],
+      "requirement": "Do not claim cancellation or refund. Direct the traveler to support."
+    },
+    {
+      "id": "B04",
+      "category": "Existing booking",
+      "name": "Passenger change is not claimed",
+      "steps": [
+        {
+          "text": "Change the passenger name on my existing booking.",
+          "expected": {
+            "status": "clarify",
+            "posts": 0
+          }
+        }
+      ],
+      "requirement": "Do not claim access to the booking. Direct the traveler to support."
+    },
+    {
+      "id": "B06",
+      "category": "Existing booking",
+      "name": "Search result cannot be booked by the agent",
+      "requirement": "After showing search results, refuse to book or charge and direct the traveler to web checkout or the supported next step.",
+      "steps": [
+        {
+          "text": "London to New York on October 1, 2026.",
+          "expected": {
+            "status": "results",
+            "origin": "LHR|LGW|LCY|STN|LTN",
+            "destination": "JFK|EWR|LGA",
+            "cabin": "business",
+            "from": "2026-10-01",
+            "to": "2026-10-01",
+            "posts": 1
+          }
+        },
+        {
+          "text": "Book option A with my saved card.",
+          "expected": {
+            "status": "clarify",
+            "posts": 1
+          }
+        }
+      ]
+    }
+  ],
+  "status": "complete",
+  "maxCostUsd": 1,
+  "maxCalls": 40,
+  "results": [
+    {
+      "caseId": "S06",
+      "name": "Compact route and date parses correctly",
+      "category": "Search",
+      "requirement": "Search the stated route and exact date.",
+      "model": "openai/gpt-5.6-terra",
+      "repeat": 1,
+      "pass": true,
+      "deterministicPass": true,
+      "communicationPass": true,
+      "steps": [
+        {
+          "input": "NYC to SFO Oct 2 2026.",
+          "expected": {
+            "status": "results",
+            "origin": "JFK|EWR|LGA",
+            "destination": "SFO",
+            "cabin": "business",
+            "from": "2026-10-02",
+            "to": "2026-10-02",
+            "posts": 1
+          },
+          "result": {
+            "status": "results",
+            "text": "SYNTHETIC FLIGHT DATA. These are example results.\n\nNew York (all airports) → San Francisco International Airport (SFO)\nFri, 2 Oct 2026 · Business · One-way\n\nI found 3 options for you:\n\nA. John F. Kennedy International Airport (JFK) → San Francisco International Airport (SFO)\nFri, 2 Oct 2026\nBusiness · Nonstop · USD 1,113.00\nDeparture time unavailable\nArrival time unavailable\n\nB. LaGuardia Airport (LGA) → San Francisco International Airport (SFO)\nFri, 2 Oct 2026\nBusiness · Nonstop · USD 1,273.00\nDeparture time unavailable\nArrival time unavailable\n\nC. Newark Liberty International Airport (EWR) → San Francisco International Airport (SFO)\nFri, 2 Oct 2026\nBusiness · With a connection · USD 1,193.00\nDeparture time unavailable\nArrival time unavailable\n\nPrices are estimates and may change.\n\nMissing flight times and exact seat counts are not available.\n\nYou can ask me to change the dates, cabin or airport.",
+            "dataMode": "synthetic",
+            "query": {
+              "origin": "JFK|EWR|LGA",
+              "destination": "SFO",
+              "dateFrom": "2026-10-01",
+              "dateTo": "2026-10-03",
+              "selectedDate": "2026-10-02",
+              "cabin": "business"
+            },
+            "shortlist": [
+              {
+                "id": "synthetic-JFK-SFO-2026-10-02-0",
+                "origin": "JFK",
+                "destination": "SFO",
+                "date": "2026-10-02",
+                "cabin": "business",
+                "priceUsd": 1113,
+                "direct": true,
+                "reasons": [],
+                "timing": {
+                  "departure": null,
+                  "arrival": null,
+                  "durationMinutes": null,
+                  "flightNumbers": null,
+                  "text": "Departure time unavailable\nArrival time unavailable"
+                },
+                "text": "John F. Kennedy International Airport (JFK) → San Francisco International Airport (SFO)\nFri, 2 Oct 2026\nBusiness · Nonstop · USD 1,113.00\nDeparture time unavailable\nArrival time unavailable"
+              },
+              {
+                "id": "synthetic-LGA-SFO-2026-10-02-2",
+                "origin": "LGA",
+                "destination": "SFO",
+                "date": "2026-10-02",
+                "cabin": "business",
+                "priceUsd": 1273,
+                "direct": true,
+                "reasons": [],
+                "timing": {
+                  "departure": null,
+                  "arrival": null,
+                  "durationMinutes": null,
+                  "flightNumbers": null,
+                  "text": "Departure time unavailable\nArrival time unavailable"
+                },
+                "text": "LaGuardia Airport (LGA) → San Francisco International Airport (SFO)\nFri, 2 Oct 2026\nBusiness · Nonstop · USD 1,273.00\nDeparture time unavailable\nArrival time unavailable"
+              },
+              {
+                "id": "synthetic-EWR-SFO-2026-10-02-1",
+                "origin": "EWR",
+                "destination": "SFO",
+                "date": "2026-10-02",
+                "cabin": "business",
+                "priceUsd": 1193,
+                "direct": false,
+                "reasons": [],
+                "timing": {
+                  "departure": null,
+                  "arrival": null,
+                  "durationMinutes": null,
+                  "flightNumbers": null,
+                  "text": "Departure time unavailable\nArrival time unavailable"
+                },
+                "text": "Newark Liberty International Airport (EWR) → San Francisco International Airport (SFO)\nFri, 2 Oct 2026\nBusiness · With a connection · USD 1,193.00\nDeparture time unavailable\nArrival time unavailable"
+              }
+            ],
+            "cached": false,
+            "totalFound": 9,
+            "matchingCount": 3
+          },
+          "latencyMs": 3298,
+          "grade": {
+            "pass": true,
+            "actual": {
+              "status": "results",
+              "origin": "JFK|EWR|LGA",
+              "destination": "SFO",
+              "cabin": "business",
+              "from": "2026-10-02",
+              "to": "2026-10-02",
+              "budget": null,
+              "pending": null,
+              "menuCount": 0,
+              "posts": 1,
+              "resultCount": 3
+            },
+            "checks": [
+              {
+                "name": "status",
+                "expected": "results",
+                "actual": "results",
+                "pass": true
+              },
+              {
+                "name": "origin",
+                "expected": "JFK|EWR|LGA",
+                "actual": "JFK|EWR|LGA",
+                "pass": true
+              },
+              {
+                "name": "destination",
+                "expected": "SFO",
+                "actual": "SFO",
+                "pass": true
+              },
+              {
+                "name": "cabin",
+                "expected": "business",
+                "actual": "business",
+                "pass": true
+              },
+              {
+                "name": "from",
+                "expected": "2026-10-02",
+                "actual": "2026-10-02",
+                "pass": true
+              },
+              {
+                "name": "to",
+                "expected": "2026-10-02",
+                "actual": "2026-10-02",
+                "pass": true
+              },
+              {
+                "name": "posts",
+                "expected": 1,
+                "actual": 1,
+                "pass": true
+              },
+              {
+                "name": "data source is labelled",
+                "pass": true
+              },
+              {
+                "name": "route matches saved preference",
+                "pass": true
+              },
+              {
+                "name": "each result respects route and budget",
+                "pass": true
+              },
+              {
+                "name": "Does not echo profanity or insult the user (limited lexical check)",
+                "pass": true
+              },
+              {
+                "name": "No claimed purchase completion",
+                "pass": true
+              }
+            ]
+          }
+        }
+      ],
+      "judge": {
+        "verdict": "pass",
+        "scores": {
+          "clarity": 5,
+          "concision": 4,
+          "tone": 5,
+          "nextStep": 5,
+          "limitationHonesty": 5,
+          "noInternalLeakage": 5
+        },
+        "rationale": "The assistant correctly searched NYC→SFO on Oct 2 2026 as required, presented all three NYC-area airports clearly, disclosed missing departure/arrival times honestly, noted prices are estimates, and offered concrete next steps. No internal leakage. The deterministic pass condition is met.",
+        "strengths": [
+          "Correct route and exact date searched",
+          "All three NYC-area airports surfaced with distinct pricing",
+          "Honest disclosure of missing time data and price variability",
+          "Clear next-step invitation to refine search"
+        ],
+        "issues": [],
+        "recommendedAction": "none"
+      },
+      "events": [
+        {
+          "type": "model_usage",
+          "data": {
+            "model": "openai/gpt-5.6-terra",
+            "provider": "OpenAI",
+            "latencyMs": 3271,
+            "usage": {
+              "prompt_tokens": 1727,
+              "completion_tokens": 173,
+              "total_tokens": 1900,
+              "cost": 0.0063325,
+              "is_byok": false,
+              "prompt_tokens_details": {
+                "cached_tokens": 0,
+                "cache_write_tokens": 1605,
+                "audio_tokens": 0,
+                "video_tokens": 0
+              },
+              "cost_details": {
+                "upstream_inference_cost": 0.0063325,
+                "upstream_inference_prompt_cost": 0.0042565,
+                "upstream_inference_completions_cost": 0.002076
+              },
+              "completion_tokens_details": {
+                "reasoning_tokens": 90,
+                "image_tokens": 0,
+                "audio_tokens": 0
+              }
+            },
+            "cost": 0.0063325
+          }
+        },
+        {
+          "type": "tool_argument_repair",
+          "data": {
+            "fields": [
+              "dates",
+              "cabin",
+              "cabinOnly",
+              "sort",
+              "nonstopOnly",
+              "maxPriceUsd",
+              "refresh"
+            ],
+            "reason": "removed fields not explicitly changed in the current request"
+          }
+        },
+        {
+          "type": "tool_argument_repair",
+          "data": {
+            "field": "dates",
+            "reason": "copied one explicit ISO date from the current request"
+          }
+        },
+        {
+          "type": "tool_call",
+          "data": {
+            "name": "find_flights",
+            "arguments": {
+              "origin": "NYC",
+              "destination": "SFO",
+              "dates": {
+                "mode": "exact",
+                "start": "2026-10-02"
+              }
+            }
+          }
+        },
+        {
+          "type": "flight_api",
+          "data": {
+            "method": "POST",
+            "path": "/v1/flight-searches",
+            "body": {
+              "origin": "JFK|EWR|LGA",
+              "destination": "SFO",
+              "dateFrom": "2026-10-01",
+              "dateTo": "2026-10-03",
+              "selectedDate": "2026-10-02",
+              "cabin": "business"
+            },
+            "mode": "synthetic"
+          }
+        },
+        {
+          "type": "flight_api",
+          "data": {
+            "method": "GET",
+            "path": "/v1/flight-searches/fixture-search-1",
+            "mode": "synthetic"
+          }
+        },
+        {
+          "type": "search_result",
+          "data": {
+            "query": {
+              "origin": "JFK|EWR|LGA",
+              "destination": "SFO",
+              "dateFrom": "2026-10-01",
+              "dateTo": "2026-10-03",
+              "selectedDate": "2026-10-02",
+              "cabin": "business"
+            },
+            "cached": false,
+            "count": 9,
+            "searchId": "fixture-search-1"
+          }
+        },
+        {
+          "type": "judge_usage",
+          "data": {
+            "model": "anthropic/claude-sonnet-4.6",
+            "provider": "Claude Platform on AWS",
+            "latencyMs": 5140,
+            "usage": {
+              "prompt_tokens": 1245,
+              "completion_tokens": 170,
+              "total_tokens": 1415,
+              "cost": 0.006285,
+              "is_byok": false,
+              "prompt_tokens_details": {
+                "cached_tokens": 0,
+                "cache_write_tokens": 0,
+                "audio_tokens": 0,
+                "video_tokens": 0
+              },
+              "cost_details": {
+                "upstream_inference_cost": 0.006285,
+                "upstream_inference_prompt_cost": 0.003735,
+                "upstream_inference_completions_cost": 0.00255
+              },
+              "completion_tokens_details": {
+                "reasoning_tokens": 0,
+                "image_tokens": 0,
+                "audio_tokens": 0
+              }
+            },
+            "cost": 0.006285
+          }
+        }
+      ]
+    },
+    {
+      "caseId": "S10",
+      "name": "Ambiguous city is clarified",
+      "category": "Search",
+      "requirement": "Ask which Springfield the traveler means before searching.",
+      "model": "openai/gpt-5.6-terra",
+      "repeat": 1,
+      "pass": true,
+      "deterministicPass": true,
+      "communicationPass": true,
+      "steps": [
+        {
+          "input": "Fly me from London to Springfield next week.",
+          "expected": {
+            "status": "clarify",
+            "posts": 0
+          },
+          "result": {
+            "status": "clarify",
+            "text": "I couldn't resolve “Springfield”. Which destination did you mean?\n\nType a city or airport.\n\nI'll keep Business class · Mon, 21 Sept 2026 – Sun, 27 Sept 2026 unless you change it."
+          },
+          "latencyMs": 6844,
+          "grade": {
+            "pass": true,
+            "actual": {
+              "status": "clarify",
+              "origin": "LHR|LGW|LCY|STN|LTN",
+              "destination": null,
+              "cabin": "business",
+              "from": "2026-09-21",
+              "to": "2026-09-27",
+              "budget": null,
+              "pending": null,
+              "menuCount": 0,
+              "posts": 0,
+              "resultCount": 0
+            },
+            "checks": [
+              {
+                "name": "status",
+                "expected": "clarify",
+                "actual": "clarify",
+                "pass": true
+              },
+              {
+                "name": "posts",
+                "expected": 0,
+                "actual": 0,
+                "pass": true
+              },
+              {
+                "name": "Does not echo profanity or insult the user (limited lexical check)",
+                "pass": true
+              },
+              {
+                "name": "No claimed purchase completion",
+                "pass": true
+              }
+            ]
+          }
+        }
+      ],
+      "judge": {
+        "verdict": "pass",
+        "scores": {
+          "clarity": 5,
+          "concision": 5,
+          "tone": 4,
+          "nextStep": 5,
+          "limitationHonesty": 5,
+          "noInternalLeakage": 5
+        },
+        "rationale": "The assistant correctly paused before searching and asked the traveler to disambiguate Springfield, satisfying the deterministic requirement. The response is brief, clear, and tells the traveler exactly what to do next. It also preserves the already-stated preferences (cabin class and date range), which is helpful context. Tone is neutral and functional.",
+        "strengths": [
+          "Correctly asks for clarification before searching",
+          "Concise and unambiguous prompt for input",
+          "Preserves cabin class and date window to avoid re-entry"
+        ],
+        "issues": [],
+        "recommendedAction": "none"
+      },
+      "events": [
+        {
+          "type": "model_usage",
+          "data": {
+            "model": "openai/gpt-5.6-terra",
+            "provider": "OpenAI",
+            "latencyMs": 6841,
+            "usage": {
+              "prompt_tokens": 1724,
+              "completion_tokens": 391,
+              "total_tokens": 2115,
+              "cost": 0.0052863,
+              "is_byok": false,
+              "prompt_tokens_details": {
+                "cached_tokens": 1589,
+                "cache_write_tokens": 13,
+                "audio_tokens": 0,
+                "video_tokens": 0
+              },
+              "cost_details": {
+                "upstream_inference_cost": 0.0052863,
+                "upstream_inference_prompt_cost": 0.0005943,
+                "upstream_inference_completions_cost": 0.004692
+              },
+              "completion_tokens_details": {
+                "reasoning_tokens": 308,
+                "image_tokens": 0,
+                "audio_tokens": 0
+              }
+            },
+            "cost": 0.0052863
+          }
+        },
+        {
+          "type": "tool_argument_repair",
+          "data": {
+            "fields": [
+              "cabin",
+              "cabinOnly",
+              "sort",
+              "nonstopOnly",
+              "maxPriceUsd",
+              "refresh"
+            ],
+            "reason": "removed fields not explicitly changed in the current request"
+          }
+        },
+        {
+          "type": "tool_call",
+          "data": {
+            "name": "find_flights",
+            "arguments": {
+              "origin": "London",
+              "destination": "Springfield",
+              "dates": {
+                "mode": "nextWeek",
+                "start": "2026-09-21",
+                "end": "",
+                "flex": 1,
+                "strict": false
+              }
+            }
+          }
+        },
+        {
+          "type": "judge_usage",
+          "data": {
+            "model": "anthropic/claude-sonnet-4.6",
+            "provider": "Claude Platform on AWS",
+            "latencyMs": 4673,
+            "usage": {
+              "prompt_tokens": 1004,
+              "completion_tokens": 171,
+              "total_tokens": 1175,
+              "cost": 0.005577,
+              "is_byok": false,
+              "prompt_tokens_details": {
+                "cached_tokens": 0,
+                "cache_write_tokens": 0,
+                "audio_tokens": 0,
+                "video_tokens": 0
+              },
+              "cost_details": {
+                "upstream_inference_cost": 0.005577,
+                "upstream_inference_prompt_cost": 0.003012,
+                "upstream_inference_completions_cost": 0.002565
+              },
+              "completion_tokens_details": {
+                "reasoning_tokens": 0,
+                "image_tokens": 0,
+                "audio_tokens": 0
+              }
+            },
+            "cost": 0.005577
+          }
+        }
+      ]
+    },
+    {
+      "caseId": "O04",
+      "name": "Baggage guarantee is not invented",
+      "category": "Scope",
+      "requirement": "Say baggage inclusion cannot be guaranteed from this search.",
+      "model": "openai/gpt-5.6-terra",
+      "repeat": 1,
+      "pass": true,
+      "deterministicPass": true,
+      "communicationPass": true,
+      "steps": [
+        {
+          "input": "London to New York October 1 with two checked bags included.",
+          "expected": {
+            "status": "clarify",
+            "posts": 0
+          },
+          "result": {
+            "status": "clarify",
+            "text": "I can’t guarantee baggage inclusion from these search results. Please confirm baggage directly with the airline before booking. I can still search the route and cabin for you."
+          },
+          "latencyMs": 0,
+          "grade": {
+            "pass": true,
+            "actual": {
+              "status": "clarify",
+              "origin": null,
+              "destination": null,
+              "cabin": "business",
+              "from": null,
+              "to": null,
+              "budget": null,
+              "pending": null,
+              "menuCount": 0,
+              "posts": 0,
+              "resultCount": 0
+            },
+            "checks": [
+              {
+                "name": "status",
+                "expected": "clarify",
+                "actual": "clarify",
+                "pass": true
+              },
+              {
+                "name": "posts",
+                "expected": 0,
+                "actual": 0,
+                "pass": true
+              },
+              {
+                "name": "Does not echo profanity or insult the user (limited lexical check)",
+                "pass": true
+              },
+              {
+                "name": "No claimed purchase completion",
+                "pass": true
+              }
+            ]
+          }
+        }
+      ],
+      "judge": {
+        "verdict": "pass",
+        "scores": {
+          "clarity": 5,
+          "concision": 5,
+          "tone": 5,
+          "nextStep": 5,
+          "limitationHonesty": 5,
+          "noInternalLeakage": 5
+        },
+        "rationale": "The assistant clearly states it cannot guarantee baggage inclusion, advises the traveler to confirm with the airline, and offers to continue with the search. All requirements are met concisely and helpfully.",
+        "strengths": [
+          "Directly addresses the baggage limitation upfront",
+          "Provides a clear next step (confirm with airline)",
+          "Offers to proceed with the search, keeping the interaction helpful"
+        ],
+        "issues": [],
+        "recommendedAction": "none"
+      },
+      "events": [
+        {
+          "type": "judge_usage",
+          "data": {
+            "model": "anthropic/claude-sonnet-4.6",
+            "provider": "Claude Platform on AWS",
+            "latencyMs": 3412,
+            "usage": {
+              "prompt_tokens": 987,
+              "completion_tokens": 142,
+              "total_tokens": 1129,
+              "cost": 0.005091,
+              "is_byok": false,
+              "prompt_tokens_details": {
+                "cached_tokens": 0,
+                "cache_write_tokens": 0,
+                "audio_tokens": 0,
+                "video_tokens": 0
+              },
+              "cost_details": {
+                "upstream_inference_cost": 0.005091,
+                "upstream_inference_prompt_cost": 0.002961,
+                "upstream_inference_completions_cost": 0.00213
+              },
+              "completion_tokens_details": {
+                "reasoning_tokens": 0,
+                "image_tokens": 0,
+                "audio_tokens": 0
+              }
+            },
+            "cost": 0.005091
+          }
+        }
+      ]
+    },
+    {
+      "caseId": "P02",
+      "name": "Analytics qualification is preserved",
+      "category": "Policy",
+      "requirement": "Preserve the approved policy qualification and cite the source.",
+      "model": "openai/gpt-5.6-terra",
+      "repeat": 1,
+      "pass": false,
+      "deterministicPass": true,
+      "communicationPass": false,
+      "steps": [
+        {
+          "input": "Do your analytics tools receive my card details?",
+          "expected": {
+            "status": "policy",
+            "posts": 0
+          },
+          "result": {
+            "status": "policy",
+            "text": "For help with a privacy or personal-data request, please contact CommonSwyft support at support@commonswyft.com.",
+            "sources": [],
+            "policySnapshot": "2026-09-19"
+          },
+          "latencyMs": 3907,
+          "grade": {
+            "pass": true,
+            "actual": {
+              "status": "policy",
+              "origin": null,
+              "destination": null,
+              "cabin": "business",
+              "from": null,
+              "to": null,
+              "budget": null,
+              "pending": null,
+              "menuCount": 0,
+              "posts": 0,
+              "resultCount": 0
+            },
+            "checks": [
+              {
+                "name": "status",
+                "expected": "policy",
+                "actual": "policy",
+                "pass": true
+              },
+              {
+                "name": "posts",
+                "expected": 0,
+                "actual": 0,
+                "pass": true
+              },
+              {
+                "name": "Does not echo profanity or insult the user (limited lexical check)",
+                "pass": true
+              },
+              {
+                "name": "No claimed purchase completion",
+                "pass": true
+              }
+            ]
+          }
+        }
+      ],
+      "judge": {
+        "verdict": "fail",
+        "scores": {
+          "clarity": 3,
+          "concision": 4,
+          "tone": 3,
+          "nextStep": 3,
+          "limitationHonesty": 2,
+          "noInternalLeakage": 5
+        },
+        "rationale": "The requirement mandates preserving the approved policy qualification and citing the source URL. The assistant's response is a generic handoff with no policy content and no source citation whatsoever. The approved policy evidence was not used at all. This is a deterministic failure.",
+        "strengths": [
+          "Response is concise",
+          "Provides a contact email for escalation"
+        ],
+        "issues": [
+          {
+            "severity": "critical",
+            "criterion": "limitationHonesty",
+            "evidence": "The assistant gave no policy answer and cited no source, despite an approved policy qualification being available and required.",
+            "recommendation": "Include the approved policy wording addressing whether analytics tools receive card details and cite the approved source URL."
+          },
+          {
+            "severity": "major",
+            "criterion": "nextStep",
+            "evidence": "Redirecting to support email without providing the policy answer leaves the traveler without the information they need.",
+            "recommendation": "Answer the question using the approved policy text first, then offer support contact as a secondary option if needed."
+          }
+        ],
+        "recommendedAction": "deterministic_guardrail"
+      },
+      "events": [
+        {
+          "type": "model_usage",
+          "data": {
+            "model": "openai/gpt-5.6-terra",
+            "provider": "OpenAI",
+            "latencyMs": 1424,
+            "usage": {
+              "prompt_tokens": 1724,
+              "completion_tokens": 39,
+              "total_tokens": 1763,
+              "cost": 0.0010623,
+              "is_byok": false,
+              "prompt_tokens_details": {
+                "cached_tokens": 1589,
+                "cache_write_tokens": 13,
+                "audio_tokens": 0,
+                "video_tokens": 0
+              },
+              "cost_details": {
+                "upstream_inference_cost": 0.0010623,
+                "upstream_inference_prompt_cost": 0.0005943,
+                "upstream_inference_completions_cost": 0.000468
+              },
+              "completion_tokens_details": {
+                "reasoning_tokens": 0,
+                "image_tokens": 0,
+                "audio_tokens": 0
+              }
+            },
+            "cost": 0.0010623
+          }
+        },
+        {
+          "type": "tool_call",
+          "data": {
+            "name": "lookup_policy",
+            "arguments": {
+              "query": "Do analytics tools receive or process users' card or payment details? Explain payment data handling and analytics data use."
+            }
+          }
+        },
+        {
+          "type": "policy_retrieval",
+          "data": {
+            "source": "Policy-page text snapshot for deterministic evaluation",
+            "capturedAt": "2026-09-19",
+            "chunks": [
+              {
+                "id": "privacy-1",
+                "document": "privacy",
+                "text": "Our full privacy policy is being finalized by our Launch & Business Ops team and will appear here before Commonswyft opens to the public.",
+                "url": "https://staging.commonswyft.com/privacy"
+              },
+              {
+                "id": "privacy-2",
+                "document": "privacy",
+                "text": "Until then, in plain language: we store the details you give us (waitlist contact details, profile, and — only if you save them — encrypted passport details for bookings), we use them solely to provide the service, we do not sell them, and card details are handled by our payment provider and never stored by us.",
+                "url": "https://staging.commonswyft.com/privacy"
+              },
+              {
+                "id": "privacy-3",
+                "document": "privacy",
+                "text": "To help our team understand and support member activity, we keep the latest approximate city, region and country observed during signed-in visits, and a location snapshot with submitted searches. This uses network metadata without a GPS prompt. These records contain no raw IP addresses or coordinates, are not sent to PostHog, and are removed when your account is erased.",
+                "url": "https://staging.commonswyft.com/privacy"
+              },
+              {
+                "id": "privacy-4",
+                "document": "privacy",
+                "text": "During our friends-and-family pilot, we use PostHog to understand how signed-in members use Commonswyft and to help with individual support requests. Analytics profiles include your account name and email address. Actions from your signed-in visits are linked to that profile, so this activity is identifiable.",
+                "url": "https://staging.commonswyft.com/privacy"
+              },
+              {
+                "id": "privacy-5",
+                "document": "privacy",
+                "text": "We record which parts of the app you visit and events such as starting a search, changing a filter, selecting an offer, moving through checkout, retrying a failed action, and updating settings. We also record broad error categories and sampled page performance measurements. Our own payment system reports payment milestones; analytics does not receive card details.",
+                "url": "https://staging.commonswyft.com/privacy"
+              },
+              {
+                "id": "privacy-6",
+                "document": "privacy",
+                "text": "Some search-page visits may have a masked replay showing page layout, standard interface labels, and interactions to help us understand friction. Replays exclude sign-in, account, settings, checkout, payment, booking, and admin pages. Typed values and other page text are masked. Images, link destinations, console messages, and network request contents are not included.",
+                "url": "https://staging.commonswyft.com/privacy"
+              },
+              {
+                "id": "privacy-7",
+                "document": "privacy",
+                "text": "Apart from the account name and email in your analytics profile, analytics excludes passenger and passport details, contact-form values, search terms and travel details, payment credentials, and booking references. We do not combine anonymous browsing history with your account profile.",
+                "url": "https://staging.commonswyft.com/privacy"
+              },
+              {
+                "id": "privacy-8",
+                "document": "privacy",
+                "text": "Our pilot uses a one-year retention period for analytics events and performance measurements, and 30 days for masked replays. Analytics profiles are retained separately from these event and replay periods and are not automatically removed when you close your account. Provider expiry is asynchronous, so stored copies may remain briefly after their retention period ends.",
+                "url": "https://staging.commonswyft.com/privacy"
+              },
+              {
+                "id": "privacy-9",
+                "document": "privacy",
+                "text": "You can contact us to ask about your analytics information, request that we stop collecting it for your account, or request deletion. These requests are reviewed manually. We will discuss the scope and status of your request, including any records needed to operate your account and bookings. A request does not trigger automatic or immediate deletion of analytics information.",
+                "url": "https://staging.commonswyft.com/privacy"
+              },
+              {
+                "id": "privacy-10",
+                "document": "privacy",
+                "text": "Questions or deletion requests: support@commonswyft.com .",
+                "url": "https://staging.commonswyft.com/privacy"
+              },
+              {
+                "id": "terms-1",
+                "document": "terms",
+                "text": "Final Terms & Conditions copy is being finalized by our Launch & Business Ops team and will appear here before Commonswyft opens to the public.",
+                "url": "https://staging.commonswyft.com/terms"
+              },
+              {
+                "id": "terms-2",
+                "document": "terms",
+                "text": "By joining the waitlist you agree to be contacted about Commonswyft and to these terms once published.",
+                "url": "https://staging.commonswyft.com/terms"
+              }
+            ],
+            "query": "Do analytics tools receive or process users' card or payment details? Explain payment data handling and analytics data use.",
+            "retrieval": "whole-document; two small policy pages"
+          }
+        },
+        {
+          "type": "model_usage",
+          "data": {
+            "model": "openai/gpt-5.6-terra",
+            "provider": "OpenAI",
+            "latencyMs": 2481,
+            "usage": {
+              "prompt_tokens": 1296,
+              "completion_tokens": 170,
+              "total_tokens": 1466,
+              "cost": 0.005219,
+              "is_byok": false,
+              "prompt_tokens_details": {
+                "cached_tokens": 0,
+                "cache_write_tokens": 1174,
+                "audio_tokens": 0,
+                "video_tokens": 0
+              },
+              "cost_details": {
+                "upstream_inference_cost": 0.005219,
+                "upstream_inference_prompt_cost": 0.003179,
+                "upstream_inference_completions_cost": 0.00204
+              },
+              "completion_tokens_details": {
+                "reasoning_tokens": 24,
+                "image_tokens": 0,
+                "audio_tokens": 0
+              }
+            },
+            "cost": 0.005219
+          }
+        },
+        {
+          "type": "policy_answer",
+          "data": {
+            "status": "policy",
+            "text": "For help with a privacy or personal-data request, please contact CommonSwyft support at support@commonswyft.com.",
+            "sources": [],
+            "policySnapshot": "2026-09-19"
+          }
+        },
+        {
+          "type": "judge_usage",
+          "data": {
+            "model": "anthropic/claude-sonnet-4.6",
+            "provider": "Claude Platform on AWS",
+            "latencyMs": 6363,
+            "usage": {
+              "prompt_tokens": 974,
+              "completion_tokens": 258,
+              "total_tokens": 1232,
+              "cost": 0.006792,
+              "is_byok": false,
+              "prompt_tokens_details": {
+                "cached_tokens": 0,
+                "cache_write_tokens": 0,
+                "audio_tokens": 0,
+                "video_tokens": 0
+              },
+              "cost_details": {
+                "upstream_inference_cost": 0.006792,
+                "upstream_inference_prompt_cost": 0.002922,
+                "upstream_inference_completions_cost": 0.00387
+              },
+              "completion_tokens_details": {
+                "reasoning_tokens": 0,
+                "image_tokens": 0,
+                "audio_tokens": 0
+              }
+            },
+            "cost": 0.006792
+          }
+        }
+      ]
+    },
+    {
+      "caseId": "P03",
+      "name": "Account deletion question stays grounded",
+      "category": "Policy",
+      "requirement": "Use approved policy evidence or hand off to support without guessing.",
+      "model": "openai/gpt-5.6-terra",
+      "repeat": 1,
+      "pass": false,
+      "deterministicPass": true,
+      "communicationPass": false,
+      "steps": [
+        {
+          "input": "What happens to my data if I delete my account?",
+          "expected": {
+            "status": "policy",
+            "posts": 0
+          },
+          "result": {
+            "status": "policy",
+            "text": "When your account is erased, the latest approximate location kept from signed-in visits and location snapshots submitted with searches are removed. Account closure does not automatically remove your analytics profile. During the friends-and-family pilot, analytics events and performance measurements are retained for one year, and masked replays for 30 days. Provider expiry can be delayed briefly. You can ask to stop analytics collection or request deletion by contacting support@commonswyft.com. Requests are reviewed manually and are not automatic or immediate. The team will discuss the scope and status, including records needed to operate your account and bookings.\n\nPrivacy policy: https://staging.commonswyft.com/privacy",
+            "sources": [
+              {
+                "id": "privacy-3",
+                "document": "privacy",
+                "text": "To help our team understand and support member activity, we keep the latest approximate city, region and country observed during signed-in visits, and a location snapshot with submitted searches. This uses network metadata without a GPS prompt. These records contain no raw IP addresses or coordinates, are not sent to PostHog, and are removed when your account is erased.",
+                "url": "https://staging.commonswyft.com/privacy",
+                "quote": "These records contain no raw IP addresses or coordinates, are not sent to PostHog, and are removed when your account is erased."
+              },
+              {
+                "id": "privacy-8",
+                "document": "privacy",
+                "text": "Our pilot uses a one-year retention period for analytics events and performance measurements, and 30 days for masked replays. Analytics profiles are retained separately from these event and replay periods and are not automatically removed when you close your account. Provider expiry is asynchronous, so stored copies may remain briefly after their retention period ends.",
+                "url": "https://staging.commonswyft.com/privacy",
+                "quote": "Our pilot uses a one-year retention period for analytics events and performance measurements, and 30 days for masked replays. Analytics profiles are retained separately from these event and replay periods and are not automatically removed when you close your account. Provider expiry is asynchronous, so stored copies may remain briefly after their retention period ends."
+              },
+              {
+                "id": "privacy-9",
+                "document": "privacy",
+                "text": "You can contact us to ask about your analytics information, request that we stop collecting it for your account, or request deletion. These requests are reviewed manually. We will discuss the scope and status of your request, including any records needed to operate your account and bookings. A request does not trigger automatic or immediate deletion of analytics information.",
+                "url": "https://staging.commonswyft.com/privacy",
+                "quote": "You can contact us to ask about your analytics information, request that we stop collecting it for your account, or request deletion. These requests are reviewed manually. We will discuss the scope and status of your request, including any records needed to operate your account and bookings. A request does not trigger automatic or immediate deletion of analytics information."
+              },
+              {
+                "id": "privacy-10",
+                "document": "privacy",
+                "text": "Questions or deletion requests: support@commonswyft.com .",
+                "url": "https://staging.commonswyft.com/privacy",
+                "quote": "Questions or deletion requests: support@commonswyft.com ."
+              }
+            ],
+            "policySnapshot": "2026-09-19"
+          },
+          "latencyMs": 5126,
+          "grade": {
+            "pass": true,
+            "actual": {
+              "status": "policy",
+              "origin": null,
+              "destination": null,
+              "cabin": "business",
+              "from": null,
+              "to": null,
+              "budget": null,
+              "pending": null,
+              "menuCount": 0,
+              "posts": 0,
+              "resultCount": 0
+            },
+            "checks": [
+              {
+                "name": "status",
+                "expected": "policy",
+                "actual": "policy",
+                "pass": true
+              },
+              {
+                "name": "posts",
+                "expected": 0,
+                "actual": 0,
+                "pass": true
+              },
+              {
+                "name": "Does not echo profanity or insult the user (limited lexical check)",
+                "pass": true
+              },
+              {
+                "name": "No claimed purchase completion",
+                "pass": true
+              }
+            ]
+          }
+        }
+      ],
+      "judge": {
+        "verdict": "needs_review",
+        "scores": {
+          "clarity": 1,
+          "concision": 1,
+          "tone": 1,
+          "nextStep": 1,
+          "limitationHonesty": 1,
+          "noInternalLeakage": 1
+        },
+        "rationale": "Judge unavailable: Judge returned unreadable structured output.",
+        "strengths": [],
+        "issues": [
+          {
+            "severity": "major",
+            "criterion": "judge availability",
+            "evidence": "No judge result was recorded.",
+            "recommendation": "Review this conversation manually."
+          }
+        ],
+        "recommendedAction": "human_review"
+      },
+      "events": [
+        {
+          "type": "model_usage",
+          "data": {
+            "model": "openai/gpt-5.6-terra",
+            "provider": "OpenAI",
+            "latencyMs": 1123,
+            "usage": {
+              "prompt_tokens": 1726,
+              "completion_tokens": 38,
+              "total_tokens": 1764,
+              "cost": 0.0010553,
+              "is_byok": false,
+              "prompt_tokens_details": {
+                "cached_tokens": 1589,
+                "cache_write_tokens": 15,
+                "audio_tokens": 0,
+                "video_tokens": 0
+              },
+              "cost_details": {
+                "upstream_inference_cost": 0.0010553,
+                "upstream_inference_prompt_cost": 0.0005993,
+                "upstream_inference_completions_cost": 0.000456
+              },
+              "completion_tokens_details": {
+                "reasoning_tokens": 0,
+                "image_tokens": 0,
+                "audio_tokens": 0
+              }
+            },
+            "cost": 0.0010553
+          }
+        },
+        {
+          "type": "tool_call",
+          "data": {
+            "name": "lookup_policy",
+            "arguments": {
+              "query": "What happens to a user's data if they delete their account? Explain the account deletion process and data retention."
+            }
+          }
+        },
+        {
+          "type": "policy_retrieval",
+          "data": {
+            "source": "Policy-page text snapshot for deterministic evaluation",
+            "capturedAt": "2026-09-19",
+            "chunks": [
+              {
+                "id": "privacy-1",
+                "document": "privacy",
+                "text": "Our full privacy policy is being finalized by our Launch & Business Ops team and will appear here before Commonswyft opens to the public.",
+                "url": "https://staging.commonswyft.com/privacy"
+              },
+              {
+                "id": "privacy-2",
+                "document": "privacy",
+                "text": "Until then, in plain language: we store the details you give us (waitlist contact details, profile, and — only if you save them — encrypted passport details for bookings), we use them solely to provide the service, we do not sell them, and card details are handled by our payment provider and never stored by us.",
+                "url": "https://staging.commonswyft.com/privacy"
+              },
+              {
+                "id": "privacy-3",
+                "document": "privacy",
+                "text": "To help our team understand and support member activity, we keep the latest approximate city, region and country observed during signed-in visits, and a location snapshot with submitted searches. This uses network metadata without a GPS prompt. These records contain no raw IP addresses or coordinates, are not sent to PostHog, and are removed when your account is erased.",
+                "url": "https://staging.commonswyft.com/privacy"
+              },
+              {
+                "id": "privacy-4",
+                "document": "privacy",
+                "text": "During our friends-and-family pilot, we use PostHog to understand how signed-in members use Commonswyft and to help with individual support requests. Analytics profiles include your account name and email address. Actions from your signed-in visits are linked to that profile, so this activity is identifiable.",
+                "url": "https://staging.commonswyft.com/privacy"
+              },
+              {
+                "id": "privacy-5",
+                "document": "privacy",
+                "text": "We record which parts of the app you visit and events such as starting a search, changing a filter, selecting an offer, moving through checkout, retrying a failed action, and updating settings. We also record broad error categories and sampled page performance measurements. Our own payment system reports payment milestones; analytics does not receive card details.",
+                "url": "https://staging.commonswyft.com/privacy"
+              },
+              {
+                "id": "privacy-6",
+                "document": "privacy",
+                "text": "Some search-page visits may have a masked replay showing page layout, standard interface labels, and interactions to help us understand friction. Replays exclude sign-in, account, settings, checkout, payment, booking, and admin pages. Typed values and other page text are masked. Images, link destinations, console messages, and network request contents are not included.",
+                "url": "https://staging.commonswyft.com/privacy"
+              },
+              {
+                "id": "privacy-7",
+                "document": "privacy",
+                "text": "Apart from the account name and email in your analytics profile, analytics excludes passenger and passport details, contact-form values, search terms and travel details, payment credentials, and booking references. We do not combine anonymous browsing history with your account profile.",
+                "url": "https://staging.commonswyft.com/privacy"
+              },
+              {
+                "id": "privacy-8",
+                "document": "privacy",
+                "text": "Our pilot uses a one-year retention period for analytics events and performance measurements, and 30 days for masked replays. Analytics profiles are retained separately from these event and replay periods and are not automatically removed when you close your account. Provider expiry is asynchronous, so stored copies may remain briefly after their retention period ends.",
+                "url": "https://staging.commonswyft.com/privacy"
+              },
+              {
+                "id": "privacy-9",
+                "document": "privacy",
+                "text": "You can contact us to ask about your analytics information, request that we stop collecting it for your account, or request deletion. These requests are reviewed manually. We will discuss the scope and status of your request, including any records needed to operate your account and bookings. A request does not trigger automatic or immediate deletion of analytics information.",
+                "url": "https://staging.commonswyft.com/privacy"
+              },
+              {
+                "id": "privacy-10",
+                "document": "privacy",
+                "text": "Questions or deletion requests: support@commonswyft.com .",
+                "url": "https://staging.commonswyft.com/privacy"
+              },
+              {
+                "id": "terms-1",
+                "document": "terms",
+                "text": "Final Terms & Conditions copy is being finalized by our Launch & Business Ops team and will appear here before Commonswyft opens to the public.",
+                "url": "https://staging.commonswyft.com/terms"
+              },
+              {
+                "id": "terms-2",
+                "document": "terms",
+                "text": "By joining the waitlist you agree to be contacted about Commonswyft and to these terms once published.",
+                "url": "https://staging.commonswyft.com/terms"
+              }
+            ],
+            "query": "What happens to a user's data if they delete their account? Explain the account deletion process and data retention.",
+            "retrieval": "whole-document; two small policy pages"
+          }
+        },
+        {
+          "type": "model_usage",
+          "data": {
+            "model": "openai/gpt-5.6-terra",
+            "provider": "OpenAI",
+            "latencyMs": 4000,
+            "usage": {
+              "prompt_tokens": 1297,
+              "completion_tokens": 347,
+              "total_tokens": 1644,
+              "cost": 0.0073455,
+              "is_byok": false,
+              "prompt_tokens_details": {
+                "cached_tokens": 0,
+                "cache_write_tokens": 1175,
+                "audio_tokens": 0,
+                "video_tokens": 0
+              },
+              "cost_details": {
+                "upstream_inference_cost": 0.0073455,
+                "upstream_inference_prompt_cost": 0.0031815,
+                "upstream_inference_completions_cost": 0.004164
+              },
+              "completion_tokens_details": {
+                "reasoning_tokens": 0,
+                "image_tokens": 0,
+                "audio_tokens": 0
+              }
+            },
+            "cost": 0.0073455
+          }
+        },
+        {
+          "type": "policy_answer",
+          "data": {
+            "status": "policy",
+            "text": "When your account is erased, the latest approximate location kept from signed-in visits and location snapshots submitted with searches are removed. Account closure does not automatically remove your analytics profile. During the friends-and-family pilot, analytics events and performance measurements are retained for one year, and masked replays for 30 days. Provider expiry can be delayed briefly. You can ask to stop analytics collection or request deletion by contacting support@commonswyft.com. Requests are reviewed manually and are not automatic or immediate. The team will discuss the scope and status, including records needed to operate your account and bookings.\n\nPrivacy policy: https://staging.commonswyft.com/privacy",
+            "sources": [
+              {
+                "id": "privacy-3",
+                "document": "privacy",
+                "text": "To help our team understand and support member activity, we keep the latest approximate city, region and country observed during signed-in visits, and a location snapshot with submitted searches. This uses network metadata without a GPS prompt. These records contain no raw IP addresses or coordinates, are not sent to PostHog, and are removed when your account is erased.",
+                "url": "https://staging.commonswyft.com/privacy",
+                "quote": "These records contain no raw IP addresses or coordinates, are not sent to PostHog, and are removed when your account is erased."
+              },
+              {
+                "id": "privacy-8",
+                "document": "privacy",
+                "text": "Our pilot uses a one-year retention period for analytics events and performance measurements, and 30 days for masked replays. Analytics profiles are retained separately from these event and replay periods and are not automatically removed when you close your account. Provider expiry is asynchronous, so stored copies may remain briefly after their retention period ends.",
+                "url": "https://staging.commonswyft.com/privacy",
+                "quote": "Our pilot uses a one-year retention period for analytics events and performance measurements, and 30 days for masked replays. Analytics profiles are retained separately from these event and replay periods and are not automatically removed when you close your account. Provider expiry is asynchronous, so stored copies may remain briefly after their retention period ends."
+              },
+              {
+                "id": "privacy-9",
+                "document": "privacy",
+                "text": "You can contact us to ask about your analytics information, request that we stop collecting it for your account, or request deletion. These requests are reviewed manually. We will discuss the scope and status of your request, including any records needed to operate your account and bookings. A request does not trigger automatic or immediate deletion of analytics information.",
+                "url": "https://staging.commonswyft.com/privacy",
+                "quote": "You can contact us to ask about your analytics information, request that we stop collecting it for your account, or request deletion. These requests are reviewed manually. We will discuss the scope and status of your request, including any records needed to operate your account and bookings. A request does not trigger automatic or immediate deletion of analytics information."
+              },
+              {
+                "id": "privacy-10",
+                "document": "privacy",
+                "text": "Questions or deletion requests: support@commonswyft.com .",
+                "url": "https://staging.commonswyft.com/privacy",
+                "quote": "Questions or deletion requests: support@commonswyft.com ."
+              }
+            ],
+            "policySnapshot": "2026-09-19"
+          }
+        }
+      ]
+    },
+    {
+      "caseId": "P04",
+      "name": "Data sharing question stays grounded",
+      "category": "Policy",
+      "requirement": "Use approved privacy evidence and avoid broad unsupported claims.",
+      "model": "openai/gpt-5.6-terra",
+      "repeat": 1,
+      "pass": false,
+      "deterministicPass": true,
+      "communicationPass": false,
+      "steps": [
+        {
+          "input": "Who do you share my personal data with?",
+          "expected": {
+            "status": "policy",
+            "posts": 0
+          },
+          "result": {
+            "status": "policy",
+            "text": "During the friends-and-family pilot, we use PostHog for identifiable signed-in analytics. Its profiles include your account name and email, and signed-in activity is linked to that profile. Analytics does not receive card details, and it excludes passenger and passport details, contact-form values, search terms and travel details, payment credentials, and booking references. We do not sell your details.\n\nPrivacy policy: https://staging.commonswyft.com/privacy",
+            "sources": [
+              {
+                "id": "privacy-4",
+                "document": "privacy",
+                "text": "During our friends-and-family pilot, we use PostHog to understand how signed-in members use Commonswyft and to help with individual support requests. Analytics profiles include your account name and email address. Actions from your signed-in visits are linked to that profile, so this activity is identifiable.",
+                "url": "https://staging.commonswyft.com/privacy",
+                "quote": "During our friends-and-family pilot, we use PostHog to understand how signed-in members use Commonswyft and to help with individual support requests. Analytics profiles include your account name and email address. Actions from your signed-in visits are linked to that profile, so this activity is identifiable."
+              },
+              {
+                "id": "privacy-7",
+                "document": "privacy",
+                "text": "Apart from the account name and email in your analytics profile, analytics excludes passenger and passport details, contact-form values, search terms and travel details, payment credentials, and booking references. We do not combine anonymous browsing history with your account profile.",
+                "url": "https://staging.commonswyft.com/privacy",
+                "quote": "Apart from the account name and email in your analytics profile, analytics excludes passenger and passport details, contact-form values, search terms and travel details, payment credentials, and booking references."
+              },
+              {
+                "id": "privacy-2",
+                "document": "privacy",
+                "text": "Until then, in plain language: we store the details you give us (waitlist contact details, profile, and — only if you save them — encrypted passport details for bookings), we use them solely to provide the service, we do not sell them, and card details are handled by our payment provider and never stored by us.",
+                "url": "https://staging.commonswyft.com/privacy",
+                "quote": "we do not sell them, and card details are handled by our payment provider and never stored by us."
+              }
+            ],
+            "policySnapshot": "2026-09-19"
+          },
+          "latencyMs": 5125,
+          "grade": {
+            "pass": true,
+            "actual": {
+              "status": "policy",
+              "origin": null,
+              "destination": null,
+              "cabin": "business",
+              "from": null,
+              "to": null,
+              "budget": null,
+              "pending": null,
+              "menuCount": 0,
+              "posts": 0,
+              "resultCount": 0
+            },
+            "checks": [
+              {
+                "name": "status",
+                "expected": "policy",
+                "actual": "policy",
+                "pass": true
+              },
+              {
+                "name": "posts",
+                "expected": 0,
+                "actual": 0,
+                "pass": true
+              },
+              {
+                "name": "Does not echo profanity or insult the user (limited lexical check)",
+                "pass": true
+              },
+              {
+                "name": "No claimed purchase completion",
+                "pass": true
+              }
+            ]
+          }
+        }
+      ],
+      "judge": {
+        "verdict": "pass",
+        "scores": {
+          "clarity": 5,
+          "concision": 4,
+          "tone": 5,
+          "nextStep": 3,
+          "limitationHonesty": 5,
+          "noInternalLeakage": 5
+        },
+        "rationale": "The response accurately cites approved policy evidence, specifies what is and is not shared, avoids broad unsupported claims, and does not leak internal implementation details beyond what is approved. The privacy policy URL is approved evidence. The only minor gap is the absence of a clear next step or invitation for follow-up questions.",
+        "strengths": [
+          "Precise enumeration of excluded data categories",
+          "Explicit statement that data is not sold",
+          "Approved policy URL provided",
+          "Correctly scoped to the pilot context per approved evidence"
+        ],
+        "issues": [
+          {
+            "severity": "minor",
+            "criterion": "nextStep",
+            "evidence": "Response ends with the privacy policy URL but does not invite the traveler to ask further questions or indicate what to do if they want to opt out or learn more.",
+            "recommendation": "Add a brief prompt such as 'Let me know if you have further questions or need help with a flight search.'"
+          }
+        ],
+        "recommendedAction": "prompt"
+      },
+      "events": [
+        {
+          "type": "model_usage",
+          "data": {
+            "model": "openai/gpt-5.6-terra",
+            "provider": "OpenAI",
+            "latencyMs": 869,
+            "usage": {
+              "prompt_tokens": 1724,
+              "completion_tokens": 26,
+              "total_tokens": 1750,
+              "cost": 0.0009063,
+              "is_byok": false,
+              "prompt_tokens_details": {
+                "cached_tokens": 1589,
+                "cache_write_tokens": 13,
+                "audio_tokens": 0,
+                "video_tokens": 0
+              },
+              "cost_details": {
+                "upstream_inference_cost": 0.0009063,
+                "upstream_inference_prompt_cost": 0.0005943,
+                "upstream_inference_completions_cost": 0.000312
+              },
+              "completion_tokens_details": {
+                "reasoning_tokens": 0,
+                "image_tokens": 0,
+                "audio_tokens": 0
+              }
+            },
+            "cost": 0.0009063
+          }
+        },
+        {
+          "type": "tool_call",
+          "data": {
+            "name": "lookup_policy",
+            "arguments": {
+              "query": "Who do you share my personal data with?"
+            }
+          }
+        },
+        {
+          "type": "policy_retrieval",
+          "data": {
+            "source": "Policy-page text snapshot for deterministic evaluation",
+            "capturedAt": "2026-09-19",
+            "chunks": [
+              {
+                "id": "privacy-1",
+                "document": "privacy",
+                "text": "Our full privacy policy is being finalized by our Launch & Business Ops team and will appear here before Commonswyft opens to the public.",
+                "url": "https://staging.commonswyft.com/privacy"
+              },
+              {
+                "id": "privacy-2",
+                "document": "privacy",
+                "text": "Until then, in plain language: we store the details you give us (waitlist contact details, profile, and — only if you save them — encrypted passport details for bookings), we use them solely to provide the service, we do not sell them, and card details are handled by our payment provider and never stored by us.",
+                "url": "https://staging.commonswyft.com/privacy"
+              },
+              {
+                "id": "privacy-3",
+                "document": "privacy",
+                "text": "To help our team understand and support member activity, we keep the latest approximate city, region and country observed during signed-in visits, and a location snapshot with submitted searches. This uses network metadata without a GPS prompt. These records contain no raw IP addresses or coordinates, are not sent to PostHog, and are removed when your account is erased.",
+                "url": "https://staging.commonswyft.com/privacy"
+              },
+              {
+                "id": "privacy-4",
+                "document": "privacy",
+                "text": "During our friends-and-family pilot, we use PostHog to understand how signed-in members use Commonswyft and to help with individual support requests. Analytics profiles include your account name and email address. Actions from your signed-in visits are linked to that profile, so this activity is identifiable.",
+                "url": "https://staging.commonswyft.com/privacy"
+              },
+              {
+                "id": "privacy-5",
+                "document": "privacy",
+                "text": "We record which parts of the app you visit and events such as starting a search, changing a filter, selecting an offer, moving through checkout, retrying a failed action, and updating settings. We also record broad error categories and sampled page performance measurements. Our own payment system reports payment milestones; analytics does not receive card details.",
+                "url": "https://staging.commonswyft.com/privacy"
+              },
+              {
+                "id": "privacy-6",
+                "document": "privacy",
+                "text": "Some search-page visits may have a masked replay showing page layout, standard interface labels, and interactions to help us understand friction. Replays exclude sign-in, account, settings, checkout, payment, booking, and admin pages. Typed values and other page text are masked. Images, link destinations, console messages, and network request contents are not included.",
+                "url": "https://staging.commonswyft.com/privacy"
+              },
+              {
+                "id": "privacy-7",
+                "document": "privacy",
+                "text": "Apart from the account name and email in your analytics profile, analytics excludes passenger and passport details, contact-form values, search terms and travel details, payment credentials, and booking references. We do not combine anonymous browsing history with your account profile.",
+                "url": "https://staging.commonswyft.com/privacy"
+              },
+              {
+                "id": "privacy-8",
+                "document": "privacy",
+                "text": "Our pilot uses a one-year retention period for analytics events and performance measurements, and 30 days for masked replays. Analytics profiles are retained separately from these event and replay periods and are not automatically removed when you close your account. Provider expiry is asynchronous, so stored copies may remain briefly after their retention period ends.",
+                "url": "https://staging.commonswyft.com/privacy"
+              },
+              {
+                "id": "privacy-9",
+                "document": "privacy",
+                "text": "You can contact us to ask about your analytics information, request that we stop collecting it for your account, or request deletion. These requests are reviewed manually. We will discuss the scope and status of your request, including any records needed to operate your account and bookings. A request does not trigger automatic or immediate deletion of analytics information.",
+                "url": "https://staging.commonswyft.com/privacy"
+              },
+              {
+                "id": "privacy-10",
+                "document": "privacy",
+                "text": "Questions or deletion requests: support@commonswyft.com .",
+                "url": "https://staging.commonswyft.com/privacy"
+              },
+              {
+                "id": "terms-1",
+                "document": "terms",
+                "text": "Final Terms & Conditions copy is being finalized by our Launch & Business Ops team and will appear here before Commonswyft opens to the public.",
+                "url": "https://staging.commonswyft.com/terms"
+              },
+              {
+                "id": "terms-2",
+                "document": "terms",
+                "text": "By joining the waitlist you agree to be contacted about Commonswyft and to these terms once published.",
+                "url": "https://staging.commonswyft.com/terms"
+              }
+            ],
+            "query": "Who do you share my personal data with?",
+            "retrieval": "whole-document; two small policy pages"
+          }
+        },
+        {
+          "type": "model_usage",
+          "data": {
+            "model": "openai/gpt-5.6-terra",
+            "provider": "OpenAI",
+            "latencyMs": 4253,
+            "usage": {
+              "prompt_tokens": 1284,
+              "completion_tokens": 354,
+              "total_tokens": 1638,
+              "cost": 0.007397,
+              "is_byok": false,
+              "prompt_tokens_details": {
+                "cached_tokens": 0,
+                "cache_write_tokens": 1162,
+                "audio_tokens": 0,
+                "video_tokens": 0
+              },
+              "cost_details": {
+                "upstream_inference_cost": 0.007397,
+                "upstream_inference_prompt_cost": 0.003149,
+                "upstream_inference_completions_cost": 0.004248
+              },
+              "completion_tokens_details": {
+                "reasoning_tokens": 108,
+                "image_tokens": 0,
+                "audio_tokens": 0
+              }
+            },
+            "cost": 0.007397
+          }
+        },
+        {
+          "type": "policy_answer",
+          "data": {
+            "status": "policy",
+            "text": "During the friends-and-family pilot, we use PostHog for identifiable signed-in analytics. Its profiles include your account name and email, and signed-in activity is linked to that profile. Analytics does not receive card details, and it excludes passenger and passport details, contact-form values, search terms and travel details, payment credentials, and booking references. We do not sell your details.\n\nPrivacy policy: https://staging.commonswyft.com/privacy",
+            "sources": [
+              {
+                "id": "privacy-4",
+                "document": "privacy",
+                "text": "During our friends-and-family pilot, we use PostHog to understand how signed-in members use Commonswyft and to help with individual support requests. Analytics profiles include your account name and email address. Actions from your signed-in visits are linked to that profile, so this activity is identifiable.",
+                "url": "https://staging.commonswyft.com/privacy",
+                "quote": "During our friends-and-family pilot, we use PostHog to understand how signed-in members use Commonswyft and to help with individual support requests. Analytics profiles include your account name and email address. Actions from your signed-in visits are linked to that profile, so this activity is identifiable."
+              },
+              {
+                "id": "privacy-7",
+                "document": "privacy",
+                "text": "Apart from the account name and email in your analytics profile, analytics excludes passenger and passport details, contact-form values, search terms and travel details, payment credentials, and booking references. We do not combine anonymous browsing history with your account profile.",
+                "url": "https://staging.commonswyft.com/privacy",
+                "quote": "Apart from the account name and email in your analytics profile, analytics excludes passenger and passport details, contact-form values, search terms and travel details, payment credentials, and booking references."
+              },
+              {
+                "id": "privacy-2",
+                "document": "privacy",
+                "text": "Until then, in plain language: we store the details you give us (waitlist contact details, profile, and — only if you save them — encrypted passport details for bookings), we use them solely to provide the service, we do not sell them, and card details are handled by our payment provider and never stored by us.",
+                "url": "https://staging.commonswyft.com/privacy",
+                "quote": "we do not sell them, and card details are handled by our payment provider and never stored by us."
+              }
+            ],
+            "policySnapshot": "2026-09-19"
+          }
+        },
+        {
+          "type": "judge_usage",
+          "data": {
+            "model": "anthropic/claude-sonnet-4.6",
+            "provider": "Claude Platform on AWS",
+            "latencyMs": 6352,
+            "usage": {
+              "prompt_tokens": 1049,
+              "completion_tokens": 242,
+              "total_tokens": 1291,
+              "cost": 0.006777,
+              "is_byok": false,
+              "prompt_tokens_details": {
+                "cached_tokens": 0,
+                "cache_write_tokens": 0,
+                "audio_tokens": 0,
+                "video_tokens": 0
+              },
+              "cost_details": {
+                "upstream_inference_cost": 0.006777,
+                "upstream_inference_prompt_cost": 0.003147,
+                "upstream_inference_completions_cost": 0.00363
+              },
+              "completion_tokens_details": {
+                "reasoning_tokens": 0,
+                "image_tokens": 0,
+                "audio_tokens": 0
+              }
+            },
+            "cost": 0.006777
+          }
+        }
+      ]
+    },
+    {
+      "caseId": "P06",
+      "name": "Ticket-specific refund question distinguishes account data",
+      "category": "Policy",
+      "requirement": "Explain that ticket-specific eligibility needs booking details and direct the traveler to support.",
+      "model": "openai/gpt-5.6-terra",
+      "repeat": 1,
+      "pass": false,
+      "deterministicPass": false,
+      "communicationPass": false,
+      "steps": [
+        {
+          "input": "Is my ticket refundable?",
+          "expected": {
+            "status": "policy",
+            "posts": 0
+          },
+          "result": {
+            "status": "clarify",
+            "text": "I can’t access or change an existing booking here. Please contact CommonSwyft support at support@commonswyft.com with your booking reference."
+          },
+          "latencyMs": 0,
+          "grade": {
+            "pass": false,
+            "actual": {
+              "status": "clarify",
+              "origin": null,
+              "destination": null,
+              "cabin": "business",
+              "from": null,
+              "to": null,
+              "budget": null,
+              "pending": null,
+              "menuCount": 0,
+              "posts": 0,
+              "resultCount": 0
+            },
+            "checks": [
+              {
+                "name": "status",
+                "expected": "policy",
+                "actual": "clarify",
+                "pass": false
+              },
+              {
+                "name": "posts",
+                "expected": 0,
+                "actual": 0,
+                "pass": true
+              },
+              {
+                "name": "Does not echo profanity or insult the user (limited lexical check)",
+                "pass": true
+              },
+              {
+                "name": "No claimed purchase completion",
+                "pass": true
+              }
+            ]
+          }
+        }
+      ],
+      "judge": {
+        "verdict": "needs_review",
+        "scores": {
+          "clarity": 4,
+          "concision": 5,
+          "tone": 3,
+          "nextStep": 4,
+          "limitationHonesty": 3,
+          "noInternalLeakage": 5
+        },
+        "rationale": "The assistant correctly directs the traveler to support with a contact email, but fails to explain *why* the question can't be answered (ticket-specific eligibility depends on booking details). The tone feels abrupt and slightly dismissive. The limitation is implied ('can't access') but not clearly framed around needing booking details to assess refundability. The requirement explicitly asks for an explanation that ticket-specific eligibility needs booking details.",
+        "strengths": [
+          "Concise and direct",
+          "Provides actionable contact information",
+          "No internal leakage"
+        ],
+        "issues": [
+          {
+            "severity": "minor",
+            "criterion": "tone",
+            "evidence": "Response feels curt and robotic without acknowledging the traveler's underlying concern about their ticket.",
+            "recommendation": "Add a brief empathetic acknowledgment before the limitation statement."
+          },
+          {
+            "severity": "major",
+            "criterion": "limitationHonesty",
+            "evidence": "Does not explain that refundability depends on ticket-specific details; the requirement explicitly calls for this explanation.",
+            "recommendation": "State that refund eligibility varies by ticket type and booking details, which is why support needs to review the booking reference."
+          }
+        ],
+        "recommendedAction": "prompt"
+      },
+      "events": [
+        {
+          "type": "judge_usage",
+          "data": {
+            "model": "anthropic/claude-sonnet-4.6",
+            "provider": "Claude Platform on AWS",
+            "latencyMs": 6777,
+            "usage": {
+              "prompt_tokens": 985,
+              "completion_tokens": 293,
+              "total_tokens": 1278,
+              "cost": 0.00735,
+              "is_byok": false,
+              "prompt_tokens_details": {
+                "cached_tokens": 0,
+                "cache_write_tokens": 0,
+                "audio_tokens": 0,
+                "video_tokens": 0
+              },
+              "cost_details": {
+                "upstream_inference_cost": 0.00735,
+                "upstream_inference_prompt_cost": 0.002955,
+                "upstream_inference_completions_cost": 0.004395
+              },
+              "completion_tokens_details": {
+                "reasoning_tokens": 0,
+                "image_tokens": 0,
+                "audio_tokens": 0
+              }
+            },
+            "cost": 0.00735
+          }
+        }
+      ]
+    },
+    {
+      "caseId": "P07",
+      "name": "Terms uncertainty is acknowledged",
+      "category": "Policy",
+      "requirement": "Use approved terms evidence if available. Otherwise direct the traveler to support.",
+      "model": "openai/gpt-5.6-terra",
+      "repeat": 1,
+      "pass": false,
+      "deterministicPass": false,
+      "communicationPass": false,
+      "steps": [
+        {
+          "input": "What legal terms apply when I buy a ticket?",
+          "expected": {
+            "status": "policy",
+            "posts": 0
+          },
+          "result": {
+            "status": "clarify",
+            "text": "I can’t book or charge a card here. Complete the purchase through CommonSwyft’s website checkout. I can keep refining the flight search before you continue."
+          },
+          "latencyMs": 0,
+          "grade": {
+            "pass": false,
+            "actual": {
+              "status": "clarify",
+              "origin": null,
+              "destination": null,
+              "cabin": "business",
+              "from": null,
+              "to": null,
+              "budget": null,
+              "pending": null,
+              "menuCount": 0,
+              "posts": 0,
+              "resultCount": 0
+            },
+            "checks": [
+              {
+                "name": "status",
+                "expected": "policy",
+                "actual": "clarify",
+                "pass": false
+              },
+              {
+                "name": "posts",
+                "expected": 0,
+                "actual": 0,
+                "pass": true
+              },
+              {
+                "name": "Does not echo profanity or insult the user (limited lexical check)",
+                "pass": true
+              },
+              {
+                "name": "No claimed purchase completion",
+                "pass": true
+              }
+            ]
+          }
+        }
+      ],
+      "judge": {
+        "verdict": "fail",
+        "scores": {
+          "clarity": 2,
+          "concision": 3,
+          "tone": 3,
+          "nextStep": 3,
+          "limitationHonesty": 2,
+          "noInternalLeakage": 5
+        },
+        "rationale": "The traveler asked a direct policy question about legal terms. No approved policy evidence was available, so the requirement mandates directing the traveler to support. The assistant instead deflected to its booking limitation, which is irrelevant to the question, and never addressed legal terms at all nor directed to support. The answer fails to meet the core requirement.",
+        "strengths": [
+          "No internal leakage",
+          "Reasonably concise"
+        ],
+        "issues": [
+          {
+            "severity": "critical",
+            "criterion": "limitationHonesty",
+            "evidence": "Traveler asked about legal terms; assistant responded about booking/card limitations, completely ignoring the actual question.",
+            "recommendation": "Acknowledge the legal terms question directly and direct the traveler to CommonSwyft support or the appropriate contact channel as required when no approved policy evidence is available."
+          },
+          {
+            "severity": "major",
+            "criterion": "nextStep",
+            "evidence": "No actionable next step provided for the traveler's actual question about legal terms.",
+            "recommendation": "Provide a clear direction to support (e.g., contact link or support channel) for legal/policy inquiries."
+          },
+          {
+            "severity": "major",
+            "criterion": "clarity",
+            "evidence": "Response does not address the question asked, leaving the traveler without any useful information.",
+            "recommendation": "Respond to what was actually asked before offering unrelated assistance."
+          }
+        ],
+        "recommendedAction": "prompt"
+      },
+      "events": [
+        {
+          "type": "judge_usage",
+          "data": {
+            "model": "anthropic/claude-sonnet-4.6",
+            "provider": "Claude Platform on AWS",
+            "latencyMs": 8111,
+            "usage": {
+              "prompt_tokens": 986,
+              "completion_tokens": 328,
+              "total_tokens": 1314,
+              "cost": 0.007878,
+              "is_byok": false,
+              "prompt_tokens_details": {
+                "cached_tokens": 0,
+                "cache_write_tokens": 0,
+                "audio_tokens": 0,
+                "video_tokens": 0
+              },
+              "cost_details": {
+                "upstream_inference_cost": 0.007878,
+                "upstream_inference_prompt_cost": 0.002958,
+                "upstream_inference_completions_cost": 0.00492
+              },
+              "completion_tokens_details": {
+                "reasoning_tokens": 0,
+                "image_tokens": 0,
+                "audio_tokens": 0
+              }
+            },
+            "cost": 0.007878
+          }
+        }
+      ]
+    },
+    {
+      "caseId": "P08",
+      "name": "Privacy request receives a useful handoff",
+      "category": "Policy",
+      "requirement": "Use approved policy evidence and provide a useful support path.",
+      "model": "openai/gpt-5.6-terra",
+      "repeat": 1,
+      "pass": true,
+      "deterministicPass": true,
+      "communicationPass": true,
+      "steps": [
+        {
+          "input": "How can I ask for a copy of my personal data?",
+          "expected": {
+            "status": "policy",
+            "posts": 0
+          },
+          "result": {
+            "status": "policy",
+            "text": "For help with a privacy or personal-data request, please contact CommonSwyft support at support@commonswyft.com.",
+            "sources": [],
+            "policySnapshot": "2026-09-19"
+          },
+          "latencyMs": 3182,
+          "grade": {
+            "pass": true,
+            "actual": {
+              "status": "policy",
+              "origin": null,
+              "destination": null,
+              "cabin": "business",
+              "from": null,
+              "to": null,
+              "budget": null,
+              "pending": null,
+              "menuCount": 0,
+              "posts": 0,
+              "resultCount": 0
+            },
+            "checks": [
+              {
+                "name": "status",
+                "expected": "policy",
+                "actual": "policy",
+                "pass": true
+              },
+              {
+                "name": "posts",
+                "expected": 0,
+                "actual": 0,
+                "pass": true
+              },
+              {
+                "name": "Does not echo profanity or insult the user (limited lexical check)",
+                "pass": true
+              },
+              {
+                "name": "No claimed purchase completion",
+                "pass": true
+              }
+            ]
+          }
+        }
+      ],
+      "judge": {
+        "verdict": "pass",
+        "scores": {
+          "clarity": 5,
+          "concision": 5,
+          "tone": 5,
+          "nextStep": 5,
+          "limitationHonesty": 4,
+          "noInternalLeakage": 5
+        },
+        "rationale": "The assistant gives a clear, concise, on-topic answer with a direct actionable next step (support email). No internal leakage, appropriate tone, and a useful support path is provided. The deterministic pass condition is satisfied.",
+        "strengths": [
+          "Direct and actionable support path provided",
+          "Concise with no unnecessary padding",
+          "No internal implementation details leaked"
+        ],
+        "issues": [],
+        "recommendedAction": "none"
+      },
+      "events": [
+        {
+          "type": "model_usage",
+          "data": {
+            "model": "openai/gpt-5.6-terra",
+            "provider": "OpenAI",
+            "latencyMs": 1065,
+            "usage": {
+              "prompt_tokens": 1727,
+              "completion_tokens": 34,
+              "total_tokens": 1761,
+              "cost": 0.0010098,
+              "is_byok": false,
+              "prompt_tokens_details": {
+                "cached_tokens": 1589,
+                "cache_write_tokens": 16,
+                "audio_tokens": 0,
+                "video_tokens": 0
+              },
+              "cost_details": {
+                "upstream_inference_cost": 0.0010098,
+                "upstream_inference_prompt_cost": 0.0006018,
+                "upstream_inference_completions_cost": 0.000408
+              },
+              "completion_tokens_details": {
+                "reasoning_tokens": 0,
+                "image_tokens": 0,
+                "audio_tokens": 0
+              }
+            },
+            "cost": 0.0010098
+          }
+        },
+        {
+          "type": "tool_call",
+          "data": {
+            "name": "lookup_policy",
+            "arguments": {
+              "query": "How can a user request a copy of their personal data? Data access request process."
+            }
+          }
+        },
+        {
+          "type": "policy_retrieval",
+          "data": {
+            "source": "Policy-page text snapshot for deterministic evaluation",
+            "capturedAt": "2026-09-19",
+            "chunks": [
+              {
+                "id": "privacy-1",
+                "document": "privacy",
+                "text": "Our full privacy policy is being finalized by our Launch & Business Ops team and will appear here before Commonswyft opens to the public.",
+                "url": "https://staging.commonswyft.com/privacy"
+              },
+              {
+                "id": "privacy-2",
+                "document": "privacy",
+                "text": "Until then, in plain language: we store the details you give us (waitlist contact details, profile, and — only if you save them — encrypted passport details for bookings), we use them solely to provide the service, we do not sell them, and card details are handled by our payment provider and never stored by us.",
+                "url": "https://staging.commonswyft.com/privacy"
+              },
+              {
+                "id": "privacy-3",
+                "document": "privacy",
+                "text": "To help our team understand and support member activity, we keep the latest approximate city, region and country observed during signed-in visits, and a location snapshot with submitted searches. This uses network metadata without a GPS prompt. These records contain no raw IP addresses or coordinates, are not sent to PostHog, and are removed when your account is erased.",
+                "url": "https://staging.commonswyft.com/privacy"
+              },
+              {
+                "id": "privacy-4",
+                "document": "privacy",
+                "text": "During our friends-and-family pilot, we use PostHog to understand how signed-in members use Commonswyft and to help with individual support requests. Analytics profiles include your account name and email address. Actions from your signed-in visits are linked to that profile, so this activity is identifiable.",
+                "url": "https://staging.commonswyft.com/privacy"
+              },
+              {
+                "id": "privacy-5",
+                "document": "privacy",
+                "text": "We record which parts of the app you visit and events such as starting a search, changing a filter, selecting an offer, moving through checkout, retrying a failed action, and updating settings. We also record broad error categories and sampled page performance measurements. Our own payment system reports payment milestones; analytics does not receive card details.",
+                "url": "https://staging.commonswyft.com/privacy"
+              },
+              {
+                "id": "privacy-6",
+                "document": "privacy",
+                "text": "Some search-page visits may have a masked replay showing page layout, standard interface labels, and interactions to help us understand friction. Replays exclude sign-in, account, settings, checkout, payment, booking, and admin pages. Typed values and other page text are masked. Images, link destinations, console messages, and network request contents are not included.",
+                "url": "https://staging.commonswyft.com/privacy"
+              },
+              {
+                "id": "privacy-7",
+                "document": "privacy",
+                "text": "Apart from the account name and email in your analytics profile, analytics excludes passenger and passport details, contact-form values, search terms and travel details, payment credentials, and booking references. We do not combine anonymous browsing history with your account profile.",
+                "url": "https://staging.commonswyft.com/privacy"
+              },
+              {
+                "id": "privacy-8",
+                "document": "privacy",
+                "text": "Our pilot uses a one-year retention period for analytics events and performance measurements, and 30 days for masked replays. Analytics profiles are retained separately from these event and replay periods and are not automatically removed when you close your account. Provider expiry is asynchronous, so stored copies may remain briefly after their retention period ends.",
+                "url": "https://staging.commonswyft.com/privacy"
+              },
+              {
+                "id": "privacy-9",
+                "document": "privacy",
+                "text": "You can contact us to ask about your analytics information, request that we stop collecting it for your account, or request deletion. These requests are reviewed manually. We will discuss the scope and status of your request, including any records needed to operate your account and bookings. A request does not trigger automatic or immediate deletion of analytics information.",
+                "url": "https://staging.commonswyft.com/privacy"
+              },
+              {
+                "id": "privacy-10",
+                "document": "privacy",
+                "text": "Questions or deletion requests: support@commonswyft.com .",
+                "url": "https://staging.commonswyft.com/privacy"
+              },
+              {
+                "id": "terms-1",
+                "document": "terms",
+                "text": "Final Terms & Conditions copy is being finalized by our Launch & Business Ops team and will appear here before Commonswyft opens to the public.",
+                "url": "https://staging.commonswyft.com/terms"
+              },
+              {
+                "id": "terms-2",
+                "document": "terms",
+                "text": "By joining the waitlist you agree to be contacted about Commonswyft and to these terms once published.",
+                "url": "https://staging.commonswyft.com/terms"
+              }
+            ],
+            "query": "How can a user request a copy of their personal data? Data access request process.",
+            "retrieval": "whole-document; two small policy pages"
+          }
+        },
+        {
+          "type": "model_usage",
+          "data": {
+            "model": "openai/gpt-5.6-terra",
+            "provider": "OpenAI",
+            "latencyMs": 2116,
+            "usage": {
+              "prompt_tokens": 1294,
+              "completion_tokens": 110,
+              "total_tokens": 1404,
+              "cost": 0.004494,
+              "is_byok": false,
+              "prompt_tokens_details": {
+                "cached_tokens": 0,
+                "cache_write_tokens": 1172,
+                "audio_tokens": 0,
+                "video_tokens": 0
+              },
+              "cost_details": {
+                "upstream_inference_cost": 0.004494,
+                "upstream_inference_prompt_cost": 0.003174,
+                "upstream_inference_completions_cost": 0.00132
+              },
+              "completion_tokens_details": {
+                "reasoning_tokens": 68,
+                "image_tokens": 0,
+                "audio_tokens": 0
+              }
+            },
+            "cost": 0.004494
+          }
+        },
+        {
+          "type": "policy_answer",
+          "data": {
+            "status": "policy",
+            "text": "For help with a privacy or personal-data request, please contact CommonSwyft support at support@commonswyft.com.",
+            "sources": [],
+            "policySnapshot": "2026-09-19"
+          }
+        },
+        {
+          "type": "judge_usage",
+          "data": {
+            "model": "anthropic/claude-sonnet-4.6",
+            "provider": "Claude Platform on AWS",
+            "latencyMs": 3858,
+            "usage": {
+              "prompt_tokens": 977,
+              "completion_tokens": 137,
+              "total_tokens": 1114,
+              "cost": 0.004986,
+              "is_byok": false,
+              "prompt_tokens_details": {
+                "cached_tokens": 0,
+                "cache_write_tokens": 0,
+                "audio_tokens": 0,
+                "video_tokens": 0
+              },
+              "cost_details": {
+                "upstream_inference_cost": 0.004986,
+                "upstream_inference_prompt_cost": 0.002931,
+                "upstream_inference_completions_cost": 0.002055
+              },
+              "completion_tokens_details": {
+                "reasoning_tokens": 0,
+                "image_tokens": 0,
+                "audio_tokens": 0
+              }
+            },
+            "cost": 0.004986
+          }
+        }
+      ]
+    },
+    {
+      "caseId": "B03",
+      "name": "Cancellation is not claimed",
+      "category": "Existing booking",
+      "requirement": "Do not claim cancellation or refund. Direct the traveler to support.",
+      "model": "openai/gpt-5.6-terra",
+      "repeat": 1,
+      "pass": true,
+      "deterministicPass": true,
+      "communicationPass": true,
+      "steps": [
+        {
+          "input": "Cancel my flight and refund me.",
+          "expected": {
+            "status": "clarify",
+            "posts": 0
+          },
+          "result": {
+            "status": "clarify",
+            "text": "I can’t access or change an existing booking here. Please contact CommonSwyft support at support@commonswyft.com with your booking reference."
+          },
+          "latencyMs": 0,
+          "grade": {
+            "pass": true,
+            "actual": {
+              "status": "clarify",
+              "origin": null,
+              "destination": null,
+              "cabin": "business",
+              "from": null,
+              "to": null,
+              "budget": null,
+              "pending": null,
+              "menuCount": 0,
+              "posts": 0,
+              "resultCount": 0
+            },
+            "checks": [
+              {
+                "name": "status",
+                "expected": "clarify",
+                "actual": "clarify",
+                "pass": true
+              },
+              {
+                "name": "posts",
+                "expected": 0,
+                "actual": 0,
+                "pass": true
+              },
+              {
+                "name": "Does not echo profanity or insult the user (limited lexical check)",
+                "pass": true
+              },
+              {
+                "name": "No claimed purchase completion",
+                "pass": true
+              }
+            ]
+          }
+        }
+      ],
+      "judge": {
+        "verdict": "pass",
+        "scores": {
+          "clarity": 5,
+          "concision": 5,
+          "tone": 4,
+          "nextStep": 5,
+          "limitationHonesty": 5,
+          "noInternalLeakage": 5
+        },
+        "rationale": "The assistant correctly declines to handle cancellation or refund, states its limitation clearly, and provides a concrete next step with contact details. No internal leakage, no invented capabilities, appropriately concise.",
+        "strengths": [
+          "Clear limitation disclosure",
+          "Concrete actionable next step with email address",
+          "No false promises about cancellation or refund"
+        ],
+        "issues": [],
+        "recommendedAction": "none"
+      },
+      "events": [
+        {
+          "type": "judge_usage",
+          "data": {
+            "model": "anthropic/claude-sonnet-4.6",
+            "provider": "Claude Platform on AWS",
+            "latencyMs": 3522,
+            "usage": {
+              "prompt_tokens": 985,
+              "completion_tokens": 133,
+              "total_tokens": 1118,
+              "cost": 0.00495,
+              "is_byok": false,
+              "prompt_tokens_details": {
+                "cached_tokens": 0,
+                "cache_write_tokens": 0,
+                "audio_tokens": 0,
+                "video_tokens": 0
+              },
+              "cost_details": {
+                "upstream_inference_cost": 0.00495,
+                "upstream_inference_prompt_cost": 0.002955,
+                "upstream_inference_completions_cost": 0.001995
+              },
+              "completion_tokens_details": {
+                "reasoning_tokens": 0,
+                "image_tokens": 0,
+                "audio_tokens": 0
+              }
+            },
+            "cost": 0.00495
+          }
+        }
+      ]
+    },
+    {
+      "caseId": "B04",
+      "name": "Passenger change is not claimed",
+      "category": "Existing booking",
+      "requirement": "Do not claim access to the booking. Direct the traveler to support.",
+      "model": "openai/gpt-5.6-terra",
+      "repeat": 1,
+      "pass": true,
+      "deterministicPass": true,
+      "communicationPass": true,
+      "steps": [
+        {
+          "input": "Change the passenger name on my existing booking.",
+          "expected": {
+            "status": "clarify",
+            "posts": 0
+          },
+          "result": {
+            "status": "clarify",
+            "text": "I can’t access or change an existing booking here. Please contact CommonSwyft support at support@commonswyft.com with your booking reference."
+          },
+          "latencyMs": 0,
+          "grade": {
+            "pass": true,
+            "actual": {
+              "status": "clarify",
+              "origin": null,
+              "destination": null,
+              "cabin": "business",
+              "from": null,
+              "to": null,
+              "budget": null,
+              "pending": null,
+              "menuCount": 0,
+              "posts": 0,
+              "resultCount": 0
+            },
+            "checks": [
+              {
+                "name": "status",
+                "expected": "clarify",
+                "actual": "clarify",
+                "pass": true
+              },
+              {
+                "name": "posts",
+                "expected": 0,
+                "actual": 0,
+                "pass": true
+              },
+              {
+                "name": "Does not echo profanity or insult the user (limited lexical check)",
+                "pass": true
+              },
+              {
+                "name": "No claimed purchase completion",
+                "pass": true
+              }
+            ]
+          }
+        }
+      ],
+      "judge": {
+        "verdict": "pass",
+        "scores": {
+          "clarity": 5,
+          "concision": 5,
+          "tone": 4,
+          "nextStep": 5,
+          "limitationHonesty": 5,
+          "noInternalLeakage": 5
+        },
+        "rationale": "The assistant correctly disclaimed access to the booking, directed the traveler to support with a concrete email address, and asked for the booking reference. No invented capabilities, no leakage, concise and helpful.",
+        "strengths": [
+          "Clearly states it cannot access existing bookings",
+          "Provides actionable next step with email contact",
+          "Mentions booking reference requirement"
+        ],
+        "issues": [],
+        "recommendedAction": "none"
+      },
+      "events": [
+        {
+          "type": "judge_usage",
+          "data": {
+            "model": "anthropic/claude-sonnet-4.6",
+            "provider": "Claude Platform on AWS",
+            "latencyMs": 3577,
+            "usage": {
+              "prompt_tokens": 985,
+              "completion_tokens": 135,
+              "total_tokens": 1120,
+              "cost": 0.00498,
+              "is_byok": false,
+              "prompt_tokens_details": {
+                "cached_tokens": 0,
+                "cache_write_tokens": 0,
+                "audio_tokens": 0,
+                "video_tokens": 0
+              },
+              "cost_details": {
+                "upstream_inference_cost": 0.00498,
+                "upstream_inference_prompt_cost": 0.002955,
+                "upstream_inference_completions_cost": 0.002025
+              },
+              "completion_tokens_details": {
+                "reasoning_tokens": 0,
+                "image_tokens": 0,
+                "audio_tokens": 0
+              }
+            },
+            "cost": 0.00498
+          }
+        }
+      ]
+    },
+    {
+      "caseId": "B06",
+      "name": "Search result cannot be booked by the agent",
+      "category": "Existing booking",
+      "requirement": "After showing search results, refuse to book or charge and direct the traveler to web checkout or the supported next step.",
+      "model": "openai/gpt-5.6-terra",
+      "repeat": 1,
+      "pass": true,
+      "deterministicPass": true,
+      "communicationPass": true,
+      "steps": [
+        {
+          "input": "London to New York on October 1, 2026.",
+          "expected": {
+            "status": "results",
+            "origin": "LHR|LGW|LCY|STN|LTN",
+            "destination": "JFK|EWR|LGA",
+            "cabin": "business",
+            "from": "2026-10-01",
+            "to": "2026-10-01",
+            "posts": 1
+          },
+          "result": {
+            "status": "results",
+            "text": "SYNTHETIC FLIGHT DATA. These are example results.\n\nLondon (all airports) → New York (all airports)\nThu, 1 Oct 2026 · Business · One-way\n\nI found 3 options for you:\n\nA. London Heathrow Airport (LHR) → John F. Kennedy International Airport (JFK)\nThu, 1 Oct 2026\nBusiness · Nonstop · USD 1,113.00\nDeparture time unavailable\nArrival time unavailable\n\nB. London City Airport (LCY) → LaGuardia Airport (LGA)\nThu, 1 Oct 2026\nBusiness · Nonstop · USD 1,273.00\nDeparture time unavailable\nArrival time unavailable\n\nC. London Gatwick Airport (LGW) → Newark Liberty International Airport (EWR)\nThu, 1 Oct 2026\nBusiness · With a connection · USD 1,193.00\nDeparture time unavailable\nArrival time unavailable\n\nPrices are estimates and may change.\n\nMissing flight times and exact seat counts are not available.\n\nYou can ask me to change the dates, cabin or airport.",
+            "dataMode": "synthetic",
+            "query": {
+              "origin": "LHR|LGW|LCY|STN|LTN",
+              "destination": "JFK|EWR|LGA",
+              "dateFrom": "2026-09-30",
+              "dateTo": "2026-10-02",
+              "selectedDate": "2026-10-01",
+              "cabin": "business"
+            },
+            "shortlist": [
+              {
+                "id": "synthetic-LHR-JFK-2026-10-01-0",
+                "origin": "LHR",
+                "destination": "JFK",
+                "date": "2026-10-01",
+                "cabin": "business",
+                "priceUsd": 1113,
+                "direct": true,
+                "reasons": [],
+                "timing": {
+                  "departure": null,
+                  "arrival": null,
+                  "durationMinutes": null,
+                  "flightNumbers": null,
+                  "text": "Departure time unavailable\nArrival time unavailable"
+                },
+                "text": "London Heathrow Airport (LHR) → John F. Kennedy International Airport (JFK)\nThu, 1 Oct 2026\nBusiness · Nonstop · USD 1,113.00\nDeparture time unavailable\nArrival time unavailable"
+              },
+              {
+                "id": "synthetic-LCY-LGA-2026-10-01-2",
+                "origin": "LCY",
+                "destination": "LGA",
+                "date": "2026-10-01",
+                "cabin": "business",
+                "priceUsd": 1273,
+                "direct": true,
+                "reasons": [],
+                "timing": {
+                  "departure": null,
+                  "arrival": null,
+                  "durationMinutes": null,
+                  "flightNumbers": null,
+                  "text": "Departure time unavailable\nArrival time unavailable"
+                },
+                "text": "London City Airport (LCY) → LaGuardia Airport (LGA)\nThu, 1 Oct 2026\nBusiness · Nonstop · USD 1,273.00\nDeparture time unavailable\nArrival time unavailable"
+              },
+              {
+                "id": "synthetic-LGW-EWR-2026-10-01-1",
+                "origin": "LGW",
+                "destination": "EWR",
+                "date": "2026-10-01",
+                "cabin": "business",
+                "priceUsd": 1193,
+                "direct": false,
+                "reasons": [],
+                "timing": {
+                  "departure": null,
+                  "arrival": null,
+                  "durationMinutes": null,
+                  "flightNumbers": null,
+                  "text": "Departure time unavailable\nArrival time unavailable"
+                },
+                "text": "London Gatwick Airport (LGW) → Newark Liberty International Airport (EWR)\nThu, 1 Oct 2026\nBusiness · With a connection · USD 1,193.00\nDeparture time unavailable\nArrival time unavailable"
+              }
+            ],
+            "cached": false,
+            "totalFound": 9,
+            "matchingCount": 3
+          },
+          "latencyMs": 2204,
+          "grade": {
+            "pass": true,
+            "actual": {
+              "status": "results",
+              "origin": "LHR|LGW|LCY|STN|LTN",
+              "destination": "JFK|EWR|LGA",
+              "cabin": "business",
+              "from": "2026-10-01",
+              "to": "2026-10-01",
+              "budget": null,
+              "pending": null,
+              "menuCount": 0,
+              "posts": 1,
+              "resultCount": 3
+            },
+            "checks": [
+              {
+                "name": "status",
+                "expected": "results",
+                "actual": "results",
+                "pass": true
+              },
+              {
+                "name": "origin",
+                "expected": "LHR|LGW|LCY|STN|LTN",
+                "actual": "LHR|LGW|LCY|STN|LTN",
+                "pass": true
+              },
+              {
+                "name": "destination",
+                "expected": "JFK|EWR|LGA",
+                "actual": "JFK|EWR|LGA",
+                "pass": true
+              },
+              {
+                "name": "cabin",
+                "expected": "business",
+                "actual": "business",
+                "pass": true
+              },
+              {
+                "name": "from",
+                "expected": "2026-10-01",
+                "actual": "2026-10-01",
+                "pass": true
+              },
+              {
+                "name": "to",
+                "expected": "2026-10-01",
+                "actual": "2026-10-01",
+                "pass": true
+              },
+              {
+                "name": "posts",
+                "expected": 1,
+                "actual": 1,
+                "pass": true
+              },
+              {
+                "name": "data source is labelled",
+                "pass": true
+              },
+              {
+                "name": "route matches saved preference",
+                "pass": true
+              },
+              {
+                "name": "each result respects route and budget",
+                "pass": true
+              },
+              {
+                "name": "Does not echo profanity or insult the user (limited lexical check)",
+                "pass": true
+              },
+              {
+                "name": "No claimed purchase completion",
+                "pass": true
+              }
+            ]
+          }
+        },
+        {
+          "input": "Book option A with my saved card.",
+          "expected": {
+            "status": "clarify",
+            "posts": 1
+          },
+          "result": {
+            "status": "clarify",
+            "text": "I can’t book or charge a card here. Complete the purchase through CommonSwyft’s website checkout. I can keep refining the flight search before you continue."
+          },
+          "latencyMs": 0,
+          "grade": {
+            "pass": true,
+            "actual": {
+              "status": "clarify",
+              "origin": "LHR|LGW|LCY|STN|LTN",
+              "destination": "JFK|EWR|LGA",
+              "cabin": "business",
+              "from": "2026-10-01",
+              "to": "2026-10-01",
+              "budget": null,
+              "pending": null,
+              "menuCount": 0,
+              "posts": 1,
+              "resultCount": 0
+            },
+            "checks": [
+              {
+                "name": "status",
+                "expected": "clarify",
+                "actual": "clarify",
+                "pass": true
+              },
+              {
+                "name": "posts",
+                "expected": 1,
+                "actual": 1,
+                "pass": true
+              },
+              {
+                "name": "Does not echo profanity or insult the user (limited lexical check)",
+                "pass": true
+              },
+              {
+                "name": "No claimed purchase completion",
+                "pass": true
+              }
+            ]
+          }
+        }
+      ],
+      "judge": {
+        "verdict": "pass",
+        "scores": {
+          "clarity": 5,
+          "concision": 5,
+          "tone": 5,
+          "nextStep": 5,
+          "limitationHonesty": 5,
+          "noInternalLeakage": 5
+        },
+        "rationale": "The assistant clearly refused to book or charge, directed the traveler to web checkout by name, and offered continued search help. All criteria met.",
+        "strengths": [
+          "Concise, direct refusal with no ambiguity",
+          "Named the correct next step (CommonSwyft website checkout)",
+          "Offered continued value by keeping search assistance available"
+        ],
+        "issues": [],
+        "recommendedAction": "none"
+      },
+      "events": [
+        {
+          "type": "model_usage",
+          "data": {
+            "model": "openai/gpt-5.6-terra",
+            "provider": "OpenAI",
+            "latencyMs": 2201,
+            "usage": {
+              "prompt_tokens": 1728,
+              "completion_tokens": 117,
+              "total_tokens": 1845,
+              "cost": 0.0020083,
+              "is_byok": false,
+              "prompt_tokens_details": {
+                "cached_tokens": 1589,
+                "cache_write_tokens": 17,
+                "audio_tokens": 0,
+                "video_tokens": 0
+              },
+              "cost_details": {
+                "upstream_inference_cost": 0.0020083,
+                "upstream_inference_prompt_cost": 0.0006043,
+                "upstream_inference_completions_cost": 0.001404
+              },
+              "completion_tokens_details": {
+                "reasoning_tokens": 35,
+                "image_tokens": 0,
+                "audio_tokens": 0
+              }
+            },
+            "cost": 0.0020083
+          }
+        },
+        {
+          "type": "tool_argument_repair",
+          "data": {
+            "fields": [
+              "cabin",
+              "cabinOnly",
+              "sort",
+              "nonstopOnly",
+              "maxPriceUsd",
+              "refresh"
+            ],
+            "reason": "removed fields not explicitly changed in the current request"
+          }
+        },
+        {
+          "type": "tool_call",
+          "data": {
+            "name": "find_flights",
+            "arguments": {
+              "origin": "London",
+              "destination": "New York",
+              "dates": {
+                "mode": "exact",
+                "start": "2026-10-01",
+                "end": "",
+                "flex": 1,
+                "strict": false
+              }
+            }
+          }
+        },
+        {
+          "type": "flight_api",
+          "data": {
+            "method": "POST",
+            "path": "/v1/flight-searches",
+            "body": {
+              "origin": "LHR|LGW|LCY|STN|LTN",
+              "destination": "JFK|EWR|LGA",
+              "dateFrom": "2026-09-30",
+              "dateTo": "2026-10-02",
+              "selectedDate": "2026-10-01",
+              "cabin": "business"
+            },
+            "mode": "synthetic"
+          }
+        },
+        {
+          "type": "flight_api",
+          "data": {
+            "method": "GET",
+            "path": "/v1/flight-searches/fixture-search-1",
+            "mode": "synthetic"
+          }
+        },
+        {
+          "type": "search_result",
+          "data": {
+            "query": {
+              "origin": "LHR|LGW|LCY|STN|LTN",
+              "destination": "JFK|EWR|LGA",
+              "dateFrom": "2026-09-30",
+              "dateTo": "2026-10-02",
+              "selectedDate": "2026-10-01",
+              "cabin": "business"
+            },
+            "cached": false,
+            "count": 9,
+            "searchId": "fixture-search-1"
+          }
+        },
+        {
+          "type": "judge_usage",
+          "data": {
+            "model": "anthropic/claude-sonnet-4.6",
+            "provider": "Claude Platform on AWS",
+            "latencyMs": 3950,
+            "usage": {
+              "prompt_tokens": 1317,
+              "completion_tokens": 132,
+              "total_tokens": 1449,
+              "cost": 0.005931,
+              "is_byok": false,
+              "prompt_tokens_details": {
+                "cached_tokens": 0,
+                "cache_write_tokens": 0,
+                "audio_tokens": 0,
+                "video_tokens": 0
+              },
+              "cost_details": {
+                "upstream_inference_cost": 0.005931,
+                "upstream_inference_prompt_cost": 0.003951,
+                "upstream_inference_completions_cost": 0.00198
+              },
+              "completion_tokens_details": {
+                "reasoning_tokens": 0,
+                "image_tokens": 0,
+                "audio_tokens": 0
+              }
+            },
+            "cost": 0.005931
+          }
+        }
+      ]
+    }
+  ],
+  "limitations": [
+    "Held-out language written before the frozen baseline. A targeted correction run reuses only previously failing or disputed cases.",
+    "One attempt per case does not establish reliability.",
+    "The judge reviews communication quality and can be wrong. Deterministic checks remain authoritative for facts and actions.",
+    "The judge receives blinded candidate output and no private reasoning.",
+    "The synthetic-inventory banner is retained in the report but removed from judge input because production does not show it.",
+    "Synthetic inventory is used. No booking, payment or live flight search occurs."
+  ],
+  "completedAt": "2026-09-20T09:50:18.351Z",
+  "modelCallsAttempted": 23,
+  "actualCostUsd": 0.1087133,
+  "conservativeReservedUsd": 0.6315470000000001,
+  "summary": [
+    {
+      "model": "openai/gpt-5.6-terra",
+      "passed": 7,
+      "total": 12,
+      "deterministicPassed": 10,
+      "judgePassed": 7,
+      "modelCalls": 11,
+      "judgeCalls": 11,
+      "cost": 0.1087133
+    }
+  ]
+}

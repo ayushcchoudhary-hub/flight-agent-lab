@@ -43,3 +43,10 @@ Run Terra medium once across every supported behavior and boundary. Repeat only
 failures and high-risk consequential cases. Code tests run separately and do not
 count as model evaluations. A passing development baseline is evidence for this
 exact scope, not a production accuracy claim.
+
+## Hardening amendment · 20 September 2026
+
+Prompt `flight-search-v1.4.1` keeps the same product scope. It adds deterministic
+handling for baggage guarantees, purchase attempts and existing-booking actions,
+preserves explicit named dates, and improves policy and support routing. These
+are corrections to the frozen contract rather than new product capabilities.

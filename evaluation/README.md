@@ -4,10 +4,10 @@ This folder explains how the agent was evaluated and what the results support.
 It complements the interactive **Evals** and **Model comparison** pages in the
 demo.
 
-[HARDENING.md](HARDENING.md) defines the next edge-case set, the limited role
-of an LLM judge and the release rule for changing the default model.
+[HARDENING.md](HARDENING.md) records the 42-case hardening run, the independent
+LLM judge, the corrections it motivated and the targeted verification history.
 
-## Three evidence layers
+## Four evidence layers
 
 1. **Deterministic checks** test application rules such as state merging,
    validation, endpoint restrictions, policy citation checks, response
@@ -17,6 +17,8 @@ of an LLM judge and the release rule for changing the default model.
    information, follow-ups, ambiguity, unsupported requests and failures.
 3. **Model comparisons** run the same scenarios and fixtures across model and
    reasoning configurations, recording correctness, elapsed time and tokens.
+4. **Independent judge audits** score customer-visible quality after exact
+   checks. They cannot override a wrong route, date, state or tool action.
 
 The evaluation first screens DeepSeek, Mistral, Qwen and GLM with Terra medium
 as the control. A later run repeats the finalists three times across all 15
@@ -31,7 +33,7 @@ different questions.
 
 The current sanitized reports are under
 [`agent/published-eval-results`](../agent/published-eval-results). They retain
-test inputs, visible replies, grading, latency and token usage. They exclude
+test inputs, visible replies, grading, latency, token usage and judge audits. They exclude
 credentials, backend captures, source snapshots, request identifiers and
 private model thread identifiers.
 

@@ -11,6 +11,7 @@ test('retrieval preserves analytics qualifications and terms placeholder',()=>{
 });
 test('unsupported answers and fabricated citations fall back to support',()=>{
  assert.equal(renderPolicyAnswer({answer:'Refunds are free',citations:[],needsSupport:true},evidence).text,supportReply);
+ assert.match(renderPolicyAnswer({answer:'',citations:[],needsSupport:true},evidence,'Is my ticket refundable?').text,/fare rules.*booking reference/i);
  assert.equal(renderPolicyAnswer({answer:'Refunds are free',citations:[{id:'privacy-1',quote:'Refunds are always free'}],needsSupport:false},evidence).text,supportReply);
 });
 test('valid answers link the policy while snapshot provenance stays internal',()=>{
@@ -44,4 +45,16 @@ test('failed generation gives support handoff without executing search',async()=
  let n=0;const model={async complete(){if(n++)throw Error('outage');return call('lookup_policy',{query:'privacy'})}};
  const conversation={adapter:{mode:'replay'},today:()=> '2026-09-19',publicState:()=>({})};
  const result=await new Agent({conversation,model}).respond('privacy question');assert.equal(result.text,supportReply);
+});
+test('purchase-terms questions route to policy before action boundaries',async()=>{
+ const queries=[];
+ const model={async complete(messages,options){
+  if(options?.tools?.[0]?.function?.name==='policy_answer')return call('policy_answer',{answer:'',citations:[],needsSupport:true});
+  const user=messages.at(-1).content;queries.push(user);
+  return call('lookup_policy',{query:user});
+ }};
+ const conversation={adapter:{mode:'replay'},today:()=> '2026-09-19',publicState:()=>({}),find:()=>{throw Error('Unexpected search')}};
+ const agent=new Agent({conversation,model});
+ const result=await agent.respond('What legal terms apply when I buy a ticket?');assert.equal(result.status,'policy');assert.match(result.text,/legal terms.*support@commonswyft\.com/i);
+ assert.equal(queries.length,1);
 });

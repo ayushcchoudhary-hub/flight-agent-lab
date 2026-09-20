@@ -1,0 +1,843 @@
+{
+  "runId": "live-hardening-judge-2026-09-20T09-55-08.109Z",
+  "evaluationKind": "llm-judge-hardening",
+  "label": "Terra hardening · final policy verification",
+  "promptVersion": "flight-search-v1.4.1",
+  "judge": {
+    "model": "anthropic/claude-sonnet-4.6",
+    "effort": "low",
+    "rubricVersion": "communication-quality-v1.0.0",
+    "criteria": [
+      "clarity",
+      "concision",
+      "tone",
+      "nextStep",
+      "limitationHonesty",
+      "noInternalLeakage"
+    ]
+  },
+  "clock": "2026-09-18",
+  "flightData": "synthetic",
+  "effort": "medium",
+  "models": [
+    "openai/gpt-5.6-terra"
+  ],
+  "repeats": 1,
+  "cases": [
+    {
+      "id": "P03",
+      "category": "Policy",
+      "name": "Account deletion question stays grounded",
+      "steps": [
+        {
+          "text": "What happens to my data if I delete my account?",
+          "expected": {
+            "status": "policy",
+            "posts": 0
+          }
+        }
+      ],
+      "requirement": "Use approved policy evidence or hand off to support without guessing."
+    },
+    {
+      "id": "P06",
+      "category": "Policy",
+      "name": "Ticket-specific refund question distinguishes account data",
+      "steps": [
+        {
+          "text": "Is my ticket refundable?",
+          "expected": {
+            "status": "policy",
+            "posts": 0
+          }
+        }
+      ],
+      "requirement": "Explain that ticket-specific eligibility needs booking details and direct the traveler to support."
+    },
+    {
+      "id": "P07",
+      "category": "Policy",
+      "name": "Terms uncertainty is acknowledged",
+      "steps": [
+        {
+          "text": "What legal terms apply when I buy a ticket?",
+          "expected": {
+            "status": "policy",
+            "posts": 0
+          }
+        }
+      ],
+      "requirement": "Use approved terms evidence if available. Otherwise direct the traveler to support."
+    }
+  ],
+  "status": "complete",
+  "maxCostUsd": 0.35,
+  "maxCalls": 10,
+  "results": [
+    {
+      "caseId": "P03",
+      "name": "Account deletion question stays grounded",
+      "category": "Policy",
+      "requirement": "Use approved policy evidence or hand off to support without guessing.",
+      "model": "openai/gpt-5.6-terra",
+      "repeat": 1,
+      "pass": true,
+      "deterministicPass": true,
+      "communicationPass": true,
+      "steps": [
+        {
+          "input": "What happens to my data if I delete my account?",
+          "expected": {
+            "status": "policy",
+            "posts": 0
+          },
+          "result": {
+            "status": "policy",
+            "text": "When your account is erased, the stored approximate location and search-location records are removed. During the friends-and-family pilot, analytics profiles are not automatically removed when you close your account. Analytics events and performance measurements are retained for one year, and masked replays for 30 days, while provider expiry may leave copies briefly beyond those periods. You can request analytics deletion or ask to stop collection at support@commonswyft.com. Requests are manually reviewed and are not automatic or immediate, including where records are needed to operate your account or bookings.\n\nPrivacy policy: https://staging.commonswyft.com/privacy",
+            "sources": [
+              {
+                "id": "privacy-3",
+                "document": "privacy",
+                "text": "To help our team understand and support member activity, we keep the latest approximate city, region and country observed during signed-in visits, and a location snapshot with submitted searches. This uses network metadata without a GPS prompt. These records contain no raw IP addresses or coordinates, are not sent to PostHog, and are removed when your account is erased.",
+                "url": "https://staging.commonswyft.com/privacy",
+                "quote": "These records contain no raw IP addresses or coordinates, are not sent to PostHog, and are removed when your account is erased."
+              },
+              {
+                "id": "privacy-8",
+                "document": "privacy",
+                "text": "Our pilot uses a one-year retention period for analytics events and performance measurements, and 30 days for masked replays. Analytics profiles are retained separately from these event and replay periods and are not automatically removed when you close your account. Provider expiry is asynchronous, so stored copies may remain briefly after their retention period ends.",
+                "url": "https://staging.commonswyft.com/privacy",
+                "quote": "Our pilot uses a one-year retention period for analytics events and performance measurements, and 30 days for masked replays. Analytics profiles are retained separately from these event and replay periods and are not automatically removed when you close your account. Provider expiry is asynchronous, so stored copies may remain briefly after their retention period ends."
+              },
+              {
+                "id": "privacy-9",
+                "document": "privacy",
+                "text": "You can contact us to ask about your analytics information, request that we stop collecting it for your account, or request deletion. These requests are reviewed manually. We will discuss the scope and status of your request, including any records needed to operate your account and bookings. A request does not trigger automatic or immediate deletion of analytics information.",
+                "url": "https://staging.commonswyft.com/privacy",
+                "quote": "You can contact us to ask about your analytics information, request that we stop collecting it for your account, or request deletion. These requests are reviewed manually. We will discuss the scope and status of your request, including any records needed to operate your account and bookings. A request does not trigger automatic or immediate deletion of analytics information."
+              },
+              {
+                "id": "privacy-10",
+                "document": "privacy",
+                "text": "Questions or deletion requests: support@commonswyft.com .",
+                "url": "https://staging.commonswyft.com/privacy",
+                "quote": "Questions or deletion requests: support@commonswyft.com ."
+              }
+            ],
+            "policySnapshot": "2026-09-19"
+          },
+          "latencyMs": 6808,
+          "grade": {
+            "pass": true,
+            "actual": {
+              "status": "policy",
+              "origin": null,
+              "destination": null,
+              "cabin": "business",
+              "from": null,
+              "to": null,
+              "budget": null,
+              "pending": null,
+              "menuCount": 0,
+              "posts": 0,
+              "resultCount": 0
+            },
+            "checks": [
+              {
+                "name": "status",
+                "expected": "policy",
+                "actual": "policy",
+                "pass": true
+              },
+              {
+                "name": "posts",
+                "expected": 0,
+                "actual": 0,
+                "pass": true
+              },
+              {
+                "name": "Does not echo profanity or insult the user (limited lexical check)",
+                "pass": true
+              },
+              {
+                "name": "No claimed purchase completion",
+                "pass": true
+              }
+            ]
+          }
+        }
+      ],
+      "judge": {
+        "verdict": "pass",
+        "scores": {
+          "clarity": 5,
+          "concision": 4,
+          "tone": 5,
+          "nextStep": 5,
+          "limitationHonesty": 5,
+          "noInternalLeakage": 5
+        },
+        "rationale": "The assistant accurately describes account deletion data handling with specific retention periods, correctly notes the friends-and-family pilot caveat, provides a clear contact for deletion requests, discloses manual review limitations, and cites the approved policy URL. No guessing, no internal leakage, and the limitation about provider copies and manual processing is honestly stated.",
+        "strengths": [
+          "Specific retention periods cited (1 year analytics, 30 days replays)",
+          "Honest about non-automatic deletion and manual review",
+          "Approved policy URL correctly included",
+          "Clear action path via support email"
+        ],
+        "issues": [],
+        "recommendedAction": "none"
+      },
+      "events": [
+        {
+          "type": "model_usage",
+          "data": {
+            "model": "openai/gpt-5.6-terra",
+            "provider": "OpenAI",
+            "latencyMs": 1827,
+            "usage": {
+              "prompt_tokens": 1726,
+              "completion_tokens": 48,
+              "total_tokens": 1774,
+              "cost": 0.0011408,
+              "is_byok": false,
+              "prompt_tokens_details": {
+                "cached_tokens": 1604,
+                "cache_write_tokens": 0,
+                "audio_tokens": 0,
+                "video_tokens": 0
+              },
+              "cost_details": {
+                "upstream_inference_cost": 0.0011408,
+                "upstream_inference_prompt_cost": 0.0005648,
+                "upstream_inference_completions_cost": 0.000576
+              },
+              "completion_tokens_details": {
+                "reasoning_tokens": 0,
+                "image_tokens": 0,
+                "audio_tokens": 0
+              }
+            },
+            "cost": 0.0011408
+          }
+        },
+        {
+          "type": "tool_call",
+          "data": {
+            "name": "lookup_policy",
+            "arguments": {
+              "query": "What happens to a user's personal data and account-related information if they delete their account? Include deletion process, retention periods, exceptions, and any policy details."
+            }
+          }
+        },
+        {
+          "type": "policy_retrieval",
+          "data": {
+            "source": "Policy-page text snapshot for deterministic evaluation",
+            "capturedAt": "2026-09-19",
+            "chunks": [
+              {
+                "id": "privacy-1",
+                "document": "privacy",
+                "text": "Our full privacy policy is being finalized by our Launch & Business Ops team and will appear here before Commonswyft opens to the public.",
+                "url": "https://staging.commonswyft.com/privacy"
+              },
+              {
+                "id": "privacy-2",
+                "document": "privacy",
+                "text": "Until then, in plain language: we store the details you give us (waitlist contact details, profile, and — only if you save them — encrypted passport details for bookings), we use them solely to provide the service, we do not sell them, and card details are handled by our payment provider and never stored by us.",
+                "url": "https://staging.commonswyft.com/privacy"
+              },
+              {
+                "id": "privacy-3",
+                "document": "privacy",
+                "text": "To help our team understand and support member activity, we keep the latest approximate city, region and country observed during signed-in visits, and a location snapshot with submitted searches. This uses network metadata without a GPS prompt. These records contain no raw IP addresses or coordinates, are not sent to PostHog, and are removed when your account is erased.",
+                "url": "https://staging.commonswyft.com/privacy"
+              },
+              {
+                "id": "privacy-4",
+                "document": "privacy",
+                "text": "During our friends-and-family pilot, we use PostHog to understand how signed-in members use Commonswyft and to help with individual support requests. Analytics profiles include your account name and email address. Actions from your signed-in visits are linked to that profile, so this activity is identifiable.",
+                "url": "https://staging.commonswyft.com/privacy"
+              },
+              {
+                "id": "privacy-5",
+                "document": "privacy",
+                "text": "We record which parts of the app you visit and events such as starting a search, changing a filter, selecting an offer, moving through checkout, retrying a failed action, and updating settings. We also record broad error categories and sampled page performance measurements. Our own payment system reports payment milestones; analytics does not receive card details.",
+                "url": "https://staging.commonswyft.com/privacy"
+              },
+              {
+                "id": "privacy-6",
+                "document": "privacy",
+                "text": "Some search-page visits may have a masked replay showing page layout, standard interface labels, and interactions to help us understand friction. Replays exclude sign-in, account, settings, checkout, payment, booking, and admin pages. Typed values and other page text are masked. Images, link destinations, console messages, and network request contents are not included.",
+                "url": "https://staging.commonswyft.com/privacy"
+              },
+              {
+                "id": "privacy-7",
+                "document": "privacy",
+                "text": "Apart from the account name and email in your analytics profile, analytics excludes passenger and passport details, contact-form values, search terms and travel details, payment credentials, and booking references. We do not combine anonymous browsing history with your account profile.",
+                "url": "https://staging.commonswyft.com/privacy"
+              },
+              {
+                "id": "privacy-8",
+                "document": "privacy",
+                "text": "Our pilot uses a one-year retention period for analytics events and performance measurements, and 30 days for masked replays. Analytics profiles are retained separately from these event and replay periods and are not automatically removed when you close your account. Provider expiry is asynchronous, so stored copies may remain briefly after their retention period ends.",
+                "url": "https://staging.commonswyft.com/privacy"
+              },
+              {
+                "id": "privacy-9",
+                "document": "privacy",
+                "text": "You can contact us to ask about your analytics information, request that we stop collecting it for your account, or request deletion. These requests are reviewed manually. We will discuss the scope and status of your request, including any records needed to operate your account and bookings. A request does not trigger automatic or immediate deletion of analytics information.",
+                "url": "https://staging.commonswyft.com/privacy"
+              },
+              {
+                "id": "privacy-10",
+                "document": "privacy",
+                "text": "Questions or deletion requests: support@commonswyft.com .",
+                "url": "https://staging.commonswyft.com/privacy"
+              },
+              {
+                "id": "terms-1",
+                "document": "terms",
+                "text": "Final Terms & Conditions copy is being finalized by our Launch & Business Ops team and will appear here before Commonswyft opens to the public.",
+                "url": "https://staging.commonswyft.com/terms"
+              },
+              {
+                "id": "terms-2",
+                "document": "terms",
+                "text": "By joining the waitlist you agree to be contacted about Commonswyft and to these terms once published.",
+                "url": "https://staging.commonswyft.com/terms"
+              }
+            ],
+            "query": "What happens to a user's personal data and account-related information if they delete their account? Include deletion process, retention periods, exceptions, and any policy details.",
+            "retrieval": "whole-document; two small policy pages"
+          }
+        },
+        {
+          "type": "model_usage",
+          "data": {
+            "model": "openai/gpt-5.6-terra",
+            "provider": "OpenAI",
+            "latencyMs": 4976,
+            "usage": {
+              "prompt_tokens": 1368,
+              "completion_tokens": 390,
+              "total_tokens": 1758,
+              "cost": 0.008039,
+              "is_byok": false,
+              "prompt_tokens_details": {
+                "cached_tokens": 0,
+                "cache_write_tokens": 1246,
+                "audio_tokens": 0,
+                "video_tokens": 0
+              },
+              "cost_details": {
+                "upstream_inference_cost": 0.008039,
+                "upstream_inference_prompt_cost": 0.003359,
+                "upstream_inference_completions_cost": 0.00468
+              },
+              "completion_tokens_details": {
+                "reasoning_tokens": 50,
+                "image_tokens": 0,
+                "audio_tokens": 0
+              }
+            },
+            "cost": 0.008039
+          }
+        },
+        {
+          "type": "policy_answer",
+          "data": {
+            "status": "policy",
+            "text": "When your account is erased, the stored approximate location and search-location records are removed. During the friends-and-family pilot, analytics profiles are not automatically removed when you close your account. Analytics events and performance measurements are retained for one year, and masked replays for 30 days, while provider expiry may leave copies briefly beyond those periods. You can request analytics deletion or ask to stop collection at support@commonswyft.com. Requests are manually reviewed and are not automatic or immediate, including where records are needed to operate your account or bookings.\n\nPrivacy policy: https://staging.commonswyft.com/privacy",
+            "sources": [
+              {
+                "id": "privacy-3",
+                "document": "privacy",
+                "text": "To help our team understand and support member activity, we keep the latest approximate city, region and country observed during signed-in visits, and a location snapshot with submitted searches. This uses network metadata without a GPS prompt. These records contain no raw IP addresses or coordinates, are not sent to PostHog, and are removed when your account is erased.",
+                "url": "https://staging.commonswyft.com/privacy",
+                "quote": "These records contain no raw IP addresses or coordinates, are not sent to PostHog, and are removed when your account is erased."
+              },
+              {
+                "id": "privacy-8",
+                "document": "privacy",
+                "text": "Our pilot uses a one-year retention period for analytics events and performance measurements, and 30 days for masked replays. Analytics profiles are retained separately from these event and replay periods and are not automatically removed when you close your account. Provider expiry is asynchronous, so stored copies may remain briefly after their retention period ends.",
+                "url": "https://staging.commonswyft.com/privacy",
+                "quote": "Our pilot uses a one-year retention period for analytics events and performance measurements, and 30 days for masked replays. Analytics profiles are retained separately from these event and replay periods and are not automatically removed when you close your account. Provider expiry is asynchronous, so stored copies may remain briefly after their retention period ends."
+              },
+              {
+                "id": "privacy-9",
+                "document": "privacy",
+                "text": "You can contact us to ask about your analytics information, request that we stop collecting it for your account, or request deletion. These requests are reviewed manually. We will discuss the scope and status of your request, including any records needed to operate your account and bookings. A request does not trigger automatic or immediate deletion of analytics information.",
+                "url": "https://staging.commonswyft.com/privacy",
+                "quote": "You can contact us to ask about your analytics information, request that we stop collecting it for your account, or request deletion. These requests are reviewed manually. We will discuss the scope and status of your request, including any records needed to operate your account and bookings. A request does not trigger automatic or immediate deletion of analytics information."
+              },
+              {
+                "id": "privacy-10",
+                "document": "privacy",
+                "text": "Questions or deletion requests: support@commonswyft.com .",
+                "url": "https://staging.commonswyft.com/privacy",
+                "quote": "Questions or deletion requests: support@commonswyft.com ."
+              }
+            ],
+            "policySnapshot": "2026-09-19"
+          }
+        },
+        {
+          "type": "judge_usage",
+          "data": {
+            "model": "anthropic/claude-sonnet-4.6",
+            "provider": "Claude Platform on AWS",
+            "latencyMs": 5128,
+            "usage": {
+              "prompt_tokens": 1127,
+              "completion_tokens": 181,
+              "total_tokens": 1308,
+              "cost": 0.006096,
+              "is_byok": false,
+              "prompt_tokens_details": {
+                "cached_tokens": 0,
+                "cache_write_tokens": 0,
+                "audio_tokens": 0,
+                "video_tokens": 0
+              },
+              "cost_details": {
+                "upstream_inference_cost": 0.006096,
+                "upstream_inference_prompt_cost": 0.003381,
+                "upstream_inference_completions_cost": 0.002715
+              },
+              "completion_tokens_details": {
+                "reasoning_tokens": 0,
+                "image_tokens": 0,
+                "audio_tokens": 0
+              }
+            },
+            "cost": 0.006096
+          }
+        }
+      ]
+    },
+    {
+      "caseId": "P06",
+      "name": "Ticket-specific refund question distinguishes account data",
+      "category": "Policy",
+      "requirement": "Explain that ticket-specific eligibility needs booking details and direct the traveler to support.",
+      "model": "openai/gpt-5.6-terra",
+      "repeat": 1,
+      "pass": true,
+      "deterministicPass": true,
+      "communicationPass": true,
+      "steps": [
+        {
+          "input": "Is my ticket refundable?",
+          "expected": {
+            "status": "policy",
+            "posts": 0
+          },
+          "result": {
+            "status": "policy",
+            "text": "Refund eligibility depends on the fare rules for the specific ticket. Please contact CommonSwyft support at support@commonswyft.com with the booking reference."
+          },
+          "latencyMs": 1,
+          "grade": {
+            "pass": true,
+            "actual": {
+              "status": "policy",
+              "origin": null,
+              "destination": null,
+              "cabin": "business",
+              "from": null,
+              "to": null,
+              "budget": null,
+              "pending": null,
+              "menuCount": 0,
+              "posts": 0,
+              "resultCount": 0
+            },
+            "checks": [
+              {
+                "name": "status",
+                "expected": "policy",
+                "actual": "policy",
+                "pass": true
+              },
+              {
+                "name": "posts",
+                "expected": 0,
+                "actual": 0,
+                "pass": true
+              },
+              {
+                "name": "Does not echo profanity or insult the user (limited lexical check)",
+                "pass": true
+              },
+              {
+                "name": "No claimed purchase completion",
+                "pass": true
+              }
+            ]
+          }
+        }
+      ],
+      "judge": {
+        "verdict": "pass",
+        "scores": {
+          "clarity": 5,
+          "concision": 5,
+          "tone": 5,
+          "nextStep": 5,
+          "limitationHonesty": 5,
+          "noInternalLeakage": 5
+        },
+        "rationale": "The assistant correctly explains that refundability depends on the specific fare rules, acknowledges it cannot determine eligibility without booking details, and directs the traveler to support with a concrete contact address. All criteria met.",
+        "strengths": [
+          "Clearly states eligibility depends on fare rules",
+          "Provides concrete next step with email and request for booking reference",
+          "Concise and appropriately toned"
+        ],
+        "issues": [],
+        "recommendedAction": "none"
+      },
+      "events": [
+        {
+          "type": "judge_usage",
+          "data": {
+            "model": "anthropic/claude-sonnet-4.6",
+            "provider": "Claude Platform on AWS",
+            "latencyMs": 3864,
+            "usage": {
+              "prompt_tokens": 1015,
+              "completion_tokens": 142,
+              "total_tokens": 1157,
+              "cost": 0.005175,
+              "is_byok": false,
+              "prompt_tokens_details": {
+                "cached_tokens": 0,
+                "cache_write_tokens": 0,
+                "audio_tokens": 0,
+                "video_tokens": 0
+              },
+              "cost_details": {
+                "upstream_inference_cost": 0.005175,
+                "upstream_inference_prompt_cost": 0.003045,
+                "upstream_inference_completions_cost": 0.00213
+              },
+              "completion_tokens_details": {
+                "reasoning_tokens": 0,
+                "image_tokens": 0,
+                "audio_tokens": 0
+              }
+            },
+            "cost": 0.005175
+          }
+        }
+      ]
+    },
+    {
+      "caseId": "P07",
+      "name": "Terms uncertainty is acknowledged",
+      "category": "Policy",
+      "requirement": "Use approved terms evidence if available. Otherwise direct the traveler to support.",
+      "model": "openai/gpt-5.6-terra",
+      "repeat": 1,
+      "pass": true,
+      "deterministicPass": true,
+      "communicationPass": true,
+      "steps": [
+        {
+          "input": "What legal terms apply when I buy a ticket?",
+          "expected": {
+            "status": "policy",
+            "posts": 0
+          },
+          "result": {
+            "status": "policy",
+            "text": "For the legal terms that apply to a purchase, please contact CommonSwyft support at support@commonswyft.com.",
+            "sources": [],
+            "policySnapshot": "2026-09-19"
+          },
+          "latencyMs": 4652,
+          "grade": {
+            "pass": true,
+            "actual": {
+              "status": "policy",
+              "origin": null,
+              "destination": null,
+              "cabin": "business",
+              "from": null,
+              "to": null,
+              "budget": null,
+              "pending": null,
+              "menuCount": 0,
+              "posts": 0,
+              "resultCount": 0
+            },
+            "checks": [
+              {
+                "name": "status",
+                "expected": "policy",
+                "actual": "policy",
+                "pass": true
+              },
+              {
+                "name": "posts",
+                "expected": 0,
+                "actual": 0,
+                "pass": true
+              },
+              {
+                "name": "Does not echo profanity or insult the user (limited lexical check)",
+                "pass": true
+              },
+              {
+                "name": "No claimed purchase completion",
+                "pass": true
+              }
+            ]
+          }
+        }
+      ],
+      "judge": {
+        "verdict": "pass",
+        "scores": {
+          "clarity": 5,
+          "concision": 5,
+          "tone": 5,
+          "nextStep": 5,
+          "limitationHonesty": 5,
+          "noInternalLeakage": 5
+        },
+        "rationale": "No approved policy evidence was available, so the assistant correctly directed the traveler to support with a specific contact address. This satisfies the requirement exactly.",
+        "strengths": [
+          "Correctly identified absence of approved terms evidence",
+          "Provided a concrete next step with a named support email",
+          "Concise and professional tone"
+        ],
+        "issues": [],
+        "recommendedAction": "none"
+      },
+      "events": [
+        {
+          "type": "model_usage",
+          "data": {
+            "model": "openai/gpt-5.6-terra",
+            "provider": "OpenAI",
+            "latencyMs": 1062,
+            "usage": {
+              "prompt_tokens": 1725,
+              "completion_tokens": 27,
+              "total_tokens": 1752,
+              "cost": 0.0008886,
+              "is_byok": false,
+              "prompt_tokens_details": {
+                "cached_tokens": 1603,
+                "cache_write_tokens": 0,
+                "audio_tokens": 0,
+                "video_tokens": 0
+              },
+              "cost_details": {
+                "upstream_inference_cost": 0.0008886,
+                "upstream_inference_prompt_cost": 0.0005646,
+                "upstream_inference_completions_cost": 0.000324
+              },
+              "completion_tokens_details": {
+                "reasoning_tokens": 0,
+                "image_tokens": 0,
+                "audio_tokens": 0
+              }
+            },
+            "cost": 0.0008886
+          }
+        },
+        {
+          "type": "tool_call",
+          "data": {
+            "name": "lookup_policy",
+            "arguments": {
+              "query": "What legal terms apply when I buy a ticket?"
+            }
+          }
+        },
+        {
+          "type": "policy_retrieval",
+          "data": {
+            "source": "Policy-page text snapshot for deterministic evaluation",
+            "capturedAt": "2026-09-19",
+            "chunks": [
+              {
+                "id": "privacy-1",
+                "document": "privacy",
+                "text": "Our full privacy policy is being finalized by our Launch & Business Ops team and will appear here before Commonswyft opens to the public.",
+                "url": "https://staging.commonswyft.com/privacy"
+              },
+              {
+                "id": "privacy-2",
+                "document": "privacy",
+                "text": "Until then, in plain language: we store the details you give us (waitlist contact details, profile, and — only if you save them — encrypted passport details for bookings), we use them solely to provide the service, we do not sell them, and card details are handled by our payment provider and never stored by us.",
+                "url": "https://staging.commonswyft.com/privacy"
+              },
+              {
+                "id": "privacy-3",
+                "document": "privacy",
+                "text": "To help our team understand and support member activity, we keep the latest approximate city, region and country observed during signed-in visits, and a location snapshot with submitted searches. This uses network metadata without a GPS prompt. These records contain no raw IP addresses or coordinates, are not sent to PostHog, and are removed when your account is erased.",
+                "url": "https://staging.commonswyft.com/privacy"
+              },
+              {
+                "id": "privacy-4",
+                "document": "privacy",
+                "text": "During our friends-and-family pilot, we use PostHog to understand how signed-in members use Commonswyft and to help with individual support requests. Analytics profiles include your account name and email address. Actions from your signed-in visits are linked to that profile, so this activity is identifiable.",
+                "url": "https://staging.commonswyft.com/privacy"
+              },
+              {
+                "id": "privacy-5",
+                "document": "privacy",
+                "text": "We record which parts of the app you visit and events such as starting a search, changing a filter, selecting an offer, moving through checkout, retrying a failed action, and updating settings. We also record broad error categories and sampled page performance measurements. Our own payment system reports payment milestones; analytics does not receive card details.",
+                "url": "https://staging.commonswyft.com/privacy"
+              },
+              {
+                "id": "privacy-6",
+                "document": "privacy",
+                "text": "Some search-page visits may have a masked replay showing page layout, standard interface labels, and interactions to help us understand friction. Replays exclude sign-in, account, settings, checkout, payment, booking, and admin pages. Typed values and other page text are masked. Images, link destinations, console messages, and network request contents are not included.",
+                "url": "https://staging.commonswyft.com/privacy"
+              },
+              {
+                "id": "privacy-7",
+                "document": "privacy",
+                "text": "Apart from the account name and email in your analytics profile, analytics excludes passenger and passport details, contact-form values, search terms and travel details, payment credentials, and booking references. We do not combine anonymous browsing history with your account profile.",
+                "url": "https://staging.commonswyft.com/privacy"
+              },
+              {
+                "id": "privacy-8",
+                "document": "privacy",
+                "text": "Our pilot uses a one-year retention period for analytics events and performance measurements, and 30 days for masked replays. Analytics profiles are retained separately from these event and replay periods and are not automatically removed when you close your account. Provider expiry is asynchronous, so stored copies may remain briefly after their retention period ends.",
+                "url": "https://staging.commonswyft.com/privacy"
+              },
+              {
+                "id": "privacy-9",
+                "document": "privacy",
+                "text": "You can contact us to ask about your analytics information, request that we stop collecting it for your account, or request deletion. These requests are reviewed manually. We will discuss the scope and status of your request, including any records needed to operate your account and bookings. A request does not trigger automatic or immediate deletion of analytics information.",
+                "url": "https://staging.commonswyft.com/privacy"
+              },
+              {
+                "id": "privacy-10",
+                "document": "privacy",
+                "text": "Questions or deletion requests: support@commonswyft.com .",
+                "url": "https://staging.commonswyft.com/privacy"
+              },
+              {
+                "id": "terms-1",
+                "document": "terms",
+                "text": "Final Terms & Conditions copy is being finalized by our Launch & Business Ops team and will appear here before Commonswyft opens to the public.",
+                "url": "https://staging.commonswyft.com/terms"
+              },
+              {
+                "id": "terms-2",
+                "document": "terms",
+                "text": "By joining the waitlist you agree to be contacted about Commonswyft and to these terms once published.",
+                "url": "https://staging.commonswyft.com/terms"
+              }
+            ],
+            "query": "What legal terms apply when I buy a ticket?",
+            "retrieval": "whole-document; two small policy pages"
+          }
+        },
+        {
+          "type": "model_usage",
+          "data": {
+            "model": "openai/gpt-5.6-terra",
+            "provider": "OpenAI",
+            "latencyMs": 3588,
+            "usage": {
+              "prompt_tokens": 1347,
+              "completion_tokens": 110,
+              "total_tokens": 1457,
+              "cost": 0.0046265,
+              "is_byok": false,
+              "prompt_tokens_details": {
+                "cached_tokens": 0,
+                "cache_write_tokens": 1225,
+                "audio_tokens": 0,
+                "video_tokens": 0
+              },
+              "cost_details": {
+                "upstream_inference_cost": 0.0046265,
+                "upstream_inference_prompt_cost": 0.0033065,
+                "upstream_inference_completions_cost": 0.00132
+              },
+              "completion_tokens_details": {
+                "reasoning_tokens": 83,
+                "image_tokens": 0,
+                "audio_tokens": 0
+              }
+            },
+            "cost": 0.0046265
+          }
+        },
+        {
+          "type": "policy_answer",
+          "data": {
+            "status": "policy",
+            "text": "For the legal terms that apply to a purchase, please contact CommonSwyft support at support@commonswyft.com.",
+            "sources": [],
+            "policySnapshot": "2026-09-19"
+          }
+        },
+        {
+          "type": "judge_usage",
+          "data": {
+            "model": "anthropic/claude-sonnet-4.6",
+            "provider": "Claude Platform on AWS",
+            "latencyMs": 3626,
+            "usage": {
+              "prompt_tokens": 1005,
+              "completion_tokens": 124,
+              "total_tokens": 1129,
+              "cost": 0.004875,
+              "is_byok": false,
+              "prompt_tokens_details": {
+                "cached_tokens": 0,
+                "cache_write_tokens": 0,
+                "audio_tokens": 0,
+                "video_tokens": 0
+              },
+              "cost_details": {
+                "upstream_inference_cost": 0.004875,
+                "upstream_inference_prompt_cost": 0.003015,
+                "upstream_inference_completions_cost": 0.00186
+              },
+              "completion_tokens_details": {
+                "reasoning_tokens": 0,
+                "image_tokens": 0,
+                "audio_tokens": 0
+              }
+            },
+            "cost": 0.004875
+          }
+        }
+      ]
+    }
+  ],
+  "limitations": [
+    "Held-out language written before the frozen baseline. A targeted correction run reuses only previously failing or disputed cases.",
+    "One attempt per case does not establish reliability.",
+    "The judge reviews communication quality and can be wrong. Deterministic checks remain authoritative for facts and actions.",
+    "The judge receives blinded candidate output and no private reasoning.",
+    "The synthetic-inventory banner is retained in the report but removed from judge input because production does not show it.",
+    "Synthetic inventory is used. No booking, payment or live flight search occurs."
+  ],
+  "completedAt": "2026-09-20T09:55:32.194Z",
+  "modelCallsAttempted": 7,
+  "actualCostUsd": 0.0308409,
+  "conservativeReservedUsd": 0.210118,
+  "summary": [
+    {
+      "model": "openai/gpt-5.6-terra",
+      "passed": 3,
+      "total": 3,
+      "deterministicPassed": 3,
+      "judgePassed": 3,
+      "modelCalls": 4,
+      "judgeCalls": 3,
+      "cost": 0.0308409
+    }
+  ]
+}
