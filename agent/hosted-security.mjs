@@ -6,7 +6,7 @@ const publicErrors=new Set([
  'Wait for the current reply before saving defaults.',
  'Choose live staging or recorded staging.',
  'The demo is at its active-chat limit. Close a chat before starting another.',
- 'Staging login has expired. Ask Codex to reconnect the signed-in staging tab. You can use recorded mode meanwhile.',
+ 'Staging login has expired. Reconnect the staging session, or use recorded mode meanwhile.',
  'No recorded staging searches are available yet.',
  'This chat expired. Start a new chat.',
  'Enter a message of 1–2,000 characters.',
@@ -30,7 +30,7 @@ export function createCredentialGuard({username,password,maxFailures=10,lockMs=1
   const remaining=item.lockedUntil-now();
   if(item.lockedUntil&&remaining<=0){attempts.delete(identifier);return {locked:false,retryAfterSeconds:0};}
   return {locked:remaining>0,retryAfterSeconds:remaining>0?Math.ceil(remaining/1000):0};
- };
+ },
  return {
   verify(identifier,suppliedUsername,suppliedPassword){
    const current=status(identifier);

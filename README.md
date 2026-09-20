@@ -18,36 +18,26 @@ WhatsApp or another messaging surface. I used the existing search API boundary
 and extended the agent-facing layer around it rather than rebuilding or
 publishing the underlying product.
 
-This is a product-led learning project, not a claim that I independently wrote
-every line of production code. I am not a software engineer. I framed the
+This is a product-led project. I am not a software engineer. I framed the
 problem, read *Building AI Agents: From Design Patterns to Production*, and used
-Codex to help design, implement, test and document the prototype. A later
-independent code review, and the held-out repair tests that came from it, used
-Claude.
+Codex to design, implement, test and document the prototype. A later independent
+code review, and the held-out repair tests that came from it, used Claude.
 
-The work here was built over a focused two-day sprint in September 2026. The
-commit history is the honest record of it: what was tried, what failed, what
-changed and why. Failed evaluation runs are preserved rather than rewritten.
+My part was the product decisions: what the agent should do, what stays out of
+scope, which failures matter, how the conversation should feel, what evidence
+supports a model choice, and where the security and human approval boundaries
+belong. I reviewed behavior through the live demo and the evaluation dashboard,
+challenged incorrect outputs and iterated on the architecture with Codex.
 
-I directed the work and made the product decisions: why an agent could improve
-access to flight search, what it should do, what should stay out of scope, which
-failures matter, how the conversation should feel, what evidence would support
-a model choice, and where security and human approval boundaries belong. I
-reviewed the behavior through the live demo and evaluation dashboard,
-challenged confusing or incorrect outputs, and iterated on the architecture
-with Codex.
-
-The goal is to understand and communicate the system honestly. The code is
-included so the decisions can be inspected and reproduced, not to imply that I
-implemented it without AI assistance. It is published for reading and
+The work was a focused two-day sprint in September 2026. The commit history is
+the record of what was tried, what failed and what changed. Failed evaluation
+runs are preserved rather than rewritten. The code is published for reading and
 assessment rather than reuse; see [LICENSE](LICENSE).
 
-The [learning guide](LEARNING-GUIDE.md) is the plain-language walkthrough I use
-to make sure I can explain every major component and tradeoff.
-
-The [project handoff](HANDOFF.md) records the current state, access boundaries,
-verification steps and next decision so another person or coding agent can
-continue without the original chat history.
+The [learning guide](LEARNING-GUIDE.md) is a plain-language walkthrough of every
+major component and tradeoff. The [project handoff](HANDOFF.md) records the
+current state, access boundaries and next decision for another person or coding
+agent.
 
 ## What the system does
 
@@ -97,6 +87,7 @@ one action from a four-tool allowlist:
 Application code owns credentials, state, API calls, response validation,
 formatting and call limits. See [ARCHITECTURE-DECISIONS.md](ARCHITECTURE-DECISIONS.md).
 
+The default model is Terra (OpenAI `gpt-5.6-terra`) at medium reasoning effort.
 All current model calls use one OpenRouter adapter, including Terra. This keeps
 the deployed chat, local live runs and new model evaluations on the same
 observable serving path. The earlier Codex SDK reports remain published as
@@ -109,11 +100,11 @@ SDK dependency has been removed.
   retrieval, preferences, output grounding, security and adapter behavior.
   Run them with `pnpm test`; no API key is needed.
 - **Model comparison.** A bounded OpenRouter screen compared Terra medium with
-  DeepSeek, Mistral, Qwen and GLM. Three-repeat validation then ran the
-  finalists across the 15-case contract. DeepSeek low passed 45 of 45 twice
-  and cost less. Terra medium stayed the default because it passed one
-  held-out date case that DeepSeek missed. That is a product decision on a
-  single new case, not a statistical result. See
+  open-weight models: DeepSeek V4.1 Flash, Mistral Small, Qwen 3.6 and GLM 5.3.
+  Three-repeat validation then ran the finalists across the 15-case contract.
+  DeepSeek low passed 45 of 45 twice and cost less. Terra medium stayed the
+  default because it passed one held-out date case that DeepSeek missed. That
+  is a product decision on a single new case, not a statistical result. See
   [evaluation/MODEL-COMPARISON.md](evaluation/MODEL-COMPARISON.md).
 - **Held-out hardening with an independent judge.** 42 new conversations,
   exact checks plus a Claude Sonnet judge for customer experience. The frozen
@@ -142,7 +133,8 @@ before autonomous payment and how WhatsApp can reuse the same harness.
 The chart shows the repeated OpenRouter validation on one serving path. DeepSeek
 was effectively tied with Terra on median latency and cost materially less. The
 deployed dashboard retains the earlier screening failures, repeated runs and a
-labelled cross-path view of historical Astra, Luna, Sol and Terra evidence.
+labelled cross-path view of historical evidence for four OpenAI models: GPT-6
+Astra and GPT-5.6 Sol, Terra and Luna.
 
 ## Security boundary
 
@@ -182,27 +174,3 @@ retries, temporary model HTTP failures receive one budgeted retry, and
 operations with uncertain side effects are not retried. See
 [RESILIENCE.md](RESILIENCE.md). New capabilities require a clear user need, a
 tool contract and regression cases before they enter scope.
-
-## What I should be able to explain
-
-- Why this uses an LLM for language interpretation while keeping execution in
-  deterministic application code
-- The difference between the agent, its harness, the model and the external
-  flight-search backend
-- Why live flight availability uses a tool call and policy questions use
-  retrieval-augmented generation
-- How session state differs from persistent preferences and why preferences
-  require explicit confirmation
-- How context precedence prevents old state or saved defaults from overriding
-  the traveler’s latest request
-- Why the model proposes one structured action and cannot call arbitrary APIs
-- How response validation, endpoint allowlists, call limits and no automatic
-  search retries reduce risk
-- What the frozen scope and regression suite establish, and what a passing test
-  does not prove
-- Why repeated evidence moved DeepSeek forward, then why a live date failure
-  moved the experiment default back to Terra
-- Why prompt instructions alone were insufficient, and how deterministic
-  explicit-field preservation improved both frontier and open-weight behavior
-- Why booking, payment, autonomous planning, multi-agent coordination and MCP
-  remain outside the current version
