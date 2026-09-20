@@ -87,6 +87,13 @@ longer receives the exact-check result. The rubric version is now
 `communication-quality-v1.1.0`. Judge results recorded under v1.0.0 stay as they
 were and should not be compared score for score with later runs.
 
+Rubric v1.2.0 gives the judge the frozen product contract without revealing
+exact-check results. This was necessary because the interrupted rerun gave S06
+and S07 synthetic-result limitations that passed elsewhere, then penalized the
+documented cabin default, missing fixture fields and supposed real-world route
+plausibility. The judge now grades only communication the reply controls, while
+exact checks remain authoritative for facts and actions.
+
 ## How to interpret the result
 
 Every one of the 12 original reviews has a later targeted pass. The 42-case
