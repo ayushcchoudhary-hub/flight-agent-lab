@@ -26,7 +26,7 @@ comparable latency evidence.
 
 ## Model selection evidence
 
-- **78 of 78 deterministic checks pass**
+- **98 of 98 deterministic checks pass**
 - **DeepSeek low passed 45 of 45 attempts across three full repeats**
 - **A second full DeepSeek run also passed 45 of 45**
 - **Terra medium passed 43 of 45 in the final same-path run. Both misses were unreadable provider responses**

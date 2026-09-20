@@ -47,6 +47,46 @@ reservation was higher because it assumes each call consumes its maximum output.
 | The judge demanded a call to action after complete informational answers | Clarify that a complete answer can satisfy next step | This was rubric calibration, not an agent defect |
 | An approved prototype policy URL was flagged as leakage | Pass an explicit approved-source allowlist to the judge | The judge should evaluate only the security boundary it was given |
 
+## External review of the repair layer
+
+A later code review tested the tool-argument repair function directly with
+phrasings that appear in no evaluation suite. The function removed any field
+whose wording was missing from a keyword list. It deleted correct model output
+for 13 of 14 held-out phrasings, including "Oct 5", "in 3 days", "coach is
+fine", "max 800", "show me the quickest" and "no layovers". The search then ran
+on application defaults, which silently dropped the traveler's constraint.
+
+The earlier fix for "Oct 2 2026" added one more pattern. That treated the symptom.
+The keyword list was fitted to the phrasings in the development cases, so those
+cases could not expose it.
+
+The recorded traces show what the layer is for: models resend the whole trip
+with default values during a follow-up. The rule now matches that failure only.
+
+| Model output | No matching wording in the request | Reason |
+|---|---|---|
+| Default value, such as business cabin or the rolling date window | Removed | It would reset an earlier choice that the traveler did not ask to change |
+| Non-default value | Kept and traced as `tool_argument_unverified` | It is the model's interpretation. A wording list cannot know every phrasing |
+| Copy of the current trip value | Kept with no trace | It changes nothing |
+
+The held-out phrasings are now a deterministic test file,
+`agent/test/repair-heldout.test.mjs`. They pass 20 of 20, and the earlier repair
+tests still pass. No paid model run was needed for this change.
+
+Remaining limitation: if a model invents a non-default value that the traveler
+never requested, the harness now keeps it. No recorded run shows that failure.
+The new trace event makes it countable in the next live run.
+
+## Judge independence
+
+The judge input used to include the exact-check result, and the judge prompt
+said a deterministic failure could never pass. In the frozen run, all three
+exact failures also failed the judge, so those three communication scores were
+not independent. The runner already requires both gates in code. The judge no
+longer receives the exact-check result. The rubric version is now
+`communication-quality-v1.1.0`. Judge results recorded under v1.0.0 stay as they
+were and should not be compared score for score with later runs.
+
 ## How to interpret the result
 
 Every one of the 12 original reviews has a later targeted pass. The 42-case
