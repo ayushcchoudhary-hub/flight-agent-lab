@@ -246,7 +246,7 @@ export class SearchConversation {
         const heading = field === 'origin'
           ? 'Sounds good. Where are you flying from?'
           : 'Where would you like to fly?';
-        return this.ask(field, choices, heading);
+        return this.ask(field, choices, heading, { numbered: false });
       }
 
       // An ambiguous date stops here. The route, cabin and everything else the
@@ -300,11 +300,16 @@ export class SearchConversation {
       return { status: 'error', text: safeSearchError(error) };
     }
   }
-  ask(field, choices, heading) {
+  // A numbered menu is right when the choices ARE the candidates, and wrong
+  // when they are only examples: the judge read a numbered starter list as
+  // "invented or hardcoded options ... the only available routes".
+  ask(field, choices, heading, { numbered = true } = {}) {
     this.state.pending = choices.length ? { field, choices } : null;
-    // choose(n) has always accepted a number, but the copy never showed one.
-    // The judge read the inline list as prose rather than a menu.
-    const menu = choices.slice(0, 5).map((choice, index) => `${index + 1}. ${choice.label.replace(/\s*\(all airports\)$/i, '')}`).join('\n');
+    const shown = choices.slice(0, 5);
+    const menu = numbered
+      ? shown.map((choice, index) => `${index + 1}. ${choice.label}`).join('\n')
+      : null;
+    const examples = shown.map(choice => choice.label.replace(/\s*\(all airports\)$/i, '')).join(', ');
     const cabinLabel = { economy: 'Economy', premium: 'Premium economy', premium_economy: 'Premium economy', business: 'Business class', first: 'First class', any: 'Any cabin' }[this.state.cabin] ?? this.state.cabin;
     const dateLabel = this.state.dates
       ? this.state.dates.from === this.state.dates.to ? readableDate(this.state.dates.from) : `${readableDate(this.state.dates.from)} – ${readableDate(this.state.dates.to)}`
@@ -312,7 +317,10 @@ export class SearchConversation {
     const retained = this.state.dates || this.state.cabin !== 'business'
       ? `I'll keep ${[cabinLabel, dateLabel].filter(Boolean).join(' · ')} unless you change it.`
       : null;
-    return { status: 'clarify', text: [heading, menu || null, menu ? 'Reply with the number, or type any city or airport.' : 'Type a city or airport.', retained].filter(Boolean).join('\n\n') };
+    const body = menu
+      ? [menu, 'Reply with the number, or type any city or airport.']
+      : [examples ? `Try ${examples}, or type any city or airport.` : 'Type a city or airport.'];
+    return { status: 'clarify', text: [heading, ...body, retained].filter(Boolean).join('\n\n') };
   }
 }
 

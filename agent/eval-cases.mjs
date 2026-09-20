@@ -57,10 +57,14 @@ export function gradeStep(expected, result, conversation, adapter) {
     cabin:s.cabin, from:s.dates?.from??null, to:s.dates?.to??null, budget:s.maxPriceUsd,
     pending:s.pending?.field??null, menuCount:s.pending?.choices?.length??0,
     posts:adapter.calls.filter(c=>c.method==='POST').length, resultCount:result.shortlist?.length??0 };
+  // 'mentions' patterns use lookaheads such as (?=.*Tokyo)(?=.*Osaka) to say a
+  // reply names both places. Without the s flag '.' stops at a newline, so a
+  // numbered menu failed a check its single-line phrasing had passed. The
+  // assertion is unchanged: the reply must still name both.
   const checks=[];
   for (const [key,value] of Object.entries(expected)) {
     const pass = key==='minResults' ? actual.resultCount>=value : key==='statuses' ? value.includes(actual.status)
-      : key==='mentions' ? new RegExp(value,'i').test(result.text) : actual[key]===value;
+      : key==='mentions' ? new RegExp(value,'is').test(result.text) : actual[key]===value;
     checks.push({name:key,expected:value,actual:key==='mentions'?result.text:key==='minResults'?actual.resultCount:key==='statuses'?actual.status:actual[key],pass});
   }
   if(result.status==='results') {

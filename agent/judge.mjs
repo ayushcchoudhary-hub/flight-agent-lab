@@ -34,9 +34,18 @@ export class OpenRouterJudge{
  }
 }
 export function judgePass(result){return result.verdict==='pass'&&Object.values(result.scores).every(score=>score>=4)&&!result.issues.some(issue=>['major','critical'].includes(issue.severity));}
+// A malformed structured response is a provider flake, not a verdict, and one
+// of them aborted two paid runs at roughly sixty percent. Retry that specific
+// failure once. Every other error still stops the run, and a verdict is never
+// re-rolled for being unwelcome.
+const UNREADABLE=/unreadable structured output/i;
+async function evaluateTolerantly(evaluate){
+ try{return await evaluate();}
+ catch(error){if(!UNREADABLE.test(error?.message??''))throw error;return await evaluate();}
+}
 export async function evaluateJudgeConsensus({deterministicPass,evaluate,isPass=judgePass}){
- const attempts=[await evaluate()];
- if(deterministicPass&&!isPass(attempts[0]))attempts.push(await evaluate(),await evaluate());
+ const attempts=[await evaluateTolerantly(evaluate)];
+ if(deterministicPass&&!isPass(attempts[0]))attempts.push(await evaluateTolerantly(evaluate),await evaluateTolerantly(evaluate));
  const passingVotes=attempts.filter(isPass).length,communicationPass=passingVotes>attempts.length/2;
  const representative=attempts.find(result=>isPass(result)===communicationPass)??attempts[0];
  return {judge:representative,judgeAttempts:attempts,judgeConsensus:{passingVotes,totalVotes:attempts.length,verdicts:attempts.map(result=>result.verdict)},communicationPass};
