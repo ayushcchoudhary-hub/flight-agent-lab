@@ -21,7 +21,9 @@ publishing the underlying product.
 This is a product-led learning project, not a claim that I independently wrote
 every line of production code. I am not a software engineer. I framed the
 problem, read *Building AI Agents: From Design Patterns to Production*, and used
-Codex to help design, implement, test and document the prototype.
+Codex to help design, implement, test and document the prototype. A later
+independent code review, and the held-out repair tests that came from it, used
+Claude.
 
 I directed the work and made the product decisions: why an agent could improve
 access to flight search, what it should do, what should stay out of scope, which
@@ -98,7 +100,7 @@ SDK dependency has been removed.
 
 ## Evidence
 
-- **78 of 78 deterministic checks pass** across routing, state, policy
+- **98 of 98 deterministic checks pass** across routing, state, policy
   retrieval, preferences, output grounding, security and adapter behavior.
 - The regression suite separates deterministic checks, model acceptance cases
   and one bounded live-search verification.

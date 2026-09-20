@@ -41,7 +41,7 @@ for(const item of cases){
  for(const step of item.steps){const started=performance.now();const result=await agent.respond(step.text);const grade=gradeStep(step.expected,result,conversation,adapter);steps.push({input:step.text,expected:step.expected,result,latencyMs:Math.round(performance.now()-started),grade});}
  const deterministicPass=steps.every(step=>step.grade.pass);
  let judged;
- try{const judge=new OpenRouterJudge({apiKey:process.env.OPENROUTER_API_KEY,model:judgeModel,effort:judgeEffort,trace,beforeRequest});judged=await judge.evaluate({caseId:item.id,category:item.category,requirement:item.requirement,steps,deterministicPass});}
+ try{const judge=new OpenRouterJudge({apiKey:process.env.OPENROUTER_API_KEY,model:judgeModel,effort:judgeEffort,trace,beforeRequest});judged=await judge.evaluate({caseId:item.id,category:item.category,requirement:item.requirement,steps});}
  catch(error){judged={verdict:'needs_review',scores:{clarity:1,concision:1,tone:1,nextStep:1,limitationHonesty:1,noInternalLeakage:1},rationale:`Judge unavailable: ${error.message}`,strengths:[],issues:[{severity:'major',criterion:'judge availability',evidence:'No judge result was recorded.',recommendation:'Review this conversation manually.'}],recommendedAction:'human_review'};}
  const communicationPass=judgePass(judged),pass=deterministicPass&&communicationPass;
  report.results.push({caseId:item.id,name:item.name,category:item.category,requirement:item.requirement,model:candidateModel,repeat:1,pass,deterministicPass,communicationPass,steps,judge:judged,events});

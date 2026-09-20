@@ -1,4 +1,4 @@
-import { findTool, welcomeFor, validDate } from './search.mjs';
+import { findTool, welcomeFor, validDate, newState } from './search.mjs';
 import { preferencesTool, preferenceAction } from './preferences.mjs';
 import { policyTool, answerPolicy, supportReply } from './policy.mjs';
 import { requestWithRetry } from './retry.mjs';
@@ -33,20 +33,36 @@ function explicitNamedDate(text) {
   return validDate(iso)?iso:null;
 }
 
-export function repairExplicitToolArguments(text,name,args,trace=()=>{}) {
+// The repair layer fixes two model mistakes that code can verify without judgment.
+// 1. A follow-up resends the whole trip with application defaults. A default value
+//    with no matching wording in the request is removed so it cannot reset an
+//    earlier choice. A non-default value is the model's interpretation of the
+//    request. It is kept and traced, because a wording list cannot know every
+//    phrasing such as "coach", "max 800" or "Oct 5".
+// 2. The request contains exactly one explicit calendar date and the model omitted it.
+const TRIP_DEFAULTS={...newState(),refresh:false};
+const isDefaultValue=(field,value)=>field==='dates'?value?.mode==='rolling':value===TRIP_DEFAULTS[field];
+// A resent copy of the current trip value changes nothing, so it is not worth a trace.
+const repeatsTrip=(field,value,trip)=>!trip?false:field==='dates'?Boolean(trip.dates)&&(value?.mode==='exact'||value?.mode==='range')&&value.start===trip.dates.from&&(value.end??value.start)===trip.dates.to:field in trip&&value===trip[field];
+const WORDING={
+  dates:/\b(?:\d{4}-\d{2}-\d{2}|today|tomorrow|dates?|days?|weeks?|later|any ?time|whenever|soon|flexible|monday|tuesday|wednesday|thursday|friday|saturday|sunday|january|february|march|april|may|june|july|august|september|october|november|december)\b/i,
+  cabin:/\b(?:business|economy|premium|first|cabin|class)\b/i,
+  cabinOnly:/\b(?:business|economy|premium|first|cabin|class|alternatives?|other cabins?)\b/i,
+  sort:/\b(?:cheapest|lowest price|fastest|recommended|best|prefer non[ -]?stop|prefer direct)\b/i,
+  nonstopOnly:/\b(?:non[ -]?stop|direct|stops?|layovers?|connections?|connecting)\b/i,
+  maxPriceUsd:/\b(?:usd|dollars?|budget|price|under|below|less than|limit|cap)\b|\$/i,
+  refresh:/\b(?:refresh|check again|search again|latest availability|new search)\b/i,
+};
+export function repairExplicitToolArguments(text,name,args,trace=()=>{},trip=null) {
   if(name!=='find_flights'||!args||Array.isArray(args))return args;
-  const repaired={...args},removed=[];
-  const rules={
-    dates:/\b(?:\d{4}-\d{2}-\d{2}|today|tomorrow|date|day|week|later|monday|tuesday|wednesday|thursday|friday|saturday|sunday|january|february|march|april|may|june|july|august|september|october|november|december)\b/i,
-    cabin:/\b(?:business|economy|premium|first|cabin|class)\b/i,
-    cabinOnly:/\b(?:business|economy|premium|first|cabin|class).{0,12}\bonly\b|\bonly\b.{0,12}\b(?:business|economy|premium|first|cabin|class)\b/i,
-    sort:/\b(?:cheapest|lowest price|fastest|recommended|prefer non[ -]?stop|prefer direct)\b/i,
-    nonstopOnly:/\b(?:non[ -]?stop|direct).{0,12}\bonly\b|\bonly\b.{0,12}\b(?:non[ -]?stop|direct)\b/i,
-    maxPriceUsd:/\b(?:usd|dollar|budget|price|under|below|less than|no budget|clear (?:the )?budget)\b|\$/i,
-    refresh:/\b(?:refresh|check again|search again|latest availability|new search)\b/i,
-  };
-  for(const [field,pattern] of Object.entries(rules))if(field in repaired&&!pattern.test(text)){delete repaired[field];removed.push(field);}
-  if(removed.length)trace('tool_argument_repair',{fields:removed,reason:'removed fields not explicitly changed in the current request'});
+  const repaired={...args},removed=[],unverified=[];
+  for(const [field,pattern] of Object.entries(WORDING)){
+    if(!(field in repaired)||pattern.test(text))continue;
+    if(isDefaultValue(field,repaired[field])){delete repaired[field];removed.push(field);}
+    else if(!repeatsTrip(field,repaired[field],trip))unverified.push(field);
+  }
+  if(removed.length)trace('tool_argument_repair',{fields:removed,reason:'removed default values the current request did not ask for'});
+  if(unverified.length)trace('tool_argument_unverified',{fields:unverified,reason:'kept a non-default value with no matching wording in the current request'});
   if(repaired.dates||/\b(return|returning|round[ -]?trip)\b/i.test(text))return repaired;
   const dates=[...new Set([...(text.match(/\b\d{4}-\d{2}-\d{2}\b/g)??[]).filter(validDate),explicitNamedDate(text)].filter(Boolean))];
   if(dates.length!==1)return repaired;
@@ -169,7 +185,7 @@ export class Agent {
       if (call.type !== 'function' || typeof call.id !== 'string' || !TOOLS.some(t => t.function.name === call.function?.name)) throw new Error('The model proposed an unsupported tool; no action taken.');
       let args;
       try { args = JSON.parse(call.function.arguments); } catch { throw new Error('The model supplied invalid tool arguments; no action taken.'); }
-      args=repairExplicitToolArguments(text,call.function.name,args,this.trace);
+      args=repairExplicitToolArguments(text,call.function.name,args,this.trace,this.conversation.publicState());
       this.trace('tool_call', { name: call.function.name, arguments: args });
       let result;
       const actionStarted=Date.now();
