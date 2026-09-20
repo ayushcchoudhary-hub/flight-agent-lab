@@ -12,14 +12,19 @@ export const TOOLS = [findTool, clarificationTool, policyTool, preferencesTool];
 export const PROMPT_VERSION = 'flight-search-v1.4.1';
 
 const supportEmail='support@commonswyft.com';
-function deterministicBoundary(text) {
+export function deterministicBoundary(text) {
   if (/\b(?:my|this)\b.{0,30}\b(?:ticket|flight|booking)\b.{0,30}\b(?:refund|refundable)\b|\b(?:refund|refundable)\b.{0,30}\b(?:my|this)\b.{0,30}\b(?:ticket|flight|booking)\b/i.test(text)) return {status:'policy',text:`Refund eligibility depends on the fare rules for the specific ticket. Please contact CommonSwyft support at ${supportEmail} with the booking reference.`};
   // Policy questions that happen to mention tickets or purchases still belong
   // to grounded policy retrieval. Consequential action requests stay below.
-  if (/\b(?:refund|refundable|terms?|legal|privacy|personal data|analytics)\b/i.test(text)) return null;
+  if (/\b(?:refund|refundable|terms?|legal|privacy|personal data|analytics|card details|data protection)\b/i.test(text)) return null;
   if (/\b(?:checked bags?|baggage|luggage)\b/i.test(text)) return {status:'clarify',text:'I can’t guarantee baggage inclusion from these search results. Please confirm baggage directly with the airline before booking. I can still search the route and cabin for you.'};
   if (/\b(?:my|existing|booked)\b.{0,30}\b(?:ticket|flight|booking)\b|\b(?:cancel|rebook|check me in|passenger name)\b/i.test(text)) return {status:'clarify',text:`I can’t access or change an existing booking here. Please contact CommonSwyft support at ${supportEmail} with your booking reference.`};
-  if (/\b(?:book|buy|purchase|charge)\b.{0,40}\b(?:option|flight|ticket|card)\b|\bsaved card\b/i.test(text)) return {status:'clarify',text:'I can’t book or charge a card here. Complete the purchase through CommonSwyft’s website checkout. I can keep refining the flight search before you continue.'};
+  // A payment request is a consequential action, so the refusal is
+  // deterministic rather than left to the model. Held-out v2 E5 and E6 both
+  // reached the model instead, which refused correctly but never pointed the
+  // traveler at checkout: "pay for option B" and "I approve the payment"
+  // contain none of book, buy, purchase or charge.
+  if (/\b(?:book|buy|purchase|charge)\b.{0,40}\b(?:option|flight|ticket|card)\b|\b(?:saved|stored|my|the)\s+card\b|\b(?:pay|paying)\b|\b(?:approv|authoris|authoriz|process|complete|make)\w*\b.{0,20}\bpayment\b/i.test(text)) return {status:'clarify',text:'I can’t book or charge a card here. Complete the purchase through CommonSwyft’s website checkout. I can keep refining the flight search before you continue.'};
   return null;
 }
 

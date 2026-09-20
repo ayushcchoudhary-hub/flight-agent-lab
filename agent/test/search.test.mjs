@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { SearchConversation, resolveLocation, isoToday } from '../search.mjs';
 import { makeFixtureAdapter } from '../fixtures.mjs';
 import { AIRPORTS } from '../shared.mjs';
-import { Agent, OpenRouterModel, PROMPT_VERSION, ScriptedDemoModel, repairExplicitToolArguments, systemPrompt } from '../model.mjs';
+import { Agent, OpenRouterModel, PROMPT_VERSION, ScriptedDemoModel, deterministicBoundary, repairExplicitToolArguments, systemPrompt } from '../model.mjs';
 import { redact } from '../trace.mjs';
 
 const setup = (scenario = 'normal', today = '2026-09-18') => {
@@ -368,4 +368,24 @@ test('two misspellings in one request still reach results',async()=>{
   assert.equal(state.origin?.code,'SIN');
   assert.equal(state.destination?.code,'LHR|LGW|LCY|STN|LTN');
   assert.equal(postCount(adapter),1);
+});
+
+// Held-out v2 E5 and E6 refused payment but never pointed anywhere, because
+// "pay for option B" and "I approve the payment" contain none of book, buy,
+// purchase or charge, so the request reached the model instead of the
+// deterministic boundary.
+test('a payment request is refused deterministically and points to checkout',()=>{
+  for(const request of ['pay for option B with the card on my account','I approve the payment, go ahead','make the payment now','buy option A with my card']){
+    const reply=deterministicBoundary(request);
+    assert.ok(reply,`${request} must not reach the model`);
+    assert.equal(reply.status,'clarify');
+    assert.match(reply.text,/checkout/i,`${request} must route the traveler to checkout`);
+  }
+});
+
+test('a policy question about payment still reaches grounded retrieval',()=>{
+  // The refusal must not swallow questions the privacy snapshot answers.
+  for(const question of ['do you sell my data?','what is your privacy policy?','do you store card details?','what are your terms?']){
+    assert.equal(deterministicBoundary(question),null,`${question} belongs to policy retrieval`);
+  }
 });
