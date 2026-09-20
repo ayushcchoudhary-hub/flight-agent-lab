@@ -302,7 +302,9 @@ export class SearchConversation {
   }
   ask(field, choices, heading) {
     this.state.pending = choices.length ? { field, choices } : null;
-    const examples = choices.slice(0, 5).map(c => c.label.replace(/\s*\(all airports\)$/i, '')).join(', ');
+    // choose(n) has always accepted a number, but the copy never showed one.
+    // The judge read the inline list as prose rather than a menu.
+    const menu = choices.slice(0, 5).map((choice, index) => `${index + 1}. ${choice.label.replace(/\s*\(all airports\)$/i, '')}`).join('\n');
     const cabinLabel = { economy: 'Economy', premium: 'Premium economy', premium_economy: 'Premium economy', business: 'Business class', first: 'First class', any: 'Any cabin' }[this.state.cabin] ?? this.state.cabin;
     const dateLabel = this.state.dates
       ? this.state.dates.from === this.state.dates.to ? readableDate(this.state.dates.from) : `${readableDate(this.state.dates.from)} – ${readableDate(this.state.dates.to)}`
@@ -310,7 +312,7 @@ export class SearchConversation {
     const retained = this.state.dates || this.state.cabin !== 'business'
       ? `I'll keep ${[cabinLabel, dateLabel].filter(Boolean).join(' · ')} unless you change it.`
       : null;
-    return { status: 'clarify', text: [heading, examples ? `Try ${examples}, or type any city or airport.` : 'Type a city or airport.', retained].filter(Boolean).join('\n\n') };
+    return { status: 'clarify', text: [heading, menu || null, menu ? 'Reply with the number, or type any city or airport.' : 'Type a city or airport.', retained].filter(Boolean).join('\n\n') };
   }
 }
 

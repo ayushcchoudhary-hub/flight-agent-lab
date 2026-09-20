@@ -67,7 +67,12 @@ function queryScore(entry,query){
   for(const token of tokens){const score=tokenScore(entry,token);if(score===null)return null;total+=score;}
   return total;
 }
-const byRank=(a,b)=>a.score-b.score||Number(Boolean(b.entry.popular))-Number(Boolean(a.entry.popular))||String(a.entry.city).localeCompare(String(b.entry.city));
+// Equal-scoring matches rank by how likely a traveler wants them. A country
+// query matches every airport in it, and alphabetical order put Aguni and
+// Tokunoshima beside Tokyo.
+const SIZE_RANK={large_airport:1,medium_airport:2,small_airport:3,seaplane_base:4,heliport:5};
+const placeRank=entry=>entry.popular?0:SIZE_RANK[entry.type]??6;
+const byRank=(a,b)=>a.score-b.score||placeRank(a.entry)-placeRank(b.entry)||String(a.entry.city).localeCompare(String(b.entry.city));
 export function rankAirportSearch(entries,term){
   const scored=[];
   for(const entry of entries){const score=queryScore(entry,term);if(score!==null)scored.push({entry,score});}

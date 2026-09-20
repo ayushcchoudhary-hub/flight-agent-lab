@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { SearchConversation, findTool, resolveLocation, isoToday } from '../search.mjs';
 import { makeFixtureAdapter } from '../fixtures.mjs';
 import { AIRPORTS } from '../shared.mjs';
-import { Agent, OpenRouterModel, PROMPT_VERSION, ScriptedDemoModel, deterministicBoundary, repairExplicitToolArguments, systemPrompt } from '../model.mjs';
+import { Agent, OpenRouterModel, PROMPT_VERSION, ScriptedDemoModel, compactForHistory, deterministicBoundary, repairExplicitToolArguments, systemPrompt } from '../model.mjs';
 import { redact } from '../trace.mjs';
 
 const setup = (scenario = 'normal', today = '2026-09-18') => {
@@ -516,4 +516,42 @@ test('a traveler never sees an error for a well-formed request',async()=>{
     const reply=await c.find(request);
     assert.notEqual(reply.status,'error',`${JSON.stringify(request)} must not produce the generic failure copy`);
   }
+});
+
+// C1 reached the context cap once the currency fix let it actually search:
+// four recorded searches overran it. History kept three copies of every reply.
+test('recorded history drops prose the assistant message already carries',()=>{
+  const result={status:'results',text:'A long rendered reply.',query:{},cached:false,totalFound:3,
+    shortlist:[{id:'a',origin:'LGW',destination:'EWR',date:'2026-10-01',cabin:'economy',priceUsd:513,direct:false,reasons:[],text:'rendered row',timing:{departs:'x',arrives:'y',legs:[1,2,3]}}]};
+  const compact=compactForHistory(result);
+  assert.equal(compact.text,undefined,'the assistant message already carries the reply');
+  assert.equal(compact.shortlist[0].text,undefined);
+  assert.equal(compact.shortlist[0].timing,undefined);
+  // A follow-up such as "the third one" still needs to identify the option.
+  for(const key of ['id','origin','destination','date','cabin','priceUsd','direct','reasons']){
+    assert.ok(key in compact.shortlist[0],`${key} must survive for follow-up questions`);
+  }
+});
+
+test('compaction roughly halves a real recorded search',async()=>{
+  const {c}=setup();
+  const real=await c.find({origin:'London',destination:'New York',dates:{mode:'exact',start:'2026-10-01'},cabin:'economy',maxPriceUsd:700});
+  const before=JSON.stringify(real).length,after=JSON.stringify(compactForHistory(real)).length;
+  assert.ok(after<before/2,`recorded search should shrink well past half: ${before} -> ${after}`);
+});
+
+test('compaction leaves non-search replies untouched',()=>{
+  const clarify={status:'clarify',text:'Which destination did you mean?'};
+  assert.deepEqual(compactForHistory(clarify),{status:'clarify'});
+  assert.equal(compactForHistory(null),null);
+});
+
+test('a numbered menu is offered, since a number is accepted',async()=>{
+  const {c}=setup();
+  const reply=await c.find({origin:'London',destination:'Japan',dates:{mode:'nextWeek'}});
+  assert.match(reply.text,/^1\. /m,'choose(n) accepts a number, so the menu must show one');
+  assert.match(reply.text,/Tokyo/);
+  assert.match(reply.text,/Osaka/);
+  // Hubs first: a country match must not lead with obscure regional fields.
+  assert.ok(!/Aguni|Tokunoshima/.test(reply.text),'regional airports must not crowd out the gateways');
 });

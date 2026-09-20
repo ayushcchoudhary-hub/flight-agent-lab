@@ -12,6 +12,19 @@ export const TOOLS = [findTool, clarificationTool, policyTool, preferencesTool];
 export const PROMPT_VERSION = 'flight-search-v1.4.1';
 
 const supportEmail='support@commonswyft.com';
+// History carried three copies of every reply: result.text inside the tool
+// result, the same text as the assistant message below it, and a rendered line
+// per shortlist row. Four searches in one conversation then overran the context
+// cap. Keep the fields a follow-up needs (which option, route, date, price) and
+// drop the prose and the timing breakdown, which the assistant message already
+// conveys. Held-out v2 C1 hit this once the currency fix let it actually search.
+export function compactForHistory(result) {
+  if (!result || typeof result !== 'object') return result;
+  const { text, shortlist, ...rest } = result;
+  if (!Array.isArray(shortlist)) return rest;
+  return { ...rest, shortlist: shortlist.map(({ text: row, timing, ...keep }) => keep) };
+}
+
 export function deterministicBoundary(text) {
   if (/\b(?:my|this)\b.{0,30}\b(?:ticket|flight|booking)\b.{0,30}\b(?:refund|refundable)\b|\b(?:refund|refundable)\b.{0,30}\b(?:my|this)\b.{0,30}\b(?:ticket|flight|booking)\b/i.test(text)) return {status:'policy',text:`Refund eligibility depends on the fare rules for the specific ticket. Please contact CommonSwyft support at ${supportEmail} with the booking reference.`};
   // Policy questions that happen to mention tickets or purchases still belong
@@ -211,7 +224,7 @@ export class Agent {
       }
       // Preserve the original message (including provider reasoning metadata),
       // but never store it in the trace. Keep complete tool-call/result pairs.
-      this.record([user, answer, { role: 'tool', tool_call_id: call.id, content: JSON.stringify(result) }, { role: 'assistant', content: result.text }]);
+      this.record([user, answer, { role: 'tool', tool_call_id: call.id, content: JSON.stringify(compactForHistory(result)) }, { role: 'assistant', content: result.text }]);
       this.trace('reply', result);
       return result;
     } catch (error) {
