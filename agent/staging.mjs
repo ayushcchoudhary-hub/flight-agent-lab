@@ -2,7 +2,9 @@ import { readFile, stat } from 'node:fs/promises';
 import { createApiClient, flightSearchStatusQueryOptions } from './shared.mjs';
 import { requestWithRetry } from './retry.mjs';
 
-export const STAGING_BASE = 'https://api.staging.commonswyft.com/v1';
+// The external flight-search API. Override with FLIGHT_API_BASE; the default
+// keeps existing local and hosted runs unchanged.
+export const STAGING_BASE = process.env.FLIGHT_API_BASE || 'https://api.staging.commonswyft.com/v1';
 export async function readStagingToken(path = process.env.AGENT_STAGING_TOKEN_FILE) {
   if (!path) throw new Error('Staging needs a current login session. Set AGENT_STAGING_TOKEN_FILE to a private local file containing your staging session token. Do not paste it into chat.');
   const info = await stat(path);
@@ -60,13 +62,13 @@ export function makeStagingAdapter({ authMode = 'session', getToken = readStagin
       if (count >= maxSearches) throw new Error('Staging session search limit reached.');
       count++;
       const body = { ...query };
-      // Existing frontend omits cabin for "any" rather than sending the UI enum.
+      // The search API treats a missing cabin as "any"; it does not accept the UI enum value.
       if (body.cabin === 'any') delete body.cabin;
       const { data, error } = await api.POST('/flight-searches', { body });
       if (error || !data || typeof data.searchId !== 'string' || !/^[\w-]+$/.test(data.searchId)) throw new Error('Staging returned an invalid search identifier.');
       owned.add(data.searchId);
       const read = () => flightSearchStatusQueryOptions(api, data).queryFn();
-      let result = await read(); // Uses the existing app's full response validation.
+      let result = await read(); // Validated against the agent-owned response contract in shared.mjs.
       for (let i = 0; i < maxPolls && result.comparisonStatus === 'pending'; i++) {
         const interval = Math.min(5000, Math.max(1000, Number(result.comparisonPollAfterMs) || 5000));
         await wait(interval);
