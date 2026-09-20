@@ -5,7 +5,7 @@ turns natural-language requests into validated search actions, preserves trip
 state across follow-ups, grounds policy answers in approved material and renders
 concise flight results. It never books or takes payment.
 
-The live demonstration is deployed as an invite-protected Cloud Run service.
+The live demonstration is deployed as a password-gated Cloud Run service.
 The repository is intentionally limited to the independent agent layer. It does
 not contain or require the underlying product codebase.
 
@@ -102,36 +102,31 @@ SDK dependency has been removed.
 
 - **106 of 106 deterministic checks pass** across routing, state, policy
   retrieval, preferences, output grounding, security and adapter behavior.
-- The regression suite separates deterministic checks, model acceptance cases
-  and one bounded live-search verification.
-- Raw staging captures and transcripts stay local. Version control contains the
-  methodology and sanitized aggregate evidence only.
-- A bounded OpenRouter screen compared Terra medium with DeepSeek, Mistral,
-  Qwen and GLM configurations. Repeated validation then ran Terra, DeepSeek
-  and GLM three times across the 15-case contract. After prompt and harness
-  improvements, DeepSeek passed 45 of 45 attempts twice in full runs. A later
-  focused regression confirmed a missed natural-language date. The hosted experiment
-  therefore defaults to Terra medium, with DeepSeek and GLM available for
-  controlled exploration.
+  Run them with `pnpm test`; no API key is needed.
+- **Model comparison.** A bounded OpenRouter screen compared Terra medium with
+  DeepSeek, Mistral, Qwen and GLM. Three-repeat validation then ran the
+  finalists across the 15-case contract. DeepSeek low passed 45 of 45 twice
+  and cost less. Terra medium stayed the default because it passed one
+  held-out date case that DeepSeek missed. That is a product decision on a
+  single new case, not a statistical result. See
+  [evaluation/MODEL-COMPARISON.md](evaluation/MODEL-COMPARISON.md).
+- **Held-out hardening with an independent judge.** 42 new conversations,
+  exact checks plus a Claude Sonnet judge for customer experience. The frozen
+  first run passed 30 of 42. The 12 failures were fixed mostly with harness
+  rules rather than prompt changes, then verified case by case. A later full
+  rerun passed 32 and stopped at B03 on a frozen expectation mismatch. There
+  is no 42-of-42 claim. See [evaluation/HARDENING.md](evaluation/HARDENING.md).
+- **Second held-out set.** 30 harder cases across place resolution, long
+  follow-ups, cross-conversation preferences and payment boundaries. Terra
+  passed 17 of 30 on the first run. The report separates product gaps from
+  three overly strict test expectations and two judge-context problems. This
+  is a baseline for the next changes, not a release score.
+- **What is published.** Sanitized per-case reports with visible replies,
+  grading, timing, token usage and judge audits. Raw captures, credentials and
+  source hashes stay local, so a published run cannot be tied to an exact
+  commit. See [EVALUATION.md](EVALUATION.md) for what a pass does and does not
+  prove.
 
-The latest Terra hardening phase added 42 held-out conversations and an
-independent Claude Sonnet judge for customer experience. The frozen first run
-passed 30 of 42. Its 12 reviews exposed lost dates, ignored baggage constraints
-and weak policy or servicing handoffs. Focused corrections then produced a
-passing verification for every one of those 12 cases. A later full rerun passed
-32 cases, then stopped at B03 when a safe policy handoff did not match the
-frozen expected status. Nine cases were not run. The original, interrupted and
-stopped evidence remains published, so there is no rewritten perfect baseline
-or 42-of-42 claim.
-
-A second frozen set added 30 harder cases across place resolution, long
-follow-ups, cross-conversation preferences, mixed requests and payment
-boundaries. Terra passed 19 exact contracts and 17 cases overall on the first
-run. The append-only report separates product gaps from three overly strict
-search-count expectations and two judge-context problems. This is a baseline
-for the next changes, not a release score.
-
-See [EVALUATION.md](EVALUATION.md) for what a pass does and does not prove.
 The [`evaluation/`](evaluation/) folder documents the test matrix, comparison
 protocol, published evidence and limits of the conclusions.
 The [product roadmap](PRODUCT-ROADMAP.md) explains why checkout handoff comes
