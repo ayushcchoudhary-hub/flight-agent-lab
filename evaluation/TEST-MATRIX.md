@@ -2,7 +2,7 @@
 
 | Layer | What it tests | Current evidence | Main limitation |
 |---|---|---:|---|
-| Deterministic suite | State, dates, validation, tools, policy grounding, preferences, security, customer-copy guardrails, API adapter, retries | 101 of 101 pass locally | Does not test model interpretation |
+| Deterministic suite | State, dates, validation, tools, policy grounding, preferences, security, customer-copy guardrails, API adapter, retries | 102 of 102 pass locally | Does not test model interpretation |
 | Terra hardening | 42 new search, policy, servicing and guardrail conversations | Frozen run 30 of 42 overall, 39 of 42 exact | One attempt per case, so not a reliability estimate |
 | Targeted correction | Only cases reviewed in the frozen hardening run | Every original review has a later targeted pass | Full 42-case suite was not rerun |
 | Current OpenRouter validation | 15 conversational agent cases, three fresh repeats | DeepSeek low 45/45; Terra medium 43/45; GLM high 43/45 | Development cases, not held-out requests |

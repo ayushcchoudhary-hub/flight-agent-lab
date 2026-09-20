@@ -228,6 +228,18 @@ test('two sessions retain independent trip state', async () => {
   assert.equal(two.state.cabin, 'business');
 });
 
+test('every results mode shows the price-change notice exactly once', async () => {
+  const notice = 'Prices are estimates and may change.';
+  for (const mode of ['synthetic', 'replay', 'staging']) {
+    const fixture = makeFixtureAdapter();
+    const adapter = { mode, calls: fixture.calls, search: query => fixture.search(query) };
+    const conversation = new SearchConversation({ adapter, today: () => '2026-09-18' });
+    const result = await conversation.find(route);
+    assert.equal(result.status, 'results', mode);
+    assert.equal(result.text.split(notice).length - 1, 1, mode);
+  }
+});
+
 test('model tool allowlist blocks unknown actions and arbitrary request fields', async () => {
   const { c, adapter } = setup();
   const agent = new Agent({ conversation: c, model: { complete: async () => toolMessage('pay_for_flight', { amount: 100 }) } });
