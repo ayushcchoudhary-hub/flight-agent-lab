@@ -1,6 +1,6 @@
 # Prompt architecture
 
-Current prompt: `flight-search-v1.2.0`
+Current prompt: `flight-search-v1.3.0`
 
 The prompt is a routing and interpretation contract. It does not ask the model
 to perform searches, calculate prices or write the final flight cards.
@@ -12,6 +12,7 @@ to perform searches, calculate prices or write the final flight cards.
 | Authority | Establishes which application state wins when context conflicts |
 | Tool routing | Maps flight, policy, preference and unsupported requests to one allowed action |
 | Trip interpretation | Defines dates, airports, cabin, budget and follow-up semantics |
+| Action check | Requires every explicit trip field in the current request to survive into the action |
 | Boundaries and safety | Blocks booking, account access, arbitrary APIs, prompt disclosure and fabricated results |
 | Output contract | Requires exactly one schema-valid action and prohibits extra prose |
 | Injected context | Supplies the current date, timezone, data mode, trip state and explicit saved preferences as data |
@@ -26,6 +27,19 @@ to perform searches, calculate prices or write the final flight cards.
 
 Retrieved policy text is evidence, never an instruction. Backend search results
 are authoritative for availability and prices. The model cannot override either.
+
+## Why the harness also checks explicit fields
+
+Prompting improved open-weight model behavior but did not make it perfectly
+consistent. The harness therefore enforces facts it can verify without model
+judgment. It restores one valid ISO date when the model omits it, and it removes
+date, cabin, budget, sorting and constraint updates that were not mentioned in
+the latest message. It does not infer ambiguous natural-language dates.
+
+This split is intentional. The model handles language and tool selection. Code
+protects explicit user input and state precedence. The same rule applies to
+every model, so it is a product guarantee rather than a test-specific prompt
+workaround.
 
 ## Escalation behavior
 

@@ -63,7 +63,7 @@ flowchart LR
 ## Current product contract
 
 Supported behavior is frozen in [FROZEN-SCOPE.md](agent/FROZEN-SCOPE.md). The
-current prompt is `flight-search-v1.2.0`, described in
+current prompt is `flight-search-v1.3.0`, described in
 [PROMPT-ARCHITECTURE.md](PROMPT-ARCHITECTURE.md).
 
 The assistant is a calm, concise and knowledgeable flight-search concierge. It
@@ -88,16 +88,18 @@ formatting and call limits. See [ARCHITECTURE-DECISIONS.md](ARCHITECTURE-DECISIO
 
 ## Evidence
 
-- **76 of 76 deterministic checks pass** across routing, state, policy
+- **79 of 79 deterministic checks pass** across routing, state, policy
   retrieval, preferences, output grounding, security and adapter behavior.
 - The regression suite separates deterministic checks, model acceptance cases
   and one bounded live-search verification.
 - Raw staging captures and transcripts stay local. Version control contains the
   methodology and sanitized aggregate evidence only.
 - A bounded OpenRouter screen compared Terra medium with DeepSeek, Mistral,
-  Qwen and GLM configurations. Terra medium, DeepSeek V4.1 Flash low and GLM
-  5.3 high passed all 15 cases once. DeepSeek low is the next candidate for
-  repeated validation. The deployed default remains Terra medium.
+  Qwen and GLM configurations. Repeated validation then ran Terra, DeepSeek
+  and GLM three times across the 15-case contract. After prompt and harness
+  improvements, DeepSeek passed 45 of 45 attempts twice in full runs. The
+  hosted experiment now defaults to DeepSeek low, with Terra and GLM available
+  as controls.
 
 See [EVALUATION.md](EVALUATION.md) for what a pass does and does not prove.
 The [`evaluation/`](evaluation/) folder documents the test matrix, comparison
@@ -105,9 +107,10 @@ protocol, published evidence and limits of the conclusions.
 
 ![OpenRouter model screen showing latency against observed cost](evaluation/openrouter-tradeoff.svg)
 
-The chart shows the current OpenRouter screen only, which keeps the serving path
-consistent. The deployed dashboard also provides a labelled cross-path view of
-the historical Astra, Luna, Sol and Terra runs.
+The chart shows the repeated OpenRouter validation on one serving path. DeepSeek
+was effectively tied with Terra on median latency and cost materially less. The
+deployed dashboard retains the earlier screening failures, repeated runs and a
+labelled cross-path view of historical Astra, Luna, Sol and Terra evidence.
 
 ## Security boundary
 
@@ -161,9 +164,9 @@ tool contract and regression cases before they enter scope.
   search retries reduce risk
 - What the frozen scope and regression suite establish, and what a passing test
   does not prove
-- Why Terra medium was selected from the observed quality, latency and token
-  tradeoff
-- Why a one-repeat open-weight screen can nominate a candidate but cannot
-  justify changing the deployed default
+- Why Terra was the original control and why repeated evidence justified moving
+  the experiment default to DeepSeek low
+- Why prompt instructions alone were insufficient, and how deterministic
+  explicit-field preservation improved both frontier and open-weight behavior
 - Why booking, payment, autonomous planning, multi-agent coordination and MCP
   remain outside the current version

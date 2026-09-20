@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { SearchConversation, resolveLocation, isoToday } from '../search.mjs';
 import { makeFixtureAdapter } from '../fixtures.mjs';
-import { Agent, OpenRouterModel, PROMPT_VERSION, ScriptedDemoModel, systemPrompt } from '../model.mjs';
+import { Agent, OpenRouterModel, PROMPT_VERSION, ScriptedDemoModel, repairExplicitToolArguments, systemPrompt } from '../model.mjs';
 import { redact } from '../trace.mjs';
 
 const setup = (scenario = 'normal', today = '2026-09-18') => {
@@ -12,6 +12,20 @@ const setup = (scenario = 'normal', today = '2026-09-18') => {
 const route = { origin: 'London', destination: 'New York' };
 const postCount = adapter => adapter.calls.filter(x => x.method === 'POST').length;
 const toolMessage = (name, args) => ({ role: 'assistant', content: null, tool_calls: [{ id: 'test-call', type: 'function', function: { name, arguments: JSON.stringify(args) } }] });
+
+test('one explicit ISO date is restored when a flight tool call omits it',()=>{
+  const events=[];
+  assert.deepEqual(repairExplicitToolArguments('London to New York on 2026-10-03','find_flights',{origin:'London',destination:'New York'},(type,data)=>events.push({type,data})),{origin:'London',destination:'New York',dates:{mode:'exact',start:'2026-10-03'}});
+  assert.equal(events[0].type,'tool_argument_repair');
+  assert.deepEqual(repairExplicitToolArguments('October 1 returning 2026-10-08','find_flights',{origin:'London'}),{origin:'London'});
+  assert.deepEqual(repairExplicitToolArguments('2026-10-01 returning 2026-10-08','find_flights',{origin:'London'}),{origin:'London'});
+});
+
+test('follow-up tool calls cannot overwrite fields the traveler did not change',()=>{
+  assert.deepEqual(repairExplicitToolArguments('Heathrow only please','find_flights',{origin:'LHR',destination:'',dates:{mode:'rolling'},cabin:'business',cabinOnly:false,sort:'recommended',nonstopOnly:false,maxPriceUsd:null,refresh:false}),{origin:'LHR',destination:''});
+  assert.deepEqual(repairExplicitToolArguments('Economy instead, keep everything else','find_flights',{origin:'LHR',dates:{mode:'rolling'},cabin:'economy',maxPriceUsd:null}),{origin:'LHR',cabin:'economy'});
+  assert.deepEqual(repairExplicitToolArguments('Direct only under USD 900','find_flights',{nonstopOnly:true,maxPriceUsd:900,sort:'recommended'}),{nonstopOnly:true,maxPriceUsd:900});
+});
 
 test('versioned prompt separates identity, behavior, authority, context and output constraints', () => {
   const { c } = setup();

@@ -10,14 +10,18 @@ const runs=[
   'compare-2026-09-19T10-06-49.201Z',
   'compare-2026-09-19T10-24-41.767Z',
   'compare-openrouter-2026-09-19T22-22-37.648Z',
-  'compare-summary-2026-09-19T22-33-39.089Z',
+  'compare-openrouter-validation-2026-09-19T22-50-48.205Z',
+  'compare-openrouter-validation-2026-09-19T23-05-18.687Z',
+  'compare-openrouter-validation-2026-09-19T23-15-17.641Z',
+  'compare-summary-2026-09-20T01-20-58.667Z',
 ];
 const root=fileURLToPath(new URL('.',import.meta.url));
 const source=`${root}eval-results/`,target=`${root}published-eval-results/`;
 
 function sanitizeEvent(event){
-  if(!['model_usage','model_failure','agent_failure','model_retry','tool_call','flight_api_retry'].includes(event?.type))return null;
+  if(!['model_usage','model_failure','agent_failure','model_retry','tool_call','tool_argument_repair','flight_api_retry'].includes(event?.type))return null;
   if(event.type==='tool_call')return {type:'tool_call',data:{name:event.data?.name,arguments:event.data?.arguments}};
+  if(event.type==='tool_argument_repair')return {type:event.type,data:{field:event.data?.field,fields:event.data?.fields,reason:event.data?.reason}};
   const data=event.data??{};
   if(event.type==='model_retry')return {type:event.type,data:{model:data.model,attempt:data.attempt,reason:data.reason,delayMs:data.delayMs}};
   if(event.type==='flight_api_retry')return {type:event.type,data:{method:data.method,path:data.path,attempt:data.attempt,reason:data.reason,delayMs:data.delayMs}};

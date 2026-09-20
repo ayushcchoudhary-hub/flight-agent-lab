@@ -45,7 +45,7 @@
           <div>
             <b>Current build</b>
             <p>
-              Deployed on Cloud Run · Terra medium through OpenRouter · live
+              Deployed on Cloud Run · DeepSeek low through OpenRouter · live
               public staging search · invite-protected web chat
             </p>
           </div>
@@ -116,8 +116,8 @@
             <span>6</span>
             <h3>Freeze and baseline</h3>
             <p>
-              Froze the V1 contract and passed 24/24 current Terra-medium
-              scenarios in 30 bounded model calls.
+              Froze the behavior contract, added 79 deterministic checks and
+              repeated 15 model cases three times per finalist.
             </p>
           </article>
           <article class="done">
@@ -138,7 +138,7 @@
             <h2>The model proposes; the application decides.</h2>
             <p>
               The CommonSwyft Harness is the channel-independent conversation
-              service. Terra is one component inside it.
+              service. The selected model is one replaceable component inside it.
             </p>
           </div>
         </div>
@@ -149,7 +149,7 @@
           </article>
           <i>→</i>
           <article>
-            <small>2 · MODEL</small><b>Terra interprets</b>
+            <small>2 · MODEL</small><b>Model interprets</b>
             <p>
               Produces one structured action. It does not call the backend
               directly.
@@ -183,8 +183,8 @@
           <article>
             <h3>Where it runs now</h3>
             <p>
-              The demo harness runs on Google Cloud Run, Terra is called through
-              OpenRouter, and flight search runs against CommonSwyft staging.
+              The demo harness runs on Google Cloud Run, the selected model is called
+              through OpenRouter, and flight search runs against CommonSwyft staging.
             </p>
           </article>
           <article>
@@ -208,7 +208,7 @@
         <div class="module-kicker">03 · MODEL CHOICE</div>
         <div class="module-head">
           <div>
-            <h2>Terra is the baseline. DeepSeek is the next candidate.</h2>
+            <h2>DeepSeek is the experiment default. Terra remains the control.</h2>
             <p>
               Correctness was the gate. Speed and estimated API-equivalent cost
               were tie-breakers. A new candidate must also prove consistency.
@@ -218,38 +218,25 @@
         </div>
         <div class="decision-grid">
           <article class="selected">
-            <span class="badge">Deployed baseline</span>
+            <span class="badge">Control</span>
             <h3>Terra · medium</h3>
-            <strong>15 / 15</strong
-            ><small>passed in the current OpenRouter screen</small>
-            <p>
-              Also passed 51/51 completed attempts in historical finalist
-              validation. It stays deployed while candidates are repeated.
-            </p>
+            <strong>1.80 s</strong><small>repeated median scenario time</small>
+            <p>43/45 passed in the final same-path run. Two failures were unreadable provider responses, not incorrect actions.</p>
           </article>
           <article>
-            <span class="badge">Best candidate</span>
+            <span class="badge">Experiment default</span>
             <h3>DeepSeek V4.1 Flash · low</h3>
-            <strong>1.45 s</strong><small>median scenario time</small>
-            <p>
-              15/15 passed once. Lowest observed passing cost at about
-              $0.00018 per scenario. Repeat validation is still required.
-            </p>
+            <strong>45 / 45</strong><small>three complete repeats passed</small>
+            <p>Median 1.84 seconds and about $0.000108 per scenario in the final run. It also passed 45/45 in the prior full run.</p>
           </article>
           <article>
             <h3>GLM 5.3 · high</h3>
-            <strong>1.40 s</strong><small>median scenario time</small>
-            <p>
-              15/15 passed once and was marginally fastest. Its observed cost
-              was about five times DeepSeek low on this screen.
-            </p>
+            <strong>43 / 45</strong><small>three-repeat validation</small>
+            <p>Both misses were repeated provider 429 responses. Median latency was 2.13 seconds. It remains available for direct testing.</p>
           </article>
         </div>
         <p class="evidence-note">
-          The OpenRouter screen used one attempt per scenario. Historical Codex
-          and current OpenRouter latency use different serving paths. The
-          combined graph is directional, and no model change is justified until
-          the candidate passes repeated and held-out checks.
+          DeepSeek passed the repeated development suite, which supports the lab default change. Held-out phrasings are still needed before a production recommendation. Historical Codex and current OpenRouter latency use different serving paths, so that cross-path view remains directional.
         </p>
       </section>
 
@@ -268,7 +255,7 @@
         <div class="baseline-grid">
           <article>
             <strong>24 / 24</strong>
-            <h3>Current Terra baseline</h3>
+            <h3>Recorded acceptance baseline</h3>
             <p>
               Eighteen search and boundary scenarios, four policy scenarios,
               and two preference/memory scenarios. One attempt each.
@@ -288,7 +275,7 @@
             <a href="/policy-examples">See saved replies →</a>
           </article>
           <article>
-            <strong>76 / 76</strong>
+            <strong>79 / 79</strong>
             <h3>Deterministic code tests</h3>
             <p>
               No model calls. Covers tools, dates, state, API validation, policy
@@ -408,7 +395,7 @@
           <li>
             <b>Repeat the strongest open-weight candidate.</b
             ><span
-              >Run DeepSeek low on repeated and held-out language. Keep Terra
+              >Add held-out phrasings for DeepSeek low. Keep Terra
               deployed unless the advantage survives that test.</span
             >
           </li>
@@ -451,8 +438,8 @@
               API executes.
             </li>
             <li>
-              Open the model comparison and explain why Terra remains the
-              baseline while DeepSeek low is the next candidate.
+              Open the model comparison and explain why repeated validation moved the
+              experiment default from Terra to DeepSeek low.
             </li>
             <li>
               Try one live flight request, one follow-up, one policy question

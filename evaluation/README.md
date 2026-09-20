@@ -15,11 +15,16 @@ demo.
 3. **Model comparisons** run the same scenarios and fixtures across model and
    reasoning configurations, recording correctness, elapsed time and tokens.
 
-The latest comparison adds an OpenRouter screen for DeepSeek, Mistral, Qwen and
-GLM, with Terra medium as the control. It first runs four smoke cases, then
-continues only configurations that pass all four. Provider fallback and model
-substitution are disabled. A $5 application cap and 200-call cap are checked
-before every request.
+The evaluation first screens DeepSeek, Mistral, Qwen and GLM with Terra medium
+as the control. A later run repeats the finalists three times across all 15
+cases. Provider fallback and model substitution remain disabled. Every paid run
+has explicit application cost and call caps checked before each request.
+
+The **Evals** page answers whether a preserved run met the behavior contract and
+lets a reviewer inspect expected versus actual conversations. **Model
+comparison** answers which configurations cleared that gate and how their
+latency, token use and cost compared. Both are retained because they answer
+different questions.
 
 The current sanitized reports are under
 [`agent/published-eval-results`](../agent/published-eval-results). They retain

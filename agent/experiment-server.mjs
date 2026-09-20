@@ -6,6 +6,7 @@ import {fileURLToPath} from 'node:url';
 import {join} from 'node:path';
 import {createChatService} from './chat-service.mjs';
 import {OpenRouterModel} from './model.mjs';
+import {HOSTED_MODEL_OPTIONS,hostedModelSettings} from './hosted-model-options.mjs';
 
 const root=fileURLToPath(new URL('.',import.meta.url));
 const host=process.env.HOST||'0.0.0.0';
@@ -14,7 +15,8 @@ const publicOrigin=(process.env.PUBLIC_ORIGIN||'').replace(/\/$/,'');
 const username=process.env.EXPERIMENT_USERNAME||'demo';
 const password=process.env.EXPERIMENT_PASSWORD||'';
 const apiKey=process.env.OPENROUTER_API_KEY||'';
-const model=process.env.OPENROUTER_MODEL||'openai/gpt-5.6-terra';
+const model=process.env.OPENROUTER_MODEL||'deepseek/deepseek-v4.1-flash';
+const defaultSettings=hostedModelSettings(model);
 if(!password)throw new Error('Set EXPERIMENT_PASSWORD before starting the hosted experiment.');
 if(!apiKey)throw new Error('Set OPENROUTER_API_KEY before starting the hosted experiment.');
 
@@ -28,7 +30,11 @@ const chat=createChatService({
  preferenceStore,
  capturesLoader:async()=>[],
  status:async()=>({connected:false,reason:'not-used',expiresAt:null}),
- modelFactory:trace=>new OpenRouterModel({apiKey,model,reasoningEffort:'medium',maxCalls:15,trace}),
+ modelOptions:HOSTED_MODEL_OPTIONS,
+ settingsFor:hostedModelSettings,
+ defaultModel:defaultSettings.model,
+ defaultEffort:defaultSettings.effort,
+ modelFactory:(trace,settings)=>new OpenRouterModel({apiKey,model:settings.model,reasoningEffort:settings.effort,maxCalls:15,trace}),
  maxTotalTurns:Number(process.env.EXPERIMENT_MAX_TURNS||250),
  maxSessions:Number(process.env.EXPERIMENT_MAX_SESSIONS||25),
  maxSessionTurns:15,
@@ -90,7 +96,7 @@ const server=http.createServer(async(req,res)=>{
   }
   if(url.pathname==='/api/logout')return send(res,200,{ok:true},'application/json',{'Set-Cookie':`${sessionCookie}=; HttpOnly; Secure; SameSite=Strict; Path=/; Max-Age=0`});
   if(req.method==='GET'){
-   if(url.pathname==='/api/status')return send(res,200,{model,remainingTurns:(await chat.status()).remainingTurns});
+   if(url.pathname==='/api/status'){const state=await chat.status();return send(res,200,{models:state.models,model:state.model,label:state.label,effort:state.effort,remainingTurns:state.remainingTurns});}
    if(url.pathname==='/api/comparisons'){
     const names=(await readdir(join(root,'eval-results'),{withFileTypes:true})).filter(x=>x.isDirectory()&&/^compare-[\w.-]+$/.test(x.name)).map(x=>x.name).sort().reverse();
     return send(res,200,{runs:names});
@@ -119,7 +125,7 @@ const server=http.createServer(async(req,res)=>{
   if(req.method!=='POST')return send(res,405,{error:'Method unavailable.'});
   if(req.headers.origin!==originFor(req)||req.headers['content-type']!=='application/json')return send(res,403,{error:'Send requests from the experiment page.'});
   const input=await readJson(req,res);if(!input)return;
-  if(url.pathname==='/api/chat/start')return send(res,200,await chat.start('staging-public','gpt-5.6-terra','medium'));
+  if(url.pathname==='/api/chat/start'){const settings=hostedModelSettings(input.model??defaultSettings.model);return send(res,200,await chat.start('staging-public',settings.model,settings.effort));}
   if(url.pathname==='/api/chat/turn')return send(res,200,await chat.turn(input.id,input.text));
   if(url.pathname==='/api/chat/close')return send(res,200,chat.close(input.id));
   return send(res,404,{error:'Not found.'});

@@ -58,13 +58,13 @@ export function fullAirport(code) {
 export const findTool = {
   type: 'function', function: {
     name: 'find_flights',
-    description: 'Update only trip preferences explicitly supplied by the user, then search or ask for missing/ambiguous airports. No dates means the application supplies today through today+7; no cabin means business. Existing state is preserved for omitted fields. Search-only; application selects the data environment. No bookings.',
+    description: 'Update only trip preferences explicitly supplied by the user, then search or ask for missing/ambiguous airports. If the user supplies a date, dates is required in this call. No dates in the user request means the application supplies today through today+7. No cabin means business. Existing state is preserved for omitted fields. Search-only; application selects the data environment. No bookings.',
     parameters: {
       type: 'object', additionalProperties: false,
       properties: {
         origin: { type: 'string', description: 'Departure city or explicit airport/IATA codes. Use user wording; application resolves city groups. Omit if unknown.' },
         destination: { type: 'string', description: 'Destination city or explicit airport/IATA codes. Omit if unknown.' },
-        dates: { type: 'object', additionalProperties: false, required: ['mode'], properties: {
+        dates: { type: 'object', description:'Required whenever the current user request explicitly supplies or changes a travel date. Omit only when the user supplies no date.', additionalProperties: false, required: ['mode'], properties: {
           mode: { type: 'string', enum: ['rolling', 'nextWeek', 'exact', 'range', 'flex'] },
           start: { type: 'string', description: 'YYYY-MM-DD; exact date, range start, or flex anchor. Required for exact/range/flex.' },
           end: { type: 'string', description: 'Inclusive range end. Required for range.' },

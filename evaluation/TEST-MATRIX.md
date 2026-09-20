@@ -2,14 +2,15 @@
 
 | Layer | What it tests | Current evidence | Main limitation |
 |---|---|---:|---|
-| Deterministic suite | State, dates, validation, tools, policy grounding, preferences, security, customer-copy guardrails, API adapter, retries | 76 of 76 pass locally | Does not test model interpretation |
-| Current Terra baseline | 15 conversational agent cases | 14 passed, then the one corrected wording assertion passed in a targeted rerun | One attempt is a regression check, not a reliability estimate |
+| Deterministic suite | State, dates, validation, tools, policy grounding, preferences, security, customer-copy guardrails, API adapter, retries | 79 of 79 pass locally | Does not test model interpretation |
+| Current OpenRouter validation | 15 conversational agent cases, three fresh repeats | DeepSeek low 45/45; Terra medium 43/45; GLM high 43/45 | Development cases, not held-out requests |
 | Policy acceptance | Retrieval, cited answers, safe support handoff | 4 of 4 passed once | Small approved document set |
 | Preference acceptance | Explicit proposal, persistence boundaries | 2 of 2 passed once | Hosted demo still uses temporary in-memory preferences |
 | Earlier repeated agent run | 15 scenarios across Astra and Luna, five repeats each | Astra 75 of 75, Luna 74 of 75 | Older prompt and harness version |
 | Model screening | 15 scenarios across 12 model and effort configurations | 180 completed attempts | One repeat per configuration |
 | Shortlisted comparison | Astra low, Luna low and Terra medium, five repeats planned | 151 completed attempts, 151 passed | Run stopped before all 225 planned attempts |
 | Open-weight screen | Terra control plus DeepSeek, Mistral, Qwen and GLM across supported effort settings | 95 scenario attempts, 115 model calls; 3 configurations passed all 15 cases | One attempt per case; smoke failures stopped after four cases |
+| Prompt and harness repair | Explicit dates and multi-turn field preservation | DeepSeek 6/6 targeted date/follow-up attempts; Terra and DeepSeek 6/6 targeted refinements | Targeted checks diagnose known failures, not general reliability |
 
 The scenarios cover complete routes, missing airports, date interpretation,
 follow-up changes, unsupported requests, empty or failed search results,
@@ -70,3 +71,27 @@ $0.0263 conservative reserve, below its $5 cap.
 Very short failed Mistral timings are request failures, not evidence that the
 model completed the task quickly. Failed and incomplete configurations remain
 visible and are excluded from the selection gate.
+
+## Repeated OpenRouter validation
+
+The first three-repeat run exposed a consistent DeepSeek failure to include an
+explicit ISO date and a GLM mistake that simplified a round trip. A revised
+prompt made the extraction rule explicit. The harness then added two general
+guarantees: copy one unambiguous ISO date when a search action omits it, and
+prevent a follow-up from changing fields the traveler did not mention. These
+rules apply to every model and do not infer new preferences.
+
+On the revised harness, DeepSeek passed all 45 attempts in two separate full
+runs. The final same-path comparison recorded:
+
+| Model | Effort | Passed | Median time | Mean tokens / scenario | Observed $ / scenario |
+|---|---|---:|---:|---:|---:|
+| Terra control | Medium | 43/45 | 1.80 s | Unknown | Unknown |
+| **DeepSeek V4.1 Flash** | **Low** | **45/45** | **1.84 s** | **3,014** | **$0.000108** |
+
+Terra's two failures were unreadable OpenRouter responses. In the preceding
+three-model run, GLM high passed 43/45 with both failures caused by repeated
+HTTP 429 responses after the one allowed retry. DeepSeek was the only candidate
+to complete every planned check. The repeated data did not reproduce the
+earlier four-times speed impression. It showed roughly equal median latency and
+a large observed cost advantage for DeepSeek.

@@ -17,14 +17,14 @@ const defaultModelFactory=async(trace,settings)=>{
  const {CodexModel}=await import('./codex-model.mjs');
  return new CodexModel({...settings,maxCalls:15,trace});
 };
-export function createChatService({modelFactory=defaultModelFactory,capturesLoader=loadCaptures,status=connectionStatus,stagingFactory=makeStagingAdapter,preferenceStore=localPreferenceStore(),maxTotalTurns=40,maxSessions=8,maxSessionTurns=15,idleMs=3600000}={}) {
+export function createChatService({modelFactory=defaultModelFactory,capturesLoader=loadCaptures,status=connectionStatus,stagingFactory=makeStagingAdapter,preferenceStore=localPreferenceStore(),modelOptions=MODEL_OPTIONS,settingsFor=modelSettings,defaultModel='gpt-5.6-terra',defaultEffort='medium',maxTotalTurns=40,maxSessions=8,maxSessionTurns=15,idleMs=3600000}={}) {
  const sessions=new Map();let turns=0,active=false;
  const prune=()=>{for(const [id,s] of sessions)if(!s.busy&&Date.now()-s.updated>idleMs)sessions.delete(id);};
  return {
- async status(){const captures=await capturesLoader();return {preferences:await preferenceStore.read(),preferenceProfile:preferenceStore.label,live:await status(),publicSearch:{available:true,verifiedAt:'2026-09-19',accountLinked:false},models:MODEL_OPTIONS,model:'Terra',effort:'medium',remainingTurns:Math.max(0,maxTotalTurns-turns),replay:{available:captures.length>0,clock:captures.at(-1)?.clock,examples:[...new Set(captures.map(c=>c.input))].filter(x=>typeof x==='string'&&/ to /i.test(x))}};},
+ async status(){const captures=await capturesLoader(),defaults=settingsFor(defaultModel,defaultEffort);return {preferences:await preferenceStore.read(),preferenceProfile:preferenceStore.label,live:await status(),publicSearch:{available:true,verifiedAt:'2026-09-19',accountLinked:false},models:modelOptions,model:defaults.model,label:defaults.label,effort:defaults.effort,remainingTurns:Math.max(0,maxTotalTurns-turns),replay:{available:captures.length>0,clock:captures.at(-1)?.clock,examples:[...new Set(captures.map(c=>c.input))].filter(x=>typeof x==='string'&&/ to /i.test(x))}};},
  async savePreferences(p){if(active)throw Error('Wait for the current reply before saving defaults.');const saved=await preferenceStore.replace(p);for(const s of sessions.values())s.agent.preferences=saved;return {preferences:saved,profile:preferenceStore.label};},
- async start(mode,model='gpt-5.6-terra',effort='medium'){
-  const settings=modelSettings(model,effort);
+ async start(mode,model=defaultModel,effort=defaultEffort){
+  const settings=settingsFor(model,effort);
   prune();if(!['staging','staging-public','replay'].includes(mode))throw new Error('Choose live staging or recorded staging.');
   if(sessions.size>=maxSessions)throw new Error('The demo is at its active-chat limit. Close a chat before starting another.');
   if(mode==='staging'&&!(await status()).connected)throw new Error('Staging login has expired. Ask Codex to reconnect the signed-in staging tab. You can use recorded mode meanwhile.');
