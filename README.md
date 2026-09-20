@@ -9,6 +9,12 @@ The live demonstration is deployed as a password-gated Cloud Run service.
 The repository is intentionally limited to the independent agent layer. It does
 not contain or require the underlying product codebase.
 
+![The agent handling a partial request: it asks one question, then runs a validated search](docs/images/agent-chat.png)
+
+A partial request, one clarifying question, then a validated search. The panel on
+the right is the trip state the application owns. The model proposes one action;
+application code holds origin, destination, cabin and dates, and times each stage.
+
 ## Project context and authorship
 
 I help with CommonSwyft as a side project. The existing product offers web-based
@@ -123,18 +129,26 @@ SDK dependency has been removed.
   commit. See [EVALUATION.md](EVALUATION.md) for what a pass does and does not
   prove.
 
+![The evaluation page showing 17 of 30 cases passed, with a failing case open for inspection](docs/images/evaluation-detail.png)
+
+The held-out v2 baseline: 30 cases checked, 17 passed, 13 failed, each failure
+open for inspection. Exact checks decide facts and actions. The independent judge
+grades only the visible reply and never sees the model identity.
+
 The [`evaluation/`](evaluation/) folder documents the test matrix, comparison
 protocol, published evidence and limits of the conclusions.
 The [product roadmap](PRODUCT-ROADMAP.md) explains why checkout handoff comes
 before autonomous payment and how WhatsApp can reuse the same harness.
 
-![OpenRouter model screen showing latency against observed cost](evaluation/openrouter-tradeoff.svg)
+![The model comparison page: DeepSeek is cheapest and fastest among full-pass configurations, and the page states why Terra stayed the default](docs/images/model-comparison.png)
 
-The chart shows the repeated OpenRouter validation on one serving path. DeepSeek
-was effectively tied with Terra on median latency and cost materially less. The
-deployed dashboard retains the earlier screening failures, repeated runs and a
-labelled cross-path view of historical evidence for four OpenAI models: GPT-6
-Astra and GPT-5.6 Sol, Terra and Luna.
+The model decision in one screen. DeepSeek passed every repeated attempt, was
+effectively tied with Terra on median latency and cost materially less. Terra
+stayed the default on a single held-out date failure. The deployed dashboard
+retains the earlier screening failures, the repeated runs and a labelled
+cross-path view of historical evidence for four OpenAI models: GPT-6 Astra and
+GPT-5.6 Sol, Terra and Luna. The static chart is in
+[`evaluation/openrouter-tradeoff.svg`](evaluation/openrouter-tradeoff.svg).
 
 ## Security boundary
 
