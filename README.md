@@ -38,6 +38,10 @@ implemented it without AI assistance.
 The [learning guide](LEARNING-GUIDE.md) is the plain-language walkthrough I use
 to make sure I can explain every major component and tradeoff.
 
+The [project handoff](HANDOFF.md) records the current state, access boundaries,
+verification steps and next decision so another person or coding agent can
+continue without the original chat history.
+
 ## What the system does
 
 ```mermaid
