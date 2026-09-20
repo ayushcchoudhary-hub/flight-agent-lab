@@ -38,3 +38,17 @@ the first request in an unknown state.
 Before any repository is shared, run the publication audit and inspect the
 tracked-file list. A private repository reduces exposure but does not relax
 these rules.
+
+## Hosted experiment limits
+
+- The session token is derived from the shared experiment password. It remains
+  valid until that password changes.
+- Login throttling, active-session limits and message limits are held in one
+  running instance. They do not coordinate across multiple instances and reset
+  when the instance restarts.
+- Keep the Cloud Run service at a maximum of one instance while these controls
+  are in memory.
+- Put a hard spending limit on the OpenRouter key. Application call limits
+  reduce routine usage but are not a billing control.
+- Anyone with the shared password can use the experiment allowance. Rotate the
+  password after external demonstrations and before changing the audience.
