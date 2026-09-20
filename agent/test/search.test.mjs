@@ -428,3 +428,27 @@ test('an ambiguous date with too few usable readings asks plainly',async()=>{
   assert.equal(c.publicState().pending,null);
   assert.match(reply.text,/which date/i);
 });
+
+// Regression: adding an ambiguous date mode put 'options' in the tool schema,
+// and resolveDates rejected any date object carrying an unexpected key. A model
+// attaching options to an ordinary date turned a normal search into an error.
+// Held-out v1 S04 caught this; the deterministic suite had not.
+test('a date mode that carries stray options still works',async()=>{
+  for(const dates of [{mode:'nextWeek',options:[]},{mode:'rolling',options:['2026-10-02']},{mode:'exact',start:'2026-10-02',options:['2026-10-02']}]){
+    const {c}=setup();
+    const reply=await c.find({destination:'Singapore',dates});
+    assert.notEqual(reply.status,'error',`${dates.mode} with options must not error`);
+  }
+});
+
+test('an origin-only request keeps the destination and dates while asking',async()=>{
+  const {adapter,c}=setup();
+  const reply=await c.find({destination:'Singapore',dates:{mode:'nextWeek'}});
+  const state=c.publicState();
+  assert.equal(reply.status,'clarify');
+  assert.equal(state.destination?.code,'SIN');
+  assert.equal(state.pending?.field,'origin');
+  assert.equal(state.dates.from,'2026-09-21');
+  assert.equal(state.dates.to,'2026-09-27');
+  assert.equal(postCount(adapter),0);
+});

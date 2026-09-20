@@ -125,7 +125,10 @@ function validatePatch(p) {
 }
 
 function resolveDates(input, today) {
-  if (!object(input) || Object.keys(input).some(k => !['mode', 'start', 'end', 'flex', 'strict'].includes(k))) throw new Error('Invalid date settings.');
+  // 'options' belongs to the ambiguous mode, which never reaches here. Models
+  // still attach it to ordinary date modes, and rejecting the whole patch for
+  // that turned a normal search into an error. Accept and ignore it.
+  if (!object(input) || Object.keys(input).some(k => !['mode', 'start', 'end', 'flex', 'strict', 'options'].includes(k))) throw new Error('Invalid date settings.');
   if ('strict' in input && typeof input.strict !== 'boolean') throw new Error('Invalid strict-date flag.');
   const mode = input.mode;
   let from, to, selected;
