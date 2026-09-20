@@ -6,11 +6,15 @@ partial export of the flight product.
 ## Allowed in this repository
 
 - Agent orchestration, tool schemas and deterministic response rendering
-- A narrow adapter contract for an externally supplied flight-search API
+- A narrow adapter contract for an externally supplied flight-search API: the
+  two search endpoints the agent calls and the response fields it validates
 - Synthetic fixtures created for this project
 - Prompt and behavior specifications
-- Aggregate evaluation methods, sanitized results and selected customer-facing
-  outputs that contain no private backend data
+- Evaluation methods, per-case reports and customer-facing outputs
+- Pinned staging-derived search rows inside published evaluation reports:
+  route, date, cabin, price, flight number and availability identifier. These
+  rows are what the grounding checks verify. They contain no account, session
+  or customer data
 - Deployment files for the independent agent service
 
 ## Never allowed in this repository
@@ -18,13 +22,14 @@ partial export of the flight product.
 - Product source code, internal documentation or generated copies of either
 - Secrets, session tokens, credentials or authenticated response captures
 - Customer data, account identifiers or private search history
-- Raw production or staging logs
+- Raw production or staging logs and raw `captures.json` files
 - Undocumented private endpoints or implementation details learned from the
   product repository
 - Raw model transcripts or any transcript containing private backend responses
+  beyond the pinned search rows described above
 
 The local folders `reference/` and `flyai-agent-preferences/` are explicitly
-ignored. The container build no longer imports from either folder. The agent
+ignored. The container build does not import from either folder. The agent
 owns its adapter and validates the small response shape it consumes.
 
 ## Runtime trust boundary
@@ -41,8 +46,8 @@ these rules.
 
 ## Hosted experiment limits
 
-- The session token is derived from the shared experiment password. It remains
-  valid until that password changes.
+- Access is a shared experiment password with login throttling. The session
+  token is derived from that password and remains valid until it changes.
 - Login throttling, active-session limits and message limits are held in one
   running instance. They do not coordinate across multiple instances and reset
   when the instance restarts.

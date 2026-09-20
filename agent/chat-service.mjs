@@ -24,7 +24,7 @@ export function createChatService({modelFactory=defaultModelFactory,capturesLoad
   const settings=settingsFor(model,effort);
   prune();if(!['staging','staging-public','replay'].includes(mode))throw new Error('Choose live staging or recorded staging.');
   if(sessions.size>=maxSessions)throw new Error('The demo is at its active-chat limit. Close a chat before starting another.');
-  if(mode==='staging'&&!(await status()).connected)throw new Error('Staging login has expired. Ask Codex to reconnect the signed-in staging tab. You can use recorded mode meanwhile.');
+  if(mode==='staging'&&!(await status()).connected)throw new Error('Staging login has expired. Reconnect the staging session, or use recorded mode meanwhile.');
   const captures=mode==='replay'?await capturesLoader():[];
   if(mode==='replay'&&!captures.length)throw new Error('No recorded staging searches are available yet.');
   const clock=mode==='replay'?captures.at(-1).clock:isoToday();

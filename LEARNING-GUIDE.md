@@ -80,16 +80,21 @@ succeeded even if its response timed out.
 
 Deterministic tests validate code invariants. Model cases test interpretation,
 clarification and routing. A bounded live case checks displayed data against the
-adapter response. The prompt version and source hashes identify exactly what was
-tested. One passing attempt is regression evidence, not a production success
-rate.
+adapter response. The prompt version identifies what was tested. Source hashes
+are recorded locally and removed from published reports, so a published run
+cannot be tied to an exact commit. One passing attempt is regression evidence,
+not a production success rate.
 
 ## Model choice
 
-The model comparison first required acceptable behavior, then compared latency
-and estimated token cost. Terra medium produced the best observed speed and cost
-tradeoff among the configurations that passed. This is a development decision,
-not proof that it is universally the best model.
+The comparison first required every development case to pass, then compared
+latency and observed cost on one serving path. DeepSeek V4.1 Flash low matched
+Terra medium on median latency, cost less per call and passed 45 of 45 attempts
+in two full runs. Terra medium stayed the default for two reasons. It passed
+the one held-out date case that DeepSeek missed, and a frontier default leaves
+more headroom as scope grows. That is a product decision made on a single new
+case, not a statistical result. The harness switches models with one setting.
+If real usage grows, the open-weight option is the first cost lever to pull.
 
 ## Questions to be ready for
 
@@ -103,3 +108,5 @@ not proof that it is universally the best model.
 8. How would authenticated web or WhatsApp users map to stored preferences?
 9. What would need to change before booking or payment entered scope?
 10. How would you safely compare a new open-weight model?
+11. Why keep a frontier default when the open-weight model was cheaper and
+    passed the same development suite?
