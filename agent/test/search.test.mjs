@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { SearchConversation, resolveLocation, isoToday } from '../search.mjs';
+import { SearchConversation, findTool, resolveLocation, isoToday } from '../search.mjs';
 import { makeFixtureAdapter } from '../fixtures.mjs';
 import { AIRPORTS } from '../shared.mjs';
 import { Agent, OpenRouterModel, PROMPT_VERSION, ScriptedDemoModel, deterministicBoundary, repairExplicitToolArguments, systemPrompt } from '../model.mjs';
@@ -451,4 +451,69 @@ test('an origin-only request keeps the destination and dates while asking',async
   assert.equal(state.dates.from,'2026-09-21');
   assert.equal(state.dates.to,'2026-09-27');
   assert.equal(postCount(adapter),0);
+});
+
+// The schema is a contract with the model: every field it advertises will be
+// sent eventually, in combinations no hand-written test would think to try.
+// These derive their inputs from the schema itself, so a field added there
+// without matching validation fails here rather than in a live run.
+const schemaProps = findTool.function.parameters.properties;
+const sampleDates = mode => {
+  const dates = { mode, strict: false };
+  if (['exact', 'range', 'flex'].includes(mode)) dates.start = '2026-10-02';
+  if (mode === 'range') dates.end = '2026-10-05';
+  if (mode === 'flex') dates.flex = 3;
+  if (mode === 'ambiguous') dates.options = ['2026-10-02', '2027-02-10'];
+  return dates;
+};
+
+test('every advertised date mode is accepted',async()=>{
+  for(const mode of schemaProps.dates.properties.mode.enum){
+    const {c}=setup();
+    const reply=await c.find({origin:'LHR',destination:'JFK',dates:sampleDates(mode)});
+    assert.notEqual(reply.status,'error',`date mode ${mode} is in the schema and must not error`);
+  }
+});
+
+test('a date object carrying every advertised key is accepted',async()=>{
+  // A model reads the whole property list, not just the keys one mode needs.
+  const everyKey={start:'2026-10-02',end:'2026-10-05',flex:3,strict:false,options:['2026-10-02','2027-02-10']};
+  for(const mode of schemaProps.dates.properties.mode.enum){
+    const {c}=setup();
+    const reply=await c.find({origin:'LHR',destination:'JFK',dates:{mode,...everyKey}});
+    assert.notEqual(reply.status,'error',`date mode ${mode} with every advertised key must not error`);
+  }
+});
+
+test('every advertised top-level field is accepted together',async()=>{
+  const {c}=setup();
+  const reply=await c.find({
+    origin:'LHR',destination:'JFK',dates:sampleDates('exact'),
+    cabin:schemaProps.cabin.enum[0],cabinOnly:false,
+    sort:schemaProps.sort.enum[0],maxPriceUsd:900,nonstopOnly:false,
+  });
+  assert.notEqual(reply.status,'error');
+  const declared=Object.keys(schemaProps);
+  const covered=['origin','destination','dates','cabin','cabinOnly','sort','maxPriceUsd','nonstopOnly','refresh'];
+  const uncovered=declared.filter(key=>!covered.includes(key));
+  assert.deepEqual(uncovered,[],`schema fields with no acceptance test: ${uncovered.join(', ')}`);
+});
+
+test('a traveler never sees an error for a well-formed request',async()=>{
+  // status 'error' is the generic failure copy. Reaching it on ordinary input
+  // is always a defect, whatever the cause.
+  const requests=[
+    {destination:'Singapore',dates:{mode:'nextWeek'}},
+    {origin:'London'},
+    {origin:'London',destination:'New York'},
+    {origin:'Japan',destination:'JFK'},
+    {origin:'Londn',destination:'Singapor',dates:{mode:'exact',start:'2026-10-01'}},
+    {origin:'LHR',destination:'JFK',dates:{mode:'ambiguous',options:['2026-10-02','2027-02-10']}},
+    {destination:'Sidney'},
+  ];
+  for(const request of requests){
+    const {c}=setup();
+    const reply=await c.find(request);
+    assert.notEqual(reply.status,'error',`${JSON.stringify(request)} must not produce the generic failure copy`);
+  }
 });
