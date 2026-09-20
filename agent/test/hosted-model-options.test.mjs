@@ -8,7 +8,7 @@ test('hosted experiment exposes only evaluated model and effort pairs',()=>{
   ['deepseek/deepseek-v4.1-flash','low'],
  ['z-ai/glm-5.3','high'],
  ]);
- assert.equal(hostedModelSettings().model,'deepseek/deepseek-v4.1-flash');
+ assert.equal(hostedModelSettings().model,'openai/gpt-5.6-terra');
  assert.equal(hostedModelSettings('deepseek/deepseek-v4.1-flash').effort,'low');
  assert.throws(()=>hostedModelSettings('deepseek/deepseek-v4.1-flash','high'),/evaluated model configurations/);
  assert.throws(()=>hostedModelSettings('openrouter/auto'),/evaluated model configurations/);

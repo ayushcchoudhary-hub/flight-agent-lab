@@ -13,7 +13,8 @@ const runs=[
   'compare-openrouter-validation-2026-09-19T22-50-48.205Z',
   'compare-openrouter-validation-2026-09-19T23-05-18.687Z',
   'compare-openrouter-validation-2026-09-19T23-15-17.641Z',
-  'compare-summary-2026-09-20T01-20-58.667Z',
+  'compare-openrouter-validation-2026-09-20T09-11-48.357Z',
+  'compare-summary-2026-09-20T09-12-17.254Z',
 ];
 const root=fileURLToPath(new URL('.',import.meta.url));
 const source=`${root}eval-results/`,target=`${root}published-eval-results/`;

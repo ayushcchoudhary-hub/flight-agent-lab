@@ -1,8 +1,8 @@
 # Evaluation contract
 
 The frozen behavior contract is in `agent/FROZEN-SCOPE.md`. The current prompt
-is `flight-search-v1.3.0`. DeepSeek V4.1 Flash at low reasoning is the hosted
-experiment default. Terra medium remains the proprietary control.
+is `flight-search-v1.3.0`. Terra medium is the hosted experiment default.
+DeepSeek V4.1 Flash low and GLM 5.3 high remain selectable research controls.
 
 The suite separates three kinds of evidence:
 
@@ -30,6 +30,7 @@ Current results for prompt `flight-search-v1.3.0` and the explicit-field guard:
 - **A second full DeepSeek run also passed 45 of 45**
 - **Terra medium passed 43 of 45 in the final same-path run; both misses were unreadable provider responses**
 - **GLM high passed 43 of 45 in the preceding full run; both misses were repeated HTTP 429 responses**
+- **A focused regression confirmed the live date error: Terra searched 3 October and DeepSeek used the default September window**
 - **4 of 4 policy cases pass**
 - **2 of 2 preference cases pass**
 - **The original one-pass screen retained results for ten OpenRouter configurations**
@@ -37,4 +38,5 @@ Current results for prompt `flight-search-v1.3.0` and the explicit-field guard:
 The final Terra-versus-DeepSeek run attempted 102 model calls, reported $0.114
 of cost and reserved $0.208 conservatively where usage was unavailable. It
 stayed below its $8 hard cap. Repeating development cases measures consistency
-on those cases. It does not replace held-out language or production monitoring.
+on those cases. The focused date check cost $0.0068 in total. Terra passed in
+3.11 seconds and DeepSeek failed in 4.45 seconds, so Terra remains the default.

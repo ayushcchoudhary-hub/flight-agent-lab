@@ -15,7 +15,7 @@ const publicOrigin=(process.env.PUBLIC_ORIGIN||'').replace(/\/$/,'');
 const username=process.env.EXPERIMENT_USERNAME||'demo';
 const password=process.env.EXPERIMENT_PASSWORD||'';
 const apiKey=process.env.OPENROUTER_API_KEY||'';
-const model=process.env.OPENROUTER_MODEL||'deepseek/deepseek-v4.1-flash';
+const model=process.env.OPENROUTER_MODEL||'openai/gpt-5.6-terra';
 const defaultSettings=hostedModelSettings(model);
 if(!password)throw new Error('Set EXPERIMENT_PASSWORD before starting the hosted experiment.');
 if(!apiKey)throw new Error('Set OPENROUTER_API_KEY before starting the hosted experiment.');

@@ -35,8 +35,8 @@ const report={
   sourceRuns:[codexId,openrouterId,validationId],
   modelCallsAttempted:(codex.modelCallsAttempted??codex.results.length)+(openrouter.modelCallsAttempted??openrouter.results.length)+(validation.modelCallsAttempted??validation.results.length),
   rates:{source:'https://openrouter.ai/api/v1/models',checkedAt:openrouter.rates.checkedAt,tier:'Rates preserved from each source run',models:{...codex.rates.models,...openrouter.rates.models}},
-  decisionTitle:'Experiment default: DeepSeek low. Terra remains the control.',
-  decisionNote:'DeepSeek low passed 45 of 45 attempts across three repeats on the revised harness. Its median latency was effectively tied with Terra on the same OpenRouter path, while its observed per-scenario cost was much lower. GLM remains available to inspect, but provider throttling prevented a clean repeated pass. Historical cross-path latency remains directional.',
+  decisionTitle:'Current default: Terra medium. DeepSeek and GLM remain research controls.',
+  decisionNote:'DeepSeek low passed 45 of 45 repeated development attempts and cost much less, but a later live request changed “3 October” to the default September window. Terra also felt faster and more accurate in manual trials. The current decision prioritizes live behavior and demo quality. Historical cross-path latency remains directional.',
   limitations:[
     'This is a derived view of three preserved runs. Opening it makes no model calls.',
     'The Codex SDK and OpenRouter use different serving paths, dates and prompt wrappers. Their latency and cost are useful context, not an apples-to-apples benchmark.',

@@ -148,16 +148,21 @@ export class Agent {
       args=repairExplicitToolArguments(text,call.function.name,args,this.trace);
       this.trace('tool_call', { name: call.function.name, arguments: args });
       let result;
-      if (call.function.name === 'find_flights') result = await this.conversation.find(args);
-      else if (call.function.name === 'travel_preferences') result = preferenceAction(args,this.preferences);
-      else if (call.function.name === 'lookup_policy') {
-        try { result = await answerPolicy({model:this.model,query:args,question:text,history:this.turns.flat().filter(m=>m.role==='user'||m.role==='assistant').map(m=>({role:m.role,content:m.content})),trace:this.trace}); }
-        catch (error) { this.trace('policy_failure',{message:error.message}); result={status:'policy',text:supportReply,sources:[]}; }
-      }
-      else {
-        if (!args || Array.isArray(args) || Object.keys(args).length !== 1 || typeof args.question !== 'string' || !args.question.trim() || args.question.length > 400) throw new Error('Invalid clarification response.');
-        const text=safeCustomerCopy(args.question,SAFE_REDIRECT);
-        result = { status: 'clarify', text };
+      const actionStarted=Date.now();
+      try {
+        if (call.function.name === 'find_flights') result = await this.conversation.find(args);
+        else if (call.function.name === 'travel_preferences') result = preferenceAction(args,this.preferences);
+        else if (call.function.name === 'lookup_policy') {
+          try { result = await answerPolicy({model:this.model,query:args,question:text,history:this.turns.flat().filter(m=>m.role==='user'||m.role==='assistant').map(m=>({role:m.role,content:m.content})),trace:this.trace}); }
+          catch (error) { this.trace('policy_failure',{message:error.message}); result={status:'policy',text:supportReply,sources:[]}; }
+        }
+        else {
+          if (!args || Array.isArray(args) || Object.keys(args).length !== 1 || typeof args.question !== 'string' || !args.question.trim() || args.question.length > 400) throw new Error('Invalid clarification response.');
+          const text=safeCustomerCopy(args.question,SAFE_REDIRECT);
+          result = { status: 'clarify', text };
+        }
+      } finally {
+        this.trace('action_latency',{name:call.function.name,latencyMs:Date.now()-actionStarted});
       }
       // Preserve the original message (including provider reasoning metadata),
       // but never store it in the trace. Keep complete tool-call/result pairs.

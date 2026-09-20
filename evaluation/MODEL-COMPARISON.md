@@ -53,9 +53,13 @@ the final Terra-versus-DeepSeek run, DeepSeek's median was 1.84 seconds and
 Terra's was 1.80 seconds, so the early apparent four-times speed advantage did
 not reproduce. DeepSeek's observed mean request cost was about $0.000108 per
 scenario. Terra had two unreadable provider responses and completed 43 of 45.
-The hosted experiment therefore defaults to DeepSeek low while retaining Terra
-and GLM as selectable controls. This is a lab decision. Held-out requests are
-still required before a production recommendation.
+The repeated suite initially supported moving the experiment default to
+DeepSeek. A subsequent live request, “London to New York on 3 October,” was
+incorrectly converted to the default September window. A focused replay then
+confirmed it: Terra passed in 3.11 seconds and DeepSeek failed in 4.45 seconds.
+The two-call check cost $0.0068. Terra medium therefore remains the hosted
+default while DeepSeek and GLM stay selectable for research. This gives new
+behavior more weight than repeated development cases.
 
 The historical Codex and current OpenRouter measurements use different serving
 paths and prompt wrappers. The combined dashboard labels that distinction.

@@ -45,7 +45,7 @@
           <div>
             <b>Current build</b>
             <p>
-              Deployed on Cloud Run · DeepSeek low through OpenRouter · live
+              Deployed on Cloud Run · Terra medium through OpenRouter · live
               public staging search · invite-protected web chat
             </p>
           </div>
@@ -208,7 +208,7 @@
         <div class="module-kicker">03 · MODEL CHOICE</div>
         <div class="module-head">
           <div>
-            <h2>DeepSeek is the experiment default. Terra remains the control.</h2>
+            <h2>Terra is the default. DeepSeek and GLM remain research controls.</h2>
             <p>
               Correctness was the gate. Speed and estimated API-equivalent cost
               were tie-breakers. A new candidate must also prove consistency.
@@ -218,13 +218,13 @@
         </div>
         <div class="decision-grid">
           <article class="selected">
-            <span class="badge">Control</span>
+            <span class="badge">Default</span>
             <h3>Terra · medium</h3>
             <strong>1.80 s</strong><small>repeated median scenario time</small>
             <p>43/45 passed in the final same-path run. Two failures were unreadable provider responses, not incorrect actions.</p>
           </article>
           <article>
-            <span class="badge">Experiment default</span>
+            <span class="badge">Research control</span>
             <h3>DeepSeek V4.1 Flash · low</h3>
             <strong>45 / 45</strong><small>three complete repeats passed</small>
             <p>Median 1.84 seconds and about $0.000108 per scenario in the final run. It also passed 45/45 in the prior full run.</p>
@@ -236,7 +236,7 @@
           </article>
         </div>
         <p class="evidence-note">
-          DeepSeek passed the repeated development suite, which supports the lab default change. Held-out phrasings are still needed before a production recommendation. Historical Codex and current OpenRouter latency use different serving paths, so that cross-path view remains directional.
+          DeepSeek passed the repeated development suite, but a focused new case confirmed that it changed “3 October” to the default September window while Terra passed. Terra remains the default and the phrasing is now a regression case. Historical Codex and current OpenRouter latency use different serving paths, so that cross-path view remains directional.
         </p>
       </section>
 
@@ -395,8 +395,8 @@
           <li>
             <b>Repeat the strongest open-weight candidate.</b
             ><span
-              >Add held-out phrasings for DeepSeek low. Keep Terra
-              deployed unless the advantage survives that test.</span
+              >Add new phrasings for Terra, DeepSeek and GLM. Keep Terra
+              deployed unless another model shows a repeatable advantage.</span
             >
           </li>
         </ol>
@@ -438,8 +438,8 @@
               API executes.
             </li>
             <li>
-              Open the model comparison and explain why repeated validation moved the
-              experiment default from Terra to DeepSeek low.
+              Open the model comparison and explain why repeated validation favored DeepSeek, then why
+              a live date failure moved the default back to Terra.
             </li>
             <li>
               Try one live flight request, one follow-up, one policy question

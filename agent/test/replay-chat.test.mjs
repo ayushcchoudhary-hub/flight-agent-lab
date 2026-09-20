@@ -20,6 +20,7 @@ test('recorded chat freezes the clock, labels data and verifies displayed fields
  const svc=chatService({capturesLoader:async()=>captures,modelFactory:()=>new ScriptedDemoModel(),status:async()=>({connected:false})});
  const s=await svc.start('replay');assert.equal(s.clock,'2026-09-19');
  const r=await svc.turn(s.id,'London to New York');assert.equal(r.result.status,'results');assert.equal(r.grounding.pass,true);assert.match(r.result.text,/Saved results/);assert.doesNotMatch(r.result.text,/New staging API search/);
+ assert.equal(r.timing.totalLatencyMs,r.latencyMs);assert.ok(r.timing.flightSearchLatencyMs>=0);assert.ok(r.timing.otherLatencyMs>=0);assert.ok(r.events.some(event=>event.type==='action_latency'&&event.data.name==='find_flights'));
  await assert.rejects(svc.start('staging'),/expired/);
  svc.close(s.id);await assert.rejects(svc.turn(s.id,'hello'),/expired/);
 });

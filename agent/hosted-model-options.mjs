@@ -4,7 +4,7 @@ export const HOSTED_MODEL_OPTIONS=[
   {id:'z-ai/glm-5.3',label:'GLM 5.3 high',effort:'high'},
 ];
 
-export function hostedModelSettings(model='deepseek/deepseek-v4.1-flash',effort){
+export function hostedModelSettings(model='openai/gpt-5.6-terra',effort){
   const option=HOSTED_MODEL_OPTIONS.find(item=>item.id===model);
   if(!option||effort&&effort!==option.effort)throw new Error('Choose one of the evaluated model configurations.');
   return {model:option.id,effort:option.effort,label:option.label};

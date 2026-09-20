@@ -11,6 +11,7 @@
 | Shortlisted comparison | Astra low, Luna low and Terra medium, five repeats planned | 151 completed attempts, 151 passed | Run stopped before all 225 planned attempts |
 | Open-weight screen | Terra control plus DeepSeek, Mistral, Qwen and GLM across supported effort settings | 95 scenario attempts, 115 model calls; 3 configurations passed all 15 cases | One attempt per case; smoke failures stopped after four cases |
 | Prompt and harness repair | Explicit dates and multi-turn field preservation | DeepSeek 6/6 targeted date/follow-up attempts; Terra and DeepSeek 6/6 targeted refinements | Targeted checks diagnose known failures, not general reliability |
+| Focused regression | Natural day-month phrasing outside the original development set | Terra 1/1; DeepSeek 0/1 | One new case, now part of the regression suite |
 
 The scenarios cover complete routes, missing airports, date interpretation,
 follow-up changes, unsupported requests, empty or failed search results,
@@ -95,3 +96,8 @@ HTTP 429 responses after the one allowed retry. DeepSeek was the only candidate
 to complete every planned check. The repeated data did not reproduce the
 earlier four-times speed impression. It showed roughly equal median latency and
 a large observed cost advantage for DeepSeek.
+
+The later live date failure changed the product decision. Terra medium is the
+hosted default. DeepSeek and GLM remain available in the frontend so their cost,
+latency and behavior can continue to be compared without presenting them as the
+recommended configuration.

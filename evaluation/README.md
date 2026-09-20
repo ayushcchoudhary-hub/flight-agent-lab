@@ -4,6 +4,9 @@ This folder explains how the agent was evaluated and what the results support.
 It complements the interactive **Evals** and **Model comparison** pages in the
 demo.
 
+[HARDENING.md](HARDENING.md) defines the next edge-case set, the limited role
+of an LLM judge and the release rule for changing the default model.
+
 ## Three evidence layers
 
 1. **Deterministic checks** test application rules such as state merging,

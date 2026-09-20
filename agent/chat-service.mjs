@@ -53,10 +53,15 @@ export function createChatService({modelFactory=defaultModelFactory,capturesLoad
   s.busy=true;active=true;turns++;s.turns++;s.updated=Date.now();
   try{
    const from=s.events.length,start=performance.now();const result=await s.agent.respond(text);
-   const events=s.events.slice(from).filter(e=>['model_usage','model_retry','tool_call','flight_api','flight_api_retry','search_result','policy_retrieval','policy_answer','policy_failure'].includes(e.type));
+   const events=s.events.slice(from).filter(e=>['model_usage','model_retry','tool_call','action_latency','flight_api','flight_api_retry','search_result','policy_retrieval','policy_answer','policy_failure'].includes(e.type));
    const snapshot=s.adapter.snapshots.at(-1),query=s.adapter.calls.filter(c=>c.method==='POST').at(-1)?.body;
    const grounding=result.status==='results'&&snapshot?verifyFlightData(result,snapshot,query):null;
-   return {result,settings:s.settings,state:s.conversation.publicState(),events,grounding,latencyMs:Math.round(performance.now()-start),remainingTurns:maxTotalTurns-turns};
+   const latencyMs=Math.round(performance.now()-start);
+   const modelLatencyMs=events.filter(e=>e.type==='model_usage').reduce((total,e)=>total+(Number(e.data.latencyMs)||0),0);
+   const usedFlightApi=events.some(e=>e.type==='flight_api');
+   const flightSearchLatencyMs=usedFlightApi?events.filter(e=>e.type==='action_latency'&&e.data.name==='find_flights').reduce((total,e)=>total+(Number(e.data.latencyMs)||0),0):0;
+   const otherLatencyMs=Math.max(0,latencyMs-modelLatencyMs-flightSearchLatencyMs);
+   return {result,settings:s.settings,state:s.conversation.publicState(),events,grounding,latencyMs,timing:{modelLatencyMs,flightSearchLatencyMs,otherLatencyMs,totalLatencyMs:latencyMs},remainingTurns:maxTotalTurns-turns};
   }finally{s.busy=false;active=false;s.updated=Date.now();}
  },
  close(id){const s=sessions.get(id);if(s?.busy)throw new Error('Wait for the current reply before resetting.');sessions.delete(id);return {closed:true};}

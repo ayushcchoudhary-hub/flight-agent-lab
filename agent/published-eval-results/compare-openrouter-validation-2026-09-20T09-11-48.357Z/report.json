@@ -1,0 +1,657 @@
+{
+  "runId": "compare-openrouter-validation-2026-09-20T09-11-48.357Z",
+  "promptVersion": "flight-search-v1.3.0",
+  "experimentKind": "openrouter-validation",
+  "phase": "Candidate validation",
+  "startedAt": "2026-09-20T09:11:48.362Z",
+  "status": "complete",
+  "clock": "2026-09-19",
+  "configs": [
+    {
+      "id": "or-terra-medium",
+      "model": "openai/gpt-5.6-terra",
+      "effort": "medium",
+      "label": "Terra medium",
+      "family": "proprietary control",
+      "canonicalModel": "openai/gpt-5.6-terra-20260709",
+      "huggingFaceId": null,
+      "supportedEfforts": [
+        "max",
+        "xhigh",
+        "high",
+        "medium",
+        "low",
+        "none"
+      ]
+    },
+    {
+      "id": "or-deepseek-flash-low",
+      "model": "deepseek/deepseek-v4.1-flash",
+      "effort": "low",
+      "label": "DeepSeek V4.1 Flash low",
+      "family": "open weight",
+      "canonicalModel": "deepseek/deepseek-v4.1-flash-20260910",
+      "huggingFaceId": "deepseek-ai/DeepSeek-V4.1-Flash",
+      "supportedEfforts": [
+        "max",
+        "high",
+        "low"
+      ]
+    }
+  ],
+  "repeats": 1,
+  "cases": [
+    {
+      "id": "H1",
+      "name": "Natural day-month date must override the default window",
+      "steps": [
+        {
+          "text": "London to New York on 3 October, business.",
+          "expected": {
+            "status": "results",
+            "origin": "LHR|LGW|LCY|STN|LTN",
+            "destination": "JFK|EWR|LGA",
+            "cabin": "business",
+            "from": "2026-10-03",
+            "to": "2026-10-03",
+            "posts": 1,
+            "minResults": 1
+          }
+        }
+      ],
+      "dataSource": "synthetic edge/route fixture"
+    }
+  ],
+  "plannedCalls": 2,
+  "modelCallCap": 6,
+  "maxCostUsd": 0.25,
+  "modelCallsAttempted": 2,
+  "actualCostUsd": 0.0068446008000000004,
+  "conservativeUnreportedCostUsd": 0,
+  "source": "live-staging-2026-09-19T03-32-45.495Z",
+  "rates": {
+    "source": "https://openrouter.ai/api/v1/models",
+    "checkedAt": "2026-09-20T09:11:48.354Z",
+    "tier": "OpenRouter routed provider, fallbacks disabled",
+    "models": {
+      "openai/gpt-5.6-terra": {
+        "input": 2,
+        "cached": 0.19999999999999998,
+        "output": 12
+      },
+      "deepseek/deepseek-v4.1-flash": {
+        "input": 0.15,
+        "cached": 0.003,
+        "output": 0.6
+      }
+    }
+  },
+  "results": [
+    {
+      "configId": "or-terra-medium",
+      "caseId": "H1",
+      "repeat": 1,
+      "dataSource": "synthetic edge/route fixture",
+      "pass": true,
+      "steps": [
+        {
+          "input": "London to New York on 3 October, business.",
+          "expected": {
+            "status": "results",
+            "origin": "LHR|LGW|LCY|STN|LTN",
+            "destination": "JFK|EWR|LGA",
+            "cabin": "business",
+            "from": "2026-10-03",
+            "to": "2026-10-03",
+            "posts": 1,
+            "minResults": 1
+          },
+          "result": {
+            "status": "results",
+            "text": "SYNTHETIC FLIGHT DATA. These are example results.\n\nLondon (all airports) → New York (all airports)\nSat, 3 Oct 2026 · Business · One-way\n\nI found 3 options for you:\n\nA. London Heathrow Airport (LHR) → John F. Kennedy International Airport (JFK)\nSat, 3 Oct 2026\nBusiness · Nonstop · USD 1,113.00\nDeparture time unavailable\nArrival time unavailable\n\nB. London City Airport (LCY) → LaGuardia Airport (LGA)\nSat, 3 Oct 2026\nBusiness · Nonstop · USD 1,273.00\nDeparture time unavailable\nArrival time unavailable\n\nC. London Gatwick Airport (LGW) → Newark Liberty International Airport (EWR)\nSat, 3 Oct 2026\nBusiness · With a connection · USD 1,193.00\nDeparture time unavailable\nArrival time unavailable\n\nPrices are estimates and may change.\n\nMissing flight times and exact seat counts are not available.\n\nYou can ask me to change the dates, cabin or airport.",
+            "dataMode": "synthetic",
+            "query": {
+              "origin": "LHR|LGW|LCY|STN|LTN",
+              "destination": "JFK|EWR|LGA",
+              "dateFrom": "2026-10-02",
+              "dateTo": "2026-10-04",
+              "selectedDate": "2026-10-03",
+              "cabin": "business"
+            },
+            "shortlist": [
+              {
+                "id": "synthetic-LHR-JFK-2026-10-03-0",
+                "origin": "LHR",
+                "destination": "JFK",
+                "date": "2026-10-03",
+                "cabin": "business",
+                "priceUsd": 1113,
+                "direct": true,
+                "reasons": [],
+                "timing": {
+                  "departure": null,
+                  "arrival": null,
+                  "durationMinutes": null,
+                  "flightNumbers": null,
+                  "text": "Departure time unavailable\nArrival time unavailable"
+                },
+                "text": "London Heathrow Airport (LHR) → John F. Kennedy International Airport (JFK)\nSat, 3 Oct 2026\nBusiness · Nonstop · USD 1,113.00\nDeparture time unavailable\nArrival time unavailable"
+              },
+              {
+                "id": "synthetic-LCY-LGA-2026-10-03-2",
+                "origin": "LCY",
+                "destination": "LGA",
+                "date": "2026-10-03",
+                "cabin": "business",
+                "priceUsd": 1273,
+                "direct": true,
+                "reasons": [],
+                "timing": {
+                  "departure": null,
+                  "arrival": null,
+                  "durationMinutes": null,
+                  "flightNumbers": null,
+                  "text": "Departure time unavailable\nArrival time unavailable"
+                },
+                "text": "London City Airport (LCY) → LaGuardia Airport (LGA)\nSat, 3 Oct 2026\nBusiness · Nonstop · USD 1,273.00\nDeparture time unavailable\nArrival time unavailable"
+              },
+              {
+                "id": "synthetic-LGW-EWR-2026-10-03-1",
+                "origin": "LGW",
+                "destination": "EWR",
+                "date": "2026-10-03",
+                "cabin": "business",
+                "priceUsd": 1193,
+                "direct": false,
+                "reasons": [],
+                "timing": {
+                  "departure": null,
+                  "arrival": null,
+                  "durationMinutes": null,
+                  "flightNumbers": null,
+                  "text": "Departure time unavailable\nArrival time unavailable"
+                },
+                "text": "London Gatwick Airport (LGW) → Newark Liberty International Airport (EWR)\nSat, 3 Oct 2026\nBusiness · With a connection · USD 1,193.00\nDeparture time unavailable\nArrival time unavailable"
+              }
+            ],
+            "cached": false,
+            "totalFound": 9,
+            "matchingCount": 3
+          },
+          "latencyMs": 3111,
+          "grade": {
+            "pass": true,
+            "actual": {
+              "status": "results",
+              "origin": "LHR|LGW|LCY|STN|LTN",
+              "destination": "JFK|EWR|LGA",
+              "cabin": "business",
+              "from": "2026-10-03",
+              "to": "2026-10-03",
+              "budget": null,
+              "pending": null,
+              "menuCount": 0,
+              "posts": 1,
+              "resultCount": 3
+            },
+            "checks": [
+              {
+                "name": "status",
+                "expected": "results",
+                "actual": "results",
+                "pass": true
+              },
+              {
+                "name": "origin",
+                "expected": "LHR|LGW|LCY|STN|LTN",
+                "actual": "LHR|LGW|LCY|STN|LTN",
+                "pass": true
+              },
+              {
+                "name": "destination",
+                "expected": "JFK|EWR|LGA",
+                "actual": "JFK|EWR|LGA",
+                "pass": true
+              },
+              {
+                "name": "cabin",
+                "expected": "business",
+                "actual": "business",
+                "pass": true
+              },
+              {
+                "name": "from",
+                "expected": "2026-10-03",
+                "actual": "2026-10-03",
+                "pass": true
+              },
+              {
+                "name": "to",
+                "expected": "2026-10-03",
+                "actual": "2026-10-03",
+                "pass": true
+              },
+              {
+                "name": "posts",
+                "expected": 1,
+                "actual": 1,
+                "pass": true
+              },
+              {
+                "name": "minResults",
+                "expected": 1,
+                "actual": 3,
+                "pass": true
+              },
+              {
+                "name": "data source is labelled",
+                "pass": true
+              },
+              {
+                "name": "route matches saved preference",
+                "pass": true
+              },
+              {
+                "name": "each result respects route and budget",
+                "pass": true
+              },
+              {
+                "name": "model completed",
+                "pass": true
+              }
+            ]
+          }
+        }
+      ],
+      "events": [
+        {
+          "type": "model_usage",
+          "data": {
+            "adapter": "openrouter-live-model",
+            "promptVersion": "flight-search-v1.3.0",
+            "model": "openai/gpt-5.6-terra",
+            "requestedModel": "openai/gpt-5.6-terra",
+            "provider": "OpenAI",
+            "latencyMs": 3078,
+            "usage": {
+              "prompt_tokens": 1726,
+              "completion_tokens": 194,
+              "total_tokens": 1920,
+              "cost": 0.006582,
+              "is_byok": false,
+              "prompt_tokens_details": {
+                "cached_tokens": 0,
+                "cache_write_tokens": 1604,
+                "audio_tokens": 0,
+                "video_tokens": 0
+              },
+              "cost_details": {
+                "upstream_inference_cost": 0.006582,
+                "upstream_inference_prompt_cost": 0.004254,
+                "upstream_inference_completions_cost": 0.002328
+              },
+              "completion_tokens_details": {
+                "reasoning_tokens": 112,
+                "image_tokens": 0,
+                "audio_tokens": 0
+              }
+            }
+          }
+        },
+        {
+          "type": "tool_argument_repair",
+          "data": {
+            "fields": [
+              "cabinOnly",
+              "sort",
+              "nonstopOnly",
+              "maxPriceUsd",
+              "refresh"
+            ],
+            "reason": "removed fields not explicitly changed in the current request"
+          }
+        },
+        {
+          "type": "tool_call",
+          "data": {
+            "name": "find_flights",
+            "arguments": {
+              "origin": "London",
+              "destination": "New York",
+              "dates": {
+                "mode": "exact",
+                "start": "2026-10-03",
+                "end": "",
+                "flex": 1,
+                "strict": false
+              },
+              "cabin": "business"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "configId": "or-deepseek-flash-low",
+      "caseId": "H1",
+      "repeat": 1,
+      "dataSource": "synthetic edge/route fixture",
+      "pass": false,
+      "steps": [
+        {
+          "input": "London to New York on 3 October, business.",
+          "expected": {
+            "status": "results",
+            "origin": "LHR|LGW|LCY|STN|LTN",
+            "destination": "JFK|EWR|LGA",
+            "cabin": "business",
+            "from": "2026-10-03",
+            "to": "2026-10-03",
+            "posts": 1,
+            "minResults": 1
+          },
+          "result": {
+            "status": "results",
+            "text": "SYNTHETIC FLIGHT DATA. These are example results.\n\nLondon (all airports) → New York (all airports)\nSat, 19 Sept 2026 – Sat, 26 Sept 2026 · Business · One-way\n\nI found 3 options for you:\n\nA. London Heathrow Airport (LHR) → John F. Kennedy International Airport (JFK)\nSat, 19 Sept 2026\nBusiness · Nonstop · USD 1,100.00\nDeparture time unavailable\nArrival time unavailable\n\nB. London Heathrow Airport (LHR) → John F. Kennedy International Airport (JFK)\nSun, 20 Sept 2026\nBusiness · Nonstop · USD 1,113.00\nDeparture time unavailable\nArrival time unavailable\n\nC. London Heathrow Airport (LHR) → John F. Kennedy International Airport (JFK)\nMon, 21 Sept 2026\nBusiness · Nonstop · USD 1,126.00\nDeparture time unavailable\nArrival time unavailable\n\nPrices are estimates and may change.\n\nMissing flight times and exact seat counts are not available.\n\nYou can ask me to change the dates, cabin or airport.",
+            "dataMode": "synthetic",
+            "query": {
+              "origin": "LHR|LGW|LCY|STN|LTN",
+              "destination": "JFK|EWR|LGA",
+              "dateFrom": "2026-09-19",
+              "dateTo": "2026-09-26",
+              "selectedDate": "2026-09-19",
+              "cabin": "business"
+            },
+            "shortlist": [
+              {
+                "id": "synthetic-LHR-JFK-2026-09-19-0",
+                "origin": "LHR",
+                "destination": "JFK",
+                "date": "2026-09-19",
+                "cabin": "business",
+                "priceUsd": 1100,
+                "direct": true,
+                "reasons": [],
+                "timing": {
+                  "departure": null,
+                  "arrival": null,
+                  "durationMinutes": null,
+                  "flightNumbers": null,
+                  "text": "Departure time unavailable\nArrival time unavailable"
+                },
+                "text": "London Heathrow Airport (LHR) → John F. Kennedy International Airport (JFK)\nSat, 19 Sept 2026\nBusiness · Nonstop · USD 1,100.00\nDeparture time unavailable\nArrival time unavailable"
+              },
+              {
+                "id": "synthetic-LHR-JFK-2026-09-20-0",
+                "origin": "LHR",
+                "destination": "JFK",
+                "date": "2026-09-20",
+                "cabin": "business",
+                "priceUsd": 1113,
+                "direct": true,
+                "reasons": [],
+                "timing": {
+                  "departure": null,
+                  "arrival": null,
+                  "durationMinutes": null,
+                  "flightNumbers": null,
+                  "text": "Departure time unavailable\nArrival time unavailable"
+                },
+                "text": "London Heathrow Airport (LHR) → John F. Kennedy International Airport (JFK)\nSun, 20 Sept 2026\nBusiness · Nonstop · USD 1,113.00\nDeparture time unavailable\nArrival time unavailable"
+              },
+              {
+                "id": "synthetic-LHR-JFK-2026-09-21-0",
+                "origin": "LHR",
+                "destination": "JFK",
+                "date": "2026-09-21",
+                "cabin": "business",
+                "priceUsd": 1126,
+                "direct": true,
+                "reasons": [],
+                "timing": {
+                  "departure": null,
+                  "arrival": null,
+                  "durationMinutes": null,
+                  "flightNumbers": null,
+                  "text": "Departure time unavailable\nArrival time unavailable"
+                },
+                "text": "London Heathrow Airport (LHR) → John F. Kennedy International Airport (JFK)\nMon, 21 Sept 2026\nBusiness · Nonstop · USD 1,126.00\nDeparture time unavailable\nArrival time unavailable"
+              }
+            ],
+            "cached": false,
+            "totalFound": 24,
+            "matchingCount": 24
+          },
+          "latencyMs": 4452,
+          "grade": {
+            "pass": false,
+            "actual": {
+              "status": "results",
+              "origin": "LHR|LGW|LCY|STN|LTN",
+              "destination": "JFK|EWR|LGA",
+              "cabin": "business",
+              "from": "2026-09-19",
+              "to": "2026-09-26",
+              "budget": null,
+              "pending": null,
+              "menuCount": 0,
+              "posts": 1,
+              "resultCount": 3
+            },
+            "checks": [
+              {
+                "name": "status",
+                "expected": "results",
+                "actual": "results",
+                "pass": true
+              },
+              {
+                "name": "origin",
+                "expected": "LHR|LGW|LCY|STN|LTN",
+                "actual": "LHR|LGW|LCY|STN|LTN",
+                "pass": true
+              },
+              {
+                "name": "destination",
+                "expected": "JFK|EWR|LGA",
+                "actual": "JFK|EWR|LGA",
+                "pass": true
+              },
+              {
+                "name": "cabin",
+                "expected": "business",
+                "actual": "business",
+                "pass": true
+              },
+              {
+                "name": "from",
+                "expected": "2026-10-03",
+                "actual": "2026-09-19",
+                "pass": false
+              },
+              {
+                "name": "to",
+                "expected": "2026-10-03",
+                "actual": "2026-09-26",
+                "pass": false
+              },
+              {
+                "name": "posts",
+                "expected": 1,
+                "actual": 1,
+                "pass": true
+              },
+              {
+                "name": "minResults",
+                "expected": 1,
+                "actual": 3,
+                "pass": true
+              },
+              {
+                "name": "data source is labelled",
+                "pass": true
+              },
+              {
+                "name": "route matches saved preference",
+                "pass": true
+              },
+              {
+                "name": "each result respects route and budget",
+                "pass": true
+              },
+              {
+                "name": "model completed",
+                "pass": true
+              }
+            ]
+          }
+        }
+      ],
+      "events": [
+        {
+          "type": "model_usage",
+          "data": {
+            "adapter": "openrouter-live-model",
+            "promptVersion": "flight-search-v1.3.0",
+            "model": "deepseek/deepseek-v4.1-flash",
+            "requestedModel": "deepseek/deepseek-v4.1-flash",
+            "provider": "DeepInfra",
+            "latencyMs": 4448,
+            "usage": {
+              "prompt_tokens": 2302,
+              "completion_tokens": 189,
+              "total_tokens": 2491,
+              "cost": 0.0002626008,
+              "is_byok": false,
+              "prompt_tokens_details": {
+                "cached_tokens": 1024,
+                "cache_write_tokens": 0,
+                "audio_tokens": 0,
+                "video_tokens": 0
+              },
+              "cost_details": {
+                "upstream_inference_cost": 0.0002626008,
+                "upstream_inference_prompt_cost": 0.0001832208,
+                "upstream_inference_completions_cost": 0.00007938
+              },
+              "completion_tokens_details": {
+                "reasoning_tokens": 26,
+                "image_tokens": 0,
+                "audio_tokens": 0
+              }
+            }
+          }
+        },
+        {
+          "type": "tool_argument_repair",
+          "data": {
+            "fields": [
+              "cabinOnly",
+              "sort",
+              "nonstopOnly",
+              "maxPriceUsd",
+              "refresh"
+            ],
+            "reason": "removed fields not explicitly changed in the current request"
+          }
+        },
+        {
+          "type": "tool_call",
+          "data": {
+            "name": "find_flights",
+            "arguments": {
+              "origin": "London",
+              "destination": "New York",
+              "cabin": "business"
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "disabled": [],
+  "decisionTitle": "Candidate validation complete",
+  "decisionNote": "Terra medium passed every completed scenario across 1 repeats. Terra medium had the fastest median. Terra medium had the lowest observed cost. This supports a lab default decision, while new language remains the next confidence check.",
+  "limitations": [
+    "Development cases, not held-out tests.",
+    "The same prompts are used across configurations.",
+    "Six cases use a pinned staging-derived fixture and nine use synthetic fixtures. No live flight searches occur.",
+    "Latency includes the OpenRouter gateway and its selected provider. It is not model-only compute time.",
+    "Provider fallbacks and automatic model substitution are disabled.",
+    "Actual response cost is preferred. Missing usage reserves a conservative upper bound.",
+    "1 repeats measure consistency on these development cases. They are not a production reliability estimate.",
+    "Historical Codex-path measurements use a different serving path and should not be treated as a controlled latency comparison."
+  ],
+  "summary": [
+    {
+      "id": "or-terra-medium",
+      "model": "openai/gpt-5.6-terra",
+      "effort": "medium",
+      "label": "Terra medium",
+      "family": "proprietary control",
+      "canonicalModel": "openai/gpt-5.6-terra-20260709",
+      "huggingFaceId": null,
+      "supportedEfforts": [
+        "max",
+        "xhigh",
+        "high",
+        "medium",
+        "low",
+        "none"
+      ],
+      "completed": 1,
+      "planned": 1,
+      "passed": 1,
+      "eligible": true,
+      "perCase": [
+        {
+          "id": "H1",
+          "passed": 1,
+          "total": 1
+        }
+      ],
+      "medianMs": 3111,
+      "p10Ms": 3111,
+      "p90Ms": 3111,
+      "meanTokens": 1920,
+      "meanCost": 0.006582,
+      "usageComplete": true,
+      "failed": 0
+    },
+    {
+      "id": "or-deepseek-flash-low",
+      "model": "deepseek/deepseek-v4.1-flash",
+      "effort": "low",
+      "label": "DeepSeek V4.1 Flash low",
+      "family": "open weight",
+      "canonicalModel": "deepseek/deepseek-v4.1-flash-20260910",
+      "huggingFaceId": "deepseek-ai/DeepSeek-V4.1-Flash",
+      "supportedEfforts": [
+        "max",
+        "high",
+        "low"
+      ],
+      "completed": 1,
+      "planned": 1,
+      "passed": 0,
+      "eligible": false,
+      "perCase": [
+        {
+          "id": "H1",
+          "passed": 0,
+          "total": 1
+        }
+      ],
+      "medianMs": 4452,
+      "p10Ms": 4452,
+      "p90Ms": 4452,
+      "meanTokens": 2491,
+      "meanCost": 0.0002626008,
+      "usageComplete": true,
+      "failed": 1
+    }
+  ],
+  "completedAt": "2026-09-20T09:11:55.929Z",
+  "stopReason": null,
+  "publication": "Sanitized review copy. Credentials, backend captures, source snapshots, request IDs and model thread IDs are excluded."
+}

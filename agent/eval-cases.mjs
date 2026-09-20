@@ -12,6 +12,9 @@ export const EVAL_CASES = [
     id: `R${i+1}`, name: `Complete trip: ${from} → ${to}`,
     steps: [{ text: `Find me a flight from ${from} to ${to} on October 1, 2026.`, expected: complete(from,to) }],
   })),
+  { id:'H1', name:'Natural day-month date must override the default window', steps:[
+    { text:'London to New York on 3 October, business.', expected:{ ...complete('London','New York'), from:'2026-10-03', to:'2026-10-03' } },
+  ] },
   { id: 'M1', name: 'Origin only → destination menu → select', steps: [
     { text: 'I want to fly from London.', expected: { status:'clarify', origin:CITY_CODES.London, destination:null, pending:'destination', menuCount:4, posts:0 } },
     { text: '1', expected: rolling('London','New York') },

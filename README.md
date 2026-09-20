@@ -97,9 +97,10 @@ formatting and call limits. See [ARCHITECTURE-DECISIONS.md](ARCHITECTURE-DECISIO
 - A bounded OpenRouter screen compared Terra medium with DeepSeek, Mistral,
   Qwen and GLM configurations. Repeated validation then ran Terra, DeepSeek
   and GLM three times across the 15-case contract. After prompt and harness
-  improvements, DeepSeek passed 45 of 45 attempts twice in full runs. The
-  hosted experiment now defaults to DeepSeek low, with Terra and GLM available
-  as controls.
+  improvements, DeepSeek passed 45 of 45 attempts twice in full runs. A later
+  focused regression confirmed a missed natural-language date. The hosted experiment
+  therefore defaults to Terra medium, with DeepSeek and GLM available for
+  controlled exploration.
 
 See [EVALUATION.md](EVALUATION.md) for what a pass does and does not prove.
 The [`evaluation/`](evaluation/) folder documents the test matrix, comparison
@@ -164,8 +165,8 @@ tool contract and regression cases before they enter scope.
   search retries reduce risk
 - What the frozen scope and regression suite establish, and what a passing test
   does not prove
-- Why Terra was the original control and why repeated evidence justified moving
-  the experiment default to DeepSeek low
+- Why repeated evidence moved DeepSeek forward, then why a live date failure
+  moved the experiment default back to Terra
 - Why prompt instructions alone were insufficient, and how deterministic
   explicit-field preservation improved both frontier and open-weight behavior
 - Why booking, payment, autonomous planning, multi-agent coordination and MCP
