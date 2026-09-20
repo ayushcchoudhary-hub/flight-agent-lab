@@ -20,7 +20,7 @@ export function validDate(value) {
   return Number.isFinite(d.valueOf()) && d.toISOString().slice(0, 10) === value;
 }
 export function newState() {
-  return { origin: null, destination: null, cabin: 'business', dates: null, sort: 'recommended', maxPriceUsd: null, nonstopOnly: false, cabinOnly: false, pending: null, snapshot: null, lastQuery: null };
+  return { origin: null, destination: null, cabin: 'business', dates: null, sort: 'recommended', maxPriceUsd: null, nonstopOnly: false, cabinOnly: false, pending: null, originFromPreference: false, snapshot: null, lastQuery: null };
 }
 
 const choiceOf = entry => ({ code: entry.code, label: entry.label ?? fullAirport(entry.code) });
@@ -95,11 +95,12 @@ export const findTool = {
         origin: { type: 'string', description: 'Departure city or explicit airport/IATA codes. Use user wording; application resolves city groups. Omit if unknown.' },
         destination: { type: 'string', description: 'Destination city or explicit airport/IATA codes. Omit if unknown.' },
         dates: { type: 'object', description:'Required whenever the current user request explicitly supplies or changes a travel date. Omit only when the user supplies no date.', additionalProperties: false, required: ['mode'], properties: {
-          mode: { type: 'string', enum: ['rolling', 'nextWeek', 'exact', 'range', 'flex'] },
+          mode: { type: 'string', enum: ['rolling', 'nextWeek', 'exact', 'range', 'flex', 'ambiguous'] },
           start: { type: 'string', description: 'YYYY-MM-DD; exact date, range start, or flex anchor. Required for exact/range/flex.' },
           end: { type: 'string', description: 'Inclusive range end. Required for range.' },
           flex: { type: 'integer', enum: [1, 3, 7], description: 'Days either side of start; required for flex.' },
           strict: { type: 'boolean', description: 'True only if user says exact dates only/no alternatives.' },
+          options: { type: 'array', items: { type: 'string' }, description: 'Required for ambiguous: the YYYY-MM-DD dates the wording could mean, e.g. "2/10" gives both readings. Send the trip you already know in the same call so it is not lost.' },
         } },
         cabin: { type: 'string', enum: cabins },
         cabinOnly: { type: 'boolean', description: 'True for explicit cabin-only restriction; false to allow cabin alternatives.' },
@@ -163,6 +164,17 @@ function normalizePatch(patch) {
   return normalized;
 }
 
+// An ambiguous date is a clarification, not a search. The model still calls
+// find_flights so the trip it already knows reaches application state, which
+// holds state precedence (see PROMPT-ARCHITECTURE.md). Held-out v2 A6 failed
+// because the model answered in prose instead and nothing was retained.
+function ambiguousDates(input, today) {
+  if (!object(input) || input.mode !== 'ambiguous') return null;
+  const options = Array.isArray(input.options) ? [...new Set(input.options)] : [];
+  const usable = options.filter(value => validDate(value) && value >= today);
+  return usable.length >= 2 ? usable.slice(0, 4).map(iso => ({ code: iso, label: readableDate(iso) })) : 'unusable';
+}
+
 function mergeTripState(current, patch, today) {
   const next = { ...current };
   if (patch.dates) next.dates = resolveDates(patch.dates, today);
@@ -177,6 +189,7 @@ function mergeTripState(current, patch, today) {
     const choices = resolveLocation(patch[field]);
     if (choices.length === 1) {
       next[field] = choices[0];
+      if (field === 'origin') next.originFromPreference = false;
       next.pending = null;
     } else {
       next[field] = null;
@@ -195,7 +208,9 @@ export class SearchConversation {
     const pending = this.state.pending;
     if (!pending) return { status: 'clarify', text: 'There is no active numbered menu. Please type the city, airport or preference you want to change.' };
     if (!Number.isInteger(number) || number < 1 || number > pending.choices.length) return { status: 'clarify', text: `Choose 1–${pending.choices.length}, or type a city/airport.` };
-    return this.find({ [pending.field]: pending.choices[number - 1].code });
+    const chosen = pending.choices[number - 1];
+    if (pending.field === 'dates') return this.find({ dates: { mode: 'exact', start: chosen.code } });
+    return this.find({ [pending.field]: chosen.code });
   }
   async find(patch) {
     try {
@@ -204,6 +219,8 @@ export class SearchConversation {
       validatePatch(patch);
       const today = this.today();
       if (!validDate(today)) throw new Error('Invalid test clock.');
+      const candidates = ambiguousDates(patch.dates, today);
+      if (candidates) { patch = { ...patch }; delete patch.dates; }
 
       // 2. Merge the follow-up into a copy. Omitted fields remain unchanged.
       const { next, unresolved } = mergeTripState(this.state, patch, today);
@@ -227,6 +244,19 @@ export class SearchConversation {
           ? 'Sounds good. Where are you flying from?'
           : 'Where would you like to fly?';
         return this.ask(field, choices, heading);
+      }
+
+      // An ambiguous date stops here. The route, cabin and everything else the
+      // traveler supplied is already merged above, so the answer builds on it.
+      if (candidates === 'unusable') {
+        this.state.pending = null;
+        return { status: 'clarify', text: 'Which date did you mean? Please give it as a day and month.' };
+      }
+      if (candidates) {
+        this.state.pending = { field: 'dates', choices: candidates };
+        const numbered = candidates.map((choice, index) => `${index + 1}. ${choice.label}`).join('\n');
+        const route = `${next.origin.label} to ${next.destination.label}`;
+        return { status: 'clarify', text: [`Which date did you mean for ${route}?`, numbered, 'Reply with the number or a different date.'].join('\n\n') };
       }
 
       // 4. Apply deterministic defaults and reject conflicting state.
@@ -309,6 +339,7 @@ function present(state, response, cached, mode = 'synthetic') {
   const text = [
     !staging?'SYNTHETIC FLIGHT DATA. These are example results.':replay?'Saved results. This is not a fresh availability check.':null,
     `${state.origin.label} → ${state.destination.label}\n${dateSummary} · ${state.cabin === 'any' ? 'Any cabin' : state.cabin.charAt(0).toUpperCase()+state.cabin.slice(1)} · One-way${state.maxPriceUsd !== null ? ` · Up to USD ${state.maxPriceUsd}` : ''}${state.nonstopOnly ? ' · Nonstop only' : ''}`,
+    state.originFromPreference?`Using your saved home airport, ${state.origin.label}. Say where you are flying from to change it.`:null,
     cached?'Using the same results. Say “refresh availability” for a new check.':null,
     shortlist.length?`I found ${shortlist.length===1?'one option':`${shortlist.length} options`} for you${alternatives.length&&!matching.length?' on nearby dates or with different flight details':''}:`:'No flights match those preferences in these results. Would you like to try different dates?',
     ...shortlist.map((r,i)=>`${String.fromCharCode(65+i)}. ${r.text}`),

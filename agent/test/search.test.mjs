@@ -389,3 +389,42 @@ test('a policy question about payment still reaches grounded retrieval',()=>{
     assert.equal(deterministicBoundary(question),null,`${question} belongs to policy retrieval`);
   }
 });
+
+// Held-out v2 A6 read perfectly ("Do you mean 2 October 2026 or 10 February
+// 2027 for LHR to JFK in business class?") while application state was empty,
+// because the model answered in prose and never called the tool. A follow-up
+// would have had no trip to build on.
+test('an ambiguous date asks without losing the trip',async()=>{
+  const {adapter,c}=setup();
+  const reply=await c.find({origin:'LHR',destination:'JFK',cabin:'business',dates:{mode:'ambiguous',options:['2026-10-02','2027-02-10']}});
+  const state=c.publicState();
+  assert.equal(reply.status,'clarify');
+  assert.equal(postCount(adapter),0,'an ambiguous date must not search');
+  assert.equal(state.origin?.code,'LHR');
+  assert.equal(state.destination?.code,'JFK');
+  assert.equal(state.cabin,'business');
+  assert.equal(state.pending?.field,'dates');
+  assert.match(reply.text,/date/i);
+});
+
+test('choosing an offered date searches the trip that was kept',async()=>{
+  const {adapter,c}=setup();
+  await c.find({origin:'LHR',destination:'JFK',cabin:'business',dates:{mode:'ambiguous',options:['2026-10-02','2027-02-10']}});
+  const reply=await c.choose(1);
+  const state=c.publicState();
+  assert.equal(reply.status,'results');
+  assert.equal(state.dates.from,'2026-10-02');
+  assert.equal(state.origin?.code,'LHR');
+  assert.equal(state.destination?.code,'JFK');
+  assert.equal(postCount(adapter),1);
+});
+
+test('an ambiguous date with too few usable readings asks plainly',async()=>{
+  const {adapter,c}=setup();
+  // A past date is not a usable reading, so one option remains.
+  const reply=await c.find({origin:'LHR',destination:'JFK',dates:{mode:'ambiguous',options:['2026-10-02','2020-01-01']}});
+  assert.equal(reply.status,'clarify');
+  assert.equal(postCount(adapter),0);
+  assert.equal(c.publicState().pending,null);
+  assert.match(reply.text,/which date/i);
+});
