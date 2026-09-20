@@ -34,3 +34,10 @@ export class OpenRouterJudge{
  }
 }
 export function judgePass(result){return result.verdict==='pass'&&Object.values(result.scores).every(score=>score>=4)&&!result.issues.some(issue=>['major','critical'].includes(issue.severity));}
+export async function evaluateJudgeConsensus({deterministicPass,evaluate,isPass=judgePass}){
+ const attempts=[await evaluate()];
+ if(deterministicPass&&!isPass(attempts[0]))attempts.push(await evaluate(),await evaluate());
+ const passingVotes=attempts.filter(isPass).length,communicationPass=passingVotes>attempts.length/2;
+ const representative=attempts.find(result=>isPass(result)===communicationPass)??attempts[0];
+ return {judge:representative,judgeAttempts:attempts,judgeConsensus:{passingVotes,totalVotes:attempts.length,verdicts:attempts.map(result=>result.verdict)},communicationPass};
+}

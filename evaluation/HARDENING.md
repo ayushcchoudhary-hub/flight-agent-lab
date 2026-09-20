@@ -94,6 +94,12 @@ documented cabin default, missing fixture fields and supposed real-world route
 plausibility. The judge now grades only communication the reply controls, while
 exact checks remain authoritative for facts and actions.
 
+When every exact check passes but the first judge call does not, the runner now
+judges the same transcript twice more and uses the majority of three. It stores
+all verdicts and counts every call against the existing limits. A judge-only
+flag does not stop the suite. Exact-check failures, provider outages and budget
+caps do.
+
 ## How to interpret the result
 
 Every one of the 12 original reviews has a later targeted pass. The 42-case
