@@ -25,6 +25,10 @@ Codex to help design, implement, test and document the prototype. A later
 independent code review, and the held-out repair tests that came from it, used
 Claude.
 
+The work here was built over a focused two-day sprint in September 2026. The
+commit history is the honest record of it: what was tried, what failed, what
+changed and why. Failed evaluation runs are preserved rather than rewritten.
+
 I directed the work and made the product decisions: why an agent could improve
 access to flight search, what it should do, what should stay out of scope, which
 failures matter, how the conversation should feel, what evidence would support
@@ -35,7 +39,8 @@ with Codex.
 
 The goal is to understand and communicate the system honestly. The code is
 included so the decisions can be inspected and reproduced, not to imply that I
-implemented it without AI assistance.
+implemented it without AI assistance. It is published for reading and
+assessment rather than reuse; see [LICENSE](LICENSE).
 
 The [learning guide](LEARNING-GUIDE.md) is the plain-language walkthrough I use
 to make sure I can explain every major component and tradeoff.
@@ -160,10 +165,12 @@ pnpm test
 pnpm run dashboard
 ```
 
-Synthetic tests need no API key. Local live runs read `OPENROUTER_API_KEY` from
-an ignored `.env` file or the process environment. The hosted adapter reads the
-same key from the deployment secret manager. Credentials must never be added to
-this repository.
+The deterministic suite and the recorded dashboard run on synthetic fixtures
+and need no API key, so anyone can reproduce the 106 checks. Live flight search
+requires credentials that are not in this repository, and live model runs read
+`OPENROUTER_API_KEY` from an ignored `.env` file or the process environment.
+The hosted adapter reads the same key from the deployment secret manager.
+Credentials must never be added to this repository.
 
 ## Why the design stays small
 
