@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { SearchConversation, resolveLocation, isoToday } from '../search.mjs';
 import { makeFixtureAdapter } from '../fixtures.mjs';
+import { AIRPORTS } from '../shared.mjs';
 import { Agent, OpenRouterModel, PROMPT_VERSION, ScriptedDemoModel, repairExplicitToolArguments, systemPrompt } from '../model.mjs';
 import { redact } from '../trace.mjs';
 
@@ -304,4 +305,67 @@ test('trace redacts common credentials and personal identifiers', () => {
   assert.ok(!r.includes('me@example.com'));
   assert.ok(!r.includes('4242'));
   assert.match(r, /prompt_tokens/);
+});
+
+// Held-out v2 cases A1, A2, A3 and A5 all failed inside one gap: the resolver
+// searched a hand-written table of 28 airports with plain substring matching,
+// so it knew no country names and no misspellings. These lock in the fix.
+test('a country resolves to a menu of its airports, hubs first',()=>{
+  const japan=resolveLocation('Japan');
+  assert.ok(japan.length>1,'a country is ambiguous and must offer a menu');
+  const labels=japan.map(x=>x.label).join(' ');
+  assert.match(labels,/Tokyo/);
+  assert.match(labels,/Osaka/);
+  assert.equal(resolveLocation('UK')[0].code,'LHR|LGW|LCY|STN|LTN');
+});
+
+test('an unambiguous misspelling resolves without a menu',()=>{
+  assert.deepEqual(resolveLocation('Londn').map(x=>x.code),['LHR|LGW|LCY|STN|LTN']);
+  assert.deepEqual(resolveLocation('Singapor').map(x=>x.code),['SIN']);
+  // Previously only worked because the model silently corrected the spelling.
+  assert.deepEqual(resolveLocation('Heathrw').map(x=>x.code),['LHR']);
+});
+
+test('an exact match on a minor airport still offers the likelier hub',()=>{
+  // Sidney, Montana is a real airport and an exact city match, but the
+  // traveler probably means Sydney. Offer both rather than guessing either.
+  const choices=resolveLocation('Sidney');
+  const codes=choices.map(x=>x.code);
+  assert.ok(codes.includes('SDY'),'keeps the literal match');
+  assert.ok(codes.includes('SYD'),'offers the hub the traveler likely meant');
+  assert.ok(choices.length>1,'must not silently resolve to either');
+});
+
+test('exact city, code and metro input still resolve to one place',()=>{
+  for(const [input,code] of [['London','LHR|LGW|LCY|STN|LTN'],['Paris','CDG|ORY'],['Osaka','KIX|ITM|UKB'],['Singapore','SIN'],['JFK','JFK']]){
+    assert.deepEqual(resolveLocation(input).map(x=>x.code),[code],`${input} must resolve to exactly ${code}`);
+  }
+});
+
+test('superseded airport records never reach customer copy',()=>{
+  // OurAirports marks duplicates with a "[Duplicate]" name prefix. The sync
+  // script drops them, so no reply can quote one back to a traveler.
+  assert.equal(AIRPORTS.filter(a=>/^\[Duplicate\]/.test(a.name)).length,0);
+});
+
+test('a country origin clarifies while keeping the rest of the trip',async()=>{
+  const {adapter,c}=setup();
+  const reply=await c.find({origin:'UK',destination:'Singapore',dates:{mode:'exact',start:'2026-10-03'}});
+  const state=c.publicState();
+  assert.equal(reply.status,'clarify');
+  assert.equal(state.pending?.field,'origin');
+  assert.equal(state.origin,null);
+  assert.equal(state.destination?.code,'SIN');
+  assert.equal(state.dates.from,'2026-10-03');
+  assert.equal(postCount(adapter),0,'no search until the origin is known');
+});
+
+test('two misspellings in one request still reach results',async()=>{
+  const {adapter,c}=setup();
+  const reply=await c.find({origin:'Singapor',destination:'Londn',dates:{mode:'exact',start:'2026-10-01'}});
+  const state=c.publicState();
+  assert.equal(reply.status,'results');
+  assert.equal(state.origin?.code,'SIN');
+  assert.equal(state.destination?.code,'LHR|LGW|LCY|STN|LTN');
+  assert.equal(postCount(adapter),1);
 });

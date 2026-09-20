@@ -38,6 +38,9 @@ function parseAirports(text) {
     const country = field(block, 'country');
     const countryCode = field(block, 'countryCode');
     const type = field(block, 'type');
+    // OurAirports marks superseded records with a "[Duplicate]" name prefix.
+    // They reach customer-facing copy verbatim, so drop them.
+    if (name?.startsWith('[Duplicate]')) continue;
     if (code && city && country && type) rows.push([code, city, name ?? city, country, countryCode ?? '', type]);
   }
   return rows;

@@ -1,5 +1,5 @@
 import { flightDetails,readableDate } from './flight-details.mjs';
-import { AIRPORTS, METRO_GROUPS, expandMetro, labelForValue, rankAirportSearch, shiftIso, flexRange, getResultsView, displayPriceUsd } from './shared.mjs';
+import { AIRPORTS, METRO_GROUPS, expandMetro, labelForValue, rankAirportSearch, nearMatches, collapseToGroups, hubsAmong, countryAlias, shiftIso, flexRange, getResultsView, displayPriceUsd } from './shared.mjs';
 import { safeSearchError } from './customer-copy.mjs';
 
 export const WELCOME = 'Where would you like to fly?\n\nTry “To New York”, “London to Singapore”, or “Dubai to London, economy”.\n\nDefaults: one-way · business class · today through the next 7 days.\nSearch only. There is no booking or checkout.';
@@ -23,9 +23,22 @@ export function newState() {
   return { origin: null, destination: null, cabin: 'business', dates: null, sort: 'recommended', maxPriceUsd: null, nonstopOnly: false, cabinOnly: false, pending: null, snapshot: null, lastQuery: null };
 }
 
+const choiceOf = entry => ({ code: entry.code, label: entry.label ?? fullAirport(entry.code) });
+const isHubEntry = entry => hubsAmong([entry]).length > 0;
+
+// Every airport and metro group the resolver can offer, in the shape the
+// ranker expects. A group matches on any member code, so typing "LGW" still
+// surfaces "London (all airports)".
+function searchableEntries() {
+  return [
+    ...METRO_GROUPS.map(group => ({ code: group.code, label: group.label, matchCodes: expandMetro(group.code), city: group.city, name: group.label, country: group.country, popular: true })),
+    ...AIRPORTS.map(airport => ({ ...airport, label: fullAirport(airport.code), matchCodes: [airport.code], name: airport.name ?? airport.city })),
+  ];
+}
+
 export function resolveLocation(text) {
   if (typeof text !== 'string' || !text.trim() || text.length > 120) return [];
-  const term = aliases[normal(text)] ?? text.trim();
+  const term = aliases[normal(text)] ?? countryAlias(text) ?? text.trim();
   // Models and people can copy an airport label, not just its bare name/code.
   // Accept a corroborating label, but never silently trust a conflicting code.
   const labelled = term.match(/^(.*?)\s*\(([A-Z]{3})\)$/i);
@@ -39,16 +52,33 @@ export function resolveLocation(text) {
   if (codes.every(c => airportByCode.has(c))) return [{ code: [...new Set(codes)].join('|'), label: labelForValue(codes.join('|')) }];
   const group = METRO_GROUPS.find(g => normal(g.city) === normal(term) || normal(g.label) === normal(term));
   if (group) return [{ code: group.code, label: group.label }];
+  const entries = searchableEntries();
   const city = AIRPORTS.filter(a => normal(a.city) === normal(term));
-  if (city.length === 1) return [{ code: city[0].code, label: fullAirport(city[0].code) }];
-  const entries = [
-    ...METRO_GROUPS.map(g => ({ code: g.code, label: g.label, matchCodes: expandMetro(g.code), city: g.city, name: g.label, country: g.country, popular: true })),
-    ...AIRPORTS.map(a => ({ ...a, label: fullAirport(a.code), matchCodes: [a.code], name: a.name ?? a.city })),
-  ];
+  if (city.length === 1) {
+    const only = choiceOf({ ...city[0], label: fullAirport(city[0].code) });
+    // An exact city match on a minor field is still probably a typo for a
+    // nearby hub: "Sidney" is a real airport in Montana, but the traveler
+    // most likely means Sydney. Offer both rather than guessing.
+    if (isHubEntry(city[0])) return [only];
+    const rivals = collapseToGroups(hubsAmong(nearMatches(entries, term))).slice(0, 4);
+    return rivals.length ? [only, ...rivals.map(choiceOf)] : [only];
+  }
   // A known airport name (e.g. Heathrow) is narrower than its metro group.
   const named = AIRPORTS.filter(a => (a.name ?? '').toLowerCase().includes(normal(term)));
   if (named.length === 1) return [{ code: named[0].code, label: fullAirport(named[0].code) }];
-  return rankAirportSearch(entries, term).slice(0, 5).map(({ code, label }) => ({ code, label }));
+  const ranked = rankAirportSearch(entries, term);
+  if (ranked.length) return ranked.slice(0, 5).map(choiceOf);
+  // Nothing matched literally. Fall back to near matches so a misspelling
+  // resolves deterministically instead of depending on the model correcting
+  // it. One hub among them is a confident answer; anything else is a menu.
+  const near = collapseToGroups(nearMatches(entries, term));
+  // A curated metro group is the strongest signal: one edit from "London"
+  // means the London group, not East London or Southend.
+  const groups = near.filter(entry => entry.popular);
+  if (groups.length === 1) return [choiceOf(groups[0])];
+  const hubs = hubsAmong(near);
+  if (hubs.length === 1) return [choiceOf(hubs[0])];
+  return near.slice(0, 5).map(choiceOf);
 }
 export function fullAirport(code) {
   const a = airportByCode.get(code);

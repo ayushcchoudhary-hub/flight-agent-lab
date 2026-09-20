@@ -57,7 +57,6 @@ export const GENERATED_AIRPORT_ROWS = [
 ['MEL','Melbourne','Melbourne Airport','Australia','AU','large_airport'],
 ['PER','Perth','Perth International Airport','Australia','AU','large_airport'],
 ['PHE','Port Hedland','Port Hedland International Airport','Australia','AU','large_airport'],
-['WSI','Sydney','[Duplicate] Western Sydney International Airport','Australia','AU','large_airport'],
 ['SYD','Sydney (Mascot)','Sydney Kingsford Smith International Airport','Australia','AU','large_airport'],
 ['WTB','Toowoomba','Toowoomba Wellcamp Airport','Australia','AU','large_airport'],
 ['NTL','Williamtown','Newcastle Airport','Australia','AU','large_airport'],
