@@ -33,6 +33,10 @@ customer data or raw backend captures.
   cases, then stopped at B03 after a safe policy handoff failed the frozen
   expected status. Nine cases were not run. Do not describe the result as 42 of
   42.
+- Held-out v2 froze 30 populated cases before its first run. Terra passed 19
+  exact contracts and 17 cases overall. The complete run used 74 calls and cost
+  $0.3887. Keep the test-contract mistakes and judge-context issues visible when
+  interpreting that score. See `evaluation/HARDENING.md`.
 
 Read these files in order when more detail is needed:
 

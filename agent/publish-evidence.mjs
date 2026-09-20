@@ -21,6 +21,7 @@ const runs=[
   'live-hardening-judge-2026-09-20T09-55-08.109Z',
   'live-hardening-judge-2026-09-20T15-23-53.919Z',
   'live-hardening-judge-2026-09-20T15-38-37.144Z',
+  'live-hardening-judge-2026-09-20T15-56-09.018Z',
 ];
 const publicationOverrides={
  'live-hardening-judge-2026-09-20T15-23-53.919Z':{label:'Terra hardening · interrupted independence rerun',status:'interrupted',stopReason:{type:'manual_interrupt',afterCase:'S07'},modelCallsAttempted:14,actualCostUsd:0.070808},

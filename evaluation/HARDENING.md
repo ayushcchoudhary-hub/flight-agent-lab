@@ -32,10 +32,44 @@ The judge returns a short structured audit rather than chain of thought.
 | Final policy verification | v1.4.1 | 3 | 3/3 | 3/3 | 3/3 | $0.0308 |
 | Interrupted independence rerun, rubric v1.1.0 | v1.4.1 | 7/42 | 5/7 | 7/7 | 5/7 | $0.0708 |
 | Contract-aware rerun, rubric v1.2.0 | v1.4.1 | 33/42 | 32/33 | 32/33 | 32/32 judged | $0.2854 |
+| Held-out v2 baseline, rubric v1.2.0 | v1.4.1 | 30 | 17/30 | 19/30 | 17/19 judged | $0.3887 |
 
 The first four runs cost about **$0.584**. The later interrupted and stopped
 reruns added about **$0.3562**. Conservative pre-call reservation was higher
 because it assumes each call consumes its maximum output.
+
+## Held-out v2 baseline
+
+The approved draft described 35 cases, but sections A through E contained 30
+populated cases. Those 30 were frozen in commit `07dd239` before the first run.
+The run completed all 30 with 74 candidate and judge calls. It cost $0.3887
+against a $3 cap.
+
+Seventeen cases passed both gates. Nineteen passed exact checks. The main
+observed product gaps were country-to-airport menus, misspelling handling,
+retaining structured state while clarifying an ambiguous numeric date, a
+grounded answer to the data-sale question, and a website-checkout next step
+after payment refusals.
+
+Several exact failures also exposed mistakes in the new test contract. C1 did
+not specify a currency, so the agent asked whether 700 meant USD. C1, C2 and C5
+expected a new search request after every refinement even though the application
+correctly reused the current snapshot. These failures remain in the append-only
+baseline. They must be corrected in a later test-only commit, never rewritten
+in this report.
+
+Two exact-pass cases received three judge flags each. D2 omitted a visible note
+that Heathrow came from a saved preference, which is useful product feedback,
+but the judge also lacked the application confirmation event and incorrectly
+described the preference as unsaved. D4 applied the documented business default
+after an unconfirmed preference proposal. The judge penalized that default even
+though rubric v1.2.0 explicitly excludes documented defaults from review. Both
+sets of verdicts are preserved as evidence that judge output needs human review.
+
+The run recorded 16 `tool_argument_unverified` events. They mostly retained
+non-default dates during follow-ups. Their associated exact checks decide
+whether the retained value was correct. The event remains a review signal, not
+an automatic failure.
 
 ## What changed and why
 

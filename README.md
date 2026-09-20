@@ -124,6 +124,13 @@ frozen expected status. Nine cases were not run. The original, interrupted and
 stopped evidence remains published, so there is no rewritten perfect baseline
 or 42-of-42 claim.
 
+A second frozen set added 30 harder cases across place resolution, long
+follow-ups, cross-conversation preferences, mixed requests and payment
+boundaries. Terra passed 19 exact contracts and 17 cases overall on the first
+run. The append-only report separates product gaps from three overly strict
+search-count expectations and two judge-context problems. This is a baseline
+for the next changes, not a release score.
+
 See [EVALUATION.md](EVALUATION.md) for what a pass does and does not prove.
 The [`evaluation/`](evaluation/) folder documents the test matrix, comparison
 protocol, published evidence and limits of the conclusions.

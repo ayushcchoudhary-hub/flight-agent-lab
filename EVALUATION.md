@@ -66,6 +66,15 @@ at B03 because a safe policy handoff did not match the frozen expected status.
 Nine cases were not run. This remains regression evidence, not a 42-of-42
 reliability estimate.
 
+The held-out v2 file was then frozen before a new baseline. Its source draft
+contained 30 populated cases despite describing 35. Terra completed all 30,
+passing 19 exact contracts and 17 cases overall. The run used 74 candidate and
+judge calls and cost $0.3887. Place resolution, saved-default disclosure,
+privacy routing and payment handoffs produced useful gaps. Three failures also
+came from overly strict test expectations about cached refinements, and two
+judge reviews lacked or ignored relevant contract context. The report preserves
+all of them for human review rather than presenting one score as ground truth.
+
 Across the baseline and three correction runs, candidate and judge calls cost
 about **$0.584** in total. Reports remain visible on the Evals page, including
 judge scores, rationale, issues and recommended action. The methodology and
