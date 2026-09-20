@@ -14,12 +14,8 @@
     "dashboard": "node dashboard-server.mjs",
     "dashboard:account": "node --import ./register.mjs local-account-lab.mjs",
     "experiment": "node --import ./register.mjs experiment-server.mjs",
-    "eval:compare": "node --import ./register.mjs benchmark.mjs",
     "eval:openrouter": "node --import ./register.mjs openrouter-benchmark.mjs",
     "eval:combine": "node combine-comparisons.mjs",
     "eval:chart": "node generate-model-chart.mjs"
-  },
-  "devDependencies": {
-    "@openai/codex-sdk": "0.154.0"
   }
 }

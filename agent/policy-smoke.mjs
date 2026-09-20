@@ -1,8 +1,8 @@
-import {Agent} from './model.mjs';
-import {CodexModel} from './codex-model.mjs';
+import {Agent,OpenRouterModel} from './model.mjs';
+
 import {mkdirSync,writeFileSync} from 'node:fs';
 const events=[];const trace=(type,data)=>events.push({type,data});
-const model=new CodexModel({model:'gpt-5.6-terra',effort:'medium',maxCalls:10,trace});
+const model=new OpenRouterModel({apiKey:process.env.OPENROUTER_API_KEY,model:'openai/gpt-5.6-terra',reasoningEffort:'medium',maxCalls:10,trace});
 const trip={origin:'London',destination:'New York',cabin:'business'};
 const conversation={adapter:{mode:'replay'},today:()=> '2026-09-19',publicState:()=>trip,find:async()=>{throw Error('Unexpected flight search in policy test')}};
 const agent=new Agent({conversation,model,trace});

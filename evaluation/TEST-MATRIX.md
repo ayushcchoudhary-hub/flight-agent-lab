@@ -2,7 +2,7 @@
 
 | Layer | What it tests | Current evidence | Main limitation |
 |---|---|---:|---|
-| Deterministic suite | State, dates, validation, tools, policy grounding, preferences, security, customer-copy guardrails, API adapter, retries | 79 of 79 pass locally | Does not test model interpretation |
+| Deterministic suite | State, dates, validation, tools, policy grounding, preferences, security, customer-copy guardrails, API adapter, retries | 75 of 75 pass locally | Does not test model interpretation |
 | Current OpenRouter validation | 15 conversational agent cases, three fresh repeats | DeepSeek low 45/45; Terra medium 43/45; GLM high 43/45 | Development cases, not held-out requests |
 | Policy acceptance | Retrieval, cited answers, safe support handoff | 4 of 4 passed once | Small approved document set |
 | Preference acceptance | Explicit proposal, persistence boundaries | 2 of 2 passed once | Hosted demo still uses temporary in-memory preferences |

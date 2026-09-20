@@ -1,6 +1,6 @@
-import {Agent} from './model.mjs';import {CodexModel} from './codex-model.mjs';import {SearchConversation} from './search.mjs';import {writeFileSync,mkdirSync} from 'node:fs';
+import {Agent,OpenRouterModel} from './model.mjs';import {SearchConversation} from './search.mjs';import {writeFileSync,mkdirSync} from 'node:fs';
 const events=[];const trace=(type,data)=>events.push({type,data});
-const model=new CodexModel({model:'gpt-5.6-terra',effort:'medium',maxCalls:4,trace});
+const model=new OpenRouterModel({apiKey:process.env.OPENROUTER_API_KEY,model:'openai/gpt-5.6-terra',reasoningEffort:'medium',maxCalls:4,trace});
 const conversation=new SearchConversation({adapter:{mode:'replay'},today:()=> '2026-09-19'});
 await conversation.find({origin:'London'});
 const before=JSON.stringify(conversation.publicState());

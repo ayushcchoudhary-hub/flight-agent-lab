@@ -3,15 +3,15 @@ import {verifyFlightData} from './verify-flight-data.mjs';
 import { mkdirSync, writeFileSync, readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { createHash } from 'node:crypto';
-import { CodexModel } from './codex-model.mjs';
-import { Agent, PROMPT_VERSION } from './model.mjs';
+
+import { Agent, OpenRouterModel, PROMPT_VERSION } from './model.mjs';
 import { SearchConversation } from './search.mjs';
 import { makeFixtureAdapter } from './fixtures.mjs';
 import { EVAL_CASES, EVAL_CLOCK, gradeStep } from './edge-cases.mjs';
 
 const option=(name,fallback)=>process.argv.find(x=>x.startsWith(`--${name}=`))?.split('=').slice(1).join('=')??fallback;
-if(!process.argv.includes('--live')) throw new Error('Explicit --live required: this uses your Codex subscription allowance.');
-const models=option('models','gpt-5.6-terra').split(',');
+if(!process.argv.includes('--live')) throw new Error('Explicit --live required: this uses your OpenRouter account.');
+const models=option('models','openai/gpt-5.6-terra').split(',');
 const repeats=Number(option('repeats','1'));
 const effort=option('effort','medium');
 const selected=option('cases','').split(',').filter(Boolean);
@@ -21,10 +21,10 @@ if(repeats!==1||models.length!==1||cases.reduce((n,c)=>n+c.steps.length,0)>25)th
 const runId=new Date().toISOString().replaceAll(':','-');
 const base=fileURLToPath(new URL(`./eval-results/live-${runId}/`,import.meta.url));
 mkdirSync(base,{recursive:true});
-const sourceFiles=['search.mjs','model.mjs','codex-model.mjs','fixtures.mjs','eval-cases.mjs','edge-cases.mjs','edge-eval.mjs'];
+const sourceFiles=['search.mjs','model.mjs','fixtures.mjs','eval-cases.mjs','edge-cases.mjs','edge-eval.mjs'];
 const sourceHashes=Object.fromEntries(sourceFiles.map(name=>[name,createHash('sha256').update(readFileSync(new URL(name,import.meta.url))).digest('hex')]));
-const report={runId,label:option('label','Terra medium: edge cases + one live staging search'),promptVersion:PROMPT_VERSION,sourceHashes,clock:EVAL_CLOCK,flightData:"mixed",effort,models,repeats,concurrency:1,adapter:'Codex SDK structured action; ChatGPT authentication; synthetic edge fixtures plus one public staging search',
-  limitations:['One attempt per case: diagnostic acceptance checks, not a reliability estimate. Tone requires human review beyond lexical checks.','Same prompts repeated; not a held-out benchmark.','Latency includes SDK/CLI startup, network and model generation.','Cached input may affect latency across repeats.','Token counts include Codex overhead; they are not a dollar bill.','Model selects an action; application generates flight-result wording.'],results:[]};
+const report={runId,label:option('label','Terra medium: edge cases + one live staging search'),promptVersion:PROMPT_VERSION,sourceHashes,clock:EVAL_CLOCK,flightData:"mixed",effort,models,repeats,concurrency:1,adapter:'OpenRouter Chat Completions with structured tools; synthetic edge fixtures plus one public staging search',
+  limitations:['One attempt per case: diagnostic acceptance checks, not a reliability estimate. Tone requires human review beyond lexical checks.','Same prompts repeated; not a held-out benchmark.','Latency includes the OpenRouter gateway, selected provider and model generation.','Cached input may affect latency across repeats.','Token counts and reported request cost come from OpenRouter when available.','Model selects an action; application generates flight-result wording.'],results:[]};
 writeFileSync(base+'cases.json',JSON.stringify(cases,null,2));
 writeFileSync(base+'report.json',JSON.stringify(report,null,2));
 let completed=0;
@@ -33,7 +33,7 @@ evalLoop: for(let repeat=1;repeat<=repeats;repeat++) for(const item of cases) fo
   const events=[];const trace=(type,data)=>events.push({type,data});
   const adapter=item.live?makeStagingAdapter({authMode:'public',maxSearches:1,trace}):makeFixtureAdapter(item.scenario??'normal',trace);
   const conversation=new SearchConversation({adapter,today:()=>item.live?'2026-09-19':EVAL_CLOCK,trace});
-  const agent=new Agent({conversation,model:new CodexModel({model,effort,maxCalls:item.steps.length,trace}),trace});
+  const agent=new Agent({conversation,model:new OpenRouterModel({apiKey:process.env.OPENROUTER_API_KEY,model,reasoningEffort:effort,maxCalls:item.steps.length,trace}),trace});
   const run={caseId:item.id,name:item.name,model,repeat,steps:[],events};
   for(const step of item.steps) {
     const start=performance.now();
@@ -60,15 +60,15 @@ evalLoop: for(let repeat=1;repeat<=repeats;repeat++) for(const item of cases) fo
 const median=xs=>{const a=[...xs].sort((a,b)=>a-b);return a.length?(a[Math.floor((a.length-1)/2)]+a[Math.ceil((a.length-1)/2)])/2:null;};
 report.summary=models.map(model=>{
   const runs=report.results.filter(r=>r.model===model), usage=runs.flatMap(r=>r.events.filter(e=>e.type==='model_usage').map(e=>e.data));
-  const sum=key=>usage.reduce((n,u)=>n+(u.usage?.[key]??0),0);
+  const sum=(primary,fallback)=>usage.reduce((n,u)=>n+(u.usage?.[primary]??u.usage?.[fallback]??0),0);
   return {model,passed:runs.filter(r=>r.pass).length,total:runs.length,modelCalls:usage.length,medianModelMs:median(usage.map(u=>u.latencyMs)),
-    inputTokens:sum('input_tokens'),cachedInputTokens:sum('cached_input_tokens'),outputTokens:sum('output_tokens'),
+    inputTokens:sum('prompt_tokens','input_tokens'),cachedInputTokens:usage.reduce((n,u)=>n+(u.usage?.prompt_tokens_details?.cached_tokens??u.usage?.cached_input_tokens??0),0),outputTokens:sum('completion_tokens','output_tokens'),
     perCase:cases.map(c=>{const cr=runs.filter(r=>r.caseId===c.id);return{id:c.id,passed:cr.filter(r=>r.pass).length,total:cr.length,
       distinctActions:new Set(cr.map(r=>JSON.stringify(r.events.filter(e=>e.type==='tool_call').map(e=>e.data)))).size};})};
 });
 writeFileSync(base+'report.json',JSON.stringify(report,null,2));
 const lines=['# Live model evaluation','',`Fixed date: ${EVAL_CLOCK} · effort: ${effort} · ${repeats} repetitions · sequential requests`,'',
-  '**Real Codex models; fictional flights. No staging, purchases or OpenRouter calls.**','',
+  '**Real model calls through OpenRouter; fictional flights and no purchases.**','',
   '| Model | Passed scenarios | Model calls | Median model latency | Input tokens | Cached input (included) | Output tokens |',
   '|---|---:|---:|---:|---:|---:|---:|',...report.summary.map(s=>`| ${s.model} | ${s.passed}/${s.total} | ${s.modelCalls} | ${s.medianModelMs===null?'n/a':(s.medianModelMs/1000).toFixed(2)+' s'} | ${s.inputTokens} | ${s.cachedInputTokens} | ${s.outputTokens} |`),'',
   '## What we tested','',...cases.map(c=>`- **${c.id} ${c.name}:** ${c.steps.map(s=>s.text).join(' → ')}`),'',

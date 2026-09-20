@@ -8,7 +8,7 @@ import { makeFixtureAdapter } from './fixtures.mjs';
 import { SearchConversation, isoToday, validDate, welcomeFor } from './search.mjs';
 import { Agent, OpenRouterModel, ScriptedDemoModel } from './model.mjs';
 import { fileTrace } from './trace.mjs';
-import { CodexModel } from './codex-model.mjs';
+import { hostedModelSettings } from './hosted-model-options.mjs';
 
 const base = fileURLToPath(new URL('.', import.meta.url));
 const demo = process.argv.includes('--demo');
@@ -22,9 +22,8 @@ const session = fileTrace(base + 'traces', randomUUID());
 const trace = session.emit;
 let model;
 try {
-  model = demo ? new ScriptedDemoModel() : process.env.AGENT_PROVIDER === 'openrouter'
-    ? new OpenRouterModel({ apiKey: process.env.OPENROUTER_API_KEY, model: process.env.AGENT_MODEL, trace })
-    : new CodexModel({ model: process.env.AGENT_CODEX_MODEL || 'gpt-6-astra', effort: process.env.AGENT_REASONING || 'low', trace });
+  const settings=hostedModelSettings(process.env.AGENT_MODEL||'openai/gpt-5.6-terra',process.env.AGENT_REASONING);
+  model = demo ? new ScriptedDemoModel() : new OpenRouterModel({ apiKey: process.env.OPENROUTER_API_KEY, model: settings.model, reasoningEffort: settings.effort, trace });
 } catch (error) { console.error(error.message); process.exit(1); }
 const staging = !demo && process.argv.includes('--staging');
 if (staging) await readStagingToken(); // Fail before making any model call.

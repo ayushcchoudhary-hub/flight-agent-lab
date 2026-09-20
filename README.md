@@ -86,9 +86,15 @@ one action from a four-tool allowlist:
 Application code owns credentials, state, API calls, response validation,
 formatting and call limits. See [ARCHITECTURE-DECISIONS.md](ARCHITECTURE-DECISIONS.md).
 
+All current model calls use one OpenRouter adapter, including Terra. This keeps
+the deployed chat, local live runs and new model evaluations on the same
+observable serving path. The earlier Codex SDK reports remain published as
+historical evidence and are labelled as a different path. The executable Codex
+SDK dependency has been removed.
+
 ## Evidence
 
-- **79 of 79 deterministic checks pass** across routing, state, policy
+- **75 of 75 deterministic checks pass** across routing, state, policy
   retrieval, preferences, output grounding, security and adapter behavior.
 - The regression suite separates deterministic checks, model acceptance cases
   and one bounded live-search verification.
@@ -134,8 +140,10 @@ pnpm test
 pnpm run dashboard
 ```
 
-Synthetic tests need no API key. The hosted model adapter reads its key from the
-deployment secret manager. Credentials must never be added to this repository.
+Synthetic tests need no API key. Local live runs read `OPENROUTER_API_KEY` from
+an ignored `.env` file or the process environment. The hosted adapter reads the
+same key from the deployment secret manager. Credentials must never be added to
+this repository.
 
 ## Why the design stays small
 

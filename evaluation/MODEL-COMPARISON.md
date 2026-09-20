@@ -120,6 +120,10 @@ preserves stopped and incomplete runs instead of hiding them.
   disabled, and missing usage was reserved conservatively rather than treated
   as free.
 
+All new model calls now use OpenRouter, including Terra, so future latency and
+cost comparisons share one adapter and gateway. Historical Codex SDK evidence
+remains labelled and unchanged.
+
 The appropriate next experiment is a small held-out set with new phrasings and
 new edge cases. It is more informative than automatically running ten repeats
 of every existing development case.

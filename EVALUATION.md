@@ -23,9 +23,14 @@ the scenarios, customer-facing replies, grading, latency and token usage while
 removing raw backend captures, source snapshots, source hashes, request
 identifiers and private model thread identifiers.
 
+New live runs use OpenRouter for every candidate, including Terra. Historical
+Codex SDK reports remain unchanged and visibly labelled. They explain the
+project's earlier decisions, but their latency is not compared as if it came
+from the same serving path.
+
 Current results for prompt `flight-search-v1.3.0` and the explicit-field guard:
 
-- **79 of 79 deterministic checks pass**
+- **75 of 75 deterministic checks pass**
 - **DeepSeek low passed 45 of 45 attempts across three full repeats**
 - **A second full DeepSeek run also passed 45 of 45**
 - **Terra medium passed 43 of 45 in the final same-path run; both misses were unreadable provider responses**

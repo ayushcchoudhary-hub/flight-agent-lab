@@ -4,6 +4,7 @@ import { makeFixtureAdapter } from '../fixtures.mjs';
 import { makeReplayAdapter,queryKey } from '../replay.mjs';
 import { createChatService } from '../chat-service.mjs';
 import { ScriptedDemoModel } from '../model.mjs';
+import { HOSTED_MODEL_OPTIONS } from '../hosted-model-options.mjs';
 const emptyPreferenceStore={label:'empty test profile',read:async()=>({}),replace:async p=>p};
 const chatService=options=>createChatService({preferenceStore:emptyPreferenceStore,...options});
 const query={origin:'LHR|LGW|LCY|STN|LTN',destination:'JFK|EWR|LGA',dateFrom:'2026-09-19',dateTo:'2026-09-26',selectedDate:'2026-09-19',cabin:'business'};
@@ -42,14 +43,14 @@ test('staging expiry is checked before invoking the model',async()=>{
 });
 test('each allowed model/effort reaches the model adapter and stays fixed for the chat',async()=>{
  const seen=[];const svc=chatService({capturesLoader:async()=>captures,modelFactory:(trace,settings)=>{seen.push(settings);return new ScriptedDemoModel();}});
- for(const model of ['gpt-6-astra','gpt-5.6-luna','gpt-5.6-sol','gpt-5.6-terra'])for(const effort of ['low','medium','high']){
-  const s=await svc.start('replay',model,effort);assert.equal(s.model,model);assert.equal(s.effort,effort);
-  const r=await svc.turn(s.id,'London to New York');assert.equal(r.settings.model,model);assert.equal(r.settings.effort,effort);svc.close(s.id);
+ for(const option of HOSTED_MODEL_OPTIONS){
+  const s=await svc.start('replay',option.id,option.effort);assert.equal(s.model,option.id);assert.equal(s.effort,option.effort);
+  const r=await svc.turn(s.id,'London to New York');assert.equal(r.settings.model,option.id);assert.equal(r.settings.effort,option.effort);svc.close(s.id);
  }
- assert.equal(seen.length,12);
- await assert.rejects(svc.start('replay','gpt-unknown','low'),/listed model/);
- await assert.rejects(svc.start('replay','gpt-6-astra','arbitrary'),/listed model/);
- assert.equal(seen.length,12);
+ assert.equal(seen.length,HOSTED_MODEL_OPTIONS.length);
+ await assert.rejects(svc.start('replay','unknown/model','low'),/evaluated model/);
+ await assert.rejects(svc.start('replay','openai/gpt-5.6-terra','low'),/evaluated model/);
+ assert.equal(seen.length,HOSTED_MODEL_OPTIONS.length);
 });
 
 test('public staging chat is explicitly anonymous and works independently of expired account connection',async()=>{

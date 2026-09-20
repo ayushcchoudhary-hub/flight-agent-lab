@@ -3,14 +3,14 @@ import { createHash } from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 import { makeStagingAdapter,readStagingToken } from './staging.mjs';
 import { SearchConversation,isoToday } from './search.mjs';
-import { Agent, PROMPT_VERSION } from './model.mjs';
-import { CodexModel } from './codex-model.mjs';
+import { Agent, OpenRouterModel, PROMPT_VERSION } from './model.mjs';
+
 import { shiftIso } from './shared.mjs';
 import { gradeStep,CITY_CODES } from './eval-cases.mjs';
 import { verifyFlightData } from './verify-flight-data.mjs';
 if(!process.argv.includes('--staging')) throw new Error('Use --staging for the bounded, search-only integration suite.');
 await readStagingToken();
-const clock=isoToday(),date=shiftIso(clock,14),rollingEnd=shiftIso(clock,7),model='gpt-6-astra',effort='low';
+const clock=isoToday(),date=shiftIso(clock,14),rollingEnd=shiftIso(clock,7),model='openai/gpt-5.6-terra',effort='medium';
 const trip=(origin='London',destination='New York',from=date,to=date,posts=1)=>({status:'results',origin:CITY_CODES[origin],destination:CITY_CODES[destination],cabin:'business',from,to,posts});
 const cases=[
  {id:'S1',name:'Complete request → real flight search',description:'Both cities, exact date, business. Check interpretation and every displayed offer against the API; availability itself may be empty.',steps:[{text:`London to New York on ${date}, business.`,expected:trip()}]},
@@ -34,7 +34,7 @@ for(const c of cases){
  const events=[],trace=(type,data)=>events.push({type,data});
  const adapter=makeStagingAdapter({trace,maxSearches:3});
  const conversation=new SearchConversation({adapter,today:()=>clock,trace});
- const agent=new Agent({conversation,model:new CodexModel({model,effort,maxCalls:3,trace}),trace});
+ const agent=new Agent({conversation,model:new OpenRouterModel({apiKey:process.env.OPENROUTER_API_KEY,model,reasoningEffort:effort,maxCalls:3,trace}),trace});
  const steps=[];
  for(const s of c.steps){
   const started=performance.now(),result=await agent.respond(s.text),grade=gradeStep(s.expected,result,conversation,adapter);

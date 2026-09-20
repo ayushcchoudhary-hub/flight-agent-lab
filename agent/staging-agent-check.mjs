@@ -4,8 +4,8 @@ import { createHash } from 'node:crypto';
 import { makeStagingAdapter, readStagingToken } from './staging.mjs';
 import { SearchConversation, isoToday } from './search.mjs';
 import { shiftIso } from './shared.mjs';
-import { CodexModel } from './codex-model.mjs';
-import { Agent, PROMPT_VERSION } from './model.mjs';
+
+import { Agent, OpenRouterModel, PROMPT_VERSION } from './model.mjs';
 import { verifyFlightData } from './verify-flight-data.mjs';
 
 if (!process.argv.includes('--staging')) throw new Error('Pass --staging to run one real model interpretation and one staging flight search.');
@@ -15,8 +15,8 @@ const text = `Find a one-way business flight from London to New York on ${date}.
 const events=[], trace=(type,data)=>events.push({type,data});
 const adapter=makeStagingAdapter({trace,maxSearches:1});
 const conversation=new SearchConversation({adapter,trace});
-const model='gpt-6-astra', effort='low';
-const agent=new Agent({conversation,model:new CodexModel({model,effort,maxCalls:1,trace}),trace});
+const model='openai/gpt-5.6-terra', effort='medium';
+const agent=new Agent({conversation,model:new OpenRouterModel({apiKey:process.env.OPENROUTER_API_KEY,model,reasoningEffort:effort,maxCalls:1,trace}),trace});
 const started=performance.now();
 const result=await agent.respond(text);
 const latencyMs=Math.round(performance.now()-started);
@@ -30,9 +30,9 @@ grade.pass=grade.checks.every(c=>c.pass);
 const runId=new Date().toISOString().replaceAll(':','-');
 const base=fileURLToPath(new URL(`./eval-results/live-staging-${runId}/`,import.meta.url));
 mkdirSync(base,{recursive:true,mode:0o700});
-const cases=[{id:'S1',name:'Real staging: London → New York',description:'One real Astra interpretation and authenticated staging search. Compare the requested city groups, date and cabin, then check displayed offers against the captured API response. This is one integration test, not a reliability benchmark.',steps:[{text,expected}]}];
+const cases=[{id:'S1',name:'Real staging: London → New York',description:'One real Terra interpretation through OpenRouter and one authenticated staging search. Compare the requested city groups, date and cabin, then check displayed offers against the captured API response. This is one integration test, not a reliability benchmark.',steps:[{text,expected}]}];
 const usage=events.find(e=>e.type==='model_usage')?.data;
-const report={runId,promptVersion:PROMPT_VERSION,label:'STAGING · Astra → real search → verified reply',flightData:'staging',clock:isoToday('Europe/London'),effort,models:[model],repeats:1,adapter:'Authenticated CommonSwyft staging API; no synthetic flight adapter',limitations:['One integration smoke test, not a repeatability benchmark.','Staging inventory is not guaranteed fresh or bookable in production.','No checkout or booking.'],sourceHashes:Object.fromEntries(['search.mjs','model.mjs','staging.mjs','verify-flight-data.mjs','staging-agent-check.mjs'].map(f=>[f,createHash('sha256').update(readFileSync(new URL(f,import.meta.url))).digest('hex')])),results:[{caseId:'S1',name:cases[0].name,model,repeat:1,pass:grade.pass,steps:[{input:text,expected,result,latencyMs,grade}],events}],summary:[{model,passed:grade.pass?1:0,total:1,modelCalls:usage?1:0,medianModelMs:usage?.latencyMs??null}]};
+const report={runId,promptVersion:PROMPT_VERSION,label:'STAGING · Terra via OpenRouter → real search → verified reply',flightData:'staging',clock:isoToday('Europe/London'),effort,models:[model],repeats:1,adapter:'OpenRouter model interpretation and authenticated CommonSwyft staging API; no synthetic flight adapter',limitations:['One integration smoke test, not a repeatability benchmark.','Staging inventory is not guaranteed fresh or bookable in production.','No checkout or booking.'],sourceHashes:Object.fromEntries(['search.mjs','model.mjs','staging.mjs','verify-flight-data.mjs','staging-agent-check.mjs'].map(f=>[f,createHash('sha256').update(readFileSync(new URL(f,import.meta.url))).digest('hex')])),results:[{caseId:'S1',name:cases[0].name,model,repeat:1,pass:grade.pass,steps:[{input:text,expected,result,latencyMs,grade}],events}],summary:[{model,passed:grade.pass?1:0,total:1,modelCalls:usage?1:0,medianModelMs:usage?.latencyMs??null}]};
 for(const [name,value] of Object.entries({'report.json':report,'cases.json':cases,'backend-snapshot.json':snapshot??{error:'No validated snapshot'}}))writeFileSync(base+name,JSON.stringify(value,null,2),{mode:0o600});
 console.log(result.text);
 console.log(`\n${grade.pass?'PASS':'FAIL'}: ${grade.checks.filter(c=>c.pass).length}/${grade.checks.length} checks; ${(latencyMs/1000).toFixed(2)}s total; ${usage? (usage.latencyMs/1000).toFixed(2):'?'}s model.`);

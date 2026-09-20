@@ -11,7 +11,7 @@ const cases = [
   { id: 'D03', name: 'Nearby-date fallback labelled', scenario: 'nearby', inputs: [{ origin: 'London', destination: 'New York', dates: { mode: 'exact', start: '2026-10-01' } }], check: r => r.shortlist.length > 0 && r.shortlist.every(f => f.reasons.includes('nearby date')) },
   { id: 'D04', name: 'Cabin-only restriction', scenario: 'cabin-fallback', inputs: [{ origin: 'London', destination: 'New York', cabinOnly: true }], check: r => r.shortlist.length === 0 },
   { id: 'D05', name: 'No flights is not an outage', scenario: 'empty', inputs: [{ origin: 'London', destination: 'New York' }], check: r => r.status === 'results' && r.shortlist.length === 0 },
-  { id: 'D06', name: 'Provider outage is not empty inventory', scenario: 'unavailable', inputs: [{ origin: 'London', destination: 'New York' }], check: r => r.status === 'error' && r.text.includes('unavailable') },
+  { id: 'D06', name: 'Provider outage is not empty inventory', scenario: 'unavailable', inputs: [{ origin: 'London', destination: 'New York' }], check: r => r.status === 'error' && /couldn't check flights/i.test(r.text) },
   { id: 'H01', name: 'Exact airport survives cabin change', inputs: [{ origin: 'SIN', destination: 'LHR', maxPriceUsd: 1400 }, { cabin: 'economy' }], check: (r,c) => r.query.origin === 'SIN' && r.query.destination === 'LHR' && c.state.maxPriceUsd === 1400 },
   { id: 'H02', name: 'Invalid date blocked', inputs: [{ origin: 'Dubai', destination: 'London', dates: { mode: 'exact', start: '2026-02-30' } }], check: (r,c,a) => r.status === 'error' && a.calls.length === 0 },
 ];

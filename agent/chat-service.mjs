@@ -1,7 +1,7 @@
 import {localPreferenceStore,applyPreferences} from './preferences.mjs';
-import { MODEL_OPTIONS,modelSettings } from './model-options.mjs';
+import { HOSTED_MODEL_OPTIONS,hostedModelSettings } from './hosted-model-options.mjs';
 import { randomUUID } from 'node:crypto';
-import { Agent } from './model.mjs';
+import { Agent,OpenRouterModel } from './model.mjs';
 import { SearchConversation,isoToday,welcomeFor,fullAirport } from './search.mjs';
 import { makeStagingAdapter,readStagingToken } from './staging.mjs';
 import { loadCaptures,makeReplayAdapter } from './replay.mjs';
@@ -13,11 +13,8 @@ export async function connectionStatus() {
   return {reason:Number.isFinite(expiresAt)&&expiresAt>Date.now()+10000?'connected':'expired',connected:Number.isFinite(expiresAt)&&expiresAt>Date.now()+10000,expiresAt:Number.isFinite(expiresAt)?new Date(expiresAt).toISOString():null};
  } catch {return {connected:false,reason:'disconnected',expiresAt:null};}
 }
-const defaultModelFactory=async(trace,settings)=>{
- const {CodexModel}=await import('./codex-model.mjs');
- return new CodexModel({...settings,maxCalls:15,trace});
-};
-export function createChatService({modelFactory=defaultModelFactory,capturesLoader=loadCaptures,status=connectionStatus,stagingFactory=makeStagingAdapter,preferenceStore=localPreferenceStore(),modelOptions=MODEL_OPTIONS,settingsFor=modelSettings,defaultModel='gpt-5.6-terra',defaultEffort='medium',maxTotalTurns=40,maxSessions=8,maxSessionTurns=15,idleMs=3600000}={}) {
+const defaultModelFactory=(trace,settings)=>new OpenRouterModel({apiKey:process.env.OPENROUTER_API_KEY,model:settings.model,reasoningEffort:settings.effort,maxCalls:15,trace});
+export function createChatService({modelFactory=defaultModelFactory,capturesLoader=loadCaptures,status=connectionStatus,stagingFactory=makeStagingAdapter,preferenceStore=localPreferenceStore(),modelOptions=HOSTED_MODEL_OPTIONS,settingsFor=hostedModelSettings,defaultModel='openai/gpt-5.6-terra',defaultEffort='medium',maxTotalTurns=40,maxSessions=8,maxSessionTurns=15,idleMs=3600000}={}) {
  const sessions=new Map();let turns=0,active=false;
  const prune=()=>{for(const [id,s] of sessions)if(!s.busy&&Date.now()-s.updated>idleMs)sessions.delete(id);};
  return {
