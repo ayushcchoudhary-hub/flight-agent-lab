@@ -30,7 +30,7 @@ export function createCredentialGuard({username,password,maxFailures=10,lockMs=1
   const remaining=item.lockedUntil-now();
   if(item.lockedUntil&&remaining<=0){attempts.delete(identifier);return {locked:false,retryAfterSeconds:0};}
   return {locked:remaining>0,retryAfterSeconds:remaining>0?Math.ceil(remaining/1000):0};
- },
+ };
  return {
   verify(identifier,suppliedUsername,suppliedPassword){
    const current=status(identifier);
