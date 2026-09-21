@@ -26,7 +26,7 @@ export function accountPreferenceStore({baseURL,token,fetchImpl=fetch,label='Aut
 export function applyPreferences(conversation,p) {
  p=validatePreferences(p);
  if(p.homeAirport){conversation.state.origin=resolveLocation(p.homeAirport)[0];conversation.state.originFromPreference=true;}
- if(p.cabin)conversation.state.cabin=p.cabin==='premium_economy'?'premium':p.cabin;
+ if(p.cabin){conversation.state.cabin=p.cabin==='premium_economy'?'premium':p.cabin;conversation.state.cabinSource='preference';}
  if(p.preferNonstop)conversation.state.sort='nonstop';
 }
 export const preferencesTool={type:'function',function:{name:'travel_preferences',description:'Show saved defaults or propose changes only when explicitly asked to remember, save, change defaults, or forget. Proposal requires the user to press Save in dashboard; never claims already saved. Current-trip changes use find_flights.',parameters:{type:'object',additionalProperties:false,required:['action'],properties:{action:{type:'string',enum:['show','propose']},homeAirport:{type:['string','null'],description:'A specific airport name or three-letter IATA code, e.g. Heathrow or LHR. Ask which airport if the city has several. Null forgets the saved airport.'},cabin:{type:['string','null'],enum:['economy','premium_economy','business','first',null]},preferNonstop:{type:['boolean','null']}}}}};

@@ -64,3 +64,39 @@ test('held-out: a resent copy of the current trip is kept without a review trace
   repairExplicitToolArguments('Heathrow only please','find_flights',{origin:'LHR',nonstopOnly:true},(type,data)=>events.push({type,data}),trip);
   assert.deepEqual(events.map(e=>[e.type,e.data.fields]),[['tool_argument_unverified',['nonstopOnly']]]);
 });
+
+// Held-out v2 C2: "nonstop only" arrived with dates=24 Sept, invented by the
+// model, and collapsed a week-long search to one day for the rest of the
+// conversation. The layer already flagged it as unverified; it now removes it.
+const WEEK={dates:{mode:'nextWeek',from:'2026-09-21',to:'2026-09-27'}};
+test('a date the request never mentions is removed',()=>{
+  const events=[];
+  const out=repairExplicitToolArguments('nonstop only','find_flights',{dates:{mode:'exact',start:'2026-09-24'},nonstopOnly:true},(type,data)=>events.push({type,data}),WEEK);
+  assert.deepEqual(out,{nonstopOnly:true});
+  assert.ok(events.some(e=>e.data.reason==='removed a date the current request did not mention'));
+});
+
+test('any time expression counts as date wording',()=>{
+  for(const text of ['next week please','5 oct','this weekend','a fortnight from now','2/10','make it the 3rd','in 3 days','tomorrow','sat or sun']){
+    assert.ok('dates' in repairExplicitToolArguments(text,'find_flights',{dates:{mode:'exact',start:'2026-10-05'}},()=>{},WEEK),`${text} mentions a date`);
+  }
+});
+
+test('answering an open date menu keeps the date',()=>{
+  const trip={...WEEK,pending:{field:'dates',choices:[]}};
+  assert.ok('dates' in repairExplicitToolArguments('the first one','find_flights',{dates:{mode:'exact',start:'2026-10-02'}},()=>{},trip));
+});
+
+// Held-out v2 D2: the prompt shows the saved home airport, so the model copied
+// it into the call as if typed, and the disclosure never fired.
+const HOME={originFromPreference:true,origin:{code:'LHR',label:'London Heathrow Airport (LHR)'}};
+test('a copied home airport stays a default',()=>{
+  const out=repairExplicitToolArguments('to Singapore next week','find_flights',{origin:'London Heathrow Airport (LHR)',destination:'Singapore'},()=>{},HOME);
+  assert.equal('origin' in out,false);
+  assert.equal(out.destination,'Singapore');
+});
+test('a home airport the traveler names is theirs',()=>{
+  for(const text of ['from Heathrow to Singapore','LHR to Singapore','London to Singapore']){
+    assert.ok('origin' in repairExplicitToolArguments(text,'find_flights',{origin:'LHR',destination:'Singapore'},()=>{},HOME),`${text} names the origin`);
+  }
+});

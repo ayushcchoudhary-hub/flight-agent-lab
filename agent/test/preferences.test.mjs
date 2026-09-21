@@ -50,3 +50,14 @@ test('an origin the traveler states is not announced as a saved default',async()
  assert.equal(c.publicState().origin?.code,'LGW');
  assert.ok(!/saved home airport/i.test(reply.text),'the traveler chose this origin themselves');
 });
+
+// Held-out v2 D4: a plain "Business" after "nothing saved yet" looked like the
+// unsaved preference had been applied. Say where the cabin came from.
+test('the cabin label says whether it is assumed, saved or asked for',async()=>{
+ const header=async(prefs,patch)=>{const c=new SearchConversation({adapter:makeFixtureAdapter('normal'),today:()=>'2026-09-18'});if(prefs)applyPreferences(c,prefs);return (await c.find(patch)).text;};
+ assert.match(await header(null,{origin:'London',destination:'New York'}),/Business class \(default\)/);
+ assert.match(await header({cabin:'economy'},{origin:'London',destination:'New York'}),/Economy \(saved default\)/);
+ const asked=await header(null,{origin:'London',destination:'New York',cabin:'premium'});
+ assert.match(asked,/· Premium ·/);
+ assert.ok(!/default\)/.test(asked),'a cabin the traveler chose is not a default');
+});

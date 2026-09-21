@@ -555,3 +555,11 @@ test('a numbered menu is offered, since a number is accepted',async()=>{
   // Hubs first: a country match must not lead with obscure regional fields.
   assert.ok(!/Aguni|Tokunoshima/.test(reply.text),'regional airports must not crowd out the gateways');
 });
+
+// Places now reach the resolver exactly as typed, article included. Held-out
+// v2 A2 sent "the UK" and got "I couldn't resolve".
+test('a leading article does not defeat place resolution',()=>{
+  assert.equal(resolveLocation('the UK')[0].code,'LHR|LGW|LCY|STN|LTN');
+  assert.deepEqual(resolveLocation('the Osaka').map(x=>x.code),['KIX|ITM|UKB']);
+  assert.ok(resolveLocation('a Sidney').length>1);
+});
