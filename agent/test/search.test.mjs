@@ -1,8 +1,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { SearchConversation, resolveLocation, isoToday } from '../search.mjs';
+import { SearchConversation, findTool, resolveLocation, isoToday } from '../search.mjs';
 import { makeFixtureAdapter } from '../fixtures.mjs';
-import { Agent, OpenRouterModel, PROMPT_VERSION, ScriptedDemoModel, repairExplicitToolArguments, systemPrompt } from '../model.mjs';
+import { AIRPORTS } from '../shared.mjs';
+import { Agent, OpenRouterModel, PROMPT_VERSION, ScriptedDemoModel, compactForHistory, deterministicBoundary, repairExplicitToolArguments, systemPrompt } from '../model.mjs';
 import { redact } from '../trace.mjs';
 
 const setup = (scenario = 'normal', today = '2026-09-18') => {
@@ -304,4 +305,253 @@ test('trace redacts common credentials and personal identifiers', () => {
   assert.ok(!r.includes('me@example.com'));
   assert.ok(!r.includes('4242'));
   assert.match(r, /prompt_tokens/);
+});
+
+// Held-out v2 cases A1, A2, A3 and A5 all failed inside one gap: the resolver
+// searched a hand-written table of 28 airports with plain substring matching,
+// so it knew no country names and no misspellings. These lock in the fix.
+test('a country resolves to a menu of its airports, hubs first',()=>{
+  const japan=resolveLocation('Japan');
+  assert.ok(japan.length>1,'a country is ambiguous and must offer a menu');
+  const labels=japan.map(x=>x.label).join(' ');
+  assert.match(labels,/Tokyo/);
+  assert.match(labels,/Osaka/);
+  assert.equal(resolveLocation('UK')[0].code,'LHR|LGW|LCY|STN|LTN');
+});
+
+test('an unambiguous misspelling resolves without a menu',()=>{
+  assert.deepEqual(resolveLocation('Londn').map(x=>x.code),['LHR|LGW|LCY|STN|LTN']);
+  assert.deepEqual(resolveLocation('Singapor').map(x=>x.code),['SIN']);
+  // Previously only worked because the model silently corrected the spelling.
+  assert.deepEqual(resolveLocation('Heathrw').map(x=>x.code),['LHR']);
+});
+
+test('an exact match on a minor airport still offers the likelier hub',()=>{
+  // Sidney, Montana is a real airport and an exact city match, but the
+  // traveler probably means Sydney. Offer both rather than guessing either.
+  const choices=resolveLocation('Sidney');
+  const codes=choices.map(x=>x.code);
+  assert.ok(codes.includes('SDY'),'keeps the literal match');
+  assert.ok(codes.includes('SYD'),'offers the hub the traveler likely meant');
+  assert.ok(choices.length>1,'must not silently resolve to either');
+});
+
+test('exact city, code and metro input still resolve to one place',()=>{
+  for(const [input,code] of [['London','LHR|LGW|LCY|STN|LTN'],['Paris','CDG|ORY'],['Osaka','KIX|ITM|UKB'],['Singapore','SIN'],['JFK','JFK']]){
+    assert.deepEqual(resolveLocation(input).map(x=>x.code),[code],`${input} must resolve to exactly ${code}`);
+  }
+});
+
+test('superseded airport records never reach customer copy',()=>{
+  // OurAirports marks duplicates with a "[Duplicate]" name prefix. The sync
+  // script drops them, so no reply can quote one back to a traveler.
+  assert.equal(AIRPORTS.filter(a=>/^\[Duplicate\]/.test(a.name)).length,0);
+});
+
+test('a country origin clarifies while keeping the rest of the trip',async()=>{
+  const {adapter,c}=setup();
+  const reply=await c.find({origin:'UK',destination:'Singapore',dates:{mode:'exact',start:'2026-10-03'}});
+  const state=c.publicState();
+  assert.equal(reply.status,'clarify');
+  assert.equal(state.pending?.field,'origin');
+  assert.equal(state.origin,null);
+  assert.equal(state.destination?.code,'SIN');
+  assert.equal(state.dates.from,'2026-10-03');
+  assert.equal(postCount(adapter),0,'no search until the origin is known');
+});
+
+test('two misspellings in one request still reach results',async()=>{
+  const {adapter,c}=setup();
+  const reply=await c.find({origin:'Singapor',destination:'Londn',dates:{mode:'exact',start:'2026-10-01'}});
+  const state=c.publicState();
+  assert.equal(reply.status,'results');
+  assert.equal(state.origin?.code,'SIN');
+  assert.equal(state.destination?.code,'LHR|LGW|LCY|STN|LTN');
+  assert.equal(postCount(adapter),1);
+});
+
+// Held-out v2 E5 and E6 refused payment but never pointed anywhere, because
+// "pay for option B" and "I approve the payment" contain none of book, buy,
+// purchase or charge, so the request reached the model instead of the
+// deterministic boundary.
+test('a payment request is refused deterministically and points to checkout',()=>{
+  for(const request of ['pay for option B with the card on my account','I approve the payment, go ahead','make the payment now','buy option A with my card']){
+    const reply=deterministicBoundary(request);
+    assert.ok(reply,`${request} must not reach the model`);
+    assert.equal(reply.status,'clarify');
+    assert.match(reply.text,/checkout/i,`${request} must route the traveler to checkout`);
+  }
+});
+
+test('a policy question about payment still reaches grounded retrieval',()=>{
+  // The refusal must not swallow questions the privacy snapshot answers.
+  for(const question of ['do you sell my data?','what is your privacy policy?','do you store card details?','what are your terms?']){
+    assert.equal(deterministicBoundary(question),null,`${question} belongs to policy retrieval`);
+  }
+});
+
+// Held-out v2 A6 read perfectly ("Do you mean 2 October 2026 or 10 February
+// 2027 for LHR to JFK in business class?") while application state was empty,
+// because the model answered in prose and never called the tool. A follow-up
+// would have had no trip to build on.
+test('an ambiguous date asks without losing the trip',async()=>{
+  const {adapter,c}=setup();
+  const reply=await c.find({origin:'LHR',destination:'JFK',cabin:'business',dates:{mode:'ambiguous',options:['2026-10-02','2027-02-10']}});
+  const state=c.publicState();
+  assert.equal(reply.status,'clarify');
+  assert.equal(postCount(adapter),0,'an ambiguous date must not search');
+  assert.equal(state.origin?.code,'LHR');
+  assert.equal(state.destination?.code,'JFK');
+  assert.equal(state.cabin,'business');
+  assert.equal(state.pending?.field,'dates');
+  assert.match(reply.text,/date/i);
+});
+
+test('choosing an offered date searches the trip that was kept',async()=>{
+  const {adapter,c}=setup();
+  await c.find({origin:'LHR',destination:'JFK',cabin:'business',dates:{mode:'ambiguous',options:['2026-10-02','2027-02-10']}});
+  const reply=await c.choose(1);
+  const state=c.publicState();
+  assert.equal(reply.status,'results');
+  assert.equal(state.dates.from,'2026-10-02');
+  assert.equal(state.origin?.code,'LHR');
+  assert.equal(state.destination?.code,'JFK');
+  assert.equal(postCount(adapter),1);
+});
+
+test('an ambiguous date with too few usable readings asks plainly',async()=>{
+  const {adapter,c}=setup();
+  // A past date is not a usable reading, so one option remains.
+  const reply=await c.find({origin:'LHR',destination:'JFK',dates:{mode:'ambiguous',options:['2026-10-02','2020-01-01']}});
+  assert.equal(reply.status,'clarify');
+  assert.equal(postCount(adapter),0);
+  assert.equal(c.publicState().pending,null);
+  assert.match(reply.text,/which date/i);
+});
+
+// Regression: adding an ambiguous date mode put 'options' in the tool schema,
+// and resolveDates rejected any date object carrying an unexpected key. A model
+// attaching options to an ordinary date turned a normal search into an error.
+// Held-out v1 S04 caught this; the deterministic suite had not.
+test('a date mode that carries stray options still works',async()=>{
+  for(const dates of [{mode:'nextWeek',options:[]},{mode:'rolling',options:['2026-10-02']},{mode:'exact',start:'2026-10-02',options:['2026-10-02']}]){
+    const {c}=setup();
+    const reply=await c.find({destination:'Singapore',dates});
+    assert.notEqual(reply.status,'error',`${dates.mode} with options must not error`);
+  }
+});
+
+test('an origin-only request keeps the destination and dates while asking',async()=>{
+  const {adapter,c}=setup();
+  const reply=await c.find({destination:'Singapore',dates:{mode:'nextWeek'}});
+  const state=c.publicState();
+  assert.equal(reply.status,'clarify');
+  assert.equal(state.destination?.code,'SIN');
+  assert.equal(state.pending?.field,'origin');
+  assert.equal(state.dates.from,'2026-09-21');
+  assert.equal(state.dates.to,'2026-09-27');
+  assert.equal(postCount(adapter),0);
+});
+
+// The schema is a contract with the model: every field it advertises will be
+// sent eventually, in combinations no hand-written test would think to try.
+// These derive their inputs from the schema itself, so a field added there
+// without matching validation fails here rather than in a live run.
+const schemaProps = findTool.function.parameters.properties;
+const sampleDates = mode => {
+  const dates = { mode, strict: false };
+  if (['exact', 'range', 'flex'].includes(mode)) dates.start = '2026-10-02';
+  if (mode === 'range') dates.end = '2026-10-05';
+  if (mode === 'flex') dates.flex = 3;
+  if (mode === 'ambiguous') dates.options = ['2026-10-02', '2027-02-10'];
+  return dates;
+};
+
+test('every advertised date mode is accepted',async()=>{
+  for(const mode of schemaProps.dates.properties.mode.enum){
+    const {c}=setup();
+    const reply=await c.find({origin:'LHR',destination:'JFK',dates:sampleDates(mode)});
+    assert.notEqual(reply.status,'error',`date mode ${mode} is in the schema and must not error`);
+  }
+});
+
+test('a date object carrying every advertised key is accepted',async()=>{
+  // A model reads the whole property list, not just the keys one mode needs.
+  const everyKey={start:'2026-10-02',end:'2026-10-05',flex:3,strict:false,options:['2026-10-02','2027-02-10']};
+  for(const mode of schemaProps.dates.properties.mode.enum){
+    const {c}=setup();
+    const reply=await c.find({origin:'LHR',destination:'JFK',dates:{mode,...everyKey}});
+    assert.notEqual(reply.status,'error',`date mode ${mode} with every advertised key must not error`);
+  }
+});
+
+test('every advertised top-level field is accepted together',async()=>{
+  const {c}=setup();
+  const reply=await c.find({
+    origin:'LHR',destination:'JFK',dates:sampleDates('exact'),
+    cabin:schemaProps.cabin.enum[0],cabinOnly:false,
+    sort:schemaProps.sort.enum[0],maxPriceUsd:900,nonstopOnly:false,
+  });
+  assert.notEqual(reply.status,'error');
+  const declared=Object.keys(schemaProps);
+  const covered=['origin','destination','dates','cabin','cabinOnly','sort','maxPriceUsd','nonstopOnly','refresh'];
+  const uncovered=declared.filter(key=>!covered.includes(key));
+  assert.deepEqual(uncovered,[],`schema fields with no acceptance test: ${uncovered.join(', ')}`);
+});
+
+test('a traveler never sees an error for a well-formed request',async()=>{
+  // status 'error' is the generic failure copy. Reaching it on ordinary input
+  // is always a defect, whatever the cause.
+  const requests=[
+    {destination:'Singapore',dates:{mode:'nextWeek'}},
+    {origin:'London'},
+    {origin:'London',destination:'New York'},
+    {origin:'Japan',destination:'JFK'},
+    {origin:'Londn',destination:'Singapor',dates:{mode:'exact',start:'2026-10-01'}},
+    {origin:'LHR',destination:'JFK',dates:{mode:'ambiguous',options:['2026-10-02','2027-02-10']}},
+    {destination:'Sidney'},
+  ];
+  for(const request of requests){
+    const {c}=setup();
+    const reply=await c.find(request);
+    assert.notEqual(reply.status,'error',`${JSON.stringify(request)} must not produce the generic failure copy`);
+  }
+});
+
+// C1 reached the context cap once the currency fix let it actually search:
+// four recorded searches overran it. History kept three copies of every reply.
+test('recorded history drops prose the assistant message already carries',()=>{
+  const result={status:'results',text:'A long rendered reply.',query:{},cached:false,totalFound:3,
+    shortlist:[{id:'a',origin:'LGW',destination:'EWR',date:'2026-10-01',cabin:'economy',priceUsd:513,direct:false,reasons:[],text:'rendered row',timing:{departs:'x',arrives:'y',legs:[1,2,3]}}]};
+  const compact=compactForHistory(result);
+  assert.equal(compact.text,undefined,'the assistant message already carries the reply');
+  assert.equal(compact.shortlist[0].text,undefined);
+  assert.equal(compact.shortlist[0].timing,undefined);
+  // A follow-up such as "the third one" still needs to identify the option.
+  for(const key of ['id','origin','destination','date','cabin','priceUsd','direct','reasons']){
+    assert.ok(key in compact.shortlist[0],`${key} must survive for follow-up questions`);
+  }
+});
+
+test('compaction roughly halves a real recorded search',async()=>{
+  const {c}=setup();
+  const real=await c.find({origin:'London',destination:'New York',dates:{mode:'exact',start:'2026-10-01'},cabin:'economy',maxPriceUsd:700});
+  const before=JSON.stringify(real).length,after=JSON.stringify(compactForHistory(real)).length;
+  assert.ok(after<before/2,`recorded search should shrink well past half: ${before} -> ${after}`);
+});
+
+test('compaction leaves non-search replies untouched',()=>{
+  const clarify={status:'clarify',text:'Which destination did you mean?'};
+  assert.deepEqual(compactForHistory(clarify),{status:'clarify'});
+  assert.equal(compactForHistory(null),null);
+});
+
+test('a numbered menu is offered, since a number is accepted',async()=>{
+  const {c}=setup();
+  const reply=await c.find({origin:'London',destination:'Japan',dates:{mode:'nextWeek'}});
+  assert.match(reply.text,/^1\. /m,'choose(n) accepts a number, so the menu must show one');
+  assert.match(reply.text,/Tokyo/);
+  assert.match(reply.text,/Osaka/);
+  // Hubs first: a country match must not lead with obscure regional fields.
+  assert.ok(!/Aguni|Tokunoshima/.test(reply.text),'regional airports must not crowd out the gateways');
 });

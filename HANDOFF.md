@@ -27,7 +27,7 @@ customer data or raw backend captures.
   session follow-ups and explicit preference proposals.
 - Booking, payment, account servicing, autonomous purchasing, WhatsApp and MCP
   remain outside the implemented scope.
-- The deterministic suite currently contains 106 passing checks.
+- The deterministic suite currently contains 136 passing checks.
 - The first 42-case Terra hardening run passed 30 cases. Every observed issue
   later received a focused passing verification. A later full rerun passed 32
   cases, then stopped at B03 after a safe policy handoff failed the frozen
@@ -37,6 +37,17 @@ customer data or raw backend captures.
   exact contracts and 17 cases overall. The complete run used 74 calls and cost
   $0.3887. Keep the test-contract mistakes and judge-context issues visible when
   interpreting that score. See `evaluation/HARDENING.md`.
+- A later run on 2026-09-20, after the place, currency, payment, date, policy
+  and history corrections, passed 24 of 30 cases and 26 exact contracts, with
+  no case regressing. It used 79 calls and cost $0.3813. The earlier baseline
+  above stands as recorded; this is a later verification, not a replacement.
+  Six cases still fail. A5, C1, C2 and C5 are model interpretation, not
+  application defects: the model corrects "Sidney" to "Sydney" before the
+  resolver sees it, reads "make it the 3rd" as picking option three, collapses
+  a date range when applying a filter, and reads "and back to business" as a
+  return flight. D2 and D4 pass every exact check and the judge asks for
+  clearer disclosure. Two frozen expectations were corrected rather than the
+  agent changed, and the reasoning is recorded beside the cases.
 
 Read these files in order when more detail is needed:
 

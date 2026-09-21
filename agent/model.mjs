@@ -5,21 +5,39 @@ import { requestWithRetry } from './retry.mjs';
 import { SAFE_FAILURE, SAFE_REDIRECT, safeCustomerCopy } from './customer-copy.mjs';
 
 const clarificationTool = { type: 'function', function: {
-  name: 'clarify_request', description: 'Ask one short clarification when the requested date/currency is genuinely ambiguous, or explain a limitation (e.g. checkout/round trips unavailable). Do not ask for missing dates or cabin: those have defaults. Never state flight availability or prices.',
+  name: 'clarify_request', description: 'Explain a limitation (e.g. checkout/round trips unavailable) or redirect an unrelated request. Do not ask for missing dates or cabin: those have defaults. For an ambiguous date use find_flights with dates.mode=ambiguous so the trip is kept. Never state flight availability or prices.',
   parameters: { type: 'object', additionalProperties: false, required: ['question'], properties: { question: { type: 'string', maxLength: 400 } } },
 } };
 export const TOOLS = [findTool, clarificationTool, policyTool, preferencesTool];
 export const PROMPT_VERSION = 'flight-search-v1.4.1';
 
 const supportEmail='support@commonswyft.com';
-function deterministicBoundary(text) {
+// History carried three copies of every reply: result.text inside the tool
+// result, the same text as the assistant message below it, and a rendered line
+// per shortlist row. Four searches in one conversation then overran the context
+// cap. Keep the fields a follow-up needs (which option, route, date, price) and
+// drop the prose and the timing breakdown, which the assistant message already
+// conveys. Held-out v2 C1 hit this once the currency fix let it actually search.
+export function compactForHistory(result) {
+  if (!result || typeof result !== 'object') return result;
+  const { text, shortlist, ...rest } = result;
+  if (!Array.isArray(shortlist)) return rest;
+  return { ...rest, shortlist: shortlist.map(({ text: row, timing, ...keep }) => keep) };
+}
+
+export function deterministicBoundary(text) {
   if (/\b(?:my|this)\b.{0,30}\b(?:ticket|flight|booking)\b.{0,30}\b(?:refund|refundable)\b|\b(?:refund|refundable)\b.{0,30}\b(?:my|this)\b.{0,30}\b(?:ticket|flight|booking)\b/i.test(text)) return {status:'policy',text:`Refund eligibility depends on the fare rules for the specific ticket. Please contact CommonSwyft support at ${supportEmail} with the booking reference.`};
   // Policy questions that happen to mention tickets or purchases still belong
   // to grounded policy retrieval. Consequential action requests stay below.
-  if (/\b(?:refund|refundable|terms?|legal|privacy|personal data|analytics)\b/i.test(text)) return null;
+  if (/\b(?:refund|refundable|terms?|legal|privacy|personal data|analytics|card details|data protection)\b/i.test(text)) return null;
   if (/\b(?:checked bags?|baggage|luggage)\b/i.test(text)) return {status:'clarify',text:'I can’t guarantee baggage inclusion from these search results. Please confirm baggage directly with the airline before booking. I can still search the route and cabin for you.'};
   if (/\b(?:my|existing|booked)\b.{0,30}\b(?:ticket|flight|booking)\b|\b(?:cancel|rebook|check me in|passenger name)\b/i.test(text)) return {status:'clarify',text:`I can’t access or change an existing booking here. Please contact CommonSwyft support at ${supportEmail} with your booking reference.`};
-  if (/\b(?:book|buy|purchase|charge)\b.{0,40}\b(?:option|flight|ticket|card)\b|\bsaved card\b/i.test(text)) return {status:'clarify',text:'I can’t book or charge a card here. Complete the purchase through CommonSwyft’s website checkout. I can keep refining the flight search before you continue.'};
+  // A payment request is a consequential action, so the refusal is
+  // deterministic rather than left to the model. Held-out v2 E5 and E6 both
+  // reached the model instead, which refused correctly but never pointed the
+  // traveler at checkout: "pay for option B" and "I approve the payment"
+  // contain none of book, buy, purchase or charge.
+  if (/\b(?:book|buy|purchase|charge)\b.{0,40}\b(?:option|flight|ticket|card)\b|\b(?:saved|stored|my|the)\s+card\b|\b(?:pay|paying)\b|\b(?:approv|authoris|authoriz|process|complete|make)\w*\b.{0,20}\bpayment\b/i.test(text)) return {status:'clarify',text:'I can’t book or charge a card here. Complete the purchase through CommonSwyft’s website checkout. I can keep refining the flight search before you continue.'};
   return null;
 }
 
@@ -97,8 +115,8 @@ Use travel_preferences only to show or propose an explicitly requested persisten
 For an unrelated request, use clarify_request with a brief, friendly redirect to finding flights. Preserve the existing trip. For an unsupported or unresolved request, use clarify_request to explain the limitation and offer the next supported step.
 
 TRIP INTERPRETATION
-City names mean all airports in the existing group. Explicit airport names or codes override the city group. Do not silently drop or replace constraints. "Economy instead" changes only cabin. For "business only" also set cabinOnly. "Direct only" sets nonstopOnly. "Prefer nonstop" sets sort=nonstop without creating a hard constraint. Budget is USD only, so clarify ambiguous currency. Clear a budget with maxPriceUsd=null when asked.
-Dates: "next week" means dates.mode=nextWeek. "Coming week" or "next seven days" means rolling. An explicit day means exact. Two dates mean range. Plus or minus 1, 3 or 7 days means flex. "Three days later" shifts the currently selected date and is not a plus-or-minus window. Resolve named weekdays against the injected current date. Clarify genuinely ambiguous wording. Do not create a range over 31 dates.
+City names mean all airports in the existing group. Explicit airport names or codes override the city group. Do not silently drop or replace constraints. "Economy instead" changes only cabin. For "business only" also set cabinOnly. "Direct only" sets nonstopOnly. "Prefer nonstop" sets sort=nonstop without creating a hard constraint. Budget is always USD. Treat a bare budget number as USD and never ask which currency the traveler means. Clear a budget with maxPriceUsd=null when asked.
+Dates: "next week" means dates.mode=nextWeek. "Coming week" or "next seven days" means rolling. An explicit day means exact. Two dates mean range. Plus or minus 1, 3 or 7 days means flex. "Three days later" shifts the currently selected date and is not a plus-or-minus window. Resolve named weekdays against the injected current date. For genuinely ambiguous wording such as "2/10", call find_flights with dates.mode=ambiguous and options listing every reading as YYYY-MM-DD, in the same call as the origin, destination and cabin you already know. The application asks the question and keeps the trip. Never ask about a date in prose instead. Do not create a range over 31 dates.
 
 ACTION CHECK BEFORE find_flights
 Copy every explicitly supplied trip field into the tool call. An explicit calendar date must always produce dates with mode=exact and start in YYYY-MM-DD form. For example, “on 2030-04-12” requires dates={"mode":"exact","start":"2030-04-12"}. On a refinement, send only changed fields because the application preserves all omitted current-trip fields. Never turn a request containing “return”, “returning” or a second travel date into a one-way search. Use clarify_request for that unsupported round trip.
@@ -206,7 +224,7 @@ export class Agent {
       }
       // Preserve the original message (including provider reasoning metadata),
       // but never store it in the trace. Keep complete tool-call/result pairs.
-      this.record([user, answer, { role: 'tool', tool_call_id: call.id, content: JSON.stringify(result) }, { role: 'assistant', content: result.text }]);
+      this.record([user, answer, { role: 'tool', tool_call_id: call.id, content: JSON.stringify(compactForHistory(result)) }, { role: 'assistant', content: result.text }]);
       this.trace('reply', result);
       return result;
     } catch (error) {

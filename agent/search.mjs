@@ -1,5 +1,5 @@
 import { flightDetails,readableDate } from './flight-details.mjs';
-import { AIRPORTS, METRO_GROUPS, expandMetro, labelForValue, rankAirportSearch, shiftIso, flexRange, getResultsView, displayPriceUsd } from './shared.mjs';
+import { AIRPORTS, METRO_GROUPS, expandMetro, labelForValue, rankAirportSearch, nearMatches, collapseToGroups, hubsAmong, countryAlias, shiftIso, flexRange, getResultsView, displayPriceUsd } from './shared.mjs';
 import { safeSearchError } from './customer-copy.mjs';
 
 export const WELCOME = 'Where would you like to fly?\n\nTry “To New York”, “London to Singapore”, or “Dubai to London, economy”.\n\nDefaults: one-way · business class · today through the next 7 days.\nSearch only. There is no booking or checkout.';
@@ -20,12 +20,25 @@ export function validDate(value) {
   return Number.isFinite(d.valueOf()) && d.toISOString().slice(0, 10) === value;
 }
 export function newState() {
-  return { origin: null, destination: null, cabin: 'business', dates: null, sort: 'recommended', maxPriceUsd: null, nonstopOnly: false, cabinOnly: false, pending: null, snapshot: null, lastQuery: null };
+  return { origin: null, destination: null, cabin: 'business', dates: null, sort: 'recommended', maxPriceUsd: null, nonstopOnly: false, cabinOnly: false, pending: null, originFromPreference: false, snapshot: null, lastQuery: null };
+}
+
+const choiceOf = entry => ({ code: entry.code, label: entry.label ?? fullAirport(entry.code) });
+const isHubEntry = entry => hubsAmong([entry]).length > 0;
+
+// Every airport and metro group the resolver can offer, in the shape the
+// ranker expects. A group matches on any member code, so typing "LGW" still
+// surfaces "London (all airports)".
+function searchableEntries() {
+  return [
+    ...METRO_GROUPS.map(group => ({ code: group.code, label: group.label, matchCodes: expandMetro(group.code), city: group.city, name: group.label, country: group.country, popular: true })),
+    ...AIRPORTS.map(airport => ({ ...airport, label: fullAirport(airport.code), matchCodes: [airport.code], name: airport.name ?? airport.city })),
+  ];
 }
 
 export function resolveLocation(text) {
   if (typeof text !== 'string' || !text.trim() || text.length > 120) return [];
-  const term = aliases[normal(text)] ?? text.trim();
+  const term = aliases[normal(text)] ?? countryAlias(text) ?? text.trim();
   // Models and people can copy an airport label, not just its bare name/code.
   // Accept a corroborating label, but never silently trust a conflicting code.
   const labelled = term.match(/^(.*?)\s*\(([A-Z]{3})\)$/i);
@@ -39,16 +52,33 @@ export function resolveLocation(text) {
   if (codes.every(c => airportByCode.has(c))) return [{ code: [...new Set(codes)].join('|'), label: labelForValue(codes.join('|')) }];
   const group = METRO_GROUPS.find(g => normal(g.city) === normal(term) || normal(g.label) === normal(term));
   if (group) return [{ code: group.code, label: group.label }];
+  const entries = searchableEntries();
   const city = AIRPORTS.filter(a => normal(a.city) === normal(term));
-  if (city.length === 1) return [{ code: city[0].code, label: fullAirport(city[0].code) }];
-  const entries = [
-    ...METRO_GROUPS.map(g => ({ code: g.code, label: g.label, matchCodes: expandMetro(g.code), city: g.city, name: g.label, country: g.country, popular: true })),
-    ...AIRPORTS.map(a => ({ ...a, label: fullAirport(a.code), matchCodes: [a.code], name: a.name ?? a.city })),
-  ];
+  if (city.length === 1) {
+    const only = choiceOf({ ...city[0], label: fullAirport(city[0].code) });
+    // An exact city match on a minor field is still probably a typo for a
+    // nearby hub: "Sidney" is a real airport in Montana, but the traveler
+    // most likely means Sydney. Offer both rather than guessing.
+    if (isHubEntry(city[0])) return [only];
+    const rivals = collapseToGroups(hubsAmong(nearMatches(entries, term))).slice(0, 4);
+    return rivals.length ? [only, ...rivals.map(choiceOf)] : [only];
+  }
   // A known airport name (e.g. Heathrow) is narrower than its metro group.
   const named = AIRPORTS.filter(a => (a.name ?? '').toLowerCase().includes(normal(term)));
   if (named.length === 1) return [{ code: named[0].code, label: fullAirport(named[0].code) }];
-  return rankAirportSearch(entries, term).slice(0, 5).map(({ code, label }) => ({ code, label }));
+  const ranked = rankAirportSearch(entries, term);
+  if (ranked.length) return ranked.slice(0, 5).map(choiceOf);
+  // Nothing matched literally. Fall back to near matches so a misspelling
+  // resolves deterministically instead of depending on the model correcting
+  // it. One hub among them is a confident answer; anything else is a menu.
+  const near = collapseToGroups(nearMatches(entries, term));
+  // A curated metro group is the strongest signal: one edit from "London"
+  // means the London group, not East London or Southend.
+  const groups = near.filter(entry => entry.popular);
+  if (groups.length === 1) return [choiceOf(groups[0])];
+  const hubs = hubsAmong(near);
+  if (hubs.length === 1) return [choiceOf(hubs[0])];
+  return near.slice(0, 5).map(choiceOf);
 }
 export function fullAirport(code) {
   const a = airportByCode.get(code);
@@ -65,11 +95,12 @@ export const findTool = {
         origin: { type: 'string', description: 'Departure city or explicit airport/IATA codes. Use user wording; application resolves city groups. Omit if unknown.' },
         destination: { type: 'string', description: 'Destination city or explicit airport/IATA codes. Omit if unknown.' },
         dates: { type: 'object', description:'Required whenever the current user request explicitly supplies or changes a travel date. Omit only when the user supplies no date.', additionalProperties: false, required: ['mode'], properties: {
-          mode: { type: 'string', enum: ['rolling', 'nextWeek', 'exact', 'range', 'flex'] },
+          mode: { type: 'string', enum: ['rolling', 'nextWeek', 'exact', 'range', 'flex', 'ambiguous'] },
           start: { type: 'string', description: 'YYYY-MM-DD; exact date, range start, or flex anchor. Required for exact/range/flex.' },
           end: { type: 'string', description: 'Inclusive range end. Required for range.' },
           flex: { type: 'integer', enum: [1, 3, 7], description: 'Days either side of start; required for flex.' },
           strict: { type: 'boolean', description: 'True only if user says exact dates only/no alternatives.' },
+          options: { type: 'array', items: { type: 'string' }, description: 'Required for ambiguous: the YYYY-MM-DD dates the wording could mean, e.g. "2/10" gives both readings. Send the trip you already know in the same call so it is not lost.' },
         } },
         cabin: { type: 'string', enum: cabins },
         cabinOnly: { type: 'boolean', description: 'True for explicit cabin-only restriction; false to allow cabin alternatives.' },
@@ -94,7 +125,10 @@ function validatePatch(p) {
 }
 
 function resolveDates(input, today) {
-  if (!object(input) || Object.keys(input).some(k => !['mode', 'start', 'end', 'flex', 'strict'].includes(k))) throw new Error('Invalid date settings.');
+  // 'options' belongs to the ambiguous mode, which never reaches here. Models
+  // still attach it to ordinary date modes, and rejecting the whole patch for
+  // that turned a normal search into an error. Accept and ignore it.
+  if (!object(input) || Object.keys(input).some(k => !['mode', 'start', 'end', 'flex', 'strict', 'options'].includes(k))) throw new Error('Invalid date settings.');
   if ('strict' in input && typeof input.strict !== 'boolean') throw new Error('Invalid strict-date flag.');
   const mode = input.mode;
   let from, to, selected;
@@ -133,6 +167,17 @@ function normalizePatch(patch) {
   return normalized;
 }
 
+// An ambiguous date is a clarification, not a search. The model still calls
+// find_flights so the trip it already knows reaches application state, which
+// holds state precedence (see PROMPT-ARCHITECTURE.md). Held-out v2 A6 failed
+// because the model answered in prose instead and nothing was retained.
+function ambiguousDates(input, today) {
+  if (!object(input) || input.mode !== 'ambiguous') return null;
+  const options = Array.isArray(input.options) ? [...new Set(input.options)] : [];
+  const usable = options.filter(value => validDate(value) && value >= today);
+  return usable.length >= 2 ? usable.slice(0, 4).map(iso => ({ code: iso, label: readableDate(iso) })) : 'unusable';
+}
+
 function mergeTripState(current, patch, today) {
   const next = { ...current };
   if (patch.dates) next.dates = resolveDates(patch.dates, today);
@@ -147,6 +192,7 @@ function mergeTripState(current, patch, today) {
     const choices = resolveLocation(patch[field]);
     if (choices.length === 1) {
       next[field] = choices[0];
+      if (field === 'origin') next.originFromPreference = false;
       next.pending = null;
     } else {
       next[field] = null;
@@ -165,7 +211,9 @@ export class SearchConversation {
     const pending = this.state.pending;
     if (!pending) return { status: 'clarify', text: 'There is no active numbered menu. Please type the city, airport or preference you want to change.' };
     if (!Number.isInteger(number) || number < 1 || number > pending.choices.length) return { status: 'clarify', text: `Choose 1–${pending.choices.length}, or type a city/airport.` };
-    return this.find({ [pending.field]: pending.choices[number - 1].code });
+    const chosen = pending.choices[number - 1];
+    if (pending.field === 'dates') return this.find({ dates: { mode: 'exact', start: chosen.code } });
+    return this.find({ [pending.field]: chosen.code });
   }
   async find(patch) {
     try {
@@ -174,6 +222,8 @@ export class SearchConversation {
       validatePatch(patch);
       const today = this.today();
       if (!validDate(today)) throw new Error('Invalid test clock.');
+      const candidates = ambiguousDates(patch.dates, today);
+      if (candidates) { patch = { ...patch }; delete patch.dates; }
 
       // 2. Merge the follow-up into a copy. Omitted fields remain unchanged.
       const { next, unresolved } = mergeTripState(this.state, patch, today);
@@ -196,7 +246,20 @@ export class SearchConversation {
         const heading = field === 'origin'
           ? 'Sounds good. Where are you flying from?'
           : 'Where would you like to fly?';
-        return this.ask(field, choices, heading);
+        return this.ask(field, choices, heading, { numbered: false });
+      }
+
+      // An ambiguous date stops here. The route, cabin and everything else the
+      // traveler supplied is already merged above, so the answer builds on it.
+      if (candidates === 'unusable') {
+        this.state.pending = null;
+        return { status: 'clarify', text: 'Which date did you mean? Please give it as a day and month.' };
+      }
+      if (candidates) {
+        this.state.pending = { field: 'dates', choices: candidates };
+        const numbered = candidates.map((choice, index) => `${index + 1}. ${choice.label}`).join('\n');
+        const route = `${next.origin.label} to ${next.destination.label}`;
+        return { status: 'clarify', text: [`Which date did you mean for ${route}?`, numbered, 'Reply with the number or a different date.'].join('\n\n') };
       }
 
       // 4. Apply deterministic defaults and reject conflicting state.
@@ -237,9 +300,16 @@ export class SearchConversation {
       return { status: 'error', text: safeSearchError(error) };
     }
   }
-  ask(field, choices, heading) {
+  // A numbered menu is right when the choices ARE the candidates, and wrong
+  // when they are only examples: the judge read a numbered starter list as
+  // "invented or hardcoded options ... the only available routes".
+  ask(field, choices, heading, { numbered = true } = {}) {
     this.state.pending = choices.length ? { field, choices } : null;
-    const examples = choices.slice(0, 5).map(c => c.label.replace(/\s*\(all airports\)$/i, '')).join(', ');
+    const shown = choices.slice(0, 5);
+    const menu = numbered
+      ? shown.map((choice, index) => `${index + 1}. ${choice.label}`).join('\n')
+      : null;
+    const examples = shown.map(choice => choice.label.replace(/\s*\(all airports\)$/i, '')).join(', ');
     const cabinLabel = { economy: 'Economy', premium: 'Premium economy', premium_economy: 'Premium economy', business: 'Business class', first: 'First class', any: 'Any cabin' }[this.state.cabin] ?? this.state.cabin;
     const dateLabel = this.state.dates
       ? this.state.dates.from === this.state.dates.to ? readableDate(this.state.dates.from) : `${readableDate(this.state.dates.from)} – ${readableDate(this.state.dates.to)}`
@@ -247,7 +317,10 @@ export class SearchConversation {
     const retained = this.state.dates || this.state.cabin !== 'business'
       ? `I'll keep ${[cabinLabel, dateLabel].filter(Boolean).join(' · ')} unless you change it.`
       : null;
-    return { status: 'clarify', text: [heading, examples ? `Try ${examples}, or type any city or airport.` : 'Type a city or airport.', retained].filter(Boolean).join('\n\n') };
+    const body = menu
+      ? [menu, 'Reply with the number, or type any city or airport.']
+      : [examples ? `Try ${examples}, or type any city or airport.` : 'Type a city or airport.'];
+    return { status: 'clarify', text: [heading, ...body, retained].filter(Boolean).join('\n\n') };
   }
 }
 
@@ -279,6 +352,7 @@ function present(state, response, cached, mode = 'synthetic') {
   const text = [
     !staging?'SYNTHETIC FLIGHT DATA. These are example results.':replay?'Saved results. This is not a fresh availability check.':null,
     `${state.origin.label} → ${state.destination.label}\n${dateSummary} · ${state.cabin === 'any' ? 'Any cabin' : state.cabin.charAt(0).toUpperCase()+state.cabin.slice(1)} · One-way${state.maxPriceUsd !== null ? ` · Up to USD ${state.maxPriceUsd}` : ''}${state.nonstopOnly ? ' · Nonstop only' : ''}`,
+    state.originFromPreference?`Using your saved home airport, ${state.origin.label}. Say where you are flying from to change it.`:null,
     cached?'Using the same results. Say “refresh availability” for a new check.':null,
     shortlist.length?`I found ${shortlist.length===1?'one option':`${shortlist.length} options`} for you${alternatives.length&&!matching.length?' on nearby dates or with different flight details':''}:`:'No flights match those preferences in these results. Would you like to try different dates?',
     ...shortlist.map((r,i)=>`${String.fromCharCode(65+i)}. ${r.text}`),

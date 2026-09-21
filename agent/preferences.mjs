@@ -25,7 +25,7 @@ export function accountPreferenceStore({baseURL,token,fetchImpl=fetch,label='Aut
 }
 export function applyPreferences(conversation,p) {
  p=validatePreferences(p);
- if(p.homeAirport)conversation.state.origin=resolveLocation(p.homeAirport)[0];
+ if(p.homeAirport){conversation.state.origin=resolveLocation(p.homeAirport)[0];conversation.state.originFromPreference=true;}
  if(p.cabin)conversation.state.cabin=p.cabin==='premium_economy'?'premium':p.cabin;
  if(p.preferNonstop)conversation.state.sort='nonstop';
 }

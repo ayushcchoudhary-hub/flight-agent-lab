@@ -36,3 +36,16 @@ test('first-pass and exact-fail cases are judged only once',async()=>{
   assert.equal(calls,1);assert.equal(result.judgeAttempts.length,1);
  }
 });
+
+test('an unreadable judge response is retried once, other errors are not',async()=>{
+ let calls=0;
+ const flaky=async()=>{calls++;if(calls===1)throw Error('Judge returned unreadable structured output.');return{verdict:'pass',scores:{clarity:5,concision:5,tone:5,nextStep:5,limitationHonesty:5,noInternalLeakage:5},issues:[]};};
+ const recovered=await evaluateJudgeConsensus({deterministicPass:true,evaluate:flaky});
+ assert.equal(recovered.communicationPass,true);
+ assert.equal(calls,2,'one retry, not a loop');
+
+ let other=0;
+ const broken=async()=>{other++;throw Error('Judge returned HTTP 500.');};
+ await assert.rejects(()=>evaluateJudgeConsensus({deterministicPass:true,evaluate:broken}),/HTTP 500/);
+ assert.equal(other,1,'other failures must still stop the run');
+});
