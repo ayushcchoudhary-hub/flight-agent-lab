@@ -42,9 +42,14 @@ let stopError=null;
 try{
  for(const item of cases){
   const events=[],trace=(type,data)=>{events.push({type,data});if(type==='model_usage'||type==='judge_usage')account({type,data});};
-  let savedPreferences={...(item.initialPreferences??{})};const steps=[];
+  let savedPreferences={...(item.initialPreferences??{})};const steps=[],notes=[];
+  if(Object.keys(savedPreferences).length)notes.push(`Before the conversation the traveler had saved preferences: ${JSON.stringify(savedPreferences)}.`);
   const sessions=item.sessions??[{steps:item.steps}];
-  for(const session of sessions){
+  for(const [index,session] of sessions.entries()){
+   // The judge reads only the conversation, so a save pressed in the app
+   // between sessions is invisible to it and a disclosed default looks
+   // invented (held-out v2 D2). Say what happened off screen.
+   if(index>0)notes.push(`After the previous reply the traveler pressed Save defaults in the app, then started a new conversation. Saved preferences now: ${JSON.stringify(savedPreferences)}.`);
    const adapter=makeFixtureAdapter(item.scenario??'normal',trace),conversation=new SearchConversation({adapter,today:()=>clock,trace});
    applyPreferences(conversation,savedPreferences);
    const candidate=new OpenRouterModel({apiKey:process.env.OPENROUTER_API_KEY,model:candidateModel,reasoningEffort:candidateEffort,maxCalls:session.steps.length*3,trace,beforeRequest,provider:{data_collection:'deny'}});
@@ -59,7 +64,7 @@ try{
    continue;
   }
   const judge=new OpenRouterJudge({apiKey:process.env.OPENROUTER_API_KEY,model:judgeModel,effort:judgeEffort,trace,beforeRequest});
-  const consensus=await evaluateJudgeConsensus({deterministicPass,evaluate:()=>judge.evaluate({caseId:item.id,category:item.category,requirement:item.requirement,steps})});
+  const consensus=await evaluateJudgeConsensus({deterministicPass,evaluate:()=>judge.evaluate({caseId:item.id,category:item.category,requirement:item.requirement,steps,notes})});
   const pass=consensus.communicationPass;
   report.results.push({caseId:item.id,name:item.name,category:item.category,requirement:item.requirement,model:candidateModel,repeat:1,pass,deterministicPass:true,communicationPass:consensus.communicationPass,steps,judge:consensus.judge,judgeAttempts:consensus.judgeAttempts,judgeConsensus:consensus.judgeConsensus,events});
   save();console.log(`${report.results.length}/${cases.length} ${item.id} ${pass?'PASS':'REVIEW'} · deterministic pass · judge ${consensus.judgeConsensus.passingVotes}/${consensus.judgeConsensus.totalVotes}`);
