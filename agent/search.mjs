@@ -38,7 +38,10 @@ function searchableEntries() {
 
 export function resolveLocation(text) {
   if (typeof text !== 'string' || !text.trim() || text.length > 120) return [];
-  const term = aliases[normal(text)] ?? countryAlias(text) ?? text.trim();
+  // Places now arrive exactly as typed, so "the UK" and "the States" carry
+  // their article. Strip it before any lookup.
+  const bare = text.trim().replace(/^(?:the|a|an)\s+/i, '');
+  const term = aliases[normal(bare)] ?? countryAlias(bare) ?? bare;
   // Models and people can copy an airport label, not just its bare name/code.
   // Accept a corroborating label, but never silently trust a conflicting code.
   const labelled = term.match(/^(.*?)\s*\(([A-Z]{3})\)$/i);
