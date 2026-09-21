@@ -27,7 +27,7 @@ customer data or raw backend captures.
   session follow-ups and explicit preference proposals.
 - Booking, payment, account servicing, autonomous purchasing, WhatsApp and MCP
   remain outside the implemented scope.
-- The deterministic suite currently contains 136 passing checks.
+- The deterministic suite currently contains 143 passing checks.
 - The first 42-case Terra hardening run passed 30 cases. Every observed issue
   later received a focused passing verification. A later full rerun passed 32
   cases, then stopped at B03 after a safe policy handoff failed the frozen
@@ -48,6 +48,17 @@ customer data or raw backend captures.
   return flight. D2 and D4 pass every exact check and the judge asks for
   clearer disclosure. Two frozen expectations were corrected rather than the
   agent changed, and the reasoning is recorded beside the cases.
+- A run on 2026-09-21, after the ambiguity rule (ask rather than search on a
+  guess), verbatim place names, removal of invented dates and cabin-source
+  labels, passed all 30 exact contracts and 27 of 30 cases. 87 calls,
+  $0.6314. The judge ran at medium effort for the first time; at low effort
+  it had passed and failed identical replies on consecutive runs. Three
+  flags remain, all judge findings on wording: the UK menu stops at five
+  with no hint that more exist, "Using the same results" reads wrongly when
+  a filter change shows different rows, and a retention question gets a bare
+  support redirect although the snapshot says analytics excludes search
+  terms. Judge medium effort needs max_tokens above 900 or its JSON
+  truncates; the harness now sets 2500 above low.
 
 Read these files in order when more detail is needed:
 
