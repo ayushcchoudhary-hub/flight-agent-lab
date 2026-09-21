@@ -20,7 +20,7 @@ export function validDate(value) {
   return Number.isFinite(d.valueOf()) && d.toISOString().slice(0, 10) === value;
 }
 export function newState() {
-  return { origin: null, destination: null, cabin: 'business', dates: null, sort: 'recommended', maxPriceUsd: null, nonstopOnly: false, cabinOnly: false, pending: null, originFromPreference: false, snapshot: null, lastQuery: null };
+  return { origin: null, destination: null, cabin: 'business', dates: null, sort: 'recommended', maxPriceUsd: null, nonstopOnly: false, cabinOnly: false, pending: null, originFromPreference: false, cabinSource: 'default', snapshot: null, lastQuery: null };
 }
 
 const choiceOf = entry => ({ code: entry.code, label: entry.label ?? fullAirport(entry.code) });
@@ -92,8 +92,8 @@ export const findTool = {
     parameters: {
       type: 'object', additionalProperties: false,
       properties: {
-        origin: { type: 'string', description: 'Departure city or explicit airport/IATA codes. Use user wording; application resolves city groups. Omit if unknown.' },
-        destination: { type: 'string', description: 'Destination city or explicit airport/IATA codes. Omit if unknown.' },
+        origin: { type: 'string', description: 'Departure place exactly as the traveler wrote it, misspellings included. The application resolves it. Omit if unknown.' },
+        destination: { type: 'string', description: 'Destination exactly as the traveler wrote it, misspellings included. Omit if unknown.' },
         dates: { type: 'object', description:'Required whenever the current user request explicitly supplies or changes a travel date. Omit only when the user supplies no date.', additionalProperties: false, required: ['mode'], properties: {
           mode: { type: 'string', enum: ['rolling', 'nextWeek', 'exact', 'range', 'flex', 'ambiguous'] },
           start: { type: 'string', description: 'YYYY-MM-DD; exact date, range start, or flex anchor. Required for exact/range/flex.' },
@@ -185,6 +185,7 @@ function mergeTripState(current, patch, today) {
   for (const field of ['cabin', 'cabinOnly', 'sort', 'maxPriceUsd', 'nonstopOnly']) {
     if (field in patch) next[field] = patch[field];
   }
+  if ('cabin' in patch && patch.cabin !== current.cabin) next.cabinSource = 'stated';
 
   let unresolved = null;
   for (const field of ['origin', 'destination']) {
@@ -324,6 +325,16 @@ export class SearchConversation {
   }
 }
 
+// Say where the cabin came from. Held-out v2 D4: after "remember I like
+// business" and "nothing saved yet", a plain "Business" looked like the unsaved
+// preference had been applied. It was the default all along.
+function cabinLabel(state) {
+  const name = state.cabin === 'any' ? 'Any cabin' : state.cabin.charAt(0).toUpperCase() + state.cabin.slice(1);
+  if (state.cabinSource === 'preference') return `${name} (saved default)`;
+  if (state.cabinSource === 'default') return `${state.cabin === 'business' ? 'Business class' : name} (default)`;
+  return name;
+}
+
 function present(state, response, cached, mode = 'synthetic') {
   const staging = mode === 'staging' || mode === 'replay';
   const replay = mode === 'replay';
@@ -351,7 +362,7 @@ function present(state, response, cached, mode = 'synthetic') {
   const dateSummary=d.from===d.to?readableDate(d.from):`${readableDate(d.from)} – ${readableDate(d.to)}`;
   const text = [
     !staging?'SYNTHETIC FLIGHT DATA. These are example results.':replay?'Saved results. This is not a fresh availability check.':null,
-    `${state.origin.label} → ${state.destination.label}\n${dateSummary} · ${state.cabin === 'any' ? 'Any cabin' : state.cabin.charAt(0).toUpperCase()+state.cabin.slice(1)} · One-way${state.maxPriceUsd !== null ? ` · Up to USD ${state.maxPriceUsd}` : ''}${state.nonstopOnly ? ' · Nonstop only' : ''}`,
+    `${state.origin.label} → ${state.destination.label}\n${dateSummary} · ${cabinLabel(state)} · One-way${state.maxPriceUsd !== null ? ` · Up to USD ${state.maxPriceUsd}` : ''}${state.nonstopOnly ? ' · Nonstop only' : ''}`,
     state.originFromPreference?`Using your saved home airport, ${state.origin.label}. Say where you are flying from to change it.`:null,
     cached?'Using the same results. Say “refresh availability” for a new check.':null,
     shortlist.length?`I found ${shortlist.length===1?'one option':`${shortlist.length} options`} for you${alternatives.length&&!matching.length?' on nearby dates or with different flight details':''}:`:'No flights match those preferences in these results. Would you like to try different dates?',

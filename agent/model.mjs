@@ -1,11 +1,11 @@
-import { findTool, welcomeFor, validDate, newState } from './search.mjs';
+import { findTool, welcomeFor, validDate, newState, resolveLocation } from './search.mjs';
 import { preferencesTool, preferenceAction } from './preferences.mjs';
 import { policyTool, answerPolicy, supportReply } from './policy.mjs';
 import { requestWithRetry } from './retry.mjs';
 import { SAFE_FAILURE, SAFE_REDIRECT, safeCustomerCopy } from './customer-copy.mjs';
 
 const clarificationTool = { type: 'function', function: {
-  name: 'clarify_request', description: 'Explain a limitation (e.g. checkout/round trips unavailable) or redirect an unrelated request. Do not ask for missing dates or cabin: those have defaults. For an ambiguous date use find_flights with dates.mode=ambiguous so the trip is kept. Never state flight availability or prices.',
+  name: 'clarify_request', description: 'Ask which of two readings the traveler means, explain a limitation (e.g. checkout/round trips unavailable) or redirect an unrelated request. Do not ask for missing dates or cabin: those have defaults. For an ambiguous date use find_flights with dates.mode=ambiguous so the trip is kept. Never state flight availability or prices.',
   parameters: { type: 'object', additionalProperties: false, required: ['question'], properties: { question: { type: 'string', maxLength: 400 } } },
 } };
 export const TOOLS = [findTool, clarificationTool, policyTool, preferencesTool];
@@ -63,7 +63,10 @@ const isDefaultValue=(field,value)=>field==='dates'?value?.mode==='rolling':valu
 // A resent copy of the current trip value changes nothing, so it is not worth a trace.
 const repeatsTrip=(field,value,trip)=>!trip?false:field==='dates'?Boolean(trip.dates)&&(value?.mode==='exact'||value?.mode==='range')&&value.start===trip.dates.from&&(value.end??value.start)===trip.dates.to:field in trip&&value===trip[field];
 const WORDING={
-  dates:/\b(?:\d{4}-\d{2}-\d{2}|today|tomorrow|dates?|days?|weeks?|later|any ?time|whenever|soon|flexible|monday|tuesday|wednesday|thursday|friday|saturday|sunday|january|february|march|april|may|june|july|august|september|october|november|december)\b/i,
+  // Any time expression counts, not only calendar words: "next week", "this
+  // weekend", "a fortnight from now", "5 oct", "2/10", "the 3rd". A miss here
+  // strips a real date, so the list errs broad.
+  dates:/\b(?:\d{4}-\d{2}-\d{2}|\d{1,2}[\/.-]\d{1,2}(?:[\/.-]\d{2,4})?|\d{1,2}(?:st|nd|rd|th)|today|tonight|tomorrow|now|soon|later|earlier|asap|any ?time|whenever|flexible|dates?|days?|weeks?|weekends?|fortnights?|months?|next|this|coming|until|before|after|jan(?:uary)?|feb(?:ruary)?|mar(?:ch)?|apr(?:il)?|may|june?|july?|aug(?:ust)?|sept?(?:ember)?|oct(?:ober)?|nov(?:ember)?|dec(?:ember)?|mon(?:day)?|tues?(?:day)?|wed(?:nesday)?|thu(?:rs)?(?:day)?|fri(?:day)?|sat(?:urday)?|sun(?:day)?)\b/i,
   cabin:/\b(?:business|economy|premium|first|cabin|class)\b/i,
   cabinOnly:/\b(?:business|economy|premium|first|cabin|class|alternatives?|other cabins?)\b/i,
   sort:/\b(?:cheapest|lowest price|fastest|recommended|best|prefer non[ -]?stop|prefer direct)\b/i,
@@ -71,15 +74,35 @@ const WORDING={
   maxPriceUsd:/\b(?:usd|dollars?|budget|price|under|below|less than|limit|cap)\b|\$/i,
   refresh:/\b(?:refresh|check again|search again|latest availability|new search)\b/i,
 };
+const GENERIC_PLACE_WORDS=new Set(['airport','international','regional','the','and','of','all','airports']);
+function namesPlace(text,place){
+  const words=[place?.code,...String(place?.label??'').split(/[^A-Za-z]+/)].filter(word=>word&&word.length>2&&!GENERIC_PLACE_WORDS.has(word.toLowerCase()));
+  return words.some(word=>new RegExp(`\\b${word}\\b`,'i').test(text));
+}
 export function repairExplicitToolArguments(text,name,args,trace=()=>{},trip=null) {
   if(name!=='find_flights'||!args||Array.isArray(args))return args;
-  const repaired={...args},removed=[],unverified=[];
+  const repaired={...args},removed=[],unverified=[],invented=[];
   for(const [field,pattern] of Object.entries(WORDING)){
     if(!(field in repaired)||pattern.test(text))continue;
     if(isDefaultValue(field,repaired[field])){delete repaired[field];removed.push(field);}
-    else if(!repeatsTrip(field,repaired[field],trip))unverified.push(field);
+    else if(repeatsTrip(field,repaired[field],trip))continue;
+    // A date the request never mentions is invented. Held-out v2 C2: "nonstop
+    // only" arrived with dates=24 Sept and collapsed a week-long search to one
+    // day. Answering an open date menu is the exception: "the first one" there
+    // is a date answer with no date words in it.
+    else if(field==='dates'&&trip?.pending?.field!=='dates'){delete repaired.dates;invented.push('dates');}
+    else unverified.push(field);
+  }
+  // A saved home airport reaches the prompt, so the model can copy it into the
+  // call as if the traveler had typed it. It then stops looking like a default
+  // and the disclosure never fires (held-out v2 D2). Keep it a default unless
+  // the request names it.
+  if(trip?.originFromPreference&&typeof repaired.origin==='string'){
+    const match=resolveLocation(repaired.origin);
+    if(match.length===1&&match[0].code===trip.origin?.code&&!namesPlace(text,trip.origin)){delete repaired.origin;removed.push('origin');}
   }
   if(removed.length)trace('tool_argument_repair',{fields:removed,reason:'removed default values the current request did not ask for'});
+  if(invented.length)trace('tool_argument_repair',{fields:invented,reason:'removed a date the current request did not mention'});
   if(unverified.length)trace('tool_argument_unverified',{fields:unverified,reason:'kept a non-default value with no matching wording in the current request'});
   if(repaired.dates||/\b(return|returning|round[ -]?trip)\b/i.test(text))return repaired;
   const dates=[...new Set([...(text.match(/\b\d{4}-\d{2}-\d{2}\b/g)??[]).filter(validDate),explicitNamedDate(text)].filter(Boolean))];
@@ -115,7 +138,7 @@ Use travel_preferences only to show or propose an explicitly requested persisten
 For an unrelated request, use clarify_request with a brief, friendly redirect to finding flights. Preserve the existing trip. For an unsupported or unresolved request, use clarify_request to explain the limitation and offer the next supported step.
 
 TRIP INTERPRETATION
-City names mean all airports in the existing group. Explicit airport names or codes override the city group. Do not silently drop or replace constraints. "Economy instead" changes only cabin. For "business only" also set cabinOnly. "Direct only" sets nonstopOnly. "Prefer nonstop" sets sort=nonstop without creating a hard constraint. Budget is always USD. Treat a bare budget number as USD and never ask which currency the traveler means. Clear a budget with maxPriceUsd=null when asked.
+City names mean all airports in the existing group. Explicit airport names or codes override the city group. Do not silently drop or replace constraints. "Economy instead" changes only cabin. For "business only" also set cabinOnly. "Direct only" sets nonstopOnly. "Prefer nonstop" sets sort=nonstop without creating a hard constraint. Budget is always USD. Treat a bare budget number as USD and never ask which currency the traveler means. Clear a budget with maxPriceUsd=null when asked. Pass place names exactly as the traveler wrote them, misspellings included. The application resolves places and asks when unsure. If a follow-up could mean two different things, such as "the 3rd" as a date or as an option, ask which with clarify_request and do not search. "Back to business" changes the cabin. It never means a return flight.
 Dates: "next week" means dates.mode=nextWeek. "Coming week" or "next seven days" means rolling. An explicit day means exact. Two dates mean range. Plus or minus 1, 3 or 7 days means flex. "Three days later" shifts the currently selected date and is not a plus-or-minus window. Resolve named weekdays against the injected current date. For genuinely ambiguous wording such as "2/10", call find_flights with dates.mode=ambiguous and options listing every reading as YYYY-MM-DD, in the same call as the origin, destination and cabin you already know. The application asks the question and keeps the trip. Never ask about a date in prose instead. Do not create a range over 31 dates.
 
 ACTION CHECK BEFORE find_flights
