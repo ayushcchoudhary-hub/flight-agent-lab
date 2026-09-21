@@ -563,3 +563,31 @@ test('a leading article does not defeat place resolution',()=>{
   assert.deepEqual(resolveLocation('the Osaka').map(x=>x.code),['KIX|ITM|UKB']);
   assert.ok(resolveLocation('a Sidney').length>1);
 });
+
+// Phase 1 checkout handoff: every results reply links to the same search on
+// the product site. The path must parse under the product's own URL grammar.
+import { productSearchPath } from '../search.mjs';
+const PRODUCT_PATH_RE=/^\/search\/([A-Z]{3}(?:\|[A-Z]{3})*)-([A-Z]{3}(?:\|[A-Z]{3})*)-(\d{6})(?:-r(\d{6}))?(?:-([a-z]+))?(?:-f([0137]))?$/i;
+test('a results reply links to the same search on the product site',async()=>{
+  const {c}=setup();
+  const reply=await c.find({origin:'London',destination:'New York',dates:{mode:'exact',start:'2026-10-03'},cabin:'premium'});
+  assert.match(reply.text,/continue on CommonSwyft/i);
+  assert.match(reply.text,/https:\/\/commonswyft\.com\/search\/LHR%7CLGW%7CLCY%7CSTN%7CLTN-JFK%7CEWR%7CLGA-031026-premium$/m);
+});
+test('the product search path parses under the product grammar for every date mode',async()=>{
+  for(const dates of [{mode:'exact',start:'2026-10-03'},{mode:'nextWeek'},{mode:'rolling'},{mode:'range',start:'2026-10-01',end:'2026-10-04'},{mode:'flex',start:'2026-10-03',flex:7}]){
+    const {c}=setup();
+    await c.find({origin:'HND|NRT',destination:'DXB|AUH',dates});
+    const path=decodeURIComponent(productSearchPath(c.publicState()));
+    assert.match(path,PRODUCT_PATH_RE,`${dates.mode} -> ${path}`);
+  }
+});
+test('the handoff link never carries a price',async()=>{
+  const {c}=setup();
+  const reply=await c.find({origin:'London',destination:'New York',maxPriceUsd:700});
+  const link=reply.text.match(/https:\/\/commonswyft\.com\S+/)[0];
+  assert.ok(!/700|usd|price/i.test(link));
+});
+test('no link before there is a searchable trip',()=>{
+  assert.equal(productSearchPath({origin:null,destination:null,dates:null}),null);
+});

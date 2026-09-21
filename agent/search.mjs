@@ -338,6 +338,30 @@ function cabinLabel(state) {
   return name;
 }
 
+// Phase 1 of the checkout handoff (PRODUCT-ROADMAP.md): send the traveler to
+// the same search on the product site, where selection, quoting and checkout
+// already live. The link carries route, date window and cabin only, never a
+// price, so the page always shows current fares. The grammar is the product's
+// public URL: /search/{from}-{to}-{ddmmyy}[-cabin][-fN], pipe-joined metro
+// codes, flex 1, 3 or 7. Cabin tokens already match.
+export const PRODUCT_WEB_BASE = process.env.PRODUCT_WEB_BASE || 'https://commonswyft.com';
+const ddmmyy = iso => `${iso.slice(8, 10)}${iso.slice(5, 7)}${iso.slice(2, 4)}`;
+const dayCount = (from, to) => Math.round((Date.parse(`${to}T00:00:00Z`) - Date.parse(`${from}T00:00:00Z`)) / 86400000);
+export function productSearchPath(state) {
+  const { origin, destination, dates, cabin } = state;
+  if (!origin?.code || !destination?.code || !dates?.selected) return null;
+  const width = dayCount(dates.from, dates.to);
+  // An exact date has no window. A range maps to the nearest product window
+  // around the selected date; the page floors past dates itself.
+  const flex = dates.mode === 'flex' ? [1, 3, 7].find(n => n >= (width / 2)) ?? 7
+    : width <= 0 ? 0 : width <= 2 ? 1 : width <= 6 ? 3 : 7;
+  const cabinSuffix = cabin && cabin !== 'any' ? `-${cabin}` : '';
+  // The product encodes the metro pipe as %7C in the links it shares.
+  const code = value => value.replaceAll('|', '%7C');
+  return `/search/${code(origin.code)}-${code(destination.code)}-${ddmmyy(dates.selected)}${cabinSuffix}${flex ? `-f${flex}` : ''}`;
+}
+export const productSearchUrl = state => { const path = productSearchPath(state); return path ? `${PRODUCT_WEB_BASE}${path}` : null; };
+
 function present(state, response, cached, mode = 'synthetic') {
   const staging = mode === 'staging' || mode === 'replay';
   const replay = mode === 'replay';
@@ -373,6 +397,7 @@ function present(state, response, cached, mode = 'synthetic') {
     shortlist.length?'Prices are estimates and may change.':null,
     !staging?'Missing flight times and exact seat counts are not available.':null,
     shortlist.length?'You can ask me to change the dates, cabin or airport.':null,
+    productSearchUrl(state)?`To pick a flight and check out, continue on CommonSwyft:\n${productSearchUrl(state)}`:null,
   ].filter(Boolean).join('\n\n');
   return { status: 'results', text, dataMode: mode, query: response.query, shortlist, cached, totalFound: response.totalFound, matchingCount: matching.length };
 }
