@@ -14,7 +14,11 @@ import {applyPreferences} from './preferences.mjs';
 const value=(name,fallback)=>process.argv.find(v=>v.startsWith(`--${name}=`))?.slice(name.length+3)??fallback;
 if(!process.argv.includes('--live'))throw Error('Pass --live to authorize bounded OpenRouter model calls.');
 const candidateModel=value('candidate','openai/gpt-5.6-terra'),candidateEffort=value('candidate-effort','medium');
-const judgeModel=value('judge','anthropic/claude-sonnet-4.6'),judgeEffort=value('judge-effort','low');
+// Judge default raised 2026-09-21: sonnet-4.6 at low effort passed and failed
+// identical replies on consecutive runs; medium effort removed the flips and
+// a stronger model reads multi-turn context more reliably. About 1.7x the
+// judge cost per call at the same token counts.
+const judgeModel=value('judge','anthropic/claude-opus-5'),judgeEffort=value('judge-effort','medium');
 const maxCost=Number(value('max-cost','3')),maxCalls=Number(value('max-calls','110'));
 const suite=value('suite','v1'),sourceCases=suite==='v2'?HARDENING_CASES_V2:HARDENING_CASES,clock=suite==='v2'?HARDENING_V2_CLOCK:HARDENING_CLOCK;
 if(!['v1','v2'].includes(suite))throw Error('Choose suite v1 or v2. No model calls were made.');
