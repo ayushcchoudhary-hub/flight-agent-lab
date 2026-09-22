@@ -173,6 +173,37 @@ account. Options discussed, none decided:
 Questions for the CommonSwyft team are drafted in the chat history for
 2026-09-21 and should be recorded here once answered.
 
+## Conversation storage and memory: built, off (2026-09-22)
+
+Conversations can be stored in Postgres for evaluation, and the last origin
+a browser searched from can be offered back as a disclosed default. Both are
+off unless `CONVERSATION_STORE=postgres` and `DATABASE_URL` are set.
+
+- Schema: `agent/db/migrations/`, applied with `agent/tools/migrate.mjs` using
+  the database owner login, passed for that command only and never stored.
+- The application login is created by `agent/tools/create-app-role.mjs` in
+  SQL, with row access only. Do not create it through a provider console:
+  Neon adds console-created roles to an admin group.
+- Development database: Neon, Frankfurt, Postgres 16. Production would move
+  to the product's Postgres; the schema has nothing provider-specific.
+- Text is redacted before it is written (emails, keys, card, phone and
+  passport numbers). Conversations expire after 90 days and are purged hourly.
+- A visitor is a random browser cookie, set only when storage is on. A
+  browser can read back only its own conversations; no route lists them.
+- Memory holds the last origin only. Cabin, dates and budget stay one-off.
+  A saved home airport takes precedence.
+- A storage failure is traced and never reaches the traveler.
+- `agent/tools/store-smoke.mjs` checks all of this against a real database.
+
+Before switching it on:
+
+1. Add a privacy-page sentence on conversation storage and its retention.
+2. Decide on held-out case D1. It asserts that a new conversation must not
+   reuse London from a closed search. Remembering the last origin changes
+   that for the origin only (economy must still not carry over). The case
+   runs without storage, so it passes today, but its requirement no longer
+   describes the product once storage is on.
+
 ## Recommended next decision
 
 Keep the search contract stable while testing it with real users. The next
