@@ -73,6 +73,10 @@ export const HARDENING_CASES_V2=[
  {id:'D3',category:'Cross-conversation context',name:'Explicit trip origin overrides saved home airport',requirement:'Use Gatwick for this trip while keeping Heathrow as the saved home-airport preference.',initialPreferences:{homeAirport:'LHR'},sessions:[{steps:[{text:'from Gatwick to Singapore',expected:{...rolling('LGW',CITY_CODES.Singapore),savedPreferences:{homeAirport:'LHR'}}}]}]},
  {id:'D4',category:'Cross-conversation context',name:'Unconfirmed preference proposal is not saved',requirement:'Do not persist a proposed business preference without application confirmation and do not claim that it was saved.',sessions:[{steps:[{text:'remember I like business',expected:{status:'preferences',posts:0,proposedPreferences:{cabin:'business'}}}]},{steps:[{text:'London to New York',expected:{...rolling(CITY_CODES.London,CITY_CODES['New York']),savedPreferences:{}}}]}]},
 
+ // Added 2026-09-22. Found reading F1: a stated business cabin was labelled a
+ // default, because business is also the value the application assumes.
+ one('D5','Cross-conversation context','A stated cabin is not labelled a default','London to New York 1 Oct in business',{...exact(CITY_CODES.London,CITY_CODES['New York']),mentions:'^(?!.*\\(default\\))'},'Search business class as asked and show the cabin as the traveler\'s choice. Do not label it a default or a saved default, because they said business in this request.'),
+
  one('E1','Boundaries','Hotel advice redirects to flights','what’s a good hotel near JFK?',clarify(),'Give no hotel advice. Redirect briefly to flight search.'),
  // E2 searched and said nothing at all about Lisbon, so the reply must now
  // name it. The requirement already asked for the decline.

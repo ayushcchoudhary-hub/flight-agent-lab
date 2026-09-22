@@ -3,6 +3,7 @@ import {localPreferenceStore,accountPreferenceStore,applyPreferences,preferenceA
 import {createPreferencesDevBackend} from '../preferences-dev-backend.mjs';
 import {SearchConversation} from '../search.mjs';
 import {makeFixtureAdapter} from '../fixtures.mjs';
+import {repairExplicitToolArguments} from '../model.mjs';
 test('preferences survive a new store, replace atomically and can be forgotten',async()=>{const dir=await mkdtemp(join(tmpdir(),'flight-prefs-'));try{const path=join(dir,'p.json');const store=localPreferenceStore(path);assert.deepEqual(await store.read(),{});await store.replace({homeAirport:'LHR',cabin:'economy',preferNonstop:true});assert.equal((await localPreferenceStore(path).read()).homeAirport,'LHR');await store.replace({cabin:'business'});assert.deepEqual(await store.read(),{cabin:'business'});await store.replace({});assert.deepEqual(await store.read(),{});}finally{await rm(dir,{recursive:true,force:true});}});
 test('defaults are soft, current trip changes do not rewrite stored preferences',async()=>{const p={homeAirport:'LHR',cabin:'economy',preferNonstop:true};const c=new SearchConversation({adapter:{mode:'replay'}});applyPreferences(c,p);assert.equal(c.state.origin.code,'LHR');assert.equal(c.state.sort,'nonstop');assert.equal(c.state.nonstopOnly,false);await c.find({origin:'LGW',cabin:'business'});assert.equal(c.state.cabin,'business');assert.equal(p.cabin,'economy');});
 test('preference proposal is not a save and validates airport, cabin, unknown fields',()=>{const saved={cabin:'economy'};const r=preferenceAction({action:'propose',homeAirport:'LHR'},saved);assert.equal(r.proposedPreferences.homeAirport,'LHR');assert.deepEqual(saved,{cabin:'economy'});assert.match(r.text,/Nothing has been saved/);assert.throws(()=>validatePreferences({homeAirport:'ZZZ'}));assert.throws(()=>validatePreferences({userId:'someone'}));});
@@ -60,4 +61,20 @@ test('the cabin label says whether it is assumed, saved or asked for',async()=>{
  const asked=await header(null,{origin:'London',destination:'New York',cabin:'premium'});
  assert.match(asked,/· Premium ·/);
  assert.ok(!/default\)/.test(asked),'a cabin the traveler chose is not a default');
+ // Found reading held-out v2 F1: the traveler typed "business" and the header
+ // still read "Business class (default)", because the cabin matched the value
+ // already held.
+ const statedDefault=await header(null,{origin:'London',destination:'New York',cabin:'business'});
+ assert.match(statedDefault,/· Business ·/);
+ assert.ok(!/default\)/.test(statedDefault),'a stated cabin is a choice even when it equals the default');
+ const statedSaved=await header({cabin:'economy'},{origin:'London',destination:'New York',cabin:'economy'});
+ assert.ok(!/default\)/.test(statedSaved),'a stated cabin is a choice even when it equals the saved one');
+});
+
+test('a cabin resent with no cabin wording stays a saved default',()=>{
+ const trip={cabin:'economy',dates:null,origin:null,destination:null,originFromPreference:false};
+ const resent=repairExplicitToolArguments('nonstop only','find_flights',{cabin:'economy',nonstopOnly:true},()=>{},trip);
+ assert.equal('cabin' in resent,false,'an unchanged cabin the request never mentions must not look stated');
+ const stated=repairExplicitToolArguments('economy please','find_flights',{cabin:'economy'},()=>{},trip);
+ assert.equal(stated.cabin,'economy');
 });

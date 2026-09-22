@@ -190,7 +190,9 @@ function mergeTripState(current, patch, today) {
   for (const field of ['cabin', 'cabinOnly', 'sort', 'maxPriceUsd', 'nonstopOnly']) {
     if (field in patch) next[field] = patch[field];
   }
-  if ('cabin' in patch && patch.cabin !== current.cabin) next.cabinSource = 'stated';
+  // A stated cabin is a choice even when it matches the value already held,
+  // so the header must not label it a default.
+  if ('cabin' in patch) next.cabinSource = 'stated';
 
   let unresolved = null;
   for (const field of ['origin', 'destination']) {
