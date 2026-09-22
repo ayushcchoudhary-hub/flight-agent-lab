@@ -77,4 +77,7 @@ test('a cabin resent with no cabin wording stays a saved default',()=>{
  assert.equal('cabin' in resent,false,'an unchanged cabin the request never mentions must not look stated');
  const stated=repairExplicitToolArguments('economy please','find_flights',{cabin:'economy'},()=>{},trip);
  assert.equal(stated.cabin,'economy');
+ // A synonym states a cabin as plainly as the canonical name.
+ const synonym=repairExplicitToolArguments('coach is fine','find_flights',{cabin:'economy'},()=>{},trip);
+ assert.equal(synonym.cabin,'economy','a stated cabin survives even when it repeats the saved one');
 });

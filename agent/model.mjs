@@ -99,6 +99,10 @@ const WORDING={
   maxPriceUsd:/\b(?:usd|dollars?|budget|price|under|below|less than|limit|cap)\b|\$/i,
   refresh:/\b(?:refresh|check again|search again|latest availability|new search)\b/i,
 };
+// WORDING.cabin is the list that decides whether a cabin value was asked for.
+// Disclosure needs a broader one: "coach is fine" states a cabin as plainly as
+// "economy", and a stated cabin must not be reported as a default.
+const CABIN_WORDING=/\b(?:coach|basic economy|economy|business|premium|first|cabin|class|any cabin)\b/i;
 const GENERIC_PLACE_WORDS=new Set(['airport','international','regional','the','and','of','all','airports']);
 function namesPlace(text,place){
   const words=[place?.code,...String(place?.label??'').split(/[^A-Za-z]+/)].filter(word=>word&&word.length>2&&!GENERIC_PLACE_WORDS.has(word.toLowerCase()));
@@ -111,8 +115,10 @@ export function repairExplicitToolArguments(text,name,args,trace=()=>{},trip=nul
     if(!(field in repaired)||pattern.test(text))continue;
     if(isDefaultValue(field,repaired[field])){delete repaired[field];removed.push(field);}
     // A resent cabin is dropped as well: it sets the same value, and keeping it
-    // would turn a saved default into a stated choice in the header.
-    else if(repeatsTrip(field,repaired[field],trip)){if(field==='cabin')delete repaired.cabin;continue;}
+    // would turn a saved default into a stated choice in the header. A request
+    // that names a cabin in any recognised way keeps it, because the traveler
+    // did choose it.
+    else if(repeatsTrip(field,repaired[field],trip)){if(field==='cabin'&&!CABIN_WORDING.test(text))delete repaired.cabin;continue;}
     // A date the request never mentions is invented. Held-out v2 C2: "nonstop
     // only" arrived with dates=24 Sept and collapsed a week-long search to one
     // day. Answering an open date menu is the exception: "the first one" there
