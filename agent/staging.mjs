@@ -1,3 +1,4 @@
+import { validateDiscoverResponse } from './discover.mjs';
 import { readFile, stat } from 'node:fs/promises';
 import { createApiClient, flightSearchStatusQueryOptions } from './shared.mjs';
 import { requestWithRetry } from './retry.mjs';
@@ -16,6 +17,37 @@ export async function readStagingToken(path = process.env.AGENT_STAGING_TOKEN_FI
 
 // Only search creation and retrieval of searches created by this adapter are
 // permitted. Redirects are disabled so a session bearer cannot leave staging.
+// The deals feed is public and read-only. It is the one request the adapter
+// sends with a query string, so it is allowlisted separately: one path, two
+// parameters, both validated, never an auth header. The feed caches for ten
+// minutes, so the adapter does too, shared across chats, keeping a busy welcome
+// page to one request per city per ten minutes.
+const DISCOVER_PATH = '/v1/discover/flights';
+const DISCOVER_TTL_MS = 10 * 60 * 1000;
+const discoverCache = new Map();
+export const clearDiscoverCache = () => discoverCache.clear();
+export async function fetchDiscover({ metro, limit }, { base = STAGING_BASE, fetchImpl = fetch, trace = () => {}, now = Date.now } = {}) {
+  if (typeof metro !== 'string' || !/^[\p{L} .'-]{2,40}$/u.test(metro)) throw new Error('Invalid deals city.');
+  if (!Number.isInteger(limit) || limit < 1 || limit > 20) throw new Error('Invalid deals limit.');
+  const key = `${metro.toLowerCase()}|${limit}`, hit = discoverCache.get(key);
+  if (hit && now() - hit.at < DISCOVER_TTL_MS) return hit.value;
+  const url = new URL(`${base.replace(/\/$/, '')}/discover/flights`);
+  if (url.pathname !== DISCOVER_PATH) throw new Error('Operation is outside the deals allowlist.');
+  url.search = new URLSearchParams({ metro, limit: String(limit) }).toString();
+  const started = now();
+  let response;
+  try { response = await fetchImpl(new Request(url, { method: 'GET', redirect: 'error', signal: AbortSignal.timeout(10000) })); }
+  catch { throw new Error('The deals feed could not be reached.'); }
+  trace('discover_api', { metro, limit, status: response.status, latencyMs: now() - started });
+  let value;
+  if (response.status === 400) value = { unknownMetro: true };
+  else if (response.status === 503) value = { unavailable: true };
+  else if (!response.ok) throw new Error(`The deals feed is unavailable (HTTP ${response.status}).`);
+  else { let doc; try { doc = await response.json(); } catch { throw new Error('The deals feed returned an unexpected response.'); } value = { feed: validateDiscoverResponse(doc) }; }
+  discoverCache.set(key, { at: now(), value });
+  return value;
+}
+
 export function makeStagingAdapter({ authMode = 'session', getToken = readStagingToken, fetchImpl = fetch, trace = () => {}, maxSearches = 5, maxPolls = 4, wait = ms => new Promise(resolve => setTimeout(resolve, ms)) } = {}) {
   if (!['session', 'public'].includes(authMode)) throw new Error('Unknown staging auth mode.');
   const calls = [], snapshots = [], owned = new Set();
@@ -58,6 +90,7 @@ export function makeStagingAdapter({ authMode = 'session', getToken = readStagin
   });
   return {
     mode: 'staging', authMode, calls, snapshots,
+    discover: query => fetchDiscover(query, { fetchImpl, trace }),
     async search(query) {
       if (count >= maxSearches) throw new Error('Staging session search limit reached.');
       count++;
