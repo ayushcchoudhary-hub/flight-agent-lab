@@ -1,9 +1,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { SearchConversation, findTool, resolveLocation, isoToday } from '../search.mjs';
+import { SearchConversation, blockedByFilter, findTool, resolveLocation, isoToday } from '../search.mjs';
 import { makeFixtureAdapter } from '../fixtures.mjs';
 import { AIRPORTS } from '../shared.mjs';
-import { Agent, OpenRouterModel, PROMPT_VERSION, ScriptedDemoModel, compactForHistory, deterministicBoundary, repairExplicitToolArguments, systemPrompt } from '../model.mjs';
+import { Agent, OpenRouterModel, PROMPT_VERSION, ScriptedDemoModel, bookingHandoff, compactForHistory, deterministicBoundary, repairExplicitToolArguments, systemPrompt } from '../model.mjs';
 import { redact } from '../trace.mjs';
 
 const setup = (scenario = 'normal', today = '2026-09-18') => {
@@ -243,8 +243,10 @@ test('every results mode shows the price-change notice exactly once', async () =
 
 test('model tool allowlist blocks unknown actions and arbitrary request fields', async () => {
   const { c, adapter } = setup();
+  // "Book it" now has a deterministic answer, so it no longer reaches the
+  // model. The allowlist assertions are unchanged; only the input is.
   const agent = new Agent({ conversation: c, model: { complete: async () => toolMessage('pay_for_flight', { amount: 100 }) } });
-  assert.equal((await agent.respond('Book it')).status, 'error');
+  assert.equal((await agent.respond('Find me a flight to Rome')).status, 'error');
   assert.equal(postCount(adapter), 0);
   assert.equal((await c.find({ ...route, apiUrl: 'https://example.com' })).status, 'error');
   assert.equal(postCount(adapter), 0);
@@ -383,6 +385,156 @@ test('a payment request is refused deterministically and points to checkout',()=
   }
 });
 
+// Held-out v2 C1: "premium instead" under a USD 700 budget suggested other
+// dates while the same results held premium fares from USD 1,113.
+test('an empty list names the filter that removed the fares',async()=>{
+  const {c}=setup();
+  await c.find({origin:'London',destination:'New York',dates:{mode:'exact',start:'2026-10-03'},cabin:'premium',maxPriceUsd:700});
+  const blocked=await c.find({});
+  assert.equal(blocked.shortlist.length,0);
+  assert.match(blocked.text,/above your USD 700 budget\. Raise or remove the budget\?/);
+  assert.match(blocked.text,/starts at USD [\d,]+/);
+  assert.ok(!/try different dates/.test(blocked.text),'the date was never the blocker');
+  const dropped=await c.find({maxPriceUsd:null});
+  assert.ok(dropped.shortlist.length>0,'the fares were there all along');
+});
+
+test('a nonstop-only filter that empties the list says so',()=>{
+  const state={cabin:'business',maxPriceUsd:null,nonstopOnly:true,cabinOnly:false,dates:{from:'2026-10-03',to:'2026-10-03',strict:false}};
+  const rows=[{cabin:'business',direct:false,date:'2026-10-03',priceUsd:900}];
+  assert.match(blockedByFilter(state,rows),/Nothing nonstop is in these results on/);
+});
+
+test('nothing at all in the results still suggests other dates',async()=>{
+  const {c}=setup('empty');
+  const reply=await c.find(route);
+  assert.equal(reply.shortlist.length,0);
+  assert.match(reply.text,/Would you like to try different dates\?/);
+});
+
+// Held-out v2 C1 and C2: a sort, nonstop or budget change was answered with
+// "Using the same results", even when the visible rows changed.
+test('every applied refinement is named in the reply',async()=>{
+  const {c}=setup();
+  await c.find(route);
+  const sorted=await c.find({sort:'cheapest'});
+  assert.match(sorted.text,/Sorted by cheapest first\./);
+  assert.ok(!/^Using the same results/m.test(sorted.text),'the acknowledgement replaces the bare cache line');
+  assert.match(sorted.text,/same search/,'the reply still says no new availability check ran');
+  const again=await c.find({sort:'cheapest'});
+  assert.match(again.text,/Already sorted by cheapest first\./);
+  const nonstop=await c.find({nonstopOnly:true});
+  assert.match(nonstop.text,/Showing nonstop flights only\./);
+  const budget=await c.find({maxPriceUsd:700});
+  assert.match(budget.text,/Budget set to USD 700\./);
+  const dropped=await c.find({maxPriceUsd:null});
+  assert.match(dropped.text,/Budget removed\./);
+  const relaxed=await c.find({nonstopOnly:false});
+  assert.match(relaxed.text,/Nonstop-only filter removed\./);
+  const cabinOnly=await c.find({cabinOnly:true});
+  assert.match(cabinOnly.text,/Showing business class only\./);
+});
+
+test('a first search is not narrated as a change',async()=>{
+  const {c}=setup();
+  const first=await c.find({...route,sort:'cheapest',nonstopOnly:true});
+  assert.ok(!/Sorted by|Showing nonstop/.test(first.text),first.text.slice(0,300));
+});
+
+test('an active non-default sort shows in the results header',async()=>{
+  const {c}=setup();
+  const recommended=await c.find(route);
+  assert.ok(!/Cheapest first|Fastest first|Nonstop first/.test(recommended.text),'the default sort is not announced');
+  const cheapest=await c.find({sort:'cheapest'});
+  assert.match(cheapest.text.split('\n\n')[1],/· Cheapest first$/m);
+  const fastest=await c.find({sort:'fastest'});
+  assert.match(fastest.text,/· Fastest first/);
+});
+
+// Held-out v2 E2: "London to New York 1 Oct, also is Lisbon nice in winter?"
+// searched and said nothing about the second question.
+test('an off-topic question asked with a flight request is answered above the results',async()=>{
+  const {c}=setup();
+  const aside='I can’t say much about Lisbon in winter. I can search flights there if you like.';
+  const reply=await c.find({...route,aside});
+  assert.equal(reply.status,'results');
+  assert.ok(reply.text.startsWith(`SYNTHETIC FLIGHT DATA. These are example results.\n\n${aside}`),reply.text.slice(0,200));
+  assert.equal('aside' in c.publicState(),false,'an aside is copy for one reply, not trip state');
+  const next=await c.find({sort:'cheapest'});
+  assert.ok(!next.text.includes('Lisbon'),'the aside does not persist into the next reply');
+});
+
+test('an unsafe or oversized aside cannot reach the traveler',async()=>{
+  const {c}=setup();
+  const claimed=await c.find({...route,aside:'I have booked that for you.'});
+  assert.ok(!claimed.text.includes('booked that for you'),'a claimed booking is dropped');
+  assert.equal(claimed.status,'results');
+  const internal=await c.find({...route,aside:'The policy snapshot has no weather data.'});
+  assert.ok(!internal.text.includes('policy snapshot'),'internal detail is dropped');
+  const tooLong=await c.find({...route,aside:'x'.repeat(201)});
+  assert.equal(tooLong.status,'error');
+});
+
+test('the prompt tells the model to decline an off-topic question and still search',()=>{
+  const {c}=setup();
+  const prompt=systemPrompt(c,'Europe/London',{});
+  assert.match(prompt,/aside field/);
+  assert.match(prompt,/still call find_flights/);
+});
+
+// Held-out v2 F1: after a results reply carrying the checkout link, "book it"
+// reached the model and came back with "booking and checkout are not available
+// here", ignoring the link shown one message earlier.
+test('a bare booking intent answers with the checkout link for the active search',async()=>{
+  const {c,adapter}=setup();
+  const model={complete:async()=>{throw Error('model should not run');}};
+  const agent=new Agent({conversation:c,model});
+  await c.find({origin:'Tokyo',destination:'Dubai',dates:{mode:'exact',start:'2026-09-30'},cabin:'business'});
+  for(const request of ['book it','buy it','checkout','I’ll take it','ok book it please']){
+    const reply=await agent.respond(request);
+    assert.equal(reply.status,'clarify',request);
+    assert.match(reply.text,/Booking happens on CommonSwyft/,request);
+    assert.match(reply.text,/https:\/\/commonswyft\.com\/search\/HND%7CNRT-DXB%7CAUH-300926-business/,request);
+    assert.doesNotMatch(reply.text,/booked|not available here/i,request);
+  }
+  const named=await agent.respond('book option B');
+  assert.match(named.text,/option B/);
+  assert.equal(postCount(adapter),1,'a booking handoff never searches again');
+});
+
+test('a booking intent with no active search says what to search first',async()=>{
+  const {c,adapter}=setup();
+  const agent=new Agent({conversation:c,model:{complete:async()=>{throw Error('model should not run');}}});
+  const reply=await agent.respond('book it');
+  assert.equal(reply.status,'clarify');
+  assert.match(reply.text,/Booking happens on CommonSwyft/);
+  assert.match(reply.text,/route and date/i);
+  assert.ok(!/https:/.test(reply.text),'no link before there is a search to link to');
+  assert.equal(postCount(adapter),0);
+});
+
+test('a booking intent that involves payment keeps the payment refusal',()=>{
+  for(const request of ['book option A with my saved card','pay for option B','I approve the payment, go ahead']){
+    const reply=deterministicBoundary(request,{origin:{code:'LHR'},destination:{code:'JFK'},dates:{mode:'exact',from:'2026-10-01',to:'2026-10-01',selected:'2026-10-01'},cabin:'business'});
+    assert.match(reply.text,/can’t book or charge a card here/,request);
+  }
+});
+
+test('a question about booking is not treated as an instruction to hand off',()=>{
+  for(const text of ['can I book a hotel too?','do you take American Express?','book me a return flight to Rome']){
+    assert.equal(bookingHandoff(text,null),null,`${text} is not a bare booking intent`);
+  }
+});
+
+test('a failed search gets no checkout link',async()=>{
+  const {c}=setup('unavailable');
+  const failed=await c.find(route);
+  assert.equal(failed.status,'error');
+  const reply=bookingHandoff('book it',c.publicState());
+  assert.match(reply.text,/Tell me the route and date you want/);
+  assert.ok(!/https?:\/\//.test(reply.text),'no link for results the traveler never saw');
+});
+
 test('a policy question about payment still reaches grounded retrieval',()=>{
   // The refusal must not swallow questions the privacy snapshot answers.
   for(const question of ['do you sell my data?','what is your privacy policy?','do you store card details?','what are your terms?']){
@@ -490,11 +642,11 @@ test('every advertised top-level field is accepted together',async()=>{
   const reply=await c.find({
     origin:'LHR',destination:'JFK',dates:sampleDates('exact'),
     cabin:schemaProps.cabin.enum[0],cabinOnly:false,
-    sort:schemaProps.sort.enum[0],maxPriceUsd:900,nonstopOnly:false,
+    sort:schemaProps.sort.enum[0],maxPriceUsd:900,nonstopOnly:false,aside:'I can’t help with that.',
   });
   assert.notEqual(reply.status,'error');
   const declared=Object.keys(schemaProps);
-  const covered=['origin','destination','dates','cabin','cabinOnly','sort','maxPriceUsd','nonstopOnly','refresh'];
+  const covered=['origin','destination','dates','cabin','cabinOnly','sort','maxPriceUsd','nonstopOnly','refresh','aside'];
   const uncovered=declared.filter(key=>!covered.includes(key));
   assert.deepEqual(uncovered,[],`schema fields with no acceptance test: ${uncovered.join(', ')}`);
 });

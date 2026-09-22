@@ -1,6 +1,6 @@
 import { flightDetails,readableDate } from './flight-details.mjs';
 import { AIRPORTS, METRO_GROUPS, expandMetro, labelForValue, rankAirportSearch, nearMatches, collapseToGroups, hubsAmong, countryAlias, shiftIso, flexRange, getResultsView, displayPriceUsd } from './shared.mjs';
-import { safeSearchError } from './customer-copy.mjs';
+import { safeCustomerCopy, safeSearchError } from './customer-copy.mjs';
 
 export const WELCOME = 'Where would you like to fly?\n\nTry “To New York”, “London to Singapore”, or “Dubai to London, economy”.\n\nDefaults: one-way · business class · today through the next 7 days.\nSearch only. There is no booking or checkout.';
 const cabins = ['business', 'economy', 'premium', 'first', 'any'];
@@ -111,6 +111,7 @@ export const findTool = {
         nonstopOnly: { type: 'boolean', description: 'True when user insists nonstop/direct only, not merely a preference.' },
         maxPriceUsd: { type: ['number', 'null'], description: 'Explicit USD total budget. Null clears the budget. Ask about currency if ambiguous.' },
         refresh: { type: 'boolean', description: 'True only when user asks to refresh/check availability again.' },
+        aside: { type: 'string', maxLength: 200, description: 'One or two short sentences answering a non-travel question asked in the same message, by saying you cannot help with it and offering the travel use case. Example: "I can’t say much about Lisbon in winter. I can search flights there if you like." Omit when the request is only about flights.' },
       },
     },
   },
@@ -122,6 +123,7 @@ function validatePatch(p) {
   if (Object.keys(p).some(k => !keys.includes(k))) throw new Error('Unsupported tool field.');
   for (const field of ['origin', 'destination']) if (field in p && (typeof p[field] !== 'string' || !p[field].trim() || p[field].length > 120)) throw new Error(`Invalid ${field}.`);
   if ('cabin' in p && !cabins.includes(p.cabin)) throw new Error('Invalid cabin.');
+  if ('aside' in p && (typeof p.aside !== 'string' || p.aside.length > 200)) throw new Error('Invalid aside.');
   if ('sort' in p && !sorts.includes(p.sort)) throw new Error('Invalid sort.');
   for (const field of ['cabinOnly', 'nonstopOnly', 'refresh']) if (field in p && typeof p[field] !== 'boolean') throw new Error(`Invalid ${field}.`);
   if ('maxPriceUsd' in p && p.maxPriceUsd !== null && (typeof p.maxPriceUsd !== 'number' || !Number.isFinite(p.maxPriceUsd) || p.maxPriceUsd <= 0)) throw new Error('Budget must be a positive USD amount or null.');
@@ -188,7 +190,9 @@ function mergeTripState(current, patch, today) {
   for (const field of ['cabin', 'cabinOnly', 'sort', 'maxPriceUsd', 'nonstopOnly']) {
     if (field in patch) next[field] = patch[field];
   }
-  if ('cabin' in patch && patch.cabin !== current.cabin) next.cabinSource = 'stated';
+  // A stated cabin is a choice even when it matches the value already held,
+  // so the header must not label it a default.
+  if ('cabin' in patch) next.cabinSource = 'stated';
 
   let unresolved = null;
   for (const field of ['origin', 'destination']) {
@@ -210,7 +214,9 @@ export class SearchConversation {
   constructor({ adapter, today = () => isoToday(), trace = () => {} }) {
     this.adapter = adapter; this.today = today; this.trace = trace; this.state = newState();
   }
-  publicState() { const { snapshot, lastQuery, ...state } = this.state; return state; }
+  // hasResults marks a search that actually returned, so a caller can tell a
+  // completed trip apart from one whose search failed.
+  publicState() { const { snapshot, lastQuery, ...state } = this.state; return { ...state, hasResults: Boolean(snapshot) }; }
   async choose(number) {
     const pending = this.state.pending;
     if (!pending) return { status: 'clarify', text: 'There is no active numbered menu. Please type the city, airport or preference you want to change.' };
@@ -226,10 +232,16 @@ export class SearchConversation {
       validatePatch(patch);
       const today = this.today();
       if (!validDate(today)) throw new Error('Invalid test clock.');
+      // An off-topic question asked alongside a flight request is answered in
+      // one line above the results. It is copy for this reply only, so it is
+      // reviewed like any other model text and never merged into the trip.
+      const aside = 'aside' in patch ? safeCustomerCopy(patch.aside, '') : '';
+      if ('aside' in patch) { patch = { ...patch }; delete patch.aside; }
       const candidates = ambiguousDates(patch.dates, today);
       if (candidates) { patch = { ...patch }; delete patch.dates; }
 
       // 2. Merge the follow-up into a copy. Omitted fields remain unchanged.
+      const previous = this.state;
       const { next, unresolved } = mergeTripState(this.state, patch, today);
       this.state = next;
 
@@ -297,7 +309,8 @@ export class SearchConversation {
       next.snapshot = response;
       next.lastQuery = key;
       this.trace('search_result', { query, cached: Boolean(cached), count: response.totalFound, searchId: response.searchId });
-      return present(next, response, Boolean(cached), this.adapter.mode);
+      const applied = previous.lastQuery ? describeApplied(previous, next, patch) : [];
+      return present(next, response, Boolean(cached), this.adapter.mode, { aside, applied });
     } catch (error) {
       const internal = error instanceof Error ? error.message : String(error);
       this.trace('error', { text: internal });
@@ -362,15 +375,78 @@ export function productSearchPath(state) {
 }
 export const productSearchUrl = state => { const path = productSearchPath(state); return path ? `${PRODUCT_WEB_BASE}${path}` : null; };
 
-function present(state, response, cached, mode = 'synthetic') {
+// Held-out v2 C1 and C2: sort, nonstop and budget changes came back under
+// "Using the same results", which reads as nothing happened even when three
+// new fares appeared. Say what was applied instead, and say when the list was
+// already in the state the traveler asked for.
+const SORT_SENTENCE = { recommended: 'our recommended order', cheapest: 'cheapest first', fastest: 'fastest first', nonstop: 'nonstop first' };
+const SORT_HEADER = { cheapest: 'Cheapest first', fastest: 'Fastest first', nonstop: 'Nonstop first' };
+const cabinName = cabin => (cabin === 'any' ? 'any cabin' : cabin === 'business' ? 'business class' : cabin === 'premium' ? 'premium economy' : `${cabin} class`);
+
+export function describeApplied(previous, next, patch) {
+  const applied = [];
+  const changed = field => field in patch && patch[field] !== previous[field];
+  const restated = field => field in patch && patch[field] === previous[field];
+
+  if (changed('cabin')) applied.push(`Cabin changed to ${cabinName(next.cabin)}.`);
+  else if (restated('cabin')) applied.push(`Already searching ${cabinName(next.cabin)}.`);
+
+  if (changed('sort')) applied.push(`Sorted by ${SORT_SENTENCE[next.sort]}.`);
+  else if (restated('sort')) applied.push(`Already sorted by ${SORT_SENTENCE[next.sort]}.`);
+
+  if (changed('nonstopOnly')) applied.push(next.nonstopOnly ? 'Showing nonstop flights only.' : 'Nonstop-only filter removed.');
+  else if (restated('nonstopOnly') && next.nonstopOnly) applied.push('Already showing nonstop flights only.');
+
+  if (changed('cabinOnly')) applied.push(next.cabinOnly ? `Showing ${cabinName(next.cabin)} only.` : 'Other cabins are allowed again.');
+
+  if (changed('maxPriceUsd')) applied.push(next.maxPriceUsd === null ? 'Budget removed.' : `Budget set to USD ${next.maxPriceUsd}.`);
+  else if (restated('maxPriceUsd') && next.maxPriceUsd !== null) applied.push(`Budget is already USD ${next.maxPriceUsd}.`);
+
+  return applied;
+}
+
+// Held-out v2 C1: "premium instead" under a USD 700 budget answered "No
+// flights match those preferences in these results. Would you like to try
+// different dates?" while the cached results held premium fares from USD
+// 1,113. The date was never the problem. Name the filter that removed them,
+// and keep the date suggestion for when nothing matches at all.
+function activeFilters(state) {
+  const d = state.dates;
+  const filters = [];
+  if (state.maxPriceUsd !== null) filters.push({ key: 'budget', keep: r => displayPriceUsd(r) <= state.maxPriceUsd });
+  if (state.nonstopOnly) filters.push({ key: 'nonstop', keep: r => r.direct });
+  if (state.cabinOnly && state.cabin !== 'any') filters.push({ key: 'cabinOnly', keep: r => r.cabin === state.cabin });
+  if (d.strict) filters.push({ key: 'dates', keep: r => r.date >= d.from && r.date <= d.to });
+  return filters;
+}
+
+export function blockedByFilter(state, unfiltered, filters = activeFilters(state)) {
+  if (!filters.length || !unfiltered.length) return null;
+  const without = key => unfiltered.filter(row => filters.every(f => f.key === key || f.keep(row)));
+  const when = state.dates.from === state.dates.to ? `on ${readableDate(state.dates.from)}` : 'in this date range';
+  const cabinWord = state.cabin === 'any' ? 'Flights' : cabinName(state.cabin).replace(/^./, c => c.toUpperCase());
+
+  const overBudget = without('budget');
+  if (overBudget.length) {
+    const inCabin = state.cabin === 'any' ? overBudget : overBudget.filter(r => r.cabin === state.cabin);
+    const rows = inCabin.length ? inCabin : overBudget;
+    const cheapest = Math.min(...rows.map(displayPriceUsd));
+    const label = inCabin.length ? cabinWord : 'The cheapest fare';
+    return `${label} ${when} starts at USD ${cheapest.toLocaleString('en-US', { maximumFractionDigits: 0 })}, above your USD ${state.maxPriceUsd} budget. Raise or remove the budget?`;
+  }
+  if (without('nonstop').length) return `Nothing nonstop is in these results ${when}. Shall I include flights with a connection?`;
+  if (without('cabinOnly').length) return `No ${cabinName(state.cabin)} fares are in these results ${when}. Shall I show the other cabins?`;
+  if (without('dates').length) return 'Nothing matches inside those exact dates. Shall I show nearby dates?';
+  return 'Nothing in these results matches all of those filters together. Which one should I relax?';
+}
+
+function present(state, response, cached, mode = 'synthetic', { aside = '', applied = [] } = {}) {
   const staging = mode === 'staging' || mode === 'replay';
   const replay = mode === 'replay';
   const d = state.dates;
-  let results = response.results.filter(r => r.origin !== r.destination);
-  if (state.maxPriceUsd !== null) results = results.filter(r => displayPriceUsd(r) <= state.maxPriceUsd);
-  if (state.nonstopOnly) results = results.filter(r => r.direct);
-  if (state.cabinOnly && state.cabin !== 'any') results = results.filter(r => r.cabin === state.cabin);
-  if (d.strict) results = results.filter(r => r.date >= d.from && r.date <= d.to);
+  const unfiltered = response.results.filter(r => r.origin !== r.destination);
+  const filters = activeFilters(state);
+  const results = unfiltered.filter(row => filters.every(f => f.keep(row)));
   const view = getResultsView(results, state.sort);
   const matching = [], alternatives = [];
   for (const r of view.results) {
@@ -389,10 +465,13 @@ function present(state, response, cached, mode = 'synthetic') {
   const dateSummary=d.from===d.to?readableDate(d.from):`${readableDate(d.from)} – ${readableDate(d.to)}`;
   const text = [
     !staging?'SYNTHETIC FLIGHT DATA. These are example results.':replay?'Saved results. This is not a fresh availability check.':null,
-    `${state.origin.label} → ${state.destination.label}\n${dateSummary} · ${cabinLabel(state)} · One-way${state.maxPriceUsd !== null ? ` · Up to USD ${state.maxPriceUsd}` : ''}${state.nonstopOnly ? ' · Nonstop only' : ''}`,
+    aside||null,
+    `${state.origin.label} → ${state.destination.label}\n${dateSummary} · ${cabinLabel(state)} · One-way${state.maxPriceUsd !== null ? ` · Up to USD ${state.maxPriceUsd}` : ''}${state.nonstopOnly ? ' · Nonstop only' : ''}${SORT_HEADER[state.sort] ? ` · ${SORT_HEADER[state.sort]}` : ''}`,
     state.originFromPreference?`Using your saved home airport, ${state.origin.label}. Say where you are flying from to change it.`:null,
-    cached?'Using the same results. Say “refresh availability” for a new check.':null,
-    shortlist.length?`I found ${shortlist.length===1?'one option':`${shortlist.length} options`} for you${alternatives.length&&!matching.length?' on nearby dates or with different flight details':''}:`:'No flights match those preferences in these results. Would you like to try different dates?',
+    applied.length
+      ? `${applied.join(' ')}${cached ? ' This uses the same search. Say “refresh availability” for a new check.' : ''}`
+      : cached ? 'Using the same results. Say “refresh availability” for a new check.' : null,
+    shortlist.length?`I found ${shortlist.length===1?'one option':`${shortlist.length} options`} for you${alternatives.length&&!matching.length?' on nearby dates or with different flight details':''}:`:(blockedByFilter(state,unfiltered,filters)??'No flights match those preferences in these results. Would you like to try different dates?'),
     ...shortlist.map((r,i)=>`${String.fromCharCode(65+i)}. ${r.text}`),
     shortlist.length?'Prices are estimates and may change.':null,
     !staging?'Missing flight times and exact seat counts are not available.':null,

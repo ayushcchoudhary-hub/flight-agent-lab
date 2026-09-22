@@ -1,4 +1,4 @@
-import { findTool, welcomeFor, validDate, newState, resolveLocation } from './search.mjs';
+import { findTool, welcomeFor, validDate, newState, resolveLocation, productSearchUrl } from './search.mjs';
 import { preferencesTool, preferenceAction } from './preferences.mjs';
 import { policyTool, answerPolicy, supportReply } from './policy.mjs';
 import { requestWithRetry } from './retry.mjs';
@@ -9,7 +9,7 @@ const clarificationTool = { type: 'function', function: {
   parameters: { type: 'object', additionalProperties: false, required: ['question'], properties: { question: { type: 'string', maxLength: 400 } } },
 } };
 export const TOOLS = [findTool, clarificationTool, policyTool, preferencesTool];
-export const PROMPT_VERSION = 'flight-search-v1.4.1';
+export const PROMPT_VERSION = 'flight-search-v1.5.0';
 
 const supportEmail='support@commonswyft.com';
 // History carried three copies of every reply: result.text inside the tool
@@ -25,13 +25,38 @@ export function compactForHistory(result) {
   return { ...rest, shortlist: shortlist.map(({ text: row, timing, ...keep }) => keep) };
 }
 
-export function deterministicBoundary(text) {
+// A bare booking intent carries none of the option, flight, ticket or card
+// words the payment boundary looks for, so "book it" reached the model, which
+// refused and ignored the checkout link the results reply had just shown
+// (held-out v2 F1). The traveler is asking for the handoff, so answer with it.
+const BOOKING_VERB = String.raw`(?:book|buy|reserve|purchase|check\s?out|take|grab)`;
+const BOOKING_OBJECT = String.raw`(?:\s+(?:it|this|that|one|them|option\s+[a-c]|flight\s+[a-c]|the\s+(?:first|second|third)(?:\s+one)?|[a-c]))?`;
+const BOOKING_LEAD = String.raw`(?:(?:ok(?:ay)?|yes|sure|great|please)[,.!\s]+)*(?:(?:i(?:'|\u2019)?d\s+like\s+to|i(?:'|\u2019)?ll|i\s+want\s+to|i\s+would\s+like\s+to|let(?:'|\u2019)?s|can\s+(?:i|you)|could\s+you)\s+)?`;
+const BOOKING_TAIL = String.raw`(?:\s+(?:now|please|then|thanks|thank\s+you))*`;
+const BARE_BOOKING = new RegExp(String.raw`^${BOOKING_LEAD}${BOOKING_VERB}${BOOKING_OBJECT}${BOOKING_TAIL}[\s.!?]*$`, 'i');
+const namedOption = text => text.match(/\b(?:option|flight)\s+([a-c])\b/i)?.[1]?.toUpperCase() ?? null;
+
+export function bookingHandoff(text, state) {
+  if (!BARE_BOOKING.test(String(text ?? '').trim())) return null;
+  // A trip can be complete while its search failed, and no link was ever
+  // shown. Point at results the traveler actually received, or ask for a
+  // search first.
+  const link = state?.hasResults ? productSearchUrl(state) : null;
+  if (!link) return { status: 'clarify', text: 'Booking happens on CommonSwyft. Tell me the route and date you want, then I can point you to that search there.' };
+  const option = namedOption(text);
+  const pointer = option ? `\n\nLook for option ${option} from the list above on that page.` : '';
+  return { status: 'clarify', text: `Booking happens on CommonSwyft. Pick your flight here:\n${link}${pointer}` };
+}
+
+export function deterministicBoundary(text, state = null) {
   if (/\b(?:my|this)\b.{0,30}\b(?:ticket|flight|booking)\b.{0,30}\b(?:refund|refundable)\b|\b(?:refund|refundable)\b.{0,30}\b(?:my|this)\b.{0,30}\b(?:ticket|flight|booking)\b/i.test(text)) return {status:'policy',text:`Refund eligibility depends on the fare rules for the specific ticket. Please contact CommonSwyft support at ${supportEmail} with the booking reference.`};
   // Policy questions that happen to mention tickets or purchases still belong
   // to grounded policy retrieval. Consequential action requests stay below.
   if (/\b(?:refund|refundable|terms?|legal|privacy|personal data|analytics|card details|data protection)\b/i.test(text)) return null;
   if (/\b(?:checked bags?|baggage|luggage)\b/i.test(text)) return {status:'clarify',text:'I can’t guarantee baggage inclusion from these search results. Please confirm baggage directly with the airline before booking. I can still search the route and cabin for you.'};
   if (/\b(?:my|existing|booked)\b.{0,30}\b(?:ticket|flight|booking)\b|\b(?:cancel|rebook|check me in|passenger name)\b/i.test(text)) return {status:'clarify',text:`I can’t access or change an existing booking here. Please contact CommonSwyft support at ${supportEmail} with your booking reference.`};
+  const handoff = bookingHandoff(text, state);
+  if (handoff) return handoff;
   // A payment request is a consequential action, so the refusal is
   // deterministic rather than left to the model. Held-out v2 E5 and E6 both
   // reached the model instead, which refused correctly but never pointed the
@@ -74,6 +99,10 @@ const WORDING={
   maxPriceUsd:/\b(?:usd|dollars?|budget|price|under|below|less than|limit|cap)\b|\$/i,
   refresh:/\b(?:refresh|check again|search again|latest availability|new search)\b/i,
 };
+// WORDING.cabin is the list that decides whether a cabin value was asked for.
+// Disclosure needs a broader one: "coach is fine" states a cabin as plainly as
+// "economy", and a stated cabin must not be reported as a default.
+const CABIN_WORDING=/\b(?:coach|basic economy|economy|business|premium|first|cabin|class|any cabin)\b/i;
 const GENERIC_PLACE_WORDS=new Set(['airport','international','regional','the','and','of','all','airports']);
 function namesPlace(text,place){
   const words=[place?.code,...String(place?.label??'').split(/[^A-Za-z]+/)].filter(word=>word&&word.length>2&&!GENERIC_PLACE_WORDS.has(word.toLowerCase()));
@@ -85,7 +114,11 @@ export function repairExplicitToolArguments(text,name,args,trace=()=>{},trip=nul
   for(const [field,pattern] of Object.entries(WORDING)){
     if(!(field in repaired)||pattern.test(text))continue;
     if(isDefaultValue(field,repaired[field])){delete repaired[field];removed.push(field);}
-    else if(repeatsTrip(field,repaired[field],trip))continue;
+    // A resent cabin is dropped as well: it sets the same value, and keeping it
+    // would turn a saved default into a stated choice in the header. A request
+    // that names a cabin in any recognised way keeps it, because the traveler
+    // did choose it.
+    else if(repeatsTrip(field,repaired[field],trip)){if(field==='cabin'&&!CABIN_WORDING.test(text))delete repaired.cabin;continue;}
     // A date the request never mentions is invented. Held-out v2 C2: "nonstop
     // only" arrived with dates=24 Sept and collapsed a week-long search to one
     // day. Answering an open date menu is the exception: "the first one" there
@@ -136,6 +169,7 @@ For a flight request or refinement, use find_flights. Supply only fields the use
 For general privacy, terms, data handling, deletion-process or policy questions and their follow-ups, use lookup_policy. Never answer policy questions from model memory. General refund-policy questions also use lookup_policy. Ticket-specific refundability remains unsupported. Do not claim deletion or any account action happened.
 Use travel_preferences only to show or propose an explicitly requested persistent preference change. A proposal is not saved until the application receives separate user confirmation. Never silently store trip-specific changes.
 For an unrelated request, use clarify_request with a brief, friendly redirect to finding flights. Preserve the existing trip. For an unsupported or unresolved request, use clarify_request to explain the limitation and offer the next supported step.
+When one message mixes a flight request with a question you cannot help with, such as weather, sightseeing, whether a place is nice, restaurants or local advice, still call find_flights for the flight request and put the reply to the other question in the aside field. Say plainly that you cannot help with it and offer the travel use case in one or two short sentences, for example "I can't say much about Lisbon in winter. I can search flights there if you like." Never answer the off-topic question itself and never leave it unanswered.
 
 TRIP INTERPRETATION
 City names mean all airports in the existing group. Explicit airport names or codes override the city group. Do not silently drop or replace constraints. "Economy instead" changes only cabin. For "business only" also set cabinOnly. "Direct only" sets nonstopOnly. "Prefer nonstop" sets sort=nonstop without creating a hard constraint. Budget is always USD. Treat a bare budget number as USD and never ask which currency the traveler means. Clear a budget with maxPriceUsd=null when asked. Pass place names exactly as the traveler wrote them, misspellings included. The application resolves places and asks when unsure. If a follow-up could mean two different things, such as "the 3rd" as a date or as an option, ask which with clarify_request and do not search. "Back to business" changes the cabin. It never means a return flight.
@@ -216,7 +250,7 @@ export class Agent {
       this.trace('reply', result);
       return result;
     }
-    const boundary=deterministicBoundary(text);
+    const boundary=deterministicBoundary(text,this.conversation.publicState?.());
     if(boundary){const result=boundary;this.record([{role:'user',content:text},{role:'assistant',content:result.text}]);this.trace('boundary_reply',{kind:'unsupported_consequential_request'});this.trace('reply',result);return result;}
     try {
       const user = { role: 'user', content: text };

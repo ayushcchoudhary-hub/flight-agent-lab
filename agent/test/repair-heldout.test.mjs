@@ -56,10 +56,15 @@ test('held-out: kept fields without wording evidence are traced for review',()=>
   assert.deepEqual(events,[{type:'tool_argument_unverified',data:{fields:['cabin'],reason:'kept a non-default value with no matching wording in the current request'}}]);
 });
 
+// The cabin expectation was narrowed on 2026-09-22. A resent cabin still sets
+// the same value, but now marks the cabin as stated, so a saved or assumed
+// default would stop being disclosed. It is dropped when the request has no
+// cabin wording. Every other resent field is still passed through untraced.
 test('held-out: a resent copy of the current trip is kept without a review trace',()=>{
   const events=[],trip={cabin:'economy',maxPriceUsd:600,sort:'recommended',nonstopOnly:false,cabinOnly:false,dates:{from:'2026-10-01',to:'2026-10-01'}};
   const args={origin:'LHR',cabin:'economy',maxPriceUsd:600,dates:{mode:'exact',start:'2026-10-01'}};
-  assert.deepEqual(repairExplicitToolArguments('Heathrow only please','find_flights',args,(type,data)=>events.push({type,data}),trip),args);
+  const {cabin,...kept}=args;
+  assert.deepEqual(repairExplicitToolArguments('Heathrow only please','find_flights',args,(type,data)=>events.push({type,data}),trip),kept);
   assert.deepEqual(events,[]);
   repairExplicitToolArguments('Heathrow only please','find_flights',{origin:'LHR',nonstopOnly:true},(type,data)=>events.push({type,data}),trip);
   assert.deepEqual(events.map(e=>[e.type,e.data.fields]),[['tool_argument_unverified',['nonstopOnly']]]);
