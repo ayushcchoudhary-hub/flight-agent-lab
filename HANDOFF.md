@@ -151,6 +151,28 @@ Local ignored folders may contain historical raw reports or private reference
 material. They are not required to run the public project and must not be
 copied into a handoff bundle.
 
+## Checkout handoff: where it stands (2026-09-22)
+
+Phase 1 is built on branch `claude/search-handoff-link` and not yet merged:
+every results reply links to the same search on commonswyft.com, so
+selection, quoting and checkout happen on the product site. Held-out case
+F1 pins it.
+
+Phase 2, a checkout link by quote id, needs a Clerk session for the member:
+`POST /checkout-quotes` is Clerk-authenticated and binds the quote to the
+account. Options discussed, none decided:
+
+- Serve the chat page from a CommonSwyft subdomain (Clerk shares sessions
+  with subdomains by default). Needs one DNS record from CommonSwyft and a
+  domain mapping or load balancer on this project; the backend stays here.
+- Clerk OAuth, if CommonSwyft has its OAuth server enabled: the member
+  consents once and the agent holds a scoped token. No domain change.
+- A Clerk satellite domain does not fit: it requires a domain this project
+  controls DNS for, and run.app is not one.
+
+Questions for the CommonSwyft team are drafted in the chat history for
+2026-09-21 and should be recorded here once answered.
+
 ## Recommended next decision
 
 Keep the search contract stable while testing it with real users. The next
