@@ -177,7 +177,24 @@ function normalizePatch(patch) {
       delete normalized[field];
     }
   }
+  // Models fill every schema field, sending "" or 0 for what the traveler
+  // never said. A budget of zero is never a real budget: treat it as absent.
+  // null still means "clear the budget".
+  if (normalized.maxPriceUsd === 0) delete normalized.maxPriceUsd;
+  if ('aside' in normalized && (typeof normalized.aside !== 'string' || !normalized.aside.trim())) delete normalized.aside;
   return normalized;
+}
+
+// The same for discover_flights: an empty string, a zero budget or an empty
+// cabin means the traveler did not say. Held-out G1-G11 all failed live
+// because the model sent region "", maxPriceUsd 0 and aside "" alongside the
+// origin it had read correctly.
+function normalizeDiscoverArgs(args) {
+  if (!object(args)) return args;
+  const out = { ...args };
+  for (const key of ['origin', 'region', 'aside', 'cabin']) if (key in out && (out[key] == null || (typeof out[key] === 'string' && !out[key].trim()))) delete out[key];
+  if ('maxPriceUsd' in out && (out.maxPriceUsd == null || out.maxPriceUsd === 0)) delete out.maxPriceUsd;
+  return out;
 }
 
 // An ambiguous date is a clarification, not a search. The model still calls
@@ -279,6 +296,7 @@ export class SearchConversation {
 
   async discover(args = {}) {
     try {
+      args = normalizeDiscoverArgs(args);
       validateDiscoverArgs(args);
       if (typeof this.adapter.discover !== 'function') return { status: 'clarify', text: noCurrentDeals(null) };
       if (args.cabin === 'economy') return { status: 'clarify', text: NO_ECONOMY_DEALS };

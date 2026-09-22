@@ -771,3 +771,25 @@ test('history is left untouched when it fits',()=>{
   const {messages,dropped}=fitHistory({role:'system',content:'s'},[[{role:'user',content:'a'}]],{role:'user',content:'b'});
   assert.equal(dropped,0); assert.equal(messages.length,3);
 });
+
+// Same class as the discover failure: a model filling every field sends a
+// zero budget on an ordinary search, which returned an error.
+test('a zero budget or empty aside from the model is treated as not given',async()=>{
+  const {c}=setup();
+  const reply=await c.find({origin:'London',destination:'New York',maxPriceUsd:0,aside:''});
+  assert.equal(reply.status,'results');
+  assert.equal(c.publicState().maxPriceUsd,null);
+  const cleared=await c.find({maxPriceUsd:null});
+  assert.equal(cleared.status,'results','null still clears a budget');
+});
+
+test('every optional find_flights field sent empty is accepted',async()=>{
+  const props=findTool.function.parameters.properties;
+  // A field may declare several types, e.g. ["number","null"]; use the first real one.
+  const kind=v=>[].concat(v.type).find(t=>t!=='null');
+  const empty=Object.fromEntries(Object.entries(props).filter(([k])=>!['origin','destination','dates'].includes(k)).map(([k,v])=>[k,kind(v)==='string'?(v.enum?v.enum[0]:''):kind(v)==='number'?0:kind(v)==='boolean'?false:null]).filter(([,v])=>v!==null));
+  assert.ok('maxPriceUsd' in empty,'the budget field must be part of this check');
+  const {c}=setup();
+  const reply=await c.find({origin:'London',destination:'New York',...empty});
+  assert.notEqual(reply.status,'error',JSON.stringify(empty));
+});

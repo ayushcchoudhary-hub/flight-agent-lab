@@ -306,3 +306,32 @@ for (const item of HARDENING_CASES_V2.filter(c => c.category === 'Discover')) {
     }
   });
 }
+
+// Held-out G1-G11 all failed live: the model read the origin correctly but
+// filled every other field with an empty value (region "", maxPriceUsd 0,
+// aside ""), and validation rejected the zero budget. The reference replay
+// above missed it because its calls were written the way a person would.
+// These replay the calls the way the model actually sends them.
+const modelStyle = intended => ({ origin: '', cabin: 'business', region: '', maxPriceUsd: 0, aside: '', ...intended });
+for (const item of HARDENING_CASES_V2.filter(c => c.category === 'Discover')) {
+  test(`held-out ${item.id} passes when the model fills every field`, async () => {
+    const adapter = makeFixtureAdapter(item.scenario ?? 'normal');
+    const conversation = new SearchConversation({ adapter, today: () => HARDENING_V2_CLOCK });
+    const preferences = { ...(item.initialPreferences ?? {}) };
+    applyPreferences(conversation, preferences);
+    const model = { complete: async messages => ({ tool_calls: [{ id: 'ref', type: 'function', function: { name: 'discover_flights', arguments: JSON.stringify(modelStyle(INTENDED[messages.at(-1).content])) } }] }) };
+    const agent = new Agent({ conversation, model, preferences });
+    for (const step of item.steps) {
+      const result = await agent.respond(step.text);
+      const grade = gradeV2Step(step.expected, result, conversation, adapter, preferences);
+      assert.ok(grade.pass, `${item.id} "${step.text}": ${JSON.stringify(grade.checks.filter(c => !c.pass))}`);
+    }
+  });
+}
+
+test('the exact arguments the model sent in the failed run now show deals', async () => {
+  const { c } = setup();
+  const reply = await c.discover({ origin: 'London', cabin: 'business', region: '', maxPriceUsd: 0, aside: '' });
+  assert.equal(reply.status, 'deals');
+  assert.match(reply.text, /deals from London/);
+});
