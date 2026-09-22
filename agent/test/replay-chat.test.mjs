@@ -55,7 +55,7 @@ test('each allowed model/effort reaches the model adapter and stays fixed for th
 
 test('public staging chat is explicitly anonymous and works independently of expired account connection',async()=>{
  let seen;const svc=chatService({status:async()=>({connected:false,reason:'expired'}),modelFactory:()=>new ScriptedDemoModel(),stagingFactory:options=>{seen=options;return {...makeFixtureAdapter(),snapshots:[]};}});
- const s=await svc.start('staging-public');assert.equal(seen.authMode,'public');assert.equal(s.mode,'staging-public');assert.doesNotMatch(s.text,/STAGING/);assert.match(s.text,/no booking or checkout/);
+ const s=await svc.start('staging-public');assert.equal(seen.authMode,'public');assert.equal(s.mode,'staging-public');assert.doesNotMatch(s.text,/STAGING/);/* Changed 2026-09-22: the welcome used to say there was no booking or checkout, untrue since results link to CommonSwyft checkout. It now offers take me anywhere. */assert.doesNotMatch(s.text,/no booking or checkout/);assert.match(s.text,/take me anywhere/i);assert.match(s.text,/Business class\. Economy prices\./);
  const r=await svc.turn(s.id,'London to New York');assert.equal(r.result.status,'results');
  await assert.rejects(svc.start('staging'),/expired/);
 });

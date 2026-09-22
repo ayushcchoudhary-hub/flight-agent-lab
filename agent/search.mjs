@@ -1,8 +1,9 @@
 import { flightDetails,readableDate } from './flight-details.mjs';
 import { AIRPORTS, METRO_GROUPS, expandMetro, labelForValue, rankAirportSearch, nearMatches, collapseToGroups, hubsAmong, countryAlias, shiftIso, flexRange, getResultsView, displayPriceUsd } from './shared.mjs';
 import { safeCustomerCopy, safeSearchError } from './customer-copy.mjs';
+import { EVERYWHERE, DEALS_SHOWN, WELCOME_DEALS_SHOWN, departureCity, filterDeals, dealChoices, renderDeals, renderWelcomeDeals, NO_ECONOMY_DEALS, noCurrentDeals, unknownOriginNotice } from './discover.mjs';
 
-export const WELCOME = 'Where would you like to fly?\n\nTry “To New York”, “London to Singapore”, or “Dubai to London, economy”.\n\nDefaults: one-way · business class · today through the next 7 days.\nSearch only. There is no booking or checkout.';
+export const WELCOME = 'Business class. Economy prices.\n\nWhere would you like to fly?\n\nTry “To New York”, “London to Singapore”, or “Dubai to London, economy”.\n\nOr say “take me anywhere” and tell me where you’re flying from. I’ll show the best business class deals from there.\n\nDefaults: one-way · business class · today through the next 7 days.';
 const cabins = ['business', 'economy', 'premium', 'first', 'any'];
 const sorts = ['recommended', 'cheapest', 'fastest', 'nonstop'];
 const airportByCode = new Map(AIRPORTS.map(a => [a.code, a]));
@@ -217,6 +218,39 @@ function mergeTripState(current, patch, today) {
   return { next, unresolved };
 }
 
+// "Take me anywhere". The model decides that the traveler wants ideas and
+// passes their words through; application code picks the city, reads the
+// deals feed, filters and renders. See discover.mjs.
+export const discoverTool = {
+  type: 'function', function: {
+    name: 'discover_flights',
+    description: 'Show ranked flight deals when the traveler has no destination and wants ideas: "take me anywhere", "surprise me", "where can I go", "somewhere cheap from London". Never name destinations yourself; the application shows only deals it has. Not for a request that already names a destination.',
+    parameters: {
+      type: 'object', additionalProperties: false,
+      properties: {
+        origin: { type: 'string', description: 'Where the traveler says they are flying from, exactly as written. Omit if they did not say.' },
+        cabin: { type: 'string', enum: ['business', 'first', 'economy'], description: 'Only when the traveler asked for a cabin.' },
+        region: { type: 'string', maxLength: 40, description: 'A region, country or city the traveler wants deals in, e.g. "Asia", "Europe", "Japan". Omit otherwise.' },
+        maxPriceUsd: { type: 'number', description: 'A budget ceiling in USD, only when stated.' },
+        aside: { type: 'string', maxLength: 200, description: 'One short sentence declining a filter the deals cannot apply, such as weather or "somewhere warm", e.g. "I can’t filter deals by weather." Omit otherwise.' },
+      },
+    },
+  },
+};
+
+function validateDiscoverArgs(args) {
+  if (!object(args)) throw new Error('Tool inputs must be an object.');
+  const keys = Object.keys(discoverTool.function.parameters.properties);
+  if (Object.keys(args).some(k => !keys.includes(k))) throw new Error('Unsupported tool field.');
+  if ('origin' in args && (typeof args.origin !== 'string' || args.origin.length > 120)) throw new Error('Invalid origin.');
+  if ('cabin' in args && !['business', 'first', 'economy'].includes(args.cabin)) throw new Error('Invalid cabin.');
+  if ('region' in args && (typeof args.region !== 'string' || args.region.length > 40)) throw new Error('Invalid region.');
+  if ('maxPriceUsd' in args && (typeof args.maxPriceUsd !== 'number' || !Number.isFinite(args.maxPriceUsd) || args.maxPriceUsd <= 0)) throw new Error('Budget must be a positive USD amount.');
+  if ('aside' in args && (typeof args.aside !== 'string' || args.aside.length > 200)) throw new Error('Invalid aside.');
+}
+
+const SYNTHETIC_BANNER = 'SYNTHETIC FLIGHT DATA. These are example results.';
+
 export class SearchConversation {
   constructor({ adapter, today = () => isoToday(), trace = () => {} }) {
     this.adapter = adapter; this.today = today; this.trace = trace; this.state = newState();
@@ -230,8 +264,82 @@ export class SearchConversation {
     if (!Number.isInteger(number) || number < 1 || number > pending.choices.length) return { status: 'clarify', text: `Choose 1–${pending.choices.length}, or type a city/airport.` };
     const chosen = pending.choices[number - 1];
     if (pending.field === 'dates') return this.find({ dates: { mode: 'exact', start: chosen.code } });
+    if (pending.field === 'deal') return this.chooseDeal(chosen.deal);
     return this.find({ [pending.field]: chosen.code });
   }
+  // A chosen deal becomes a normal live search. The snapshot price never
+  // travels with it: the traveler sees the live result, and is told when the
+  // exact deal is no longer there.
+  async chooseDeal(deal) {
+    const result = await this.find({ origin: deal.origin, destination: deal.airport, dates: { mode: 'exact', start: deal.date }, cabin: deal.cabin });
+    if (result.status !== 'results') return result;
+    const stillThere = (result.shortlist ?? []).some(row => row.date === deal.date && row.destination === deal.airport);
+    return stillThere ? result : { ...result, text: `That exact deal isn’t showing now. Here’s what’s available on that route.\n\n${result.text}` };
+  }
+
+  async discover(args = {}) {
+    try {
+      validateDiscoverArgs(args);
+      if (typeof this.adapter.discover !== 'function') return { status: 'clarify', text: noCurrentDeals(null) };
+      if (args.cabin === 'economy') return { status: 'clarify', text: NO_ECONOMY_DEALS };
+      const cabin = args.cabin === 'first' ? 'first' : 'business';
+      const today = this.today();
+      // Where from: a place named now, then the current trip (a saved home
+      // airport arrives here too), then every departure city.
+      const aside = typeof args.aside === 'string' && args.aside.trim() ? safeCustomerCopy(args.aside, '') : '';
+      let place = null, source = null, notice = null;
+      const named = typeof args.origin === 'string' && args.origin.trim() ? args.origin.trim() : null;
+      if (named) { place = resolveLocation(named)[0] ?? null; source = 'stated'; if (!place) notice = unknownOriginNotice(named); }
+      else if (this.state.origin) { place = this.state.origin; source = this.state.originFromPreference ? 'preference' : 'trip'; }
+      let city = place ? departureCity(place, { airportByCode, metroGroups: METRO_GROUPS }) : null;
+      let response = city ? await this.adapter.discover({ metro: city, limit: 20, today }) : null;
+      if (response?.unknownMetro) { notice = unknownOriginNotice(named ?? city); city = null; response = null; }
+      if (!response) response = await this.adapter.discover({ metro: EVERYWHERE, limit: 20, today });
+      if (!response?.feed) return { status: 'clarify', text: noCurrentDeals(city) };
+      const feed = response.feed, originCity = feed.multiOrigin ? null : city;
+      const disclosure = !originCity ? null
+        : source === 'preference' ? `Using your saved home airport, ${this.state.origin.label}.`
+        : source === 'trip' ? `Using ${originCity} from your current search.` : null;
+      let deals = filterDeals(feed.deals, { today, cabin, region: args.region ?? null, maxPriceUsd: args.maxPriceUsd ?? null });
+      let region = args.region ?? null;
+      if (!deals.length && (args.region || args.maxPriceUsd)) {
+        const what = [args.region ? `in ${args.region}` : null, args.maxPriceUsd ? `under USD ${Math.round(args.maxPriceUsd).toLocaleString('en-US')}` : null].filter(Boolean).join(' ');
+        notice = [notice, `I don’t have deals ${what} ${originCity ? `from ${originCity}` : 'across our departure cities'} right now. Here are the best deals instead.`].filter(Boolean).join(' ');
+        deals = filterDeals(feed.deals, { today, cabin }); region = null;
+      }
+      if (!deals.length) return { status: 'clarify', text: noCurrentDeals(originCity) };
+      deals = deals.slice(0, DEALS_SHOWN);
+      this.state.pending = { field: 'deal', choices: dealChoices(deals) };
+      const banner = this.adapter.mode === 'synthetic' ? SYNTHETIC_BANNER : null;
+      return { status: 'deals', text: [banner, aside || null, renderDeals({ feed, deals, cabin, originCity, notice, disclosure, region })].filter(Boolean).join('\n\n'),
+        deals: deals.map(d => ({ origin: d.origin, destination: d.airport, city: d.city, date: d.date, cabin: d.cabin, priceUsd: d.priceUsd })), checkedAt: feed.generatedAt, stale: feed.stale };
+    } catch (error) {
+      this.trace('error', { text: error instanceof Error ? error.message : String(error) });
+      return { status: 'error', text: noCurrentDeals(null) };
+    }
+  }
+
+  // The welcome's "Great deals this week": the top business class deals across
+  // every departure city. Any failure returns null and the welcome simply has
+  // no deals section.
+  async welcomeDeals() {
+    if (typeof this.adapter.discover !== 'function') return null;
+    try {
+      const today = this.today();
+      const response = await this.adapter.discover({ metro: EVERYWHERE, limit: 20, today });
+      if (!response?.feed) return null;
+      const deals = filterDeals(response.feed.deals, { today, cabin: 'business' }).slice(0, WELCOME_DEALS_SHOWN);
+      if (!deals.length) return null;
+      return { text: renderWelcomeDeals({ feed: response.feed, deals }), choices: dealChoices(deals), key: `${response.feed.generatedAt}:${deals.map(d => `${d.origin}-${d.airport}-${d.date}`).join(',')}` };
+    } catch (error) {
+      this.trace('error', { text: error instanceof Error ? error.message : String(error) });
+      return null;
+    }
+  }
+  // Make the welcome's deals answerable by number in the conversation that
+  // follows, when no other menu is open.
+  offerDeals(choices) { if (!this.state.pending && Array.isArray(choices) && choices.length) this.state.pending = { field: 'deal', choices }; }
+
   async find(patch) {
     try {
       // 1. Normalize and validate only the fields supplied in this turn.
