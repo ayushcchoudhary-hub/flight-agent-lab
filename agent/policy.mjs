@@ -46,16 +46,32 @@ const GROUNDED_ANSWERS = [{
   match: /\b(?:sell|sells|selling|sold)\b[^.?!]{0,40}\b(?:data|details|information|info)\b|\b(?:data|details|information|info)\b[^.?!]{0,30}\b(?:sold|sell)\b/i,
   quote: 'we do not sell them',
   answer: 'No. CommonSwyft does not sell the details you provide. They are used only to provide the service.',
+}, {
+  // Held-out v2 E4 asked "how long do you keep my searches?" and got a bare
+  // support handoff, though privacy-7 and privacy-8 answer it. The wording
+  // paraphrases the snapshot rather than quoting it, so a policy rewrite
+  // changes only the quotes the guard checks.
+  id: 'privacy-8',
+  supporting: ['privacy-7'],
+  match: /\bretention\b|\bhow long\b[^.?!]{0,60}\b(?:keep|keeps|kept|stor(?:e|es|ed|ing)|retain(?:s|ed)?|hold|holds|held|have)\b|\b(?:keep|keeps|kept|stor(?:e|es|ed|ing)|retain(?:s|ed)?)\b[^.?!]{0,40}\b(?:searches|search history|search terms)\b/i,
+  quotes: { 'privacy-8': 'one-year retention period for analytics events', 'privacy-7': 'search terms and travel details' },
+  answer: 'Your search terms and travel details are not part of what CommonSwyft keeps for analytics. For the data that is kept, the pilot holds analytics events and performance measurements for one year, and masked replays for 30 days. Analytics profiles are kept separately and are not removed automatically when an account is closed. Copies can remain briefly after a period ends, because provider expiry is not immediate.',
 }];
 
 export function groundedPolicyAnswer(question, evidence = snapshot) {
   const entry = GROUNDED_ANSWERS.find(item => item.match.test(String(question ?? '')));
   if (!entry) return null;
-  const passage = evidence.chunks?.find(chunk => chunk.id === entry.id);
-  // If the snapshot no longer carries the quote, the answer has outlived its
-  // evidence. Fall back to retrieval rather than asserting it anyway.
-  if (!passage || !normalizeQuote(passage.text).includes(normalizeQuote(entry.quote))) return null;
-  return { status: 'policy', text: `${entry.answer}\n\nPrivacy policy: ${passage.url}`, sources: [{ ...passage, quote: entry.quote }], policySnapshot: evidence.capturedAt };
+  const quotes = entry.quotes ?? { [entry.id]: entry.quote };
+  const sources = [];
+  for (const id of [entry.id, ...(entry.supporting ?? [])]) {
+    const passage = evidence.chunks?.find(chunk => chunk.id === id);
+    // If the snapshot no longer carries the quote, the answer has outlived its
+    // evidence. Fall back to retrieval rather than asserting it anyway.
+    if (!passage || !normalizeQuote(passage.text).includes(normalizeQuote(quotes[id]))) return null;
+    sources.push({ ...passage, quote: quotes[id] });
+  }
+  const links = [...new Set(sources.map(s => s.url))];
+  return { status: 'policy', text: `${entry.answer}\n\nPrivacy policy: ${links.join('\n')}`, sources, policySnapshot: evidence.capturedAt };
 }
 
 export function renderPolicyAnswer(args, evidence, question='') {

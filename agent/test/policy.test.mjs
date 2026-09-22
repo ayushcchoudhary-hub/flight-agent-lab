@@ -73,8 +73,36 @@ test('a data-sale question is answered from the snapshot, not deflected',()=>{
   }
 });
 
+// Held-out v2 E4 asked "how long do you keep my searches?" and got a bare
+// support handoff, although privacy-7 and privacy-8 answer it. The retention
+// question is no longer in the list below, because the snapshot does settle it.
+test('a retention question is answered from the privacy snapshot',()=>{
+  for(const question of ['how long do you keep my searches?','what is your retention period?','how long is my data stored?']){
+    const answer=groundedPolicyAnswer(question);
+    assert.ok(answer,`${question} must be answered from evidence`);
+    assert.match(answer.text,/one year/);
+    assert.match(answer.text,/30 days/);
+    assert.match(answer.text,/search terms and travel details are not part of/);
+    assert.match(answer.text,/Privacy policy: https:\/\//);
+    assert.deepEqual(answer.sources.map(s=>s.id),['privacy-8','privacy-7']);
+    assert.ok(!/contact CommonSwyft support/i.test(answer.text),'must not deflect to support');
+    // No period the snapshot does not state.
+    for(const period of answer.text.match(/\b\d+\s+(?:day|days|month|months|year|years)\b/g)??[])
+      assert.ok(evidence.chunks.some(c=>c.text.toLowerCase().includes(period.toLowerCase())),`${period} is not in the snapshot`);
+  }
+});
+
+test('a retention answer falls back to retrieval when the evidence changes',()=>{
+  const stale={capturedAt:'2026-09-19',chunks:[
+    {id:'privacy-8',url:'https://example.invalid/privacy',text:'Retention periods are under review.'},
+    {id:'privacy-7',url:'https://example.invalid/privacy',text:'Analytics excludes search terms and travel details.'}]};
+  assert.equal(groundedPolicyAnswer('how long do you keep my searches?',stale),null);
+  const missingSupport={capturedAt:'2026-09-19',chunks:[evidence.chunks.find(c=>c.id==='privacy-8')]};
+  assert.equal(groundedPolicyAnswer('how long do you keep my searches?',missingSupport),null);
+});
+
 test('questions the snapshot does not settle still reach retrieval',()=>{
-  for(const question of ['what is your refund policy?','what is your retention period?','do you store card details?']){
+  for(const question of ['what is your refund policy?','do you store card details?','can I change my seat?']){
     assert.equal(groundedPolicyAnswer(question),null,`${question} must not be answered deterministically`);
   }
 });
