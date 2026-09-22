@@ -1,0 +1,223 @@
+[
+  {
+    "id": "A8",
+    "category": "Places",
+    "name": "Same origin and destination are clarified",
+    "requirement": "Point out that origin and destination are the same and ask for the intended route.",
+    "steps": [
+      {
+        "text": "Dubai to Dubai tomorrow",
+        "expected": {
+          "status": "clarify",
+          "posts": 0,
+          "origin": "DXB|AUH",
+          "destination": "DXB|AUH",
+          "mentions": "same|different"
+        }
+      }
+    ]
+  },
+  {
+    "id": "G1",
+    "category": "Discover",
+    "name": "No origin shows deals across departure cities",
+    "requirement": "Show the best business class deals across every departure city, with each deal naming where it departs from, and ask where the traveler is flying from. Do not guess a city. Name only destinations the deals contain.",
+    "steps": [
+      {
+        "text": "take me anywhere",
+        "expected": {
+          "status": "deals",
+          "posts": 0,
+          "pending": "deal",
+          "mentions": "(?=.*across our departure cities)(?=.*flying from)"
+        }
+      }
+    ]
+  },
+  {
+    "id": "G2",
+    "category": "Discover",
+    "name": "A named city shows its deals",
+    "requirement": "Show the best business class deals from London with the date they were checked and a note that prices can change. Name only destinations the deals contain.",
+    "steps": [
+      {
+        "text": "I’m in London, take me anywhere",
+        "expected": {
+          "status": "deals",
+          "posts": 0,
+          "pending": "deal",
+          "mentions": "(?=.*deals from London)(?=.*checked)"
+        }
+      }
+    ]
+  },
+  {
+    "id": "G3",
+    "category": "Discover",
+    "name": "Economy deals are declined honestly",
+    "requirement": "Say the deals are business and first class only and offer an economy search on a specific route. Never present business deals as economy.",
+    "steps": [
+      {
+        "text": "anywhere from Tokyo in economy",
+        "expected": {
+          "status": "clarify",
+          "posts": 0,
+          "pending": null,
+          "mentions": "business and first class only"
+        }
+      }
+    ]
+  },
+  {
+    "id": "G4",
+    "category": "Discover",
+    "name": "Choosing a deal runs a live search",
+    "requirement": "Show deals from New York, then search the second deal live on its exact route and date and show the CommonSwyft link. The deal list price is not presented as the live price.",
+    "steps": [
+      {
+        "text": "take me anywhere from New York",
+        "expected": {
+          "status": "deals",
+          "posts": 0,
+          "pending": "deal",
+          "mentions": "deals from New York"
+        }
+      },
+      {
+        "text": "2",
+        "expected": {
+          "status": "results",
+          "origin": "JFK",
+          "destination": "BKK",
+          "from": "2026-09-20",
+          "to": "2026-09-20",
+          "posts": 1,
+          "mentions": "commonswyft\\.com/search/JFK-BKK-200926-business"
+        }
+      }
+    ]
+  },
+  {
+    "id": "G5",
+    "category": "Discover",
+    "name": "A saved home airport sets the deals city and is disclosed",
+    "requirement": "Use the saved home airport, Heathrow, for deals from London, and say that the saved home airport was used.",
+    "initialPreferences": {
+      "homeAirport": "LHR"
+    },
+    "steps": [
+      {
+        "text": "take me anywhere",
+        "expected": {
+          "status": "deals",
+          "posts": 0,
+          "pending": "deal",
+          "mentions": "(?=.*saved home airport)(?=.*deals from London)"
+        }
+      }
+    ]
+  },
+  {
+    "id": "G6",
+    "category": "Discover",
+    "name": "A filter the deals cannot apply is declined briefly",
+    "requirement": "Show deals from Paris and say in one short sentence that deals cannot be filtered by weather. Do not claim any destination is warm.",
+    "steps": [
+      {
+        "text": "somewhere warm from Paris",
+        "expected": {
+          "status": "deals",
+          "posts": 0,
+          "pending": "deal",
+          "mentions": "(?=.*deals from Paris)(?=.*weather)"
+        }
+      }
+    ]
+  },
+  {
+    "id": "G7",
+    "category": "Discover",
+    "name": "Nothing current is said plainly",
+    "requirement": "The deals feed has only past deals. Say there are no current deals from London and offer to search a destination. Show no list.",
+    "scenario": "deals-past",
+    "steps": [
+      {
+        "text": "take me anywhere from London",
+        "expected": {
+          "status": "clarify",
+          "posts": 0,
+          "pending": null,
+          "mentions": "have current deals from London"
+        }
+      }
+    ]
+  },
+  {
+    "id": "G8",
+    "category": "Discover",
+    "name": "A city without deals falls back honestly",
+    "requirement": "Say there are no deals from Aberdeen yet and show the best deals across departure cities instead, each naming its origin.",
+    "steps": [
+      {
+        "text": "anywhere from Aberdeen",
+        "expected": {
+          "status": "deals",
+          "posts": 0,
+          "pending": "deal",
+          "mentions": "(?=.*deals from Aberdeen yet)(?=.*across our departure cities)"
+        }
+      }
+    ]
+  },
+  {
+    "id": "G9",
+    "category": "Discover",
+    "name": "Other wording for the same request",
+    "requirement": "\"Surprise me\" with a stated origin is a request for deals from Tokyo.",
+    "steps": [
+      {
+        "text": "surprise me, I’m flying out of Tokyo",
+        "expected": {
+          "status": "deals",
+          "posts": 0,
+          "pending": "deal",
+          "mentions": "deals from Tokyo"
+        }
+      }
+    ]
+  },
+  {
+    "id": "G10",
+    "category": "Discover",
+    "name": "First class only when asked",
+    "requirement": "Show first class deals from Dubai, and only first class.",
+    "steps": [
+      {
+        "text": "where can I go from Dubai in first class?",
+        "expected": {
+          "status": "deals",
+          "posts": 0,
+          "pending": "deal",
+          "mentions": "first class deals from Dubai"
+        }
+      }
+    ]
+  },
+  {
+    "id": "G11",
+    "category": "Discover",
+    "name": "A region narrows the deals",
+    "requirement": "Show only deals in Asia from London. Name only destinations the deals contain.",
+    "steps": [
+      {
+        "text": "take me anywhere in Asia from London",
+        "expected": {
+          "status": "deals",
+          "posts": 0,
+          "pending": "deal",
+          "mentions": "(?=.*in Asia from London)(?=.*Bangkok)"
+        }
+      }
+    ]
+  }
+]

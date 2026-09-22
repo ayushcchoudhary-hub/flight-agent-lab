@@ -1,0 +1,3647 @@
+{
+  "runId": "live-hardening-judge-2026-09-22T22-23-59.766Z",
+  "evaluationKind": "llm-judge-hardening",
+  "suite": "v2",
+  "label": "Take me anywhere · verification after empty-value fix · G1-G11 plus A8 · 008ed46",
+  "promptVersion": "flight-search-v1.6.0",
+  "judge": {
+    "model": "anthropic/claude-opus-5.5",
+    "effort": "medium",
+    "rubricVersion": "communication-quality-v1.2.0",
+    "criteria": [
+      "clarity",
+      "concision",
+      "tone",
+      "nextStep",
+      "limitationHonesty",
+      "noInternalLeakage"
+    ]
+  },
+  "clock": "2026-09-18",
+  "flightData": "synthetic",
+  "effort": "medium",
+  "models": [
+    "openai/gpt-5.6-terra"
+  ],
+  "repeats": 1,
+  "cases": [
+    {
+      "id": "A8",
+      "category": "Places",
+      "name": "Same origin and destination are clarified",
+      "requirement": "Point out that origin and destination are the same and ask for the intended route.",
+      "steps": [
+        {
+          "text": "Dubai to Dubai tomorrow",
+          "expected": {
+            "status": "clarify",
+            "posts": 0,
+            "origin": "DXB|AUH",
+            "destination": "DXB|AUH",
+            "mentions": "same|different"
+          }
+        }
+      ]
+    },
+    {
+      "id": "G1",
+      "category": "Discover",
+      "name": "No origin shows deals across departure cities",
+      "requirement": "Show the best business class deals across every departure city, with each deal naming where it departs from, and ask where the traveler is flying from. Do not guess a city. Name only destinations the deals contain.",
+      "steps": [
+        {
+          "text": "take me anywhere",
+          "expected": {
+            "status": "deals",
+            "posts": 0,
+            "pending": "deal",
+            "mentions": "(?=.*across our departure cities)(?=.*flying from)"
+          }
+        }
+      ]
+    },
+    {
+      "id": "G2",
+      "category": "Discover",
+      "name": "A named city shows its deals",
+      "requirement": "Show the best business class deals from London with the date they were checked and a note that prices can change. Name only destinations the deals contain.",
+      "steps": [
+        {
+          "text": "I’m in London, take me anywhere",
+          "expected": {
+            "status": "deals",
+            "posts": 0,
+            "pending": "deal",
+            "mentions": "(?=.*deals from London)(?=.*checked)"
+          }
+        }
+      ]
+    },
+    {
+      "id": "G3",
+      "category": "Discover",
+      "name": "Economy deals are declined honestly",
+      "requirement": "Say the deals are business and first class only and offer an economy search on a specific route. Never present business deals as economy.",
+      "steps": [
+        {
+          "text": "anywhere from Tokyo in economy",
+          "expected": {
+            "status": "clarify",
+            "posts": 0,
+            "pending": null,
+            "mentions": "business and first class only"
+          }
+        }
+      ]
+    },
+    {
+      "id": "G4",
+      "category": "Discover",
+      "name": "Choosing a deal runs a live search",
+      "requirement": "Show deals from New York, then search the second deal live on its exact route and date and show the CommonSwyft link. The deal list price is not presented as the live price.",
+      "steps": [
+        {
+          "text": "take me anywhere from New York",
+          "expected": {
+            "status": "deals",
+            "posts": 0,
+            "pending": "deal",
+            "mentions": "deals from New York"
+          }
+        },
+        {
+          "text": "2",
+          "expected": {
+            "status": "results",
+            "origin": "JFK",
+            "destination": "BKK",
+            "from": "2026-09-20",
+            "to": "2026-09-20",
+            "posts": 1,
+            "mentions": "commonswyft\\.com/search/JFK-BKK-200926-business"
+          }
+        }
+      ]
+    },
+    {
+      "id": "G5",
+      "category": "Discover",
+      "name": "A saved home airport sets the deals city and is disclosed",
+      "requirement": "Use the saved home airport, Heathrow, for deals from London, and say that the saved home airport was used.",
+      "initialPreferences": {
+        "homeAirport": "LHR"
+      },
+      "steps": [
+        {
+          "text": "take me anywhere",
+          "expected": {
+            "status": "deals",
+            "posts": 0,
+            "pending": "deal",
+            "mentions": "(?=.*saved home airport)(?=.*deals from London)"
+          }
+        }
+      ]
+    },
+    {
+      "id": "G6",
+      "category": "Discover",
+      "name": "A filter the deals cannot apply is declined briefly",
+      "requirement": "Show deals from Paris and say in one short sentence that deals cannot be filtered by weather. Do not claim any destination is warm.",
+      "steps": [
+        {
+          "text": "somewhere warm from Paris",
+          "expected": {
+            "status": "deals",
+            "posts": 0,
+            "pending": "deal",
+            "mentions": "(?=.*deals from Paris)(?=.*weather)"
+          }
+        }
+      ]
+    },
+    {
+      "id": "G7",
+      "category": "Discover",
+      "name": "Nothing current is said plainly",
+      "requirement": "The deals feed has only past deals. Say there are no current deals from London and offer to search a destination. Show no list.",
+      "scenario": "deals-past",
+      "steps": [
+        {
+          "text": "take me anywhere from London",
+          "expected": {
+            "status": "clarify",
+            "posts": 0,
+            "pending": null,
+            "mentions": "have current deals from London"
+          }
+        }
+      ]
+    },
+    {
+      "id": "G8",
+      "category": "Discover",
+      "name": "A city without deals falls back honestly",
+      "requirement": "Say there are no deals from Aberdeen yet and show the best deals across departure cities instead, each naming its origin.",
+      "steps": [
+        {
+          "text": "anywhere from Aberdeen",
+          "expected": {
+            "status": "deals",
+            "posts": 0,
+            "pending": "deal",
+            "mentions": "(?=.*deals from Aberdeen yet)(?=.*across our departure cities)"
+          }
+        }
+      ]
+    },
+    {
+      "id": "G9",
+      "category": "Discover",
+      "name": "Other wording for the same request",
+      "requirement": "\"Surprise me\" with a stated origin is a request for deals from Tokyo.",
+      "steps": [
+        {
+          "text": "surprise me, I’m flying out of Tokyo",
+          "expected": {
+            "status": "deals",
+            "posts": 0,
+            "pending": "deal",
+            "mentions": "deals from Tokyo"
+          }
+        }
+      ]
+    },
+    {
+      "id": "G10",
+      "category": "Discover",
+      "name": "First class only when asked",
+      "requirement": "Show first class deals from Dubai, and only first class.",
+      "steps": [
+        {
+          "text": "where can I go from Dubai in first class?",
+          "expected": {
+            "status": "deals",
+            "posts": 0,
+            "pending": "deal",
+            "mentions": "first class deals from Dubai"
+          }
+        }
+      ]
+    },
+    {
+      "id": "G11",
+      "category": "Discover",
+      "name": "A region narrows the deals",
+      "requirement": "Show only deals in Asia from London. Name only destinations the deals contain.",
+      "steps": [
+        {
+          "text": "take me anywhere in Asia from London",
+          "expected": {
+            "status": "deals",
+            "posts": 0,
+            "pending": "deal",
+            "mentions": "(?=.*in Asia from London)(?=.*Bangkok)"
+          }
+        }
+      ]
+    }
+  ],
+  "status": "complete",
+  "maxCostUsd": 3,
+  "maxCalls": 60,
+  "results": [
+    {
+      "caseId": "A8",
+      "name": "Same origin and destination are clarified",
+      "category": "Places",
+      "requirement": "Point out that origin and destination are the same and ask for the intended route.",
+      "model": "openai/gpt-5.6-terra",
+      "repeat": 1,
+      "pass": true,
+      "deterministicPass": true,
+      "communicationPass": true,
+      "steps": [
+        {
+          "input": "Dubai to Dubai tomorrow",
+          "expected": {
+            "status": "clarify",
+            "posts": 0,
+            "origin": "DXB|AUH",
+            "destination": "DXB|AUH",
+            "mentions": "same|different"
+          },
+          "result": {
+            "status": "clarify",
+            "text": "Departure and destination overlap. Please choose a different city or non-overlapping airports."
+          },
+          "latencyMs": 3340,
+          "grade": {
+            "pass": true,
+            "actual": {
+              "status": "clarify",
+              "origin": "DXB|AUH",
+              "destination": "DXB|AUH",
+              "cabin": "business",
+              "from": "2026-09-19",
+              "to": "2026-09-19",
+              "budget": null,
+              "pending": null,
+              "menuCount": 0,
+              "posts": 0,
+              "resultCount": 0,
+              "sort": "recommended",
+              "nonstopOnly": false,
+              "sources": [],
+              "savedPreferences": {}
+            },
+            "checks": [
+              {
+                "name": "status",
+                "expected": "clarify",
+                "actual": "clarify",
+                "pass": true
+              },
+              {
+                "name": "posts",
+                "expected": 0,
+                "actual": 0,
+                "pass": true
+              },
+              {
+                "name": "origin",
+                "expected": "DXB|AUH",
+                "actual": "DXB|AUH",
+                "pass": true
+              },
+              {
+                "name": "destination",
+                "expected": "DXB|AUH",
+                "actual": "DXB|AUH",
+                "pass": true
+              },
+              {
+                "name": "mentions",
+                "expected": "same|different",
+                "actual": "Departure and destination overlap. Please choose a different city or non-overlapping airports.",
+                "pass": true
+              },
+              {
+                "name": "Does not echo profanity or insult the user (limited lexical check)",
+                "pass": true
+              },
+              {
+                "name": "No claimed purchase completion",
+                "pass": true
+              }
+            ]
+          }
+        }
+      ],
+      "judge": {
+        "verdict": "pass",
+        "scores": {
+          "clarity": 4,
+          "concision": 5,
+          "tone": 4,
+          "nextStep": 4,
+          "limitationHonesty": 5,
+          "noInternalLeakage": 5
+        },
+        "rationale": "The reply identifies the same-city problem and asks the traveler to change it, which meets the requirement. The wording is slightly abstract and terse. It does not name Dubai, confirm the 'tomorrow' date or ask directly where the traveler wants to go. None of these gaps rise to a major issue.",
+        "strengths": [
+          "Flags the identical origin and destination instead of running a meaningless search.",
+          "Very concise.",
+          "Makes no invented capabilities and leaks no internal details."
+        ],
+        "issues": [
+          {
+            "severity": "minor",
+            "criterion": "clarity",
+            "evidence": "\"Departure and destination overlap.\"",
+            "recommendation": "State it plainly and name the city, for example: \"Your departure and destination are both Dubai.\""
+          },
+          {
+            "severity": "minor",
+            "criterion": "nextStep",
+            "evidence": "\"Please choose a different city or non-overlapping airports.\"",
+            "recommendation": "Ask for the intended route directly and keep the date context, for example: \"Where would you like to fly to from Dubai tomorrow?\""
+          },
+          {
+            "severity": "minor",
+            "criterion": "tone",
+            "evidence": "The phrasing is system-like (\"overlap\", \"non-overlapping airports\").",
+            "recommendation": "Use warmer, conversational wording."
+          }
+        ],
+        "recommendedAction": "prompt"
+      },
+      "judgeAttempts": [
+        {
+          "verdict": "pass",
+          "scores": {
+            "clarity": 4,
+            "concision": 5,
+            "tone": 4,
+            "nextStep": 4,
+            "limitationHonesty": 5,
+            "noInternalLeakage": 5
+          },
+          "rationale": "The reply identifies the same-city problem and asks the traveler to change it, which meets the requirement. The wording is slightly abstract and terse. It does not name Dubai, confirm the 'tomorrow' date or ask directly where the traveler wants to go. None of these gaps rise to a major issue.",
+          "strengths": [
+            "Flags the identical origin and destination instead of running a meaningless search.",
+            "Very concise.",
+            "Makes no invented capabilities and leaks no internal details."
+          ],
+          "issues": [
+            {
+              "severity": "minor",
+              "criterion": "clarity",
+              "evidence": "\"Departure and destination overlap.\"",
+              "recommendation": "State it plainly and name the city, for example: \"Your departure and destination are both Dubai.\""
+            },
+            {
+              "severity": "minor",
+              "criterion": "nextStep",
+              "evidence": "\"Please choose a different city or non-overlapping airports.\"",
+              "recommendation": "Ask for the intended route directly and keep the date context, for example: \"Where would you like to fly to from Dubai tomorrow?\""
+            },
+            {
+              "severity": "minor",
+              "criterion": "tone",
+              "evidence": "The phrasing is system-like (\"overlap\", \"non-overlapping airports\").",
+              "recommendation": "Use warmer, conversational wording."
+            }
+          ],
+          "recommendedAction": "prompt"
+        }
+      ],
+      "judgeConsensus": {
+        "passingVotes": 1,
+        "totalVotes": 1,
+        "verdicts": [
+          "pass"
+        ]
+      },
+      "events": [
+        {
+          "type": "model_usage",
+          "data": {
+            "model": "openai/gpt-5.6-terra",
+            "provider": "OpenAI",
+            "latencyMs": 3328,
+            "usage": {
+              "prompt_tokens": 2484,
+              "completion_tokens": 123,
+              "total_tokens": 2607,
+              "cost": 0.0021924,
+              "is_byok": false,
+              "prompt_tokens_details": {
+                "cached_tokens": 2362,
+                "cache_write_tokens": 0,
+                "audio_tokens": 0,
+                "video_tokens": 0
+              },
+              "cost_details": {
+                "upstream_inference_cost": 0.0021924,
+                "upstream_inference_prompt_cost": 0.0007164,
+                "upstream_inference_completions_cost": 0.001476
+              },
+              "completion_tokens_details": {
+                "reasoning_tokens": 34,
+                "image_tokens": 0,
+                "audio_tokens": 0
+              }
+            },
+            "cost": 0.0021924
+          }
+        },
+        {
+          "type": "tool_argument_repair",
+          "data": {
+            "fields": [
+              "cabin",
+              "cabinOnly",
+              "sort",
+              "nonstopOnly",
+              "maxPriceUsd",
+              "refresh"
+            ],
+            "reason": "removed default values the current request did not ask for"
+          }
+        },
+        {
+          "type": "tool_call",
+          "data": {
+            "name": "find_flights",
+            "arguments": {
+              "origin": "Dubai",
+              "destination": "Dubai",
+              "dates": {
+                "mode": "exact",
+                "start": "2026-09-19",
+                "end": "",
+                "flex": 1,
+                "strict": true,
+                "options": []
+              },
+              "aside": ""
+            }
+          }
+        },
+        {
+          "type": "judge_usage",
+          "data": {
+            "model": "anthropic/claude-opus-5.5",
+            "provider": "Claude Platform on AWS",
+            "latencyMs": 9534,
+            "usage": {
+              "prompt_tokens": 1483,
+              "completion_tokens": 830,
+              "total_tokens": 2313,
+              "cost": 0.022532,
+              "is_byok": false,
+              "prompt_tokens_details": {
+                "cached_tokens": 0,
+                "cache_write_tokens": 0,
+                "audio_tokens": 0,
+                "video_tokens": 0
+              },
+              "cost_details": {
+                "upstream_inference_cost": 0.022532,
+                "upstream_inference_prompt_cost": 0.005932,
+                "upstream_inference_completions_cost": 0.0166
+              },
+              "completion_tokens_details": {
+                "reasoning_tokens": 343,
+                "image_tokens": 0,
+                "audio_tokens": 0
+              }
+            },
+            "cost": 0.022532
+          }
+        }
+      ]
+    },
+    {
+      "caseId": "G1",
+      "name": "No origin shows deals across departure cities",
+      "category": "Discover",
+      "requirement": "Show the best business class deals across every departure city, with each deal naming where it departs from, and ask where the traveler is flying from. Do not guess a city. Name only destinations the deals contain.",
+      "model": "openai/gpt-5.6-terra",
+      "repeat": 1,
+      "pass": true,
+      "deterministicPass": true,
+      "communicationPass": true,
+      "steps": [
+        {
+          "input": "take me anywhere",
+          "expected": {
+            "status": "deals",
+            "posts": 0,
+            "pending": "deal",
+            "mentions": "(?=.*across our departure cities)(?=.*flying from)"
+          },
+          "result": {
+            "status": "deals",
+            "text": "SYNTHETIC FLIGHT DATA. These are example results.\n\nBest business class deals across our departure cities · checked 18 Sept. Prices can change.\n\n1. London → Charlotte, United States · Sat, 19 Sept 2026 · 1 stop via New York (JFK)\n   USD 1,290 · usually USD 10,805\n2. London → Lisbon, Portugal · Tue, 22 Sept 2026 · Nonstop\n   USD 690 · usually USD 2,100\n3. New York → Cape Town, South Africa · Tue, 22 Sept 2026 · 1 stop via Doha (DOH)\n   USD 1,657 · usually USD 5,900\n4. Tokyo → Bangkok, Thailand · Tue, 22 Sept 2026 · Nonstop\n   USD 1,554 · usually USD 6,200\n5. Tokyo → Sydney, Australia · Fri, 25 Sept 2026 · 1 stop via Singapore (SIN)\n   USD 2,484 · usually USD 9,800\n\nDeals can change or sell out quickly.\n\nReply with a number to search that flight, or tell me where you’re flying from for deals from there.",
+            "deals": [
+              {
+                "origin": "LHR",
+                "destination": "CLT",
+                "city": "Charlotte",
+                "date": "2026-09-19",
+                "cabin": "business",
+                "priceUsd": 1290
+              },
+              {
+                "origin": "LHR",
+                "destination": "LIS",
+                "city": "Lisbon",
+                "date": "2026-09-22",
+                "cabin": "business",
+                "priceUsd": 690
+              },
+              {
+                "origin": "JFK",
+                "destination": "CPT",
+                "city": "Cape Town",
+                "date": "2026-09-22",
+                "cabin": "business",
+                "priceUsd": 1657
+              },
+              {
+                "origin": "HND",
+                "destination": "BKK",
+                "city": "Bangkok",
+                "date": "2026-09-22",
+                "cabin": "business",
+                "priceUsd": 1554
+              },
+              {
+                "origin": "HND",
+                "destination": "SYD",
+                "city": "Sydney",
+                "date": "2026-09-25",
+                "cabin": "business",
+                "priceUsd": 2484
+              }
+            ],
+            "checkedAt": "2026-09-18",
+            "stale": false
+          },
+          "latencyMs": 5425,
+          "grade": {
+            "pass": true,
+            "actual": {
+              "status": "deals",
+              "origin": null,
+              "destination": null,
+              "cabin": "business",
+              "from": null,
+              "to": null,
+              "budget": null,
+              "pending": "deal",
+              "menuCount": 5,
+              "posts": 0,
+              "resultCount": 0,
+              "sort": "recommended",
+              "nonstopOnly": false,
+              "sources": [],
+              "savedPreferences": {}
+            },
+            "checks": [
+              {
+                "name": "status",
+                "expected": "deals",
+                "actual": "deals",
+                "pass": true
+              },
+              {
+                "name": "posts",
+                "expected": 0,
+                "actual": 0,
+                "pass": true
+              },
+              {
+                "name": "pending",
+                "expected": "deal",
+                "actual": "deal",
+                "pass": true
+              },
+              {
+                "name": "mentions",
+                "expected": "(?=.*across our departure cities)(?=.*flying from)",
+                "actual": "SYNTHETIC FLIGHT DATA. These are example results.\n\nBest business class deals across our departure cities · checked 18 Sept. Prices can change.\n\n1. London → Charlotte, United States · Sat, 19 Sept 2026 · 1 stop via New York (JFK)\n   USD 1,290 · usually USD 10,805\n2. London → Lisbon, Portugal · Tue, 22 Sept 2026 · Nonstop\n   USD 690 · usually USD 2,100\n3. New York → Cape Town, South Africa · Tue, 22 Sept 2026 · 1 stop via Doha (DOH)\n   USD 1,657 · usually USD 5,900\n4. Tokyo → Bangkok, Thailand · Tue, 22 Sept 2026 · Nonstop\n   USD 1,554 · usually USD 6,200\n5. Tokyo → Sydney, Australia · Fri, 25 Sept 2026 · 1 stop via Singapore (SIN)\n   USD 2,484 · usually USD 9,800\n\nDeals can change or sell out quickly.\n\nReply with a number to search that flight, or tell me where you’re flying from for deals from there.",
+                "pass": true
+              },
+              {
+                "name": "menu excludes opposite city",
+                "pass": true
+              },
+              {
+                "name": "Does not echo profanity or insult the user (limited lexical check)",
+                "pass": true
+              },
+              {
+                "name": "No claimed purchase completion",
+                "pass": true
+              }
+            ]
+          }
+        }
+      ],
+      "judge": {
+        "verdict": "pass",
+        "scores": {
+          "clarity": 5,
+          "concision": 4,
+          "tone": 5,
+          "nextStep": 5,
+          "limitationHonesty": 5,
+          "noInternalLeakage": 5
+        },
+        "rationale": "The reply lists business class deals across several departure cities. Each deal clearly names its origin and destination, the reply does not assume a home city, and it asks where the traveler is flying from. It states the check date and warns that prices can change. It offers two clear next steps: pick a number, or give a departure city. The only flaw is a repeated price-volatility warning.",
+        "strengths": [
+          "Every deal names its departure city, so no traveler location is assumed.",
+          "Clearly asks where the traveler is flying from, as required.",
+          "Destinations named are limited to those in the listed deals.",
+          "States the check date and discloses that prices can change.",
+          "Offers two concrete next steps: reply with a number, or name a departure city."
+        ],
+        "issues": [
+          {
+            "severity": "minor",
+            "criterion": "concision",
+            "evidence": "'Prices can change.' in the header and 'Deals can change or sell out quickly.' after the list",
+            "recommendation": "Keep a single volatility disclaimer."
+          }
+        ],
+        "recommendedAction": "none"
+      },
+      "judgeAttempts": [
+        {
+          "verdict": "pass",
+          "scores": {
+            "clarity": 5,
+            "concision": 4,
+            "tone": 5,
+            "nextStep": 5,
+            "limitationHonesty": 5,
+            "noInternalLeakage": 5
+          },
+          "rationale": "The reply lists business class deals across several departure cities. Each deal clearly names its origin and destination, the reply does not assume a home city, and it asks where the traveler is flying from. It states the check date and warns that prices can change. It offers two clear next steps: pick a number, or give a departure city. The only flaw is a repeated price-volatility warning.",
+          "strengths": [
+            "Every deal names its departure city, so no traveler location is assumed.",
+            "Clearly asks where the traveler is flying from, as required.",
+            "Destinations named are limited to those in the listed deals.",
+            "States the check date and discloses that prices can change.",
+            "Offers two concrete next steps: reply with a number, or name a departure city."
+          ],
+          "issues": [
+            {
+              "severity": "minor",
+              "criterion": "concision",
+              "evidence": "'Prices can change.' in the header and 'Deals can change or sell out quickly.' after the list",
+              "recommendation": "Keep a single volatility disclaimer."
+            }
+          ],
+          "recommendedAction": "none"
+        }
+      ],
+      "judgeConsensus": {
+        "passingVotes": 1,
+        "totalVotes": 1,
+        "verdicts": [
+          "pass"
+        ]
+      },
+      "events": [
+        {
+          "type": "model_usage",
+          "data": {
+            "model": "openai/gpt-5.6-terra",
+            "provider": "OpenAI",
+            "latencyMs": 5409,
+            "usage": {
+              "prompt_tokens": 2483,
+              "completion_tokens": 213,
+              "total_tokens": 2696,
+              "cost": 0.0032722,
+              "is_byok": false,
+              "prompt_tokens_details": {
+                "cached_tokens": 2361,
+                "cache_write_tokens": 0,
+                "audio_tokens": 0,
+                "video_tokens": 0
+              },
+              "cost_details": {
+                "upstream_inference_cost": 0.0032722,
+                "upstream_inference_prompt_cost": 0.0007162,
+                "upstream_inference_completions_cost": 0.002556
+              },
+              "completion_tokens_details": {
+                "reasoning_tokens": 176,
+                "image_tokens": 0,
+                "audio_tokens": 0
+              }
+            },
+            "cost": 0.0032722
+          }
+        },
+        {
+          "type": "tool_call",
+          "data": {
+            "name": "discover_flights",
+            "arguments": {
+              "origin": "",
+              "cabin": "business",
+              "region": "",
+              "maxPriceUsd": 0,
+              "aside": ""
+            }
+          }
+        },
+        {
+          "type": "judge_usage",
+          "data": {
+            "model": "anthropic/claude-opus-5.5",
+            "provider": "Claude Platform on AWS",
+            "latencyMs": 7746,
+            "usage": {
+              "prompt_tokens": 1875,
+              "completion_tokens": 601,
+              "total_tokens": 2476,
+              "cost": 0.01952,
+              "is_byok": false,
+              "prompt_tokens_details": {
+                "cached_tokens": 0,
+                "cache_write_tokens": 0,
+                "audio_tokens": 0,
+                "video_tokens": 0
+              },
+              "cost_details": {
+                "upstream_inference_cost": 0.01952,
+                "upstream_inference_prompt_cost": 0.0075,
+                "upstream_inference_completions_cost": 0.01202
+              },
+              "completion_tokens_details": {
+                "reasoning_tokens": 220,
+                "image_tokens": 0,
+                "audio_tokens": 0
+              }
+            },
+            "cost": 0.01952
+          }
+        }
+      ]
+    },
+    {
+      "caseId": "G2",
+      "name": "A named city shows its deals",
+      "category": "Discover",
+      "requirement": "Show the best business class deals from London with the date they were checked and a note that prices can change. Name only destinations the deals contain.",
+      "model": "openai/gpt-5.6-terra",
+      "repeat": 1,
+      "pass": true,
+      "deterministicPass": true,
+      "communicationPass": true,
+      "steps": [
+        {
+          "input": "I’m in London, take me anywhere",
+          "expected": {
+            "status": "deals",
+            "posts": 0,
+            "pending": "deal",
+            "mentions": "(?=.*deals from London)(?=.*checked)"
+          },
+          "result": {
+            "status": "deals",
+            "text": "SYNTHETIC FLIGHT DATA. These are example results.\n\nBest business class deals from London · checked 18 Sept. Prices can change.\n\n1. Charlotte, United States · Sat, 19 Sept 2026 · 1 stop via New York (JFK)\n   USD 1,290 · usually USD 10,805\n2. Bangkok, Thailand · Sun, 20 Sept 2026 · Nonstop\n   USD 1,480 · usually USD 6,200\n3. Cape Town, South Africa · Mon, 21 Sept 2026 · 1 stop via Doha (DOH)\n   USD 1,620 · usually USD 5,900\n4. Lisbon, Portugal · Tue, 22 Sept 2026 · Nonstop\n   USD 690 · usually USD 2,100\n5. Sydney, Australia · Wed, 23 Sept 2026 · 1 stop via Singapore (SIN)\n   USD 2,410 · usually USD 9,800\n\nDeals can change or sell out quickly.\n\nReply with a number to search that flight, or name a place.",
+            "deals": [
+              {
+                "origin": "LHR",
+                "destination": "CLT",
+                "city": "Charlotte",
+                "date": "2026-09-19",
+                "cabin": "business",
+                "priceUsd": 1290
+              },
+              {
+                "origin": "LHR",
+                "destination": "BKK",
+                "city": "Bangkok",
+                "date": "2026-09-20",
+                "cabin": "business",
+                "priceUsd": 1480
+              },
+              {
+                "origin": "LHR",
+                "destination": "CPT",
+                "city": "Cape Town",
+                "date": "2026-09-21",
+                "cabin": "business",
+                "priceUsd": 1620
+              },
+              {
+                "origin": "LHR",
+                "destination": "LIS",
+                "city": "Lisbon",
+                "date": "2026-09-22",
+                "cabin": "business",
+                "priceUsd": 690
+              },
+              {
+                "origin": "LHR",
+                "destination": "SYD",
+                "city": "Sydney",
+                "date": "2026-09-23",
+                "cabin": "business",
+                "priceUsd": 2410
+              }
+            ],
+            "checkedAt": "2026-09-18",
+            "stale": false
+          },
+          "latencyMs": 4480,
+          "grade": {
+            "pass": true,
+            "actual": {
+              "status": "deals",
+              "origin": null,
+              "destination": null,
+              "cabin": "business",
+              "from": null,
+              "to": null,
+              "budget": null,
+              "pending": "deal",
+              "menuCount": 5,
+              "posts": 0,
+              "resultCount": 0,
+              "sort": "recommended",
+              "nonstopOnly": false,
+              "sources": [],
+              "savedPreferences": {}
+            },
+            "checks": [
+              {
+                "name": "status",
+                "expected": "deals",
+                "actual": "deals",
+                "pass": true
+              },
+              {
+                "name": "posts",
+                "expected": 0,
+                "actual": 0,
+                "pass": true
+              },
+              {
+                "name": "pending",
+                "expected": "deal",
+                "actual": "deal",
+                "pass": true
+              },
+              {
+                "name": "mentions",
+                "expected": "(?=.*deals from London)(?=.*checked)",
+                "actual": "SYNTHETIC FLIGHT DATA. These are example results.\n\nBest business class deals from London · checked 18 Sept. Prices can change.\n\n1. Charlotte, United States · Sat, 19 Sept 2026 · 1 stop via New York (JFK)\n   USD 1,290 · usually USD 10,805\n2. Bangkok, Thailand · Sun, 20 Sept 2026 · Nonstop\n   USD 1,480 · usually USD 6,200\n3. Cape Town, South Africa · Mon, 21 Sept 2026 · 1 stop via Doha (DOH)\n   USD 1,620 · usually USD 5,900\n4. Lisbon, Portugal · Tue, 22 Sept 2026 · Nonstop\n   USD 690 · usually USD 2,100\n5. Sydney, Australia · Wed, 23 Sept 2026 · 1 stop via Singapore (SIN)\n   USD 2,410 · usually USD 9,800\n\nDeals can change or sell out quickly.\n\nReply with a number to search that flight, or name a place.",
+                "pass": true
+              },
+              {
+                "name": "menu excludes opposite city",
+                "pass": true
+              },
+              {
+                "name": "Does not echo profanity or insult the user (limited lexical check)",
+                "pass": true
+              },
+              {
+                "name": "No claimed purchase completion",
+                "pass": true
+              }
+            ]
+          }
+        }
+      ],
+      "judge": {
+        "verdict": "pass",
+        "scores": {
+          "clarity": 5,
+          "concision": 4,
+          "tone": 5,
+          "nextStep": 5,
+          "limitationHonesty": 5,
+          "noInternalLeakage": 5
+        },
+        "rationale": "The reply meets the requirement. It labels the results as business class deals from London and gives the check date (18 Sept). It says prices can change and lists only destinations contained in the deals. Each entry is clear, with dates, stops, current price and usual price. It ends with a simple next step. The only flaw is a repeated price-change caveat.",
+        "strengths": [
+          "The headline states the cabin, origin, check date and price-change note together.",
+          "Each deal is consistently formatted with destination, date, routing, price and usual price.",
+          "Only destinations that appear in the deals are named.",
+          "It ends with an actionable next step: pick a number or name a place.",
+          "No internal leakage, invented capabilities or hostile wording."
+        ],
+        "issues": [
+          {
+            "severity": "minor",
+            "criterion": "concision",
+            "evidence": "'Prices can change.' in the header is repeated by 'Deals can change or sell out quickly.' before the closing line.",
+            "recommendation": "Keep a single price-change caveat, either in the header or as the closing note."
+          }
+        ],
+        "recommendedAction": "none"
+      },
+      "judgeAttempts": [
+        {
+          "verdict": "pass",
+          "scores": {
+            "clarity": 5,
+            "concision": 4,
+            "tone": 5,
+            "nextStep": 5,
+            "limitationHonesty": 5,
+            "noInternalLeakage": 5
+          },
+          "rationale": "The reply meets the requirement. It labels the results as business class deals from London and gives the check date (18 Sept). It says prices can change and lists only destinations contained in the deals. Each entry is clear, with dates, stops, current price and usual price. It ends with a simple next step. The only flaw is a repeated price-change caveat.",
+          "strengths": [
+            "The headline states the cabin, origin, check date and price-change note together.",
+            "Each deal is consistently formatted with destination, date, routing, price and usual price.",
+            "Only destinations that appear in the deals are named.",
+            "It ends with an actionable next step: pick a number or name a place.",
+            "No internal leakage, invented capabilities or hostile wording."
+          ],
+          "issues": [
+            {
+              "severity": "minor",
+              "criterion": "concision",
+              "evidence": "'Prices can change.' in the header is repeated by 'Deals can change or sell out quickly.' before the closing line.",
+              "recommendation": "Keep a single price-change caveat, either in the header or as the closing note."
+            }
+          ],
+          "recommendedAction": "none"
+        }
+      ],
+      "judgeConsensus": {
+        "passingVotes": 1,
+        "totalVotes": 1,
+        "verdicts": [
+          "pass"
+        ]
+      },
+      "events": [
+        {
+          "type": "model_usage",
+          "data": {
+            "model": "openai/gpt-5.6-terra",
+            "provider": "OpenAI",
+            "latencyMs": 4474,
+            "usage": {
+              "prompt_tokens": 2488,
+              "completion_tokens": 150,
+              "total_tokens": 2638,
+              "cost": 0.0025172,
+              "is_byok": false,
+              "prompt_tokens_details": {
+                "cached_tokens": 2366,
+                "cache_write_tokens": 0,
+                "audio_tokens": 0,
+                "video_tokens": 0
+              },
+              "cost_details": {
+                "upstream_inference_cost": 0.0025172,
+                "upstream_inference_prompt_cost": 0.0007172,
+                "upstream_inference_completions_cost": 0.0018
+              },
+              "completion_tokens_details": {
+                "reasoning_tokens": 110,
+                "image_tokens": 0,
+                "audio_tokens": 0
+              }
+            },
+            "cost": 0.0025172
+          }
+        },
+        {
+          "type": "tool_call",
+          "data": {
+            "name": "discover_flights",
+            "arguments": {
+              "origin": "London",
+              "cabin": "business",
+              "region": "",
+              "maxPriceUsd": 0,
+              "aside": ""
+            }
+          }
+        },
+        {
+          "type": "judge_usage",
+          "data": {
+            "model": "anthropic/claude-opus-5.5",
+            "provider": "Claude Platform on AWS",
+            "latencyMs": 8322,
+            "usage": {
+              "prompt_tokens": 1825,
+              "completion_tokens": 714,
+              "total_tokens": 2539,
+              "cost": 0.02158,
+              "is_byok": false,
+              "prompt_tokens_details": {
+                "cached_tokens": 0,
+                "cache_write_tokens": 0,
+                "audio_tokens": 0,
+                "video_tokens": 0
+              },
+              "cost_details": {
+                "upstream_inference_cost": 0.02158,
+                "upstream_inference_prompt_cost": 0.0073,
+                "upstream_inference_completions_cost": 0.01428
+              },
+              "completion_tokens_details": {
+                "reasoning_tokens": 316,
+                "image_tokens": 0,
+                "audio_tokens": 0
+              }
+            },
+            "cost": 0.02158
+          }
+        }
+      ]
+    },
+    {
+      "caseId": "G3",
+      "name": "Economy deals are declined honestly",
+      "category": "Discover",
+      "requirement": "Say the deals are business and first class only and offer an economy search on a specific route. Never present business deals as economy.",
+      "model": "openai/gpt-5.6-terra",
+      "repeat": 1,
+      "pass": true,
+      "deterministicPass": true,
+      "communicationPass": true,
+      "steps": [
+        {
+          "input": "anywhere from Tokyo in economy",
+          "expected": {
+            "status": "clarify",
+            "posts": 0,
+            "pending": null,
+            "mentions": "business and first class only"
+          },
+          "result": {
+            "status": "clarify",
+            "text": "These deals are business and first class only. I can search a specific route in economy. Where would you like to fly?"
+          },
+          "latencyMs": 2381,
+          "grade": {
+            "pass": true,
+            "actual": {
+              "status": "clarify",
+              "origin": null,
+              "destination": null,
+              "cabin": "business",
+              "from": null,
+              "to": null,
+              "budget": null,
+              "pending": null,
+              "menuCount": 0,
+              "posts": 0,
+              "resultCount": 0,
+              "sort": "recommended",
+              "nonstopOnly": false,
+              "sources": [],
+              "savedPreferences": {}
+            },
+            "checks": [
+              {
+                "name": "status",
+                "expected": "clarify",
+                "actual": "clarify",
+                "pass": true
+              },
+              {
+                "name": "posts",
+                "expected": 0,
+                "actual": 0,
+                "pass": true
+              },
+              {
+                "name": "pending",
+                "expected": null,
+                "actual": null,
+                "pass": true
+              },
+              {
+                "name": "mentions",
+                "expected": "business and first class only",
+                "actual": "These deals are business and first class only. I can search a specific route in economy. Where would you like to fly?",
+                "pass": true
+              },
+              {
+                "name": "Does not echo profanity or insult the user (limited lexical check)",
+                "pass": true
+              },
+              {
+                "name": "No claimed purchase completion",
+                "pass": true
+              }
+            ]
+          }
+        }
+      ],
+      "judge": {
+        "verdict": "pass",
+        "scores": {
+          "clarity": 5,
+          "concision": 5,
+          "tone": 5,
+          "nextStep": 5,
+          "limitationHonesty": 5,
+          "noInternalLeakage": 5
+        },
+        "rationale": "The reply states that the deals cover business and first class only. It does not present them as economy. It offers an economy search on a specific route and asks for the destination, keeping Tokyo as the implied origin. It is brief and friendly, with no leakage.",
+        "strengths": [
+          "Discloses the business and first class limit up front.",
+          "Offers an economy alternative for a specific route with a clear question.",
+          "Short and free of internal detail."
+        ],
+        "issues": [
+          {
+            "severity": "minor",
+            "criterion": "clarity",
+            "evidence": "\"I can search a specific route in economy.\" does not explicitly mention Tokyo.",
+            "recommendation": "Optionally confirm the origin, for example: \"I can search economy from Tokyo to a specific city.\""
+          }
+        ],
+        "recommendedAction": "none"
+      },
+      "judgeAttempts": [
+        {
+          "verdict": "pass",
+          "scores": {
+            "clarity": 5,
+            "concision": 5,
+            "tone": 5,
+            "nextStep": 5,
+            "limitationHonesty": 5,
+            "noInternalLeakage": 5
+          },
+          "rationale": "The reply states that the deals cover business and first class only. It does not present them as economy. It offers an economy search on a specific route and asks for the destination, keeping Tokyo as the implied origin. It is brief and friendly, with no leakage.",
+          "strengths": [
+            "Discloses the business and first class limit up front.",
+            "Offers an economy alternative for a specific route with a clear question.",
+            "Short and free of internal detail."
+          ],
+          "issues": [
+            {
+              "severity": "minor",
+              "criterion": "clarity",
+              "evidence": "\"I can search a specific route in economy.\" does not explicitly mention Tokyo.",
+              "recommendation": "Optionally confirm the origin, for example: \"I can search economy from Tokyo to a specific city.\""
+            }
+          ],
+          "recommendedAction": "none"
+        }
+      ],
+      "judgeConsensus": {
+        "passingVotes": 1,
+        "totalVotes": 1,
+        "verdicts": [
+          "pass"
+        ]
+      },
+      "events": [
+        {
+          "type": "model_usage",
+          "data": {
+            "model": "openai/gpt-5.6-terra",
+            "provider": "OpenAI",
+            "latencyMs": 2381,
+            "usage": {
+              "prompt_tokens": 2486,
+              "completion_tokens": 53,
+              "total_tokens": 2539,
+              "cost": 0.0013528,
+              "is_byok": false,
+              "prompt_tokens_details": {
+                "cached_tokens": 2364,
+                "cache_write_tokens": 0,
+                "audio_tokens": 0,
+                "video_tokens": 0
+              },
+              "cost_details": {
+                "upstream_inference_cost": 0.0013528,
+                "upstream_inference_prompt_cost": 0.0007168,
+                "upstream_inference_completions_cost": 0.000636
+              },
+              "completion_tokens_details": {
+                "reasoning_tokens": 13,
+                "image_tokens": 0,
+                "audio_tokens": 0
+              }
+            },
+            "cost": 0.0013528
+          }
+        },
+        {
+          "type": "tool_call",
+          "data": {
+            "name": "discover_flights",
+            "arguments": {
+              "origin": "Tokyo",
+              "cabin": "economy",
+              "region": "",
+              "maxPriceUsd": 0,
+              "aside": ""
+            }
+          }
+        },
+        {
+          "type": "judge_usage",
+          "data": {
+            "model": "anthropic/claude-opus-5.5",
+            "provider": "Claude Platform on AWS",
+            "latencyMs": 4982,
+            "usage": {
+              "prompt_tokens": 1499,
+              "completion_tokens": 313,
+              "total_tokens": 1812,
+              "cost": 0.012256,
+              "is_byok": false,
+              "prompt_tokens_details": {
+                "cached_tokens": 0,
+                "cache_write_tokens": 0,
+                "audio_tokens": 0,
+                "video_tokens": 0
+              },
+              "cost_details": {
+                "upstream_inference_cost": 0.012256,
+                "upstream_inference_prompt_cost": 0.005996,
+                "upstream_inference_completions_cost": 0.00626
+              },
+              "completion_tokens_details": {
+                "reasoning_tokens": 0,
+                "image_tokens": 0,
+                "audio_tokens": 0
+              }
+            },
+            "cost": 0.012256
+          }
+        }
+      ]
+    },
+    {
+      "caseId": "G4",
+      "name": "Choosing a deal runs a live search",
+      "category": "Discover",
+      "requirement": "Show deals from New York, then search the second deal live on its exact route and date and show the CommonSwyft link. The deal list price is not presented as the live price.",
+      "model": "openai/gpt-5.6-terra",
+      "repeat": 1,
+      "pass": true,
+      "deterministicPass": true,
+      "communicationPass": true,
+      "steps": [
+        {
+          "input": "take me anywhere from New York",
+          "expected": {
+            "status": "deals",
+            "posts": 0,
+            "pending": "deal",
+            "mentions": "deals from New York"
+          },
+          "result": {
+            "status": "deals",
+            "text": "SYNTHETIC FLIGHT DATA. These are example results.\n\nBest business class deals from New York · checked 18 Sept. Prices can change.\n\n1. Charlotte, United States · Sat, 19 Sept 2026 · 1 stop via New York (JFK)\n   USD 1,290 · usually USD 10,805\n2. Bangkok, Thailand · Sun, 20 Sept 2026 · Nonstop\n   USD 1,480 · usually USD 6,200\n3. Cape Town, South Africa · Mon, 21 Sept 2026 · 1 stop via Doha (DOH)\n   USD 1,620 · usually USD 5,900\n4. Lisbon, Portugal · Tue, 22 Sept 2026 · Nonstop\n   USD 690 · usually USD 2,100\n5. Sydney, Australia · Wed, 23 Sept 2026 · 1 stop via Singapore (SIN)\n   USD 2,410 · usually USD 9,800\n\nDeals can change or sell out quickly.\n\nReply with a number to search that flight, or name a place.",
+            "deals": [
+              {
+                "origin": "JFK",
+                "destination": "CLT",
+                "city": "Charlotte",
+                "date": "2026-09-19",
+                "cabin": "business",
+                "priceUsd": 1290
+              },
+              {
+                "origin": "JFK",
+                "destination": "BKK",
+                "city": "Bangkok",
+                "date": "2026-09-20",
+                "cabin": "business",
+                "priceUsd": 1480
+              },
+              {
+                "origin": "JFK",
+                "destination": "CPT",
+                "city": "Cape Town",
+                "date": "2026-09-21",
+                "cabin": "business",
+                "priceUsd": 1620
+              },
+              {
+                "origin": "JFK",
+                "destination": "LIS",
+                "city": "Lisbon",
+                "date": "2026-09-22",
+                "cabin": "business",
+                "priceUsd": 690
+              },
+              {
+                "origin": "JFK",
+                "destination": "SYD",
+                "city": "Sydney",
+                "date": "2026-09-23",
+                "cabin": "business",
+                "priceUsd": 2410
+              }
+            ],
+            "checkedAt": "2026-09-18",
+            "stale": false
+          },
+          "latencyMs": 2547,
+          "grade": {
+            "pass": true,
+            "actual": {
+              "status": "deals",
+              "origin": null,
+              "destination": null,
+              "cabin": "business",
+              "from": null,
+              "to": null,
+              "budget": null,
+              "pending": "deal",
+              "menuCount": 5,
+              "posts": 0,
+              "resultCount": 0,
+              "sort": "recommended",
+              "nonstopOnly": false,
+              "sources": [],
+              "savedPreferences": {}
+            },
+            "checks": [
+              {
+                "name": "status",
+                "expected": "deals",
+                "actual": "deals",
+                "pass": true
+              },
+              {
+                "name": "posts",
+                "expected": 0,
+                "actual": 0,
+                "pass": true
+              },
+              {
+                "name": "pending",
+                "expected": "deal",
+                "actual": "deal",
+                "pass": true
+              },
+              {
+                "name": "mentions",
+                "expected": "deals from New York",
+                "actual": "SYNTHETIC FLIGHT DATA. These are example results.\n\nBest business class deals from New York · checked 18 Sept. Prices can change.\n\n1. Charlotte, United States · Sat, 19 Sept 2026 · 1 stop via New York (JFK)\n   USD 1,290 · usually USD 10,805\n2. Bangkok, Thailand · Sun, 20 Sept 2026 · Nonstop\n   USD 1,480 · usually USD 6,200\n3. Cape Town, South Africa · Mon, 21 Sept 2026 · 1 stop via Doha (DOH)\n   USD 1,620 · usually USD 5,900\n4. Lisbon, Portugal · Tue, 22 Sept 2026 · Nonstop\n   USD 690 · usually USD 2,100\n5. Sydney, Australia · Wed, 23 Sept 2026 · 1 stop via Singapore (SIN)\n   USD 2,410 · usually USD 9,800\n\nDeals can change or sell out quickly.\n\nReply with a number to search that flight, or name a place.",
+                "pass": true
+              },
+              {
+                "name": "menu excludes opposite city",
+                "pass": true
+              },
+              {
+                "name": "Does not echo profanity or insult the user (limited lexical check)",
+                "pass": true
+              },
+              {
+                "name": "No claimed purchase completion",
+                "pass": true
+              }
+            ]
+          }
+        },
+        {
+          "input": "2",
+          "expected": {
+            "status": "results",
+            "origin": "JFK",
+            "destination": "BKK",
+            "from": "2026-09-20",
+            "to": "2026-09-20",
+            "posts": 1,
+            "mentions": "commonswyft\\.com/search/JFK-BKK-200926-business"
+          },
+          "result": {
+            "status": "results",
+            "text": "SYNTHETIC FLIGHT DATA. These are example results.\n\nJohn F. Kennedy International Airport (JFK) → Suvarnabhumi Airport (BKK)\nSun, 20 Sept 2026 · Business · One-way\n\nI found 3 options for you:\n\nA. John F. Kennedy International Airport (JFK) → Suvarnabhumi Airport (BKK)\nSun, 20 Sept 2026\nBusiness · Nonstop · USD 1,113.00\nDeparture time unavailable\nArrival time unavailable\n\nB. John F. Kennedy International Airport (JFK) → Suvarnabhumi Airport (BKK)\nSun, 20 Sept 2026\nBusiness · Nonstop · USD 1,273.00\nDeparture time unavailable\nArrival time unavailable\n\nC. John F. Kennedy International Airport (JFK) → Suvarnabhumi Airport (BKK)\nSun, 20 Sept 2026\nBusiness · With a connection · USD 1,193.00\nDeparture time unavailable\nArrival time unavailable\n\nPrices are estimates and may change.\n\nMissing flight times and exact seat counts are not available.\n\nYou can ask me to change the dates, cabin or airport.\n\nTo pick a flight and check out, continue on CommonSwyft:\nhttps://commonswyft.com/search/JFK-BKK-200926-business",
+            "dataMode": "synthetic",
+            "query": {
+              "origin": "JFK",
+              "destination": "BKK",
+              "dateFrom": "2026-09-19",
+              "dateTo": "2026-09-21",
+              "selectedDate": "2026-09-20",
+              "cabin": "business"
+            },
+            "shortlist": [
+              {
+                "id": "synthetic-JFK-BKK-2026-09-20-0",
+                "origin": "JFK",
+                "destination": "BKK",
+                "date": "2026-09-20",
+                "cabin": "business",
+                "priceUsd": 1113,
+                "direct": true,
+                "reasons": [],
+                "timing": {
+                  "departure": null,
+                  "arrival": null,
+                  "durationMinutes": null,
+                  "flightNumbers": null,
+                  "text": "Departure time unavailable\nArrival time unavailable"
+                },
+                "text": "John F. Kennedy International Airport (JFK) → Suvarnabhumi Airport (BKK)\nSun, 20 Sept 2026\nBusiness · Nonstop · USD 1,113.00\nDeparture time unavailable\nArrival time unavailable"
+              },
+              {
+                "id": "synthetic-JFK-BKK-2026-09-20-2",
+                "origin": "JFK",
+                "destination": "BKK",
+                "date": "2026-09-20",
+                "cabin": "business",
+                "priceUsd": 1273,
+                "direct": true,
+                "reasons": [],
+                "timing": {
+                  "departure": null,
+                  "arrival": null,
+                  "durationMinutes": null,
+                  "flightNumbers": null,
+                  "text": "Departure time unavailable\nArrival time unavailable"
+                },
+                "text": "John F. Kennedy International Airport (JFK) → Suvarnabhumi Airport (BKK)\nSun, 20 Sept 2026\nBusiness · Nonstop · USD 1,273.00\nDeparture time unavailable\nArrival time unavailable"
+              },
+              {
+                "id": "synthetic-JFK-BKK-2026-09-20-1",
+                "origin": "JFK",
+                "destination": "BKK",
+                "date": "2026-09-20",
+                "cabin": "business",
+                "priceUsd": 1193,
+                "direct": false,
+                "reasons": [],
+                "timing": {
+                  "departure": null,
+                  "arrival": null,
+                  "durationMinutes": null,
+                  "flightNumbers": null,
+                  "text": "Departure time unavailable\nArrival time unavailable"
+                },
+                "text": "John F. Kennedy International Airport (JFK) → Suvarnabhumi Airport (BKK)\nSun, 20 Sept 2026\nBusiness · With a connection · USD 1,193.00\nDeparture time unavailable\nArrival time unavailable"
+              }
+            ],
+            "cached": false,
+            "totalFound": 9,
+            "matchingCount": 3
+          },
+          "latencyMs": 4,
+          "grade": {
+            "pass": true,
+            "actual": {
+              "status": "results",
+              "origin": "JFK",
+              "destination": "BKK",
+              "cabin": "business",
+              "from": "2026-09-20",
+              "to": "2026-09-20",
+              "budget": null,
+              "pending": null,
+              "menuCount": 0,
+              "posts": 1,
+              "resultCount": 3,
+              "sort": "recommended",
+              "nonstopOnly": false,
+              "sources": [],
+              "savedPreferences": {}
+            },
+            "checks": [
+              {
+                "name": "status",
+                "expected": "results",
+                "actual": "results",
+                "pass": true
+              },
+              {
+                "name": "origin",
+                "expected": "JFK",
+                "actual": "JFK",
+                "pass": true
+              },
+              {
+                "name": "destination",
+                "expected": "BKK",
+                "actual": "BKK",
+                "pass": true
+              },
+              {
+                "name": "from",
+                "expected": "2026-09-20",
+                "actual": "2026-09-20",
+                "pass": true
+              },
+              {
+                "name": "to",
+                "expected": "2026-09-20",
+                "actual": "2026-09-20",
+                "pass": true
+              },
+              {
+                "name": "posts",
+                "expected": 1,
+                "actual": 1,
+                "pass": true
+              },
+              {
+                "name": "mentions",
+                "expected": "commonswyft\\.com/search/JFK-BKK-200926-business",
+                "actual": "SYNTHETIC FLIGHT DATA. These are example results.\n\nJohn F. Kennedy International Airport (JFK) → Suvarnabhumi Airport (BKK)\nSun, 20 Sept 2026 · Business · One-way\n\nI found 3 options for you:\n\nA. John F. Kennedy International Airport (JFK) → Suvarnabhumi Airport (BKK)\nSun, 20 Sept 2026\nBusiness · Nonstop · USD 1,113.00\nDeparture time unavailable\nArrival time unavailable\n\nB. John F. Kennedy International Airport (JFK) → Suvarnabhumi Airport (BKK)\nSun, 20 Sept 2026\nBusiness · Nonstop · USD 1,273.00\nDeparture time unavailable\nArrival time unavailable\n\nC. John F. Kennedy International Airport (JFK) → Suvarnabhumi Airport (BKK)\nSun, 20 Sept 2026\nBusiness · With a connection · USD 1,193.00\nDeparture time unavailable\nArrival time unavailable\n\nPrices are estimates and may change.\n\nMissing flight times and exact seat counts are not available.\n\nYou can ask me to change the dates, cabin or airport.\n\nTo pick a flight and check out, continue on CommonSwyft:\nhttps://commonswyft.com/search/JFK-BKK-200926-business",
+                "pass": true
+              },
+              {
+                "name": "data source is labelled",
+                "pass": true
+              },
+              {
+                "name": "route matches saved preference",
+                "pass": true
+              },
+              {
+                "name": "each result respects route and budget",
+                "pass": true
+              },
+              {
+                "name": "Does not echo profanity or insult the user (limited lexical check)",
+                "pass": true
+              },
+              {
+                "name": "No claimed purchase completion",
+                "pass": true
+              }
+            ]
+          }
+        }
+      ],
+      "judge": {
+        "verdict": "pass",
+        "scores": {
+          "clarity": 4,
+          "concision": 4,
+          "tone": 5,
+          "nextStep": 5,
+          "limitationHonesty": 4,
+          "noInternalLeakage": 5
+        },
+        "rationale": "The reply lists the New York deals and correctly searches deal 2 live on its exact route and date: JFK to BKK, Sun 20 Sept 2026, Business. It shows the CommonSwyft link. The live results carry their own prices, and the deal price of USD 1,480 is not presented as live. Missing times are disclosed and the next step is clear. Only minor wording and repetition issues remain.",
+        "strengths": [
+          "The live search matches the selected deal's route, date and cabin, and a header confirms what was searched.",
+          "Live prices are shown separately and are never presented as the deal list price.",
+          "Missing departure and arrival times are disclosed for every option.",
+          "The CommonSwyft link is shown with clear checkout guidance and options to refine the search."
+        ],
+        "issues": [
+          {
+            "severity": "minor",
+            "criterion": "clarity",
+            "evidence": "\"Missing flight times and exact seat counts are not available.\"",
+            "recommendation": "Rephrase plainly, for example: \"Flight times and exact seat counts aren't available for these options.\""
+          },
+          {
+            "severity": "minor",
+            "criterion": "concision",
+            "evidence": "The full airport names and date are repeated in the header and again in each of the three options.",
+            "recommendation": "Keep the route and date in the header only, and show price, stops and times per option."
+          },
+          {
+            "severity": "minor",
+            "criterion": "clarity",
+            "evidence": "The deal showed USD 1,480, but live results run USD 1,113 to 1,273. The reply never notes that the difference is expected.",
+            "recommendation": "Add a brief line such as \"Live prices differ from the deal price shown earlier.\""
+          }
+        ],
+        "recommendedAction": "prompt"
+      },
+      "judgeAttempts": [
+        {
+          "verdict": "pass",
+          "scores": {
+            "clarity": 4,
+            "concision": 4,
+            "tone": 5,
+            "nextStep": 5,
+            "limitationHonesty": 4,
+            "noInternalLeakage": 5
+          },
+          "rationale": "The reply lists the New York deals and correctly searches deal 2 live on its exact route and date: JFK to BKK, Sun 20 Sept 2026, Business. It shows the CommonSwyft link. The live results carry their own prices, and the deal price of USD 1,480 is not presented as live. Missing times are disclosed and the next step is clear. Only minor wording and repetition issues remain.",
+          "strengths": [
+            "The live search matches the selected deal's route, date and cabin, and a header confirms what was searched.",
+            "Live prices are shown separately and are never presented as the deal list price.",
+            "Missing departure and arrival times are disclosed for every option.",
+            "The CommonSwyft link is shown with clear checkout guidance and options to refine the search."
+          ],
+          "issues": [
+            {
+              "severity": "minor",
+              "criterion": "clarity",
+              "evidence": "\"Missing flight times and exact seat counts are not available.\"",
+              "recommendation": "Rephrase plainly, for example: \"Flight times and exact seat counts aren't available for these options.\""
+            },
+            {
+              "severity": "minor",
+              "criterion": "concision",
+              "evidence": "The full airport names and date are repeated in the header and again in each of the three options.",
+              "recommendation": "Keep the route and date in the header only, and show price, stops and times per option."
+            },
+            {
+              "severity": "minor",
+              "criterion": "clarity",
+              "evidence": "The deal showed USD 1,480, but live results run USD 1,113 to 1,273. The reply never notes that the difference is expected.",
+              "recommendation": "Add a brief line such as \"Live prices differ from the deal price shown earlier.\""
+            }
+          ],
+          "recommendedAction": "prompt"
+        }
+      ],
+      "judgeConsensus": {
+        "passingVotes": 1,
+        "totalVotes": 1,
+        "verdicts": [
+          "pass"
+        ]
+      },
+      "events": [
+        {
+          "type": "model_usage",
+          "data": {
+            "model": "openai/gpt-5.6-terra",
+            "provider": "OpenAI",
+            "latencyMs": 2545,
+            "usage": {
+              "prompt_tokens": 2486,
+              "completion_tokens": 38,
+              "total_tokens": 2524,
+              "cost": 0.0011728,
+              "is_byok": false,
+              "prompt_tokens_details": {
+                "cached_tokens": 2364,
+                "cache_write_tokens": 0,
+                "audio_tokens": 0,
+                "video_tokens": 0
+              },
+              "cost_details": {
+                "upstream_inference_cost": 0.0011728,
+                "upstream_inference_prompt_cost": 0.0007168,
+                "upstream_inference_completions_cost": 0.000456
+              },
+              "completion_tokens_details": {
+                "reasoning_tokens": 0,
+                "image_tokens": 0,
+                "audio_tokens": 0
+              }
+            },
+            "cost": 0.0011728
+          }
+        },
+        {
+          "type": "tool_call",
+          "data": {
+            "name": "discover_flights",
+            "arguments": {
+              "origin": "New York",
+              "cabin": "business",
+              "region": "",
+              "maxPriceUsd": 0,
+              "aside": ""
+            }
+          }
+        },
+        {
+          "type": "flight_api",
+          "data": {
+            "method": "POST",
+            "path": "/v1/flight-searches",
+            "body": {
+              "origin": "JFK",
+              "destination": "BKK",
+              "dateFrom": "2026-09-19",
+              "dateTo": "2026-09-21",
+              "selectedDate": "2026-09-20",
+              "cabin": "business"
+            },
+            "mode": "synthetic"
+          }
+        },
+        {
+          "type": "flight_api",
+          "data": {
+            "method": "GET",
+            "path": "/v1/flight-searches/fixture-search-1",
+            "mode": "synthetic"
+          }
+        },
+        {
+          "type": "search_result",
+          "data": {
+            "query": {
+              "origin": "JFK",
+              "destination": "BKK",
+              "dateFrom": "2026-09-19",
+              "dateTo": "2026-09-21",
+              "selectedDate": "2026-09-20",
+              "cabin": "business"
+            },
+            "cached": false,
+            "count": 9,
+            "searchId": "fixture-search-1"
+          }
+        },
+        {
+          "type": "judge_usage",
+          "data": {
+            "model": "anthropic/claude-opus-5.5",
+            "provider": "Claude Platform on AWS",
+            "latencyMs": 10735,
+            "usage": {
+              "prompt_tokens": 2327,
+              "completion_tokens": 905,
+              "total_tokens": 3232,
+              "cost": 0.027408,
+              "is_byok": false,
+              "prompt_tokens_details": {
+                "cached_tokens": 0,
+                "cache_write_tokens": 0,
+                "audio_tokens": 0,
+                "video_tokens": 0
+              },
+              "cost_details": {
+                "upstream_inference_cost": 0.027408,
+                "upstream_inference_prompt_cost": 0.009308,
+                "upstream_inference_completions_cost": 0.0181
+              },
+              "completion_tokens_details": {
+                "reasoning_tokens": 309,
+                "image_tokens": 0,
+                "audio_tokens": 0
+              }
+            },
+            "cost": 0.027408
+          }
+        }
+      ]
+    },
+    {
+      "caseId": "G5",
+      "name": "A saved home airport sets the deals city and is disclosed",
+      "category": "Discover",
+      "requirement": "Use the saved home airport, Heathrow, for deals from London, and say that the saved home airport was used.",
+      "model": "openai/gpt-5.6-terra",
+      "repeat": 1,
+      "pass": true,
+      "deterministicPass": true,
+      "communicationPass": true,
+      "steps": [
+        {
+          "input": "take me anywhere",
+          "expected": {
+            "status": "deals",
+            "posts": 0,
+            "pending": "deal",
+            "mentions": "(?=.*saved home airport)(?=.*deals from London)"
+          },
+          "result": {
+            "status": "deals",
+            "text": "SYNTHETIC FLIGHT DATA. These are example results.\n\nUsing your saved home airport, London Heathrow Airport (LHR).\n\nBest business class deals from London · checked 18 Sept. Prices can change.\n\n1. Charlotte, United States · Sat, 19 Sept 2026 · 1 stop via New York (JFK)\n   USD 1,290 · usually USD 10,805\n2. Bangkok, Thailand · Sun, 20 Sept 2026 · Nonstop\n   USD 1,480 · usually USD 6,200\n3. Cape Town, South Africa · Mon, 21 Sept 2026 · 1 stop via Doha (DOH)\n   USD 1,620 · usually USD 5,900\n4. Lisbon, Portugal · Tue, 22 Sept 2026 · Nonstop\n   USD 690 · usually USD 2,100\n5. Sydney, Australia · Wed, 23 Sept 2026 · 1 stop via Singapore (SIN)\n   USD 2,410 · usually USD 9,800\n\nDeals can change or sell out quickly.\n\nReply with a number to search that flight, or name a place.",
+            "deals": [
+              {
+                "origin": "LHR",
+                "destination": "CLT",
+                "city": "Charlotte",
+                "date": "2026-09-19",
+                "cabin": "business",
+                "priceUsd": 1290
+              },
+              {
+                "origin": "LHR",
+                "destination": "BKK",
+                "city": "Bangkok",
+                "date": "2026-09-20",
+                "cabin": "business",
+                "priceUsd": 1480
+              },
+              {
+                "origin": "LHR",
+                "destination": "CPT",
+                "city": "Cape Town",
+                "date": "2026-09-21",
+                "cabin": "business",
+                "priceUsd": 1620
+              },
+              {
+                "origin": "LHR",
+                "destination": "LIS",
+                "city": "Lisbon",
+                "date": "2026-09-22",
+                "cabin": "business",
+                "priceUsd": 690
+              },
+              {
+                "origin": "LHR",
+                "destination": "SYD",
+                "city": "Sydney",
+                "date": "2026-09-23",
+                "cabin": "business",
+                "priceUsd": 2410
+              }
+            ],
+            "checkedAt": "2026-09-18",
+            "stale": false
+          },
+          "latencyMs": 5318,
+          "grade": {
+            "pass": true,
+            "actual": {
+              "status": "deals",
+              "origin": "LHR",
+              "destination": null,
+              "cabin": "business",
+              "from": null,
+              "to": null,
+              "budget": null,
+              "pending": "deal",
+              "menuCount": 5,
+              "posts": 0,
+              "resultCount": 0,
+              "sort": "recommended",
+              "nonstopOnly": false,
+              "sources": [],
+              "savedPreferences": {
+                "homeAirport": "LHR"
+              }
+            },
+            "checks": [
+              {
+                "name": "status",
+                "expected": "deals",
+                "actual": "deals",
+                "pass": true
+              },
+              {
+                "name": "posts",
+                "expected": 0,
+                "actual": 0,
+                "pass": true
+              },
+              {
+                "name": "pending",
+                "expected": "deal",
+                "actual": "deal",
+                "pass": true
+              },
+              {
+                "name": "mentions",
+                "expected": "(?=.*saved home airport)(?=.*deals from London)",
+                "actual": "SYNTHETIC FLIGHT DATA. These are example results.\n\nUsing your saved home airport, London Heathrow Airport (LHR).\n\nBest business class deals from London · checked 18 Sept. Prices can change.\n\n1. Charlotte, United States · Sat, 19 Sept 2026 · 1 stop via New York (JFK)\n   USD 1,290 · usually USD 10,805\n2. Bangkok, Thailand · Sun, 20 Sept 2026 · Nonstop\n   USD 1,480 · usually USD 6,200\n3. Cape Town, South Africa · Mon, 21 Sept 2026 · 1 stop via Doha (DOH)\n   USD 1,620 · usually USD 5,900\n4. Lisbon, Portugal · Tue, 22 Sept 2026 · Nonstop\n   USD 690 · usually USD 2,100\n5. Sydney, Australia · Wed, 23 Sept 2026 · 1 stop via Singapore (SIN)\n   USD 2,410 · usually USD 9,800\n\nDeals can change or sell out quickly.\n\nReply with a number to search that flight, or name a place.",
+                "pass": true
+              },
+              {
+                "name": "menu excludes opposite city",
+                "pass": true
+              },
+              {
+                "name": "Does not echo profanity or insult the user (limited lexical check)",
+                "pass": true
+              },
+              {
+                "name": "No claimed purchase completion",
+                "pass": true
+              }
+            ]
+          }
+        }
+      ],
+      "judge": {
+        "verdict": "pass",
+        "scores": {
+          "clarity": 5,
+          "concision": 4,
+          "tone": 5,
+          "nextStep": 5,
+          "limitationHonesty": 5,
+          "noInternalLeakage": 5
+        },
+        "rationale": "The reply opens by saying it used the saved home airport, London Heathrow (LHR), which meets the requirement. It states the cabin and the check date, and lists five dated deals with stops and prices. It notes that prices are volatile and ends with a clear next step: pick a number or name a place. The only flaw is a repeated price-change caveat.",
+        "strengths": [
+          "Explicitly states that the saved home airport (LHR) was used, as required.",
+          "States the business cabin and the date the deals were checked.",
+          "Each deal shows date, stops and connection airport, current price and usual price.",
+          "Clear next step: reply with a number or name a place.",
+          "No internal leakage and no invented capabilities."
+        ],
+        "issues": [
+          {
+            "severity": "minor",
+            "criterion": "concision",
+            "evidence": "'checked 18 Sept. Prices can change.' is followed later by 'Deals can change or sell out quickly.'",
+            "recommendation": "Keep only one price-volatility caveat."
+          }
+        ],
+        "recommendedAction": "none"
+      },
+      "judgeAttempts": [
+        {
+          "verdict": "pass",
+          "scores": {
+            "clarity": 5,
+            "concision": 4,
+            "tone": 5,
+            "nextStep": 5,
+            "limitationHonesty": 5,
+            "noInternalLeakage": 5
+          },
+          "rationale": "The reply opens by saying it used the saved home airport, London Heathrow (LHR), which meets the requirement. It states the cabin and the check date, and lists five dated deals with stops and prices. It notes that prices are volatile and ends with a clear next step: pick a number or name a place. The only flaw is a repeated price-change caveat.",
+          "strengths": [
+            "Explicitly states that the saved home airport (LHR) was used, as required.",
+            "States the business cabin and the date the deals were checked.",
+            "Each deal shows date, stops and connection airport, current price and usual price.",
+            "Clear next step: reply with a number or name a place.",
+            "No internal leakage and no invented capabilities."
+          ],
+          "issues": [
+            {
+              "severity": "minor",
+              "criterion": "concision",
+              "evidence": "'checked 18 Sept. Prices can change.' is followed later by 'Deals can change or sell out quickly.'",
+              "recommendation": "Keep only one price-volatility caveat."
+            }
+          ],
+          "recommendedAction": "none"
+        }
+      ],
+      "judgeConsensus": {
+        "passingVotes": 1,
+        "totalVotes": 1,
+        "verdicts": [
+          "pass"
+        ]
+      },
+      "events": [
+        {
+          "type": "model_usage",
+          "data": {
+            "model": "openai/gpt-5.6-terra",
+            "provider": "OpenAI",
+            "latencyMs": 5316,
+            "usage": {
+              "prompt_tokens": 2501,
+              "completion_tokens": 124,
+              "total_tokens": 2625,
+              "cost": 0.0022078,
+              "is_byok": false,
+              "prompt_tokens_details": {
+                "cached_tokens": 2379,
+                "cache_write_tokens": 0,
+                "audio_tokens": 0,
+                "video_tokens": 0
+              },
+              "cost_details": {
+                "upstream_inference_cost": 0.0022078,
+                "upstream_inference_prompt_cost": 0.0007198,
+                "upstream_inference_completions_cost": 0.001488
+              },
+              "completion_tokens_details": {
+                "reasoning_tokens": 87,
+                "image_tokens": 0,
+                "audio_tokens": 0
+              }
+            },
+            "cost": 0.0022078
+          }
+        },
+        {
+          "type": "tool_call",
+          "data": {
+            "name": "discover_flights",
+            "arguments": {
+              "origin": "",
+              "cabin": "business",
+              "region": "",
+              "maxPriceUsd": 0,
+              "aside": ""
+            }
+          }
+        },
+        {
+          "type": "judge_usage",
+          "data": {
+            "model": "anthropic/claude-opus-5.5",
+            "provider": "Claude Platform on AWS",
+            "latencyMs": 7527,
+            "usage": {
+              "prompt_tokens": 1877,
+              "completion_tokens": 558,
+              "total_tokens": 2435,
+              "cost": 0.018668,
+              "is_byok": false,
+              "prompt_tokens_details": {
+                "cached_tokens": 0,
+                "cache_write_tokens": 0,
+                "audio_tokens": 0,
+                "video_tokens": 0
+              },
+              "cost_details": {
+                "upstream_inference_cost": 0.018668,
+                "upstream_inference_prompt_cost": 0.007508,
+                "upstream_inference_completions_cost": 0.01116
+              },
+              "completion_tokens_details": {
+                "reasoning_tokens": 173,
+                "image_tokens": 0,
+                "audio_tokens": 0
+              }
+            },
+            "cost": 0.018668
+          }
+        }
+      ]
+    },
+    {
+      "caseId": "G6",
+      "name": "A filter the deals cannot apply is declined briefly",
+      "category": "Discover",
+      "requirement": "Show deals from Paris and say in one short sentence that deals cannot be filtered by weather. Do not claim any destination is warm.",
+      "model": "openai/gpt-5.6-terra",
+      "repeat": 1,
+      "pass": true,
+      "deterministicPass": true,
+      "communicationPass": true,
+      "steps": [
+        {
+          "input": "somewhere warm from Paris",
+          "expected": {
+            "status": "deals",
+            "posts": 0,
+            "pending": "deal",
+            "mentions": "(?=.*deals from Paris)(?=.*weather)"
+          },
+          "result": {
+            "status": "deals",
+            "text": "SYNTHETIC FLIGHT DATA. These are example results.\n\nI can’t filter deals by weather, but I can show flight deals from Paris.\n\nBest business class deals from Paris · checked 18 Sept. Prices can change.\n\n1. Charlotte, United States · Sat, 19 Sept 2026 · 1 stop via New York (JFK)\n   USD 1,290 · usually USD 10,805\n2. Bangkok, Thailand · Sun, 20 Sept 2026 · Nonstop\n   USD 1,480 · usually USD 6,200\n3. Cape Town, South Africa · Mon, 21 Sept 2026 · 1 stop via Doha (DOH)\n   USD 1,620 · usually USD 5,900\n4. Lisbon, Portugal · Tue, 22 Sept 2026 · Nonstop\n   USD 690 · usually USD 2,100\n5. Sydney, Australia · Wed, 23 Sept 2026 · 1 stop via Singapore (SIN)\n   USD 2,410 · usually USD 9,800\n\nDeals can change or sell out quickly.\n\nReply with a number to search that flight, or name a place.",
+            "deals": [
+              {
+                "origin": "CDG",
+                "destination": "CLT",
+                "city": "Charlotte",
+                "date": "2026-09-19",
+                "cabin": "business",
+                "priceUsd": 1290
+              },
+              {
+                "origin": "CDG",
+                "destination": "BKK",
+                "city": "Bangkok",
+                "date": "2026-09-20",
+                "cabin": "business",
+                "priceUsd": 1480
+              },
+              {
+                "origin": "CDG",
+                "destination": "CPT",
+                "city": "Cape Town",
+                "date": "2026-09-21",
+                "cabin": "business",
+                "priceUsd": 1620
+              },
+              {
+                "origin": "CDG",
+                "destination": "LIS",
+                "city": "Lisbon",
+                "date": "2026-09-22",
+                "cabin": "business",
+                "priceUsd": 690
+              },
+              {
+                "origin": "CDG",
+                "destination": "SYD",
+                "city": "Sydney",
+                "date": "2026-09-23",
+                "cabin": "business",
+                "priceUsd": 2410
+              }
+            ],
+            "checkedAt": "2026-09-18",
+            "stale": false
+          },
+          "latencyMs": 3813,
+          "grade": {
+            "pass": true,
+            "actual": {
+              "status": "deals",
+              "origin": null,
+              "destination": null,
+              "cabin": "business",
+              "from": null,
+              "to": null,
+              "budget": null,
+              "pending": "deal",
+              "menuCount": 5,
+              "posts": 0,
+              "resultCount": 0,
+              "sort": "recommended",
+              "nonstopOnly": false,
+              "sources": [],
+              "savedPreferences": {}
+            },
+            "checks": [
+              {
+                "name": "status",
+                "expected": "deals",
+                "actual": "deals",
+                "pass": true
+              },
+              {
+                "name": "posts",
+                "expected": 0,
+                "actual": 0,
+                "pass": true
+              },
+              {
+                "name": "pending",
+                "expected": "deal",
+                "actual": "deal",
+                "pass": true
+              },
+              {
+                "name": "mentions",
+                "expected": "(?=.*deals from Paris)(?=.*weather)",
+                "actual": "SYNTHETIC FLIGHT DATA. These are example results.\n\nI can’t filter deals by weather, but I can show flight deals from Paris.\n\nBest business class deals from Paris · checked 18 Sept. Prices can change.\n\n1. Charlotte, United States · Sat, 19 Sept 2026 · 1 stop via New York (JFK)\n   USD 1,290 · usually USD 10,805\n2. Bangkok, Thailand · Sun, 20 Sept 2026 · Nonstop\n   USD 1,480 · usually USD 6,200\n3. Cape Town, South Africa · Mon, 21 Sept 2026 · 1 stop via Doha (DOH)\n   USD 1,620 · usually USD 5,900\n4. Lisbon, Portugal · Tue, 22 Sept 2026 · Nonstop\n   USD 690 · usually USD 2,100\n5. Sydney, Australia · Wed, 23 Sept 2026 · 1 stop via Singapore (SIN)\n   USD 2,410 · usually USD 9,800\n\nDeals can change or sell out quickly.\n\nReply with a number to search that flight, or name a place.",
+                "pass": true
+              },
+              {
+                "name": "menu excludes opposite city",
+                "pass": true
+              },
+              {
+                "name": "Does not echo profanity or insult the user (limited lexical check)",
+                "pass": true
+              },
+              {
+                "name": "No claimed purchase completion",
+                "pass": true
+              }
+            ]
+          }
+        }
+      ],
+      "judge": {
+        "verdict": "pass",
+        "scores": {
+          "clarity": 5,
+          "concision": 4,
+          "tone": 5,
+          "nextStep": 5,
+          "limitationHonesty": 5,
+          "noInternalLeakage": 5
+        },
+        "rationale": "The reply states in one short sentence that deals cannot be filtered by weather and makes no claim that any destination is warm. It shows business-class deals from Paris, labels the cabin and check date, and ends with a clear next step. The only flaw is a duplicated price-volatility caveat.",
+        "strengths": [
+          "The weather limitation is stated in one short, honest sentence, as required.",
+          "It never describes any destination as warm or implies weather-based selection.",
+          "The search context is visible: origin Paris, business cabin and check date.",
+          "The next step is actionable: reply with a number or name a place."
+        ],
+        "issues": [
+          {
+            "severity": "minor",
+            "criterion": "concision",
+            "evidence": "'Prices can change.' appears in the header, then 'Deals can change or sell out quickly.' appears after the list.",
+            "recommendation": "Keep a single volatility caveat."
+          }
+        ],
+        "recommendedAction": "none"
+      },
+      "judgeAttempts": [
+        {
+          "verdict": "pass",
+          "scores": {
+            "clarity": 5,
+            "concision": 4,
+            "tone": 5,
+            "nextStep": 5,
+            "limitationHonesty": 5,
+            "noInternalLeakage": 5
+          },
+          "rationale": "The reply states in one short sentence that deals cannot be filtered by weather and makes no claim that any destination is warm. It shows business-class deals from Paris, labels the cabin and check date, and ends with a clear next step. The only flaw is a duplicated price-volatility caveat.",
+          "strengths": [
+            "The weather limitation is stated in one short, honest sentence, as required.",
+            "It never describes any destination as warm or implies weather-based selection.",
+            "The search context is visible: origin Paris, business cabin and check date.",
+            "The next step is actionable: reply with a number or name a place."
+          ],
+          "issues": [
+            {
+              "severity": "minor",
+              "criterion": "concision",
+              "evidence": "'Prices can change.' appears in the header, then 'Deals can change or sell out quickly.' appears after the list.",
+              "recommendation": "Keep a single volatility caveat."
+            }
+          ],
+          "recommendedAction": "none"
+        }
+      ],
+      "judgeConsensus": {
+        "passingVotes": 1,
+        "totalVotes": 1,
+        "verdicts": [
+          "pass"
+        ]
+      },
+      "events": [
+        {
+          "type": "model_usage",
+          "data": {
+            "model": "openai/gpt-5.6-terra",
+            "provider": "OpenAI",
+            "latencyMs": 3809,
+            "usage": {
+              "prompt_tokens": 2485,
+              "completion_tokens": 127,
+              "total_tokens": 2612,
+              "cost": 0.0022406,
+              "is_byok": false,
+              "prompt_tokens_details": {
+                "cached_tokens": 2363,
+                "cache_write_tokens": 0,
+                "audio_tokens": 0,
+                "video_tokens": 0
+              },
+              "cost_details": {
+                "upstream_inference_cost": 0.0022406,
+                "upstream_inference_prompt_cost": 0.0007166,
+                "upstream_inference_completions_cost": 0.001524
+              },
+              "completion_tokens_details": {
+                "reasoning_tokens": 71,
+                "image_tokens": 0,
+                "audio_tokens": 0
+              }
+            },
+            "cost": 0.0022406
+          }
+        },
+        {
+          "type": "tool_call",
+          "data": {
+            "name": "discover_flights",
+            "arguments": {
+              "origin": "Paris",
+              "cabin": "business",
+              "region": "",
+              "maxPriceUsd": 0,
+              "aside": "I can’t filter deals by weather, but I can show flight deals from Paris."
+            }
+          }
+        },
+        {
+          "type": "judge_usage",
+          "data": {
+            "model": "anthropic/claude-opus-5.5",
+            "provider": "Claude Platform on AWS",
+            "latencyMs": 6900,
+            "usage": {
+              "prompt_tokens": 1858,
+              "completion_tokens": 496,
+              "total_tokens": 2354,
+              "cost": 0.017352,
+              "is_byok": false,
+              "prompt_tokens_details": {
+                "cached_tokens": 0,
+                "cache_write_tokens": 0,
+                "audio_tokens": 0,
+                "video_tokens": 0
+              },
+              "cost_details": {
+                "upstream_inference_cost": 0.017352,
+                "upstream_inference_prompt_cost": 0.007432,
+                "upstream_inference_completions_cost": 0.00992
+              },
+              "completion_tokens_details": {
+                "reasoning_tokens": 146,
+                "image_tokens": 0,
+                "audio_tokens": 0
+              }
+            },
+            "cost": 0.017352
+          }
+        }
+      ]
+    },
+    {
+      "caseId": "G7",
+      "name": "Nothing current is said plainly",
+      "category": "Discover",
+      "requirement": "The deals feed has only past deals. Say there are no current deals from London and offer to search a destination. Show no list.",
+      "model": "openai/gpt-5.6-terra",
+      "repeat": 1,
+      "pass": true,
+      "deterministicPass": true,
+      "communicationPass": true,
+      "steps": [
+        {
+          "input": "take me anywhere from London",
+          "expected": {
+            "status": "clarify",
+            "posts": 0,
+            "pending": null,
+            "mentions": "have current deals from London"
+          },
+          "result": {
+            "status": "clarify",
+            "text": "I don’t have current deals from London right now. Tell me a destination and I’ll search it."
+          },
+          "latencyMs": 3796,
+          "grade": {
+            "pass": true,
+            "actual": {
+              "status": "clarify",
+              "origin": null,
+              "destination": null,
+              "cabin": "business",
+              "from": null,
+              "to": null,
+              "budget": null,
+              "pending": null,
+              "menuCount": 0,
+              "posts": 0,
+              "resultCount": 0,
+              "sort": "recommended",
+              "nonstopOnly": false,
+              "sources": [],
+              "savedPreferences": {}
+            },
+            "checks": [
+              {
+                "name": "status",
+                "expected": "clarify",
+                "actual": "clarify",
+                "pass": true
+              },
+              {
+                "name": "posts",
+                "expected": 0,
+                "actual": 0,
+                "pass": true
+              },
+              {
+                "name": "pending",
+                "expected": null,
+                "actual": null,
+                "pass": true
+              },
+              {
+                "name": "mentions",
+                "expected": "have current deals from London",
+                "actual": "I don’t have current deals from London right now. Tell me a destination and I’ll search it.",
+                "pass": true
+              },
+              {
+                "name": "Does not echo profanity or insult the user (limited lexical check)",
+                "pass": true
+              },
+              {
+                "name": "No claimed purchase completion",
+                "pass": true
+              }
+            ]
+          }
+        }
+      ],
+      "judge": {
+        "verdict": "pass",
+        "scores": {
+          "clarity": 5,
+          "concision": 5,
+          "tone": 5,
+          "nextStep": 5,
+          "limitationHonesty": 5,
+          "noInternalLeakage": 5
+        },
+        "rationale": "The reply states plainly that there are no current deals from London, shows no list, and asks for a destination to search. It is concise and friendly, and it does not leak internal details or claim any capability the assistant lacks.",
+        "strengths": [
+          "States clearly that no current deals exist and keeps London as the origin.",
+          "Shows no list of past deals, as required.",
+          "Gives a concrete next step by asking for a destination.",
+          "Brief and warm tone."
+        ],
+        "issues": [],
+        "recommendedAction": "none"
+      },
+      "judgeAttempts": [
+        {
+          "verdict": "pass",
+          "scores": {
+            "clarity": 5,
+            "concision": 5,
+            "tone": 5,
+            "nextStep": 5,
+            "limitationHonesty": 5,
+            "noInternalLeakage": 5
+          },
+          "rationale": "The reply states plainly that there are no current deals from London, shows no list, and asks for a destination to search. It is concise and friendly, and it does not leak internal details or claim any capability the assistant lacks.",
+          "strengths": [
+            "States clearly that no current deals exist and keeps London as the origin.",
+            "Shows no list of past deals, as required.",
+            "Gives a concrete next step by asking for a destination.",
+            "Brief and warm tone."
+          ],
+          "issues": [],
+          "recommendedAction": "none"
+        }
+      ],
+      "judgeConsensus": {
+        "passingVotes": 1,
+        "totalVotes": 1,
+        "verdicts": [
+          "pass"
+        ]
+      },
+      "events": [
+        {
+          "type": "model_usage",
+          "data": {
+            "model": "openai/gpt-5.6-terra",
+            "provider": "OpenAI",
+            "latencyMs": 3794,
+            "usage": {
+              "prompt_tokens": 2485,
+              "completion_tokens": 107,
+              "total_tokens": 2592,
+              "cost": 0.0020006,
+              "is_byok": false,
+              "prompt_tokens_details": {
+                "cached_tokens": 2363,
+                "cache_write_tokens": 0,
+                "audio_tokens": 0,
+                "video_tokens": 0
+              },
+              "cost_details": {
+                "upstream_inference_cost": 0.0020006,
+                "upstream_inference_prompt_cost": 0.0007166,
+                "upstream_inference_completions_cost": 0.001284
+              },
+              "completion_tokens_details": {
+                "reasoning_tokens": 67,
+                "image_tokens": 0,
+                "audio_tokens": 0
+              }
+            },
+            "cost": 0.0020006
+          }
+        },
+        {
+          "type": "tool_call",
+          "data": {
+            "name": "discover_flights",
+            "arguments": {
+              "origin": "London",
+              "cabin": "business",
+              "region": "",
+              "maxPriceUsd": 0,
+              "aside": ""
+            }
+          }
+        },
+        {
+          "type": "judge_usage",
+          "data": {
+            "model": "anthropic/claude-opus-5.5",
+            "provider": "Claude Platform on AWS",
+            "latencyMs": 3493,
+            "usage": {
+              "prompt_tokens": 1493,
+              "completion_tokens": 224,
+              "total_tokens": 1717,
+              "cost": 0.010452,
+              "is_byok": false,
+              "prompt_tokens_details": {
+                "cached_tokens": 0,
+                "cache_write_tokens": 0,
+                "audio_tokens": 0,
+                "video_tokens": 0
+              },
+              "cost_details": {
+                "upstream_inference_cost": 0.010452,
+                "upstream_inference_prompt_cost": 0.005972,
+                "upstream_inference_completions_cost": 0.00448
+              },
+              "completion_tokens_details": {
+                "reasoning_tokens": 0,
+                "image_tokens": 0,
+                "audio_tokens": 0
+              }
+            },
+            "cost": 0.010452
+          }
+        }
+      ]
+    },
+    {
+      "caseId": "G8",
+      "name": "A city without deals falls back honestly",
+      "category": "Discover",
+      "requirement": "Say there are no deals from Aberdeen yet and show the best deals across departure cities instead, each naming its origin.",
+      "model": "openai/gpt-5.6-terra",
+      "repeat": 1,
+      "pass": true,
+      "deterministicPass": true,
+      "communicationPass": true,
+      "steps": [
+        {
+          "input": "anywhere from Aberdeen",
+          "expected": {
+            "status": "deals",
+            "posts": 0,
+            "pending": "deal",
+            "mentions": "(?=.*deals from Aberdeen yet)(?=.*across our departure cities)"
+          },
+          "result": {
+            "status": "deals",
+            "text": "SYNTHETIC FLIGHT DATA. These are example results.\n\nI don’t have deals from Aberdeen yet. Here are the best deals across our departure cities.\n\nBest business class deals across our departure cities · checked 18 Sept. Prices can change.\n\n1. London → Charlotte, United States · Sat, 19 Sept 2026 · 1 stop via New York (JFK)\n   USD 1,290 · usually USD 10,805\n2. London → Lisbon, Portugal · Tue, 22 Sept 2026 · Nonstop\n   USD 690 · usually USD 2,100\n3. New York → Cape Town, South Africa · Tue, 22 Sept 2026 · 1 stop via Doha (DOH)\n   USD 1,657 · usually USD 5,900\n4. Tokyo → Bangkok, Thailand · Tue, 22 Sept 2026 · Nonstop\n   USD 1,554 · usually USD 6,200\n5. Tokyo → Sydney, Australia · Fri, 25 Sept 2026 · 1 stop via Singapore (SIN)\n   USD 2,484 · usually USD 9,800\n\nDeals can change or sell out quickly.\n\nReply with a number to search that flight, or tell me where you’re flying from for deals from there.",
+            "deals": [
+              {
+                "origin": "LHR",
+                "destination": "CLT",
+                "city": "Charlotte",
+                "date": "2026-09-19",
+                "cabin": "business",
+                "priceUsd": 1290
+              },
+              {
+                "origin": "LHR",
+                "destination": "LIS",
+                "city": "Lisbon",
+                "date": "2026-09-22",
+                "cabin": "business",
+                "priceUsd": 690
+              },
+              {
+                "origin": "JFK",
+                "destination": "CPT",
+                "city": "Cape Town",
+                "date": "2026-09-22",
+                "cabin": "business",
+                "priceUsd": 1657
+              },
+              {
+                "origin": "HND",
+                "destination": "BKK",
+                "city": "Bangkok",
+                "date": "2026-09-22",
+                "cabin": "business",
+                "priceUsd": 1554
+              },
+              {
+                "origin": "HND",
+                "destination": "SYD",
+                "city": "Sydney",
+                "date": "2026-09-25",
+                "cabin": "business",
+                "priceUsd": 2484
+              }
+            ],
+            "checkedAt": "2026-09-18",
+            "stale": false
+          },
+          "latencyMs": 2582,
+          "grade": {
+            "pass": true,
+            "actual": {
+              "status": "deals",
+              "origin": null,
+              "destination": null,
+              "cabin": "business",
+              "from": null,
+              "to": null,
+              "budget": null,
+              "pending": "deal",
+              "menuCount": 5,
+              "posts": 0,
+              "resultCount": 0,
+              "sort": "recommended",
+              "nonstopOnly": false,
+              "sources": [],
+              "savedPreferences": {}
+            },
+            "checks": [
+              {
+                "name": "status",
+                "expected": "deals",
+                "actual": "deals",
+                "pass": true
+              },
+              {
+                "name": "posts",
+                "expected": 0,
+                "actual": 0,
+                "pass": true
+              },
+              {
+                "name": "pending",
+                "expected": "deal",
+                "actual": "deal",
+                "pass": true
+              },
+              {
+                "name": "mentions",
+                "expected": "(?=.*deals from Aberdeen yet)(?=.*across our departure cities)",
+                "actual": "SYNTHETIC FLIGHT DATA. These are example results.\n\nI don’t have deals from Aberdeen yet. Here are the best deals across our departure cities.\n\nBest business class deals across our departure cities · checked 18 Sept. Prices can change.\n\n1. London → Charlotte, United States · Sat, 19 Sept 2026 · 1 stop via New York (JFK)\n   USD 1,290 · usually USD 10,805\n2. London → Lisbon, Portugal · Tue, 22 Sept 2026 · Nonstop\n   USD 690 · usually USD 2,100\n3. New York → Cape Town, South Africa · Tue, 22 Sept 2026 · 1 stop via Doha (DOH)\n   USD 1,657 · usually USD 5,900\n4. Tokyo → Bangkok, Thailand · Tue, 22 Sept 2026 · Nonstop\n   USD 1,554 · usually USD 6,200\n5. Tokyo → Sydney, Australia · Fri, 25 Sept 2026 · 1 stop via Singapore (SIN)\n   USD 2,484 · usually USD 9,800\n\nDeals can change or sell out quickly.\n\nReply with a number to search that flight, or tell me where you’re flying from for deals from there.",
+                "pass": true
+              },
+              {
+                "name": "menu excludes opposite city",
+                "pass": true
+              },
+              {
+                "name": "Does not echo profanity or insult the user (limited lexical check)",
+                "pass": true
+              },
+              {
+                "name": "No claimed purchase completion",
+                "pass": true
+              }
+            ]
+          }
+        }
+      ],
+      "judge": {
+        "verdict": "pass",
+        "scores": {
+          "clarity": 5,
+          "concision": 4,
+          "tone": 5,
+          "nextStep": 5,
+          "limitationHonesty": 5,
+          "noInternalLeakage": 5
+        },
+        "rationale": "The reply meets the requirement. It says there are no Aberdeen deals yet, then lists deals from other departure cities, and each deal names its origin. The business cabin and the check date are disclosed. Price volatility is noted honestly. The closing line gives clear next steps: pick a number, or give a different origin. The only weakness is a small amount of repeated wording.",
+        "strengths": [
+          "Opens by stating that no Aberdeen deals are available.",
+          "Each deal names its origin city, as required.",
+          "Discloses the business cabin and the check date.",
+          "Gives two clear next steps: reply with a number, or name another origin."
+        ],
+        "issues": [
+          {
+            "severity": "minor",
+            "criterion": "concision",
+            "evidence": "'Prices can change.' in the header is repeated by 'Deals can change or sell out quickly.' The phrase 'across our departure cities' also appears in both the intro and the header.",
+            "recommendation": "Keep a single price-volatility caveat and avoid repeating the intro line in the header."
+          }
+        ],
+        "recommendedAction": "none"
+      },
+      "judgeAttempts": [
+        {
+          "verdict": "pass",
+          "scores": {
+            "clarity": 5,
+            "concision": 4,
+            "tone": 5,
+            "nextStep": 5,
+            "limitationHonesty": 5,
+            "noInternalLeakage": 5
+          },
+          "rationale": "The reply meets the requirement. It says there are no Aberdeen deals yet, then lists deals from other departure cities, and each deal names its origin. The business cabin and the check date are disclosed. Price volatility is noted honestly. The closing line gives clear next steps: pick a number, or give a different origin. The only weakness is a small amount of repeated wording.",
+          "strengths": [
+            "Opens by stating that no Aberdeen deals are available.",
+            "Each deal names its origin city, as required.",
+            "Discloses the business cabin and the check date.",
+            "Gives two clear next steps: reply with a number, or name another origin."
+          ],
+          "issues": [
+            {
+              "severity": "minor",
+              "criterion": "concision",
+              "evidence": "'Prices can change.' in the header is repeated by 'Deals can change or sell out quickly.' The phrase 'across our departure cities' also appears in both the intro and the header.",
+              "recommendation": "Keep a single price-volatility caveat and avoid repeating the intro line in the header."
+            }
+          ],
+          "recommendedAction": "none"
+        }
+      ],
+      "judgeConsensus": {
+        "passingVotes": 1,
+        "totalVotes": 1,
+        "verdicts": [
+          "pass"
+        ]
+      },
+      "events": [
+        {
+          "type": "model_usage",
+          "data": {
+            "model": "openai/gpt-5.6-terra",
+            "provider": "OpenAI",
+            "latencyMs": 2561,
+            "usage": {
+              "prompt_tokens": 2484,
+              "completion_tokens": 60,
+              "total_tokens": 2544,
+              "cost": 0.0014364,
+              "is_byok": false,
+              "prompt_tokens_details": {
+                "cached_tokens": 2362,
+                "cache_write_tokens": 0,
+                "audio_tokens": 0,
+                "video_tokens": 0
+              },
+              "cost_details": {
+                "upstream_inference_cost": 0.0014364,
+                "upstream_inference_prompt_cost": 0.0007164,
+                "upstream_inference_completions_cost": 0.00072
+              },
+              "completion_tokens_details": {
+                "reasoning_tokens": 19,
+                "image_tokens": 0,
+                "audio_tokens": 0
+              }
+            },
+            "cost": 0.0014364
+          }
+        },
+        {
+          "type": "tool_call",
+          "data": {
+            "name": "discover_flights",
+            "arguments": {
+              "origin": "Aberdeen",
+              "cabin": "business",
+              "region": "",
+              "maxPriceUsd": 0,
+              "aside": ""
+            }
+          }
+        },
+        {
+          "type": "judge_usage",
+          "data": {
+            "model": "anthropic/claude-opus-5.5",
+            "provider": "Claude Platform on AWS",
+            "latencyMs": 6943,
+            "usage": {
+              "prompt_tokens": 1893,
+              "completion_tokens": 572,
+              "total_tokens": 2465,
+              "cost": 0.019012,
+              "is_byok": false,
+              "prompt_tokens_details": {
+                "cached_tokens": 0,
+                "cache_write_tokens": 0,
+                "audio_tokens": 0,
+                "video_tokens": 0
+              },
+              "cost_details": {
+                "upstream_inference_cost": 0.019012,
+                "upstream_inference_prompt_cost": 0.007572,
+                "upstream_inference_completions_cost": 0.01144
+              },
+              "completion_tokens_details": {
+                "reasoning_tokens": 174,
+                "image_tokens": 0,
+                "audio_tokens": 0
+              }
+            },
+            "cost": 0.019012
+          }
+        }
+      ]
+    },
+    {
+      "caseId": "G9",
+      "name": "Other wording for the same request",
+      "category": "Discover",
+      "requirement": "\"Surprise me\" with a stated origin is a request for deals from Tokyo.",
+      "model": "openai/gpt-5.6-terra",
+      "repeat": 1,
+      "pass": true,
+      "deterministicPass": true,
+      "communicationPass": true,
+      "steps": [
+        {
+          "input": "surprise me, I’m flying out of Tokyo",
+          "expected": {
+            "status": "deals",
+            "posts": 0,
+            "pending": "deal",
+            "mentions": "deals from Tokyo"
+          },
+          "result": {
+            "status": "deals",
+            "text": "SYNTHETIC FLIGHT DATA. These are example results.\n\nBest business class deals from Tokyo · checked 18 Sept. Prices can change.\n\n1. Charlotte, United States · Sat, 19 Sept 2026 · 1 stop via New York (JFK)\n   USD 1,290 · usually USD 10,805\n2. Bangkok, Thailand · Sun, 20 Sept 2026 · Nonstop\n   USD 1,480 · usually USD 6,200\n3. Cape Town, South Africa · Mon, 21 Sept 2026 · 1 stop via Doha (DOH)\n   USD 1,620 · usually USD 5,900\n4. Lisbon, Portugal · Tue, 22 Sept 2026 · Nonstop\n   USD 690 · usually USD 2,100\n5. Sydney, Australia · Wed, 23 Sept 2026 · 1 stop via Singapore (SIN)\n   USD 2,410 · usually USD 9,800\n\nDeals can change or sell out quickly.\n\nReply with a number to search that flight, or name a place.",
+            "deals": [
+              {
+                "origin": "HND",
+                "destination": "CLT",
+                "city": "Charlotte",
+                "date": "2026-09-19",
+                "cabin": "business",
+                "priceUsd": 1290
+              },
+              {
+                "origin": "HND",
+                "destination": "BKK",
+                "city": "Bangkok",
+                "date": "2026-09-20",
+                "cabin": "business",
+                "priceUsd": 1480
+              },
+              {
+                "origin": "HND",
+                "destination": "CPT",
+                "city": "Cape Town",
+                "date": "2026-09-21",
+                "cabin": "business",
+                "priceUsd": 1620
+              },
+              {
+                "origin": "HND",
+                "destination": "LIS",
+                "city": "Lisbon",
+                "date": "2026-09-22",
+                "cabin": "business",
+                "priceUsd": 690
+              },
+              {
+                "origin": "HND",
+                "destination": "SYD",
+                "city": "Sydney",
+                "date": "2026-09-23",
+                "cabin": "business",
+                "priceUsd": 2410
+              }
+            ],
+            "checkedAt": "2026-09-18",
+            "stale": false
+          },
+          "latencyMs": 2244,
+          "grade": {
+            "pass": true,
+            "actual": {
+              "status": "deals",
+              "origin": null,
+              "destination": null,
+              "cabin": "business",
+              "from": null,
+              "to": null,
+              "budget": null,
+              "pending": "deal",
+              "menuCount": 5,
+              "posts": 0,
+              "resultCount": 0,
+              "sort": "recommended",
+              "nonstopOnly": false,
+              "sources": [],
+              "savedPreferences": {}
+            },
+            "checks": [
+              {
+                "name": "status",
+                "expected": "deals",
+                "actual": "deals",
+                "pass": true
+              },
+              {
+                "name": "posts",
+                "expected": 0,
+                "actual": 0,
+                "pass": true
+              },
+              {
+                "name": "pending",
+                "expected": "deal",
+                "actual": "deal",
+                "pass": true
+              },
+              {
+                "name": "mentions",
+                "expected": "deals from Tokyo",
+                "actual": "SYNTHETIC FLIGHT DATA. These are example results.\n\nBest business class deals from Tokyo · checked 18 Sept. Prices can change.\n\n1. Charlotte, United States · Sat, 19 Sept 2026 · 1 stop via New York (JFK)\n   USD 1,290 · usually USD 10,805\n2. Bangkok, Thailand · Sun, 20 Sept 2026 · Nonstop\n   USD 1,480 · usually USD 6,200\n3. Cape Town, South Africa · Mon, 21 Sept 2026 · 1 stop via Doha (DOH)\n   USD 1,620 · usually USD 5,900\n4. Lisbon, Portugal · Tue, 22 Sept 2026 · Nonstop\n   USD 690 · usually USD 2,100\n5. Sydney, Australia · Wed, 23 Sept 2026 · 1 stop via Singapore (SIN)\n   USD 2,410 · usually USD 9,800\n\nDeals can change or sell out quickly.\n\nReply with a number to search that flight, or name a place.",
+                "pass": true
+              },
+              {
+                "name": "menu excludes opposite city",
+                "pass": true
+              },
+              {
+                "name": "Does not echo profanity or insult the user (limited lexical check)",
+                "pass": true
+              },
+              {
+                "name": "No claimed purchase completion",
+                "pass": true
+              }
+            ]
+          }
+        }
+      ],
+      "judge": {
+        "verdict": "pass",
+        "scores": {
+          "clarity": 4,
+          "concision": 4,
+          "tone": 5,
+          "nextStep": 5,
+          "limitationHonesty": 4,
+          "noInternalLeakage": 5
+        },
+        "rationale": "The reply treats 'surprise me' as a deals request from Tokyo, as required. It names the default business cabin, the check date and a dated list within the default seven-day window. It closes with a clear next step. Remaining issues are minor: a repeated price caveat, a 'Best' label whose ordering is unexplained, and a check date without a year.",
+        "strengths": [
+          "Interprets 'surprise me' as a deals request and keeps the Tokyo origin.",
+          "States the business cabin default and the check date up front.",
+          "Each option has a destination, date, stops, price and usual price for comparison.",
+          "Gives a clear next step: reply with a number or name a place.",
+          "No internal leakage and no invented capabilities."
+        ],
+        "issues": [
+          {
+            "severity": "minor",
+            "criterion": "concision",
+            "evidence": "'Prices can change.' in the header and 'Deals can change or sell out quickly.' after the list.",
+            "recommendation": "Keep one volatility caveat."
+          },
+          {
+            "severity": "minor",
+            "criterion": "clarity",
+            "evidence": "The list is headed 'Best business class deals', but it is not ordered by price or by discount. For example, Lisbon at USD 690 is fourth.",
+            "recommendation": "Sort by the ranking implied, or say what 'best' means."
+          },
+          {
+            "severity": "minor",
+            "criterion": "clarity",
+            "evidence": "'checked 18 Sept' has no year, while the options show 2026.",
+            "recommendation": "Use a consistent date format, including the year."
+          }
+        ],
+        "recommendedAction": "none"
+      },
+      "judgeAttempts": [
+        {
+          "verdict": "pass",
+          "scores": {
+            "clarity": 4,
+            "concision": 4,
+            "tone": 5,
+            "nextStep": 5,
+            "limitationHonesty": 4,
+            "noInternalLeakage": 5
+          },
+          "rationale": "The reply treats 'surprise me' as a deals request from Tokyo, as required. It names the default business cabin, the check date and a dated list within the default seven-day window. It closes with a clear next step. Remaining issues are minor: a repeated price caveat, a 'Best' label whose ordering is unexplained, and a check date without a year.",
+          "strengths": [
+            "Interprets 'surprise me' as a deals request and keeps the Tokyo origin.",
+            "States the business cabin default and the check date up front.",
+            "Each option has a destination, date, stops, price and usual price for comparison.",
+            "Gives a clear next step: reply with a number or name a place.",
+            "No internal leakage and no invented capabilities."
+          ],
+          "issues": [
+            {
+              "severity": "minor",
+              "criterion": "concision",
+              "evidence": "'Prices can change.' in the header and 'Deals can change or sell out quickly.' after the list.",
+              "recommendation": "Keep one volatility caveat."
+            },
+            {
+              "severity": "minor",
+              "criterion": "clarity",
+              "evidence": "The list is headed 'Best business class deals', but it is not ordered by price or by discount. For example, Lisbon at USD 690 is fourth.",
+              "recommendation": "Sort by the ranking implied, or say what 'best' means."
+            },
+            {
+              "severity": "minor",
+              "criterion": "clarity",
+              "evidence": "'checked 18 Sept' has no year, while the options show 2026.",
+              "recommendation": "Use a consistent date format, including the year."
+            }
+          ],
+          "recommendedAction": "none"
+        }
+      ],
+      "judgeConsensus": {
+        "passingVotes": 1,
+        "totalVotes": 1,
+        "verdicts": [
+          "pass"
+        ]
+      },
+      "events": [
+        {
+          "type": "model_usage",
+          "data": {
+            "model": "openai/gpt-5.6-terra",
+            "provider": "OpenAI",
+            "latencyMs": 2240,
+            "usage": {
+              "prompt_tokens": 2490,
+              "completion_tokens": 37,
+              "total_tokens": 2527,
+              "cost": 0.0011616,
+              "is_byok": false,
+              "prompt_tokens_details": {
+                "cached_tokens": 2368,
+                "cache_write_tokens": 0,
+                "audio_tokens": 0,
+                "video_tokens": 0
+              },
+              "cost_details": {
+                "upstream_inference_cost": 0.0011616,
+                "upstream_inference_prompt_cost": 0.0007176,
+                "upstream_inference_completions_cost": 0.000444
+              },
+              "completion_tokens_details": {
+                "reasoning_tokens": 0,
+                "image_tokens": 0,
+                "audio_tokens": 0
+              }
+            },
+            "cost": 0.0011616
+          }
+        },
+        {
+          "type": "tool_call",
+          "data": {
+            "name": "discover_flights",
+            "arguments": {
+              "origin": "Tokyo",
+              "cabin": "business",
+              "region": "",
+              "maxPriceUsd": 0,
+              "aside": ""
+            }
+          }
+        },
+        {
+          "type": "judge_usage",
+          "data": {
+            "model": "anthropic/claude-opus-5.5",
+            "provider": "Claude Platform on AWS",
+            "latencyMs": 9138,
+            "usage": {
+              "prompt_tokens": 1824,
+              "completion_tokens": 857,
+              "total_tokens": 2681,
+              "cost": 0.024436,
+              "is_byok": false,
+              "prompt_tokens_details": {
+                "cached_tokens": 0,
+                "cache_write_tokens": 0,
+                "audio_tokens": 0,
+                "video_tokens": 0
+              },
+              "cost_details": {
+                "upstream_inference_cost": 0.024436,
+                "upstream_inference_prompt_cost": 0.007296,
+                "upstream_inference_completions_cost": 0.01714
+              },
+              "completion_tokens_details": {
+                "reasoning_tokens": 311,
+                "image_tokens": 0,
+                "audio_tokens": 0
+              }
+            },
+            "cost": 0.024436
+          }
+        }
+      ]
+    },
+    {
+      "caseId": "G10",
+      "name": "First class only when asked",
+      "category": "Discover",
+      "requirement": "Show first class deals from Dubai, and only first class.",
+      "model": "openai/gpt-5.6-terra",
+      "repeat": 1,
+      "pass": true,
+      "deterministicPass": true,
+      "communicationPass": true,
+      "steps": [
+        {
+          "input": "where can I go from Dubai in first class?",
+          "expected": {
+            "status": "deals",
+            "posts": 0,
+            "pending": "deal",
+            "mentions": "first class deals from Dubai"
+          },
+          "result": {
+            "status": "deals",
+            "text": "SYNTHETIC FLIGHT DATA. These are example results.\n\nBest first class deals from Dubai · checked 18 Sept. Prices can change.\n\n1. Seoul, South Korea · Thu, 24 Sept 2026 · Nonstop\n   USD 1,350 · usually USD 5,400\n\nDeals can change or sell out quickly.\n\nReply with a number to search that flight, or name a place.",
+            "deals": [
+              {
+                "origin": "DXB",
+                "destination": "ICN",
+                "city": "Seoul",
+                "date": "2026-09-24",
+                "cabin": "first",
+                "priceUsd": 1350
+              }
+            ],
+            "checkedAt": "2026-09-18",
+            "stale": false
+          },
+          "latencyMs": 4902,
+          "grade": {
+            "pass": true,
+            "actual": {
+              "status": "deals",
+              "origin": null,
+              "destination": null,
+              "cabin": "business",
+              "from": null,
+              "to": null,
+              "budget": null,
+              "pending": "deal",
+              "menuCount": 1,
+              "posts": 0,
+              "resultCount": 0,
+              "sort": "recommended",
+              "nonstopOnly": false,
+              "sources": [],
+              "savedPreferences": {}
+            },
+            "checks": [
+              {
+                "name": "status",
+                "expected": "deals",
+                "actual": "deals",
+                "pass": true
+              },
+              {
+                "name": "posts",
+                "expected": 0,
+                "actual": 0,
+                "pass": true
+              },
+              {
+                "name": "pending",
+                "expected": "deal",
+                "actual": "deal",
+                "pass": true
+              },
+              {
+                "name": "mentions",
+                "expected": "first class deals from Dubai",
+                "actual": "SYNTHETIC FLIGHT DATA. These are example results.\n\nBest first class deals from Dubai · checked 18 Sept. Prices can change.\n\n1. Seoul, South Korea · Thu, 24 Sept 2026 · Nonstop\n   USD 1,350 · usually USD 5,400\n\nDeals can change or sell out quickly.\n\nReply with a number to search that flight, or name a place.",
+                "pass": true
+              },
+              {
+                "name": "menu excludes opposite city",
+                "pass": true
+              },
+              {
+                "name": "Does not echo profanity or insult the user (limited lexical check)",
+                "pass": true
+              },
+              {
+                "name": "No claimed purchase completion",
+                "pass": true
+              }
+            ]
+          }
+        }
+      ],
+      "judge": {
+        "verdict": "pass",
+        "scores": {
+          "clarity": 4,
+          "concision": 4,
+          "tone": 5,
+          "nextStep": 5,
+          "limitationHonesty": 4,
+          "noInternalLeakage": 5
+        },
+        "rationale": "The reply keeps the first-class and Dubai context, labels the result clearly, gives a price with a reference price, and offers an easy next step. There are minor weaknesses. The price-change warning appears twice. The plural 'Best deals' heading sits over a single result. The reply also does not say that carrier and times are not shown. None of these issues is major.",
+        "strengths": [
+          "The heading keeps the cabin and origin constraint: 'first class deals from Dubai'.",
+          "It gives a check date and notes that prices can change.",
+          "The single deal is concise, with the date, stops, price and usual price.",
+          "The next step is clear and actionable: reply with a number or name a place."
+        ],
+        "issues": [
+          {
+            "severity": "minor",
+            "criterion": "concision",
+            "evidence": "'Prices can change.' and 'Deals can change or sell out quickly.' repeat the same caveat.",
+            "recommendation": "Keep a single volatility caveat."
+          },
+          {
+            "severity": "minor",
+            "criterion": "limitationHonesty",
+            "evidence": "The carrier and departure times are omitted without comment, and only one result appears under a plural 'Best ... deals' heading.",
+            "recommendation": "Say briefly when details are unavailable, and note when only one first-class deal was found."
+          }
+        ],
+        "recommendedAction": "prompt"
+      },
+      "judgeAttempts": [
+        {
+          "verdict": "pass",
+          "scores": {
+            "clarity": 4,
+            "concision": 4,
+            "tone": 5,
+            "nextStep": 5,
+            "limitationHonesty": 4,
+            "noInternalLeakage": 5
+          },
+          "rationale": "The reply keeps the first-class and Dubai context, labels the result clearly, gives a price with a reference price, and offers an easy next step. There are minor weaknesses. The price-change warning appears twice. The plural 'Best deals' heading sits over a single result. The reply also does not say that carrier and times are not shown. None of these issues is major.",
+          "strengths": [
+            "The heading keeps the cabin and origin constraint: 'first class deals from Dubai'.",
+            "It gives a check date and notes that prices can change.",
+            "The single deal is concise, with the date, stops, price and usual price.",
+            "The next step is clear and actionable: reply with a number or name a place."
+          ],
+          "issues": [
+            {
+              "severity": "minor",
+              "criterion": "concision",
+              "evidence": "'Prices can change.' and 'Deals can change or sell out quickly.' repeat the same caveat.",
+              "recommendation": "Keep a single volatility caveat."
+            },
+            {
+              "severity": "minor",
+              "criterion": "limitationHonesty",
+              "evidence": "The carrier and departure times are omitted without comment, and only one result appears under a plural 'Best ... deals' heading.",
+              "recommendation": "Say briefly when details are unavailable, and note when only one first-class deal was found."
+            }
+          ],
+          "recommendedAction": "prompt"
+        }
+      ],
+      "judgeConsensus": {
+        "passingVotes": 1,
+        "totalVotes": 1,
+        "verdicts": [
+          "pass"
+        ]
+      },
+      "events": [
+        {
+          "type": "model_usage",
+          "data": {
+            "model": "openai/gpt-5.6-terra",
+            "provider": "OpenAI",
+            "latencyMs": 4900,
+            "usage": {
+              "prompt_tokens": 2490,
+              "completion_tokens": 86,
+              "total_tokens": 2576,
+              "cost": 0.0017496,
+              "is_byok": false,
+              "prompt_tokens_details": {
+                "cached_tokens": 2368,
+                "cache_write_tokens": 0,
+                "audio_tokens": 0,
+                "video_tokens": 0
+              },
+              "cost_details": {
+                "upstream_inference_cost": 0.0017496,
+                "upstream_inference_prompt_cost": 0.0007176,
+                "upstream_inference_completions_cost": 0.001032
+              },
+              "completion_tokens_details": {
+                "reasoning_tokens": 47,
+                "image_tokens": 0,
+                "audio_tokens": 0
+              }
+            },
+            "cost": 0.0017496
+          }
+        },
+        {
+          "type": "tool_call",
+          "data": {
+            "name": "discover_flights",
+            "arguments": {
+              "origin": "Dubai",
+              "cabin": "first",
+              "region": "",
+              "maxPriceUsd": 0,
+              "aside": ""
+            }
+          }
+        },
+        {
+          "type": "judge_usage",
+          "data": {
+            "model": "anthropic/claude-opus-5.5",
+            "provider": "Claude Platform on AWS",
+            "latencyMs": 9417,
+            "usage": {
+              "prompt_tokens": 1570,
+              "completion_tokens": 785,
+              "total_tokens": 2355,
+              "cost": 0.02198,
+              "is_byok": false,
+              "prompt_tokens_details": {
+                "cached_tokens": 0,
+                "cache_write_tokens": 0,
+                "audio_tokens": 0,
+                "video_tokens": 0
+              },
+              "cost_details": {
+                "upstream_inference_cost": 0.02198,
+                "upstream_inference_prompt_cost": 0.00628,
+                "upstream_inference_completions_cost": 0.0157
+              },
+              "completion_tokens_details": {
+                "reasoning_tokens": 311,
+                "image_tokens": 0,
+                "audio_tokens": 0
+              }
+            },
+            "cost": 0.02198
+          }
+        }
+      ]
+    },
+    {
+      "caseId": "G11",
+      "name": "A region narrows the deals",
+      "category": "Discover",
+      "requirement": "Show only deals in Asia from London. Name only destinations the deals contain.",
+      "model": "openai/gpt-5.6-terra",
+      "repeat": 1,
+      "pass": true,
+      "deterministicPass": true,
+      "communicationPass": true,
+      "steps": [
+        {
+          "input": "take me anywhere in Asia from London",
+          "expected": {
+            "status": "deals",
+            "posts": 0,
+            "pending": "deal",
+            "mentions": "(?=.*in Asia from London)(?=.*Bangkok)"
+          },
+          "result": {
+            "status": "deals",
+            "text": "SYNTHETIC FLIGHT DATA. These are example results.\n\nBest business class deals in Asia from London · checked 18 Sept. Prices can change.\n\n1. Bangkok, Thailand · Sun, 20 Sept 2026 · Nonstop\n   USD 1,480 · usually USD 6,200\n\nDeals can change or sell out quickly.\n\nReply with a number to search that flight, or name a place.",
+            "deals": [
+              {
+                "origin": "LHR",
+                "destination": "BKK",
+                "city": "Bangkok",
+                "date": "2026-09-20",
+                "cabin": "business",
+                "priceUsd": 1480
+              }
+            ],
+            "checkedAt": "2026-09-18",
+            "stale": false
+          },
+          "latencyMs": 1604,
+          "grade": {
+            "pass": true,
+            "actual": {
+              "status": "deals",
+              "origin": null,
+              "destination": null,
+              "cabin": "business",
+              "from": null,
+              "to": null,
+              "budget": null,
+              "pending": "deal",
+              "menuCount": 1,
+              "posts": 0,
+              "resultCount": 0,
+              "sort": "recommended",
+              "nonstopOnly": false,
+              "sources": [],
+              "savedPreferences": {}
+            },
+            "checks": [
+              {
+                "name": "status",
+                "expected": "deals",
+                "actual": "deals",
+                "pass": true
+              },
+              {
+                "name": "posts",
+                "expected": 0,
+                "actual": 0,
+                "pass": true
+              },
+              {
+                "name": "pending",
+                "expected": "deal",
+                "actual": "deal",
+                "pass": true
+              },
+              {
+                "name": "mentions",
+                "expected": "(?=.*in Asia from London)(?=.*Bangkok)",
+                "actual": "SYNTHETIC FLIGHT DATA. These are example results.\n\nBest business class deals in Asia from London · checked 18 Sept. Prices can change.\n\n1. Bangkok, Thailand · Sun, 20 Sept 2026 · Nonstop\n   USD 1,480 · usually USD 6,200\n\nDeals can change or sell out quickly.\n\nReply with a number to search that flight, or name a place.",
+                "pass": true
+              },
+              {
+                "name": "menu excludes opposite city",
+                "pass": true
+              },
+              {
+                "name": "Does not echo profanity or insult the user (limited lexical check)",
+                "pass": true
+              },
+              {
+                "name": "No claimed purchase completion",
+                "pass": true
+              }
+            ]
+          }
+        }
+      ],
+      "judge": {
+        "verdict": "pass",
+        "scores": {
+          "clarity": 4,
+          "concision": 4,
+          "tone": 5,
+          "nextStep": 5,
+          "limitationHonesty": 4,
+          "noInternalLeakage": 5
+        },
+        "rationale": "The reply meets the requirement. It shows a single deal in Asia from London (Bangkok) and names no other destinations. It states the cabin and when the deals were checked, and it gives a clear next step. Two small weaknesses: it repeats the price-change caveat, and it does not say that carrier and departure times are unavailable.",
+        "strengths": [
+          "Names only Bangkok, the one destination the deal contains, which fits the Asia-from-London scope.",
+          "States the business cabin and the date the deals were checked.",
+          "Offers a clear next step: reply with the number or name another place.",
+          "Contains no internal leakage and uses a neutral, friendly tone."
+        ],
+        "issues": [
+          {
+            "severity": "minor",
+            "criterion": "concision",
+            "evidence": "\"Prices can change.\" in the header and \"Deals can change or sell out quickly.\" later repeat the same caveat.",
+            "recommendation": "Keep a single price-volatility caveat."
+          },
+          {
+            "severity": "minor",
+            "criterion": "limitationHonesty",
+            "evidence": "The deal lists no carrier or departure time, and the reply does not say these details are unavailable.",
+            "recommendation": "Briefly note which flight details are missing, e.g. \"carrier and times not yet available\"."
+          }
+        ],
+        "recommendedAction": "prompt"
+      },
+      "judgeAttempts": [
+        {
+          "verdict": "pass",
+          "scores": {
+            "clarity": 4,
+            "concision": 4,
+            "tone": 5,
+            "nextStep": 5,
+            "limitationHonesty": 4,
+            "noInternalLeakage": 5
+          },
+          "rationale": "The reply meets the requirement. It shows a single deal in Asia from London (Bangkok) and names no other destinations. It states the cabin and when the deals were checked, and it gives a clear next step. Two small weaknesses: it repeats the price-change caveat, and it does not say that carrier and departure times are unavailable.",
+          "strengths": [
+            "Names only Bangkok, the one destination the deal contains, which fits the Asia-from-London scope.",
+            "States the business cabin and the date the deals were checked.",
+            "Offers a clear next step: reply with the number or name another place.",
+            "Contains no internal leakage and uses a neutral, friendly tone."
+          ],
+          "issues": [
+            {
+              "severity": "minor",
+              "criterion": "concision",
+              "evidence": "\"Prices can change.\" in the header and \"Deals can change or sell out quickly.\" later repeat the same caveat.",
+              "recommendation": "Keep a single price-volatility caveat."
+            },
+            {
+              "severity": "minor",
+              "criterion": "limitationHonesty",
+              "evidence": "The deal lists no carrier or departure time, and the reply does not say these details are unavailable.",
+              "recommendation": "Briefly note which flight details are missing, e.g. \"carrier and times not yet available\"."
+            }
+          ],
+          "recommendedAction": "prompt"
+        }
+      ],
+      "judgeConsensus": {
+        "passingVotes": 1,
+        "totalVotes": 1,
+        "verdicts": [
+          "pass"
+        ]
+      },
+      "events": [
+        {
+          "type": "model_usage",
+          "data": {
+            "model": "openai/gpt-5.6-terra",
+            "provider": "OpenAI",
+            "latencyMs": 1602,
+            "usage": {
+              "prompt_tokens": 2487,
+              "completion_tokens": 39,
+              "total_tokens": 2526,
+              "cost": 0.001185,
+              "is_byok": false,
+              "prompt_tokens_details": {
+                "cached_tokens": 2365,
+                "cache_write_tokens": 0,
+                "audio_tokens": 0,
+                "video_tokens": 0
+              },
+              "cost_details": {
+                "upstream_inference_cost": 0.001185,
+                "upstream_inference_prompt_cost": 0.000717,
+                "upstream_inference_completions_cost": 0.000468
+              },
+              "completion_tokens_details": {
+                "reasoning_tokens": 0,
+                "image_tokens": 0,
+                "audio_tokens": 0
+              }
+            },
+            "cost": 0.001185
+          }
+        },
+        {
+          "type": "tool_call",
+          "data": {
+            "name": "discover_flights",
+            "arguments": {
+              "origin": "London",
+              "cabin": "business",
+              "region": "Asia",
+              "maxPriceUsd": 0,
+              "aside": ""
+            }
+          }
+        },
+        {
+          "type": "judge_usage",
+          "data": {
+            "model": "anthropic/claude-opus-5.5",
+            "provider": "Claude Platform on AWS",
+            "latencyMs": 8405,
+            "usage": {
+              "prompt_tokens": 1578,
+              "completion_tokens": 680,
+              "total_tokens": 2258,
+              "cost": 0.019912,
+              "is_byok": false,
+              "prompt_tokens_details": {
+                "cached_tokens": 0,
+                "cache_write_tokens": 0,
+                "audio_tokens": 0,
+                "video_tokens": 0
+              },
+              "cost_details": {
+                "upstream_inference_cost": 0.019912,
+                "upstream_inference_prompt_cost": 0.006312,
+                "upstream_inference_completions_cost": 0.0136
+              },
+              "completion_tokens_details": {
+                "reasoning_tokens": 204,
+                "image_tokens": 0,
+                "audio_tokens": 0
+              }
+            },
+            "cost": 0.019912
+          }
+        }
+      ]
+    }
+  ],
+  "limitations": [
+    "Held-out v2 cases were frozen before this first run. Known place-handling gaps were not fixed first.",
+    "One attempt per case does not establish reliability.",
+    "The judge reviews communication quality and can be wrong. Deterministic checks remain authoritative for facts and actions.",
+    "The judge receives blinded candidate output and no private reasoning.",
+    "The synthetic-inventory banner is retained in the report but removed from judge input because production does not show it.",
+    "Synthetic inventory is used. No booking, payment or live flight search occurs."
+  ],
+  "completedAt": "2026-09-22T22:26:15.396Z",
+  "modelCallsAttempted": 24,
+  "actualCostUsd": 0.257597,
+  "conservativeReservedUsd": 0.8698680000000001,
+  "summary": [
+    {
+      "model": "openai/gpt-5.6-terra",
+      "passed": 12,
+      "total": 12,
+      "deterministicPassed": 12,
+      "judgePassed": 12,
+      "modelCalls": 12,
+      "judgeCalls": 12,
+      "cost": 0.257597
+    }
+  ]
+}
