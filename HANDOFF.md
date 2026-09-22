@@ -22,12 +22,12 @@ customer data or raw backend captures.
 - Terra medium is the default model. DeepSeek V4.1 Flash low and GLM 5.3 high
   remain optional research controls in the live chat.
 - All model traffic uses the OpenRouter adapter.
-- The current prompt contract is `flight-search-v1.4.1`.
+- The current prompt contract is `flight-search-v1.6.0`.
 - The supported product scope is one-way flight search, policy retrieval,
   session follow-ups and explicit preference proposals.
 - Booking, payment, account servicing, autonomous purchasing, WhatsApp and MCP
   remain outside the implemented scope.
-- The deterministic suite currently contains 143 passing checks.
+- The deterministic suite currently contains 217 passing checks.
 - The first 42-case Terra hardening run passed 30 cases. Every observed issue
   later received a focused passing verification. A later full rerun passed 32
   cases, then stopped at B03 after a safe policy handoff failed the frozen
@@ -153,10 +153,9 @@ copied into a handoff bundle.
 
 ## Checkout handoff: where it stands (2026-09-22)
 
-Phase 1 is built on branch `claude/search-handoff-link` and not yet merged:
-every results reply links to the same search on commonswyft.com, so
-selection, quoting and checkout happen on the product site. Held-out case
-F1 pins it.
+Phase 1 is live (PR #7, revision 00026-run onwards): every results reply
+links to the same search on commonswyft.com, so selection, quoting and
+checkout happen on the product site. Held-out case F1 pins it.
 
 Phase 2, a checkout link by quote id, needs a Clerk session for the member:
 `POST /checkout-quotes` is Clerk-authenticated and binds the quote to the
