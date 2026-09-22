@@ -18,5 +18,8 @@
     "eval:combine": "node combine-comparisons.mjs",
     "eval:chart": "node generate-model-chart.mjs",
     "eval:harden": "node --import ./register.mjs hardening-judge-eval.mjs"
+  },
+  "dependencies": {
+    "pg": "^8.23.0"
   }
 }
