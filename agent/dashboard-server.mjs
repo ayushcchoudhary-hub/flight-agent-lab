@@ -28,7 +28,9 @@ const server=http.createServer(async(req,res)=>{
       if(!input||Array.isArray(input)||typeof input!=='object')return send(res,400,{error:'Invalid request.'});
       try{
         if(url.pathname==='/api/preferences')return send(res,200,await chat.savePreferences(input.preferences));
-        if(url.pathname==='/api/chat/start')return send(res,200,await chat.start(input.mode,input.model,input.effort));
+        if(url.pathname==='/api/chat/welcome')return send(res,200,await chat.welcome(input.mode));
+        if(url.pathname==='/api/chat/deals')return send(res,200,await chat.welcomeDeals(input.mode));
+        if(url.pathname==='/api/chat/start')return send(res,200,await chat.start(input.mode,input.model,input.effort,typeof input.welcomeKey==='string'?input.welcomeKey.slice(0,300):null));
         if(url.pathname==='/api/chat/turn')return send(res,200,await chat.turn(input.id,input.text));
         if(url.pathname==='/api/chat/close')return send(res,200,chat.close(input.id));
       }catch(e){return send(res,400,{error:e.message});}
