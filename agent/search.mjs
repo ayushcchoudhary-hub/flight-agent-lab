@@ -40,7 +40,14 @@ export function resolveLocation(text) {
   if (typeof text !== 'string' || !text.trim() || text.length > 120) return [];
   // Places now arrive exactly as typed, so "the UK" and "the States" carry
   // their article. Strip it before any lookup.
-  const bare = text.trim().replace(/^(?:the|a|an)\s+/i, '');
+  // Places arrive exactly as typed, so conversational filler travels with
+  // them: "the UK", "Gatwick only", "just Heathrow please", "from Tokyo".
+  // Held-out v2 C1 sent "Gatwick only" and got "I couldn't resolve".
+  const bare = text.trim()
+    .replace(/[.!?,]+$/, '')
+    .replace(/^(?:(?:from|to|via|fly|flying|out of|into|the|a|an|just|only|actually|maybe|please)\s+)+/i, '')
+    .replace(/(?:\s+(?:only|please|instead|then|thanks|thank you|pls))+$/i, '')
+    .trim();
   const term = aliases[normal(bare)] ?? countryAlias(bare) ?? bare;
   // Models and people can copy an airport label, not just its bare name/code.
   // Accept a corroborating label, but never silently trust a conflicting code.

@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { SearchConversation, blockedByFilter, findTool, resolveLocation, isoToday } from '../search.mjs';
 import { makeFixtureAdapter } from '../fixtures.mjs';
 import { AIRPORTS } from '../shared.mjs';
-import { Agent, OpenRouterModel, PROMPT_VERSION, ScriptedDemoModel, bookingHandoff, compactForHistory, deterministicBoundary, repairExplicitToolArguments, systemPrompt } from '../model.mjs';
+import { Agent, OpenRouterModel, PROMPT_VERSION, ScriptedDemoModel, bookingHandoff, compactForHistory, deterministicBoundary, fitHistory, repairExplicitToolArguments, systemPrompt } from '../model.mjs';
 import { redact } from '../trace.mjs';
 
 const setup = (scenario = 'normal', today = '2026-09-18') => {
@@ -742,4 +742,32 @@ test('the handoff link never carries a price',async()=>{
 });
 test('no link before there is a searchable trip',()=>{
   assert.equal(productSearchPath({origin:null,destination:null,dates:null}),null);
+});
+
+// Held-out v2 C1 (gpt-6-sol): "Gatwick only" reached the resolver verbatim and
+// got "I couldn't resolve". Filler around a place name must not defeat it.
+test('filler words around a place name do not defeat resolution',()=>{
+  for(const [text,code] of [['Gatwick only','LGW'],['just Heathrow please','LHR'],['from Tokyo','HND|NRT'],['to Singapore.','SIN'],['Osaka instead','KIX|ITM|UKB'],['the UK only','LHR|LGW|LCY|STN|LTN']]){
+    assert.equal(resolveLocation(text)[0]?.code,code,`${text} -> ${code}`);
+  }
+  // A place whose name contains a filler word stays intact.
+  assert.deepEqual(resolveLocation('Only').length>=0,true);
+});
+
+// Held-out v2 C1 (gpt-5.6-terra): "Context size limit reached" at turn five.
+test('long conversations drop old turns instead of failing',()=>{
+  const system={role:'system',content:'s'.repeat(2000)};
+  const turn=i=>[{role:'user',content:`turn ${i}`},{role:'assistant',content:'r'.repeat(6000)}];
+  const turns=[turn(1),turn(2),turn(3),turn(4)];
+  const user={role:'user',content:'drop the budget'};
+  const {messages,dropped}=fitHistory(system,turns,user,20000);
+  assert.ok(dropped>0,'something must give way');
+  assert.ok(JSON.stringify(messages).length<=20000);
+  assert.equal(messages[0],system);
+  assert.equal(messages.at(-1),user);
+  assert.deepEqual(messages.at(-2),turns[3][1],'the latest turn is kept');
+});
+test('history is left untouched when it fits',()=>{
+  const {messages,dropped}=fitHistory({role:'system',content:'s'},[[{role:'user',content:'a'}]],{role:'user',content:'b'});
+  assert.equal(dropped,0); assert.equal(messages.length,3);
 });
