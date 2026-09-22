@@ -385,6 +385,45 @@ test('a payment request is refused deterministically and points to checkout',()=
   }
 });
 
+// Held-out v2 C1 and C2: a sort, nonstop or budget change was answered with
+// "Using the same results", even when the visible rows changed.
+test('every applied refinement is named in the reply',async()=>{
+  const {c}=setup();
+  await c.find(route);
+  const sorted=await c.find({sort:'cheapest'});
+  assert.match(sorted.text,/Sorted by cheapest first\./);
+  assert.ok(!/^Using the same results/m.test(sorted.text),'the acknowledgement replaces the bare cache line');
+  assert.match(sorted.text,/same search/,'the reply still says no new availability check ran');
+  const again=await c.find({sort:'cheapest'});
+  assert.match(again.text,/Already sorted by cheapest first\./);
+  const nonstop=await c.find({nonstopOnly:true});
+  assert.match(nonstop.text,/Showing nonstop flights only\./);
+  const budget=await c.find({maxPriceUsd:700});
+  assert.match(budget.text,/Budget set to USD 700\./);
+  const dropped=await c.find({maxPriceUsd:null});
+  assert.match(dropped.text,/Budget removed\./);
+  const relaxed=await c.find({nonstopOnly:false});
+  assert.match(relaxed.text,/Nonstop-only filter removed\./);
+  const cabinOnly=await c.find({cabinOnly:true});
+  assert.match(cabinOnly.text,/Showing business class only\./);
+});
+
+test('a first search is not narrated as a change',async()=>{
+  const {c}=setup();
+  const first=await c.find({...route,sort:'cheapest',nonstopOnly:true});
+  assert.ok(!/Sorted by|Showing nonstop/.test(first.text),first.text.slice(0,300));
+});
+
+test('an active non-default sort shows in the results header',async()=>{
+  const {c}=setup();
+  const recommended=await c.find(route);
+  assert.ok(!/Cheapest first|Fastest first|Nonstop first/.test(recommended.text),'the default sort is not announced');
+  const cheapest=await c.find({sort:'cheapest'});
+  assert.match(cheapest.text.split('\n\n')[1],/· Cheapest first$/m);
+  const fastest=await c.find({sort:'fastest'});
+  assert.match(fastest.text,/· Fastest first/);
+});
+
 // Held-out v2 E2: "London to New York 1 Oct, also is Lisbon nice in winter?"
 // searched and said nothing about the second question.
 test('an off-topic question asked with a flight request is answered above the results',async()=>{

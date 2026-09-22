@@ -237,6 +237,7 @@ export class SearchConversation {
       if (candidates) { patch = { ...patch }; delete patch.dates; }
 
       // 2. Merge the follow-up into a copy. Omitted fields remain unchanged.
+      const previous = this.state;
       const { next, unresolved } = mergeTripState(this.state, patch, today);
       this.state = next;
 
@@ -304,7 +305,8 @@ export class SearchConversation {
       next.snapshot = response;
       next.lastQuery = key;
       this.trace('search_result', { query, cached: Boolean(cached), count: response.totalFound, searchId: response.searchId });
-      return present(next, response, Boolean(cached), this.adapter.mode, { aside });
+      const applied = previous.lastQuery ? describeApplied(previous, next, patch) : [];
+      return present(next, response, Boolean(cached), this.adapter.mode, { aside, applied });
     } catch (error) {
       const internal = error instanceof Error ? error.message : String(error);
       this.trace('error', { text: internal });
@@ -369,7 +371,37 @@ export function productSearchPath(state) {
 }
 export const productSearchUrl = state => { const path = productSearchPath(state); return path ? `${PRODUCT_WEB_BASE}${path}` : null; };
 
-function present(state, response, cached, mode = 'synthetic', { aside = '' } = {}) {
+// Held-out v2 C1 and C2: sort, nonstop and budget changes came back under
+// "Using the same results", which reads as nothing happened even when three
+// new fares appeared. Say what was applied instead, and say when the list was
+// already in the state the traveler asked for.
+const SORT_SENTENCE = { recommended: 'our recommended order', cheapest: 'cheapest first', fastest: 'fastest first', nonstop: 'nonstop first' };
+const SORT_HEADER = { cheapest: 'Cheapest first', fastest: 'Fastest first', nonstop: 'Nonstop first' };
+const cabinName = cabin => (cabin === 'any' ? 'any cabin' : cabin === 'business' ? 'business class' : cabin === 'premium' ? 'premium economy' : `${cabin} class`);
+
+export function describeApplied(previous, next, patch) {
+  const applied = [];
+  const changed = field => field in patch && patch[field] !== previous[field];
+  const restated = field => field in patch && patch[field] === previous[field];
+
+  if (changed('cabin')) applied.push(`Cabin changed to ${cabinName(next.cabin)}.`);
+  else if (restated('cabin')) applied.push(`Already searching ${cabinName(next.cabin)}.`);
+
+  if (changed('sort')) applied.push(`Sorted by ${SORT_SENTENCE[next.sort]}.`);
+  else if (restated('sort')) applied.push(`Already sorted by ${SORT_SENTENCE[next.sort]}.`);
+
+  if (changed('nonstopOnly')) applied.push(next.nonstopOnly ? 'Showing nonstop flights only.' : 'Nonstop-only filter removed.');
+  else if (restated('nonstopOnly') && next.nonstopOnly) applied.push('Already showing nonstop flights only.');
+
+  if (changed('cabinOnly')) applied.push(next.cabinOnly ? `Showing ${cabinName(next.cabin)} only.` : 'Other cabins are allowed again.');
+
+  if (changed('maxPriceUsd')) applied.push(next.maxPriceUsd === null ? 'Budget removed.' : `Budget set to USD ${next.maxPriceUsd}.`);
+  else if (restated('maxPriceUsd') && next.maxPriceUsd !== null) applied.push(`Budget is already USD ${next.maxPriceUsd}.`);
+
+  return applied;
+}
+
+function present(state, response, cached, mode = 'synthetic', { aside = '', applied = [] } = {}) {
   const staging = mode === 'staging' || mode === 'replay';
   const replay = mode === 'replay';
   const d = state.dates;
@@ -397,9 +429,11 @@ function present(state, response, cached, mode = 'synthetic', { aside = '' } = {
   const text = [
     !staging?'SYNTHETIC FLIGHT DATA. These are example results.':replay?'Saved results. This is not a fresh availability check.':null,
     aside||null,
-    `${state.origin.label} → ${state.destination.label}\n${dateSummary} · ${cabinLabel(state)} · One-way${state.maxPriceUsd !== null ? ` · Up to USD ${state.maxPriceUsd}` : ''}${state.nonstopOnly ? ' · Nonstop only' : ''}`,
+    `${state.origin.label} → ${state.destination.label}\n${dateSummary} · ${cabinLabel(state)} · One-way${state.maxPriceUsd !== null ? ` · Up to USD ${state.maxPriceUsd}` : ''}${state.nonstopOnly ? ' · Nonstop only' : ''}${SORT_HEADER[state.sort] ? ` · ${SORT_HEADER[state.sort]}` : ''}`,
     state.originFromPreference?`Using your saved home airport, ${state.origin.label}. Say where you are flying from to change it.`:null,
-    cached?'Using the same results. Say “refresh availability” for a new check.':null,
+    applied.length
+      ? `${applied.join(' ')}${cached ? ' This uses the same search. Say “refresh availability” for a new check.' : ''}`
+      : cached ? 'Using the same results. Say “refresh availability” for a new check.' : null,
     shortlist.length?`I found ${shortlist.length===1?'one option':`${shortlist.length} options`} for you${alternatives.length&&!matching.length?' on nearby dates or with different flight details':''}:`:'No flights match those preferences in these results. Would you like to try different dates?',
     ...shortlist.map((r,i)=>`${String.fromCharCode(65+i)}. ${r.text}`),
     shortlist.length?'Prices are estimates and may change.':null,
