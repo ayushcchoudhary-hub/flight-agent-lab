@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { SearchConversation, findTool, resolveLocation, isoToday } from '../search.mjs';
 import { makeFixtureAdapter } from '../fixtures.mjs';
 import { AIRPORTS } from '../shared.mjs';
-import { Agent, OpenRouterModel, PROMPT_VERSION, ScriptedDemoModel, compactForHistory, deterministicBoundary, repairExplicitToolArguments, systemPrompt } from '../model.mjs';
+import { Agent, OpenRouterModel, PROMPT_VERSION, ScriptedDemoModel, bookingHandoff, compactForHistory, deterministicBoundary, repairExplicitToolArguments, systemPrompt } from '../model.mjs';
 import { redact } from '../trace.mjs';
 
 const setup = (scenario = 'normal', today = '2026-09-18') => {
@@ -243,8 +243,10 @@ test('every results mode shows the price-change notice exactly once', async () =
 
 test('model tool allowlist blocks unknown actions and arbitrary request fields', async () => {
   const { c, adapter } = setup();
+  // "Book it" now has a deterministic answer, so it no longer reaches the
+  // model. The allowlist assertions are unchanged; only the input is.
   const agent = new Agent({ conversation: c, model: { complete: async () => toolMessage('pay_for_flight', { amount: 100 }) } });
-  assert.equal((await agent.respond('Book it')).status, 'error');
+  assert.equal((await agent.respond('Find me a flight to Rome')).status, 'error');
   assert.equal(postCount(adapter), 0);
   assert.equal((await c.find({ ...route, apiUrl: 'https://example.com' })).status, 'error');
   assert.equal(postCount(adapter), 0);
@@ -380,6 +382,50 @@ test('a payment request is refused deterministically and points to checkout',()=
     assert.ok(reply,`${request} must not reach the model`);
     assert.equal(reply.status,'clarify');
     assert.match(reply.text,/checkout/i,`${request} must route the traveler to checkout`);
+  }
+});
+
+// Held-out v2 F1: after a results reply carrying the checkout link, "book it"
+// reached the model and came back with "booking and checkout are not available
+// here", ignoring the link shown one message earlier.
+test('a bare booking intent answers with the checkout link for the active search',async()=>{
+  const {c,adapter}=setup();
+  const model={complete:async()=>{throw Error('model should not run');}};
+  const agent=new Agent({conversation:c,model});
+  await c.find({origin:'Tokyo',destination:'Dubai',dates:{mode:'exact',start:'2026-09-30'},cabin:'business'});
+  for(const request of ['book it','buy it','checkout','I’ll take it','ok book it please']){
+    const reply=await agent.respond(request);
+    assert.equal(reply.status,'clarify',request);
+    assert.match(reply.text,/Booking happens on CommonSwyft/,request);
+    assert.match(reply.text,/https:\/\/commonswyft\.com\/search\/HND%7CNRT-DXB%7CAUH-300926-business/,request);
+    assert.doesNotMatch(reply.text,/booked|not available here/i,request);
+  }
+  const named=await agent.respond('book option B');
+  assert.match(named.text,/option B/);
+  assert.equal(postCount(adapter),1,'a booking handoff never searches again');
+});
+
+test('a booking intent with no active search says what to search first',async()=>{
+  const {c,adapter}=setup();
+  const agent=new Agent({conversation:c,model:{complete:async()=>{throw Error('model should not run');}}});
+  const reply=await agent.respond('book it');
+  assert.equal(reply.status,'clarify');
+  assert.match(reply.text,/Booking happens on CommonSwyft/);
+  assert.match(reply.text,/route and date/i);
+  assert.ok(!/https:/.test(reply.text),'no link before there is a search to link to');
+  assert.equal(postCount(adapter),0);
+});
+
+test('a booking intent that involves payment keeps the payment refusal',()=>{
+  for(const request of ['book option A with my saved card','pay for option B','I approve the payment, go ahead']){
+    const reply=deterministicBoundary(request,{origin:{code:'LHR'},destination:{code:'JFK'},dates:{mode:'exact',from:'2026-10-01',to:'2026-10-01',selected:'2026-10-01'},cabin:'business'});
+    assert.match(reply.text,/can’t book or charge a card here/,request);
+  }
+});
+
+test('a question about booking is not treated as an instruction to hand off',()=>{
+  for(const text of ['can I book a hotel too?','do you take American Express?','book me a return flight to Rome']){
+    assert.equal(bookingHandoff(text,null),null,`${text} is not a bare booking intent`);
   }
 });
 

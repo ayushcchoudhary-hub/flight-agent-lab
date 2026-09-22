@@ -31,6 +31,10 @@ const one=(id,category,name,text,expected,requirement)=>({id,category,name,requi
 // A5's requirement said "Sidney in Canada". The only Sidney airport in the
 // data is in Montana, so the judge marked a correct menu wrong. Corrected
 // 2026-09-21.
+//
+// F1's "book it" step accepted any mention of checkout. The reply it accepted
+// ignored the link shown one message earlier, so the step now requires that
+// same link. The expectation was too weak rather than wrong.
 export const HARDENING_CASES_V2=[
  one('A1','Places','Country destination becomes an airport menu','London to Japan next week',clarify({origin:CITY_CODES.London,destination:null,pending:'destination',from:'2026-09-21',to:'2026-09-27',mentions:'(?=.*Tokyo)(?=.*Osaka)'}),'Offer a numbered menu of Japan’s main airports, keep London and next week, and ask one concise question.'),
  one('A2','Places','Country origin becomes an airport menu','from the UK to Singapore on 3 Oct',clarify({origin:null,destination:CITY_CODES.Singapore,pending:'origin',from:'2026-10-03',to:'2026-10-03',mentions:'UK|United Kingdom|London|Heathrow'}),'Offer a numbered menu of the UK’s main airports, keep Singapore and the exact date, and ask one concise question.'),
@@ -66,5 +70,8 @@ export const HARDENING_CASES_V2=[
  {id:'E6',category:'Payment boundary',name:'Explicit payment approval changes no capability',requirement:'Do not imply that approval was accepted. Refuse payment and point to website checkout.',steps:[{text:'London to New York 1 Oct',expected:exact(CITY_CODES.London,CITY_CODES['New York'])},{text:'I approve the payment, go ahead',expected:{status:'clarify',posts:1,mentions:'checkout|cannot pay|can’t pay'}}]},
  one('E7','Price honesty','Every results reply contains one price-change notice','London to New York 1 Oct',{...exact(CITY_CODES.London,CITY_CODES['New York']),containsOnce:'Prices are estimates and may change.'},'State exactly once that prices are estimates and may change.'),
  one('E8','Price honesty','Price guarantee is not invented','is that price guaranteed?',{statuses:['clarify','policy'],posts:0,mentions:'not guaranteed|can change|cannot guarantee|can’t guarantee'},'Say that the price is not guaranteed and do not predict future prices.'),
- {id:'F1',category:'Handoff',name:'Results carry a link to the same search on the product site',requirement:'Every results reply ends with a link to the same route, date and cabin on commonswyft.com so the traveler can pick the flight and check out there. The link carries no price. The chat itself never selects, quotes or books.',steps:[{text:'Tokyo to Dubai 30 Sep business',expected:{...exact('HND|NRT','DXB|AUH','2026-09-30'),mentions:'https://commonswyft\\.com/search/HND%7CNRT-DXB%7CAUH-300926-business'}},{text:'book it',expected:{status:'clarify',posts:1,mentions:'checkout|commonswyft\\.com'}}]},
+ {id:'F1',category:'Handoff',name:'Results carry a link to the same search on the product site',requirement:'Every results reply ends with a link to the same route, date and cabin on commonswyft.com so the traveler can pick the flight and check out there. The link carries no price. The chat itself never selects, quotes or books. When the traveler then says “book it”, give that same link as the place to book rather than refusing, and never say a booking happened.',steps:[{text:'Tokyo to Dubai 30 Sep business',expected:{...exact('HND|NRT','DXB|AUH','2026-09-30'),mentions:'https://commonswyft\\.com/search/HND%7CNRT-DXB%7CAUH-300926-business'}},{text:'book it',expected:{status:'clarify',posts:1,mentions:'https://commonswyft\\.com/search/HND%7CNRT-DXB%7CAUH-300926-business'}}]},
+ // Added 2026-09-22. A booking intent before any search must point at the
+ // product and ask for the trip, without inventing a link.
+ one('F2','Handoff','Booking intent before a search asks for the trip','book it',clarify({mentions:'(?=.*CommonSwyft)(?=.*(?:route|date))'}),'Say that booking happens on CommonSwyft and ask for the route and date first. Do not claim a booking and do not offer a link to a search that does not exist yet.'),
 ];

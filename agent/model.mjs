@@ -1,4 +1,4 @@
-import { findTool, welcomeFor, validDate, newState, resolveLocation } from './search.mjs';
+import { findTool, welcomeFor, validDate, newState, resolveLocation, productSearchUrl } from './search.mjs';
 import { preferencesTool, preferenceAction } from './preferences.mjs';
 import { policyTool, answerPolicy, supportReply } from './policy.mjs';
 import { requestWithRetry } from './retry.mjs';
@@ -25,13 +25,35 @@ export function compactForHistory(result) {
   return { ...rest, shortlist: shortlist.map(({ text: row, timing, ...keep }) => keep) };
 }
 
-export function deterministicBoundary(text) {
+// A bare booking intent carries none of the option, flight, ticket or card
+// words the payment boundary looks for, so "book it" reached the model, which
+// refused and ignored the checkout link the results reply had just shown
+// (held-out v2 F1). The traveler is asking for the handoff, so answer with it.
+const BOOKING_VERB = String.raw`(?:book|buy|reserve|purchase|check\s?out|take|grab)`;
+const BOOKING_OBJECT = String.raw`(?:\s+(?:it|this|that|one|them|option\s+[a-c]|flight\s+[a-c]|the\s+(?:first|second|third)(?:\s+one)?|[a-c]))?`;
+const BOOKING_LEAD = String.raw`(?:(?:ok(?:ay)?|yes|sure|great|please)[,.!\s]+)*(?:(?:i(?:'|\u2019)?d\s+like\s+to|i(?:'|\u2019)?ll|i\s+want\s+to|i\s+would\s+like\s+to|let(?:'|\u2019)?s|can\s+(?:i|you)|could\s+you)\s+)?`;
+const BOOKING_TAIL = String.raw`(?:\s+(?:now|please|then|thanks|thank\s+you))*`;
+const BARE_BOOKING = new RegExp(String.raw`^${BOOKING_LEAD}${BOOKING_VERB}${BOOKING_OBJECT}${BOOKING_TAIL}[\s.!?]*$`, 'i');
+const namedOption = text => text.match(/\b(?:option|flight)\s+([a-c])\b/i)?.[1]?.toUpperCase() ?? null;
+
+export function bookingHandoff(text, state) {
+  if (!BARE_BOOKING.test(String(text ?? '').trim())) return null;
+  const link = state ? productSearchUrl(state) : null;
+  if (!link) return { status: 'clarify', text: 'Booking happens on CommonSwyft. Tell me the route and date you want, then I can point you to that search there.' };
+  const option = namedOption(text);
+  const pointer = option ? `\n\nLook for option ${option} from the list above on that page.` : '';
+  return { status: 'clarify', text: `Booking happens on CommonSwyft. Pick your flight here:\n${link}${pointer}` };
+}
+
+export function deterministicBoundary(text, state = null) {
   if (/\b(?:my|this)\b.{0,30}\b(?:ticket|flight|booking)\b.{0,30}\b(?:refund|refundable)\b|\b(?:refund|refundable)\b.{0,30}\b(?:my|this)\b.{0,30}\b(?:ticket|flight|booking)\b/i.test(text)) return {status:'policy',text:`Refund eligibility depends on the fare rules for the specific ticket. Please contact CommonSwyft support at ${supportEmail} with the booking reference.`};
   // Policy questions that happen to mention tickets or purchases still belong
   // to grounded policy retrieval. Consequential action requests stay below.
   if (/\b(?:refund|refundable|terms?|legal|privacy|personal data|analytics|card details|data protection)\b/i.test(text)) return null;
   if (/\b(?:checked bags?|baggage|luggage)\b/i.test(text)) return {status:'clarify',text:'I can’t guarantee baggage inclusion from these search results. Please confirm baggage directly with the airline before booking. I can still search the route and cabin for you.'};
   if (/\b(?:my|existing|booked)\b.{0,30}\b(?:ticket|flight|booking)\b|\b(?:cancel|rebook|check me in|passenger name)\b/i.test(text)) return {status:'clarify',text:`I can’t access or change an existing booking here. Please contact CommonSwyft support at ${supportEmail} with your booking reference.`};
+  const handoff = bookingHandoff(text, state);
+  if (handoff) return handoff;
   // A payment request is a consequential action, so the refusal is
   // deterministic rather than left to the model. Held-out v2 E5 and E6 both
   // reached the model instead, which refused correctly but never pointed the
@@ -216,7 +238,7 @@ export class Agent {
       this.trace('reply', result);
       return result;
     }
-    const boundary=deterministicBoundary(text);
+    const boundary=deterministicBoundary(text,this.conversation.publicState?.());
     if(boundary){const result=boundary;this.record([{role:'user',content:text},{role:'assistant',content:result.text}]);this.trace('boundary_reply',{kind:'unsupported_consequential_request'});this.trace('reply',result);return result;}
     try {
       const user = { role: 'user', content: text };
