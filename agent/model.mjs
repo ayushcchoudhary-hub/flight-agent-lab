@@ -200,7 +200,7 @@ export class OpenRouterModel {
   }
   async complete(messages, { tools = TOOLS } = {}) {
     if (this.calls >= this.maxCalls) throw new Error('Session model-call limit reached. No further paid calls were made.');
-    if (JSON.stringify(messages).length > 24000) throw new Error('Context size limit reached. Start a new session to continue.');
+    if (JSON.stringify(messages).length > CONTEXT_CHAR_LIMIT) throw new Error('Context size limit reached. Start a new session to continue.');
     const retries = Math.min(this.maxTemporaryRetries, Math.max(0, this.maxCalls - this.calls - 1));
     const started = Date.now();
     let response;
@@ -235,6 +235,21 @@ export class OpenRouterModel {
   }
 }
 
+export const CONTEXT_CHAR_LIMIT = 24000;
+
+// Older turns give way before the context cap is reached. The trip itself
+// lives in application state and the system prompt, so an old turn carries
+// little the next reply needs, while a hard error ends the conversation.
+// Held-out v2 C1 failed at turn five with "Context size limit reached" once
+// the currency fix let it search every turn. Keep at least the latest turn.
+export function fitHistory(system, turns, user, limit = CONTEXT_CHAR_LIMIT) {
+  const kept = [...turns];
+  const size = () => JSON.stringify([system, ...kept.flat(), user]).length;
+  let dropped = 0;
+  while (kept.length > 1 && size() > limit) { kept.shift(); dropped++; }
+  return { messages: [system, ...kept.flat(), user], dropped };
+}
+
 export class Agent {
   constructor({ conversation, model, timezone = 'Europe/London', trace = () => {}, preferences = {} }) {
     this.preferences = preferences; this.conversation = conversation; this.model = model; this.timezone = timezone; this.trace = trace; this.turns = [];
@@ -254,7 +269,9 @@ export class Agent {
     if(boundary){const result=boundary;this.record([{role:'user',content:text},{role:'assistant',content:result.text}]);this.trace('boundary_reply',{kind:'unsupported_consequential_request'});this.trace('reply',result);return result;}
     try {
       const user = { role: 'user', content: text };
-      const answer = await this.model.complete([{ role: 'system', content: systemPrompt(this.conversation, this.timezone, this.preferences) }, ...this.turns.flat(), user]);
+      const { messages, dropped } = fitHistory({ role: 'system', content: systemPrompt(this.conversation, this.timezone, this.preferences) }, this.turns, user);
+      if (dropped) { this.turns = this.turns.slice(dropped); this.trace('history_trimmed', { droppedTurns: dropped }); }
+      const answer = await this.model.complete(messages);
       if (!Array.isArray(answer.tool_calls) || answer.tool_calls.length !== 1) throw new Error('Expected one structured tool call; no action taken. Try rephrasing.');
       const call = answer.tool_calls[0];
       if (call.type !== 'function' || typeof call.id !== 'string' || !TOOLS.some(t => t.function.name === call.function?.name)) throw new Error('The model proposed an unsupported tool; no action taken.');
