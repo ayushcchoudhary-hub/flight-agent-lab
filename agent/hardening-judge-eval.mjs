@@ -17,8 +17,9 @@ const candidateModel=value('candidate','openai/gpt-5.6-terra'),candidateEffort=v
 // Judge default raised 2026-09-21: sonnet-4.6 at low effort passed and failed
 // identical replies on consecutive runs; medium effort removed the flips and
 // a stronger model reads multi-turn context more reliably. About 1.7x the
-// judge cost per call at the same token counts.
-const judgeModel=value('judge','anthropic/claude-opus-5'),judgeEffort=value('judge-effort','medium');
+// judge cost per call at the same token counts. Moved to opus-5.5 on
+// 2026-09-22: newer, and cheaper per token than opus-5 ($4/$20 vs $5/$25 per M).
+const judgeModel=value('judge','anthropic/claude-opus-5.5'),judgeEffort=value('judge-effort','medium');
 const maxCost=Number(value('max-cost','3')),maxCalls=Number(value('max-calls','110'));
 const suite=value('suite','v1'),sourceCases=suite==='v2'?HARDENING_CASES_V2:HARDENING_CASES,clock=suite==='v2'?HARDENING_V2_CLOCK:HARDENING_CLOCK;
 if(!['v1','v2'].includes(suite))throw Error('Choose suite v1 or v2. No model calls were made.');
