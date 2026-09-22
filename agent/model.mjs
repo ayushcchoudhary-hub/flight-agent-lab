@@ -9,7 +9,7 @@ const clarificationTool = { type: 'function', function: {
   parameters: { type: 'object', additionalProperties: false, required: ['question'], properties: { question: { type: 'string', maxLength: 400 } } },
 } };
 export const TOOLS = [findTool, clarificationTool, policyTool, preferencesTool];
-export const PROMPT_VERSION = 'flight-search-v1.4.1';
+export const PROMPT_VERSION = 'flight-search-v1.5.0';
 
 const supportEmail='support@commonswyft.com';
 // History carried three copies of every reply: result.text inside the tool
@@ -158,6 +158,7 @@ For a flight request or refinement, use find_flights. Supply only fields the use
 For general privacy, terms, data handling, deletion-process or policy questions and their follow-ups, use lookup_policy. Never answer policy questions from model memory. General refund-policy questions also use lookup_policy. Ticket-specific refundability remains unsupported. Do not claim deletion or any account action happened.
 Use travel_preferences only to show or propose an explicitly requested persistent preference change. A proposal is not saved until the application receives separate user confirmation. Never silently store trip-specific changes.
 For an unrelated request, use clarify_request with a brief, friendly redirect to finding flights. Preserve the existing trip. For an unsupported or unresolved request, use clarify_request to explain the limitation and offer the next supported step.
+When one message mixes a flight request with a question you cannot help with, such as weather, sightseeing, whether a place is nice, restaurants or local advice, still call find_flights for the flight request and put the reply to the other question in the aside field. Say plainly that you cannot help with it and offer the travel use case in one or two short sentences, for example "I can't say much about Lisbon in winter. I can search flights there if you like." Never answer the off-topic question itself and never leave it unanswered.
 
 TRIP INTERPRETATION
 City names mean all airports in the existing group. Explicit airport names or codes override the city group. Do not silently drop or replace constraints. "Economy instead" changes only cabin. For "business only" also set cabinOnly. "Direct only" sets nonstopOnly. "Prefer nonstop" sets sort=nonstop without creating a hard constraint. Budget is always USD. Treat a bare budget number as USD and never ask which currency the traveler means. Clear a budget with maxPriceUsd=null when asked. Pass place names exactly as the traveler wrote them, misspellings included. The application resolves places and asks when unsure. If a follow-up could mean two different things, such as "the 3rd" as a date or as an option, ask which with clarify_request and do not search. "Back to business" changes the cabin. It never means a return flight.

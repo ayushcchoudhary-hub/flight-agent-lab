@@ -1,6 +1,6 @@
 import { flightDetails,readableDate } from './flight-details.mjs';
 import { AIRPORTS, METRO_GROUPS, expandMetro, labelForValue, rankAirportSearch, nearMatches, collapseToGroups, hubsAmong, countryAlias, shiftIso, flexRange, getResultsView, displayPriceUsd } from './shared.mjs';
-import { safeSearchError } from './customer-copy.mjs';
+import { safeCustomerCopy, safeSearchError } from './customer-copy.mjs';
 
 export const WELCOME = 'Where would you like to fly?\n\nTry “To New York”, “London to Singapore”, or “Dubai to London, economy”.\n\nDefaults: one-way · business class · today through the next 7 days.\nSearch only. There is no booking or checkout.';
 const cabins = ['business', 'economy', 'premium', 'first', 'any'];
@@ -111,6 +111,7 @@ export const findTool = {
         nonstopOnly: { type: 'boolean', description: 'True when user insists nonstop/direct only, not merely a preference.' },
         maxPriceUsd: { type: ['number', 'null'], description: 'Explicit USD total budget. Null clears the budget. Ask about currency if ambiguous.' },
         refresh: { type: 'boolean', description: 'True only when user asks to refresh/check availability again.' },
+        aside: { type: 'string', maxLength: 200, description: 'One or two short sentences answering a non-travel question asked in the same message, by saying you cannot help with it and offering the travel use case. Example: "I can’t say much about Lisbon in winter. I can search flights there if you like." Omit when the request is only about flights.' },
       },
     },
   },
@@ -122,6 +123,7 @@ function validatePatch(p) {
   if (Object.keys(p).some(k => !keys.includes(k))) throw new Error('Unsupported tool field.');
   for (const field of ['origin', 'destination']) if (field in p && (typeof p[field] !== 'string' || !p[field].trim() || p[field].length > 120)) throw new Error(`Invalid ${field}.`);
   if ('cabin' in p && !cabins.includes(p.cabin)) throw new Error('Invalid cabin.');
+  if ('aside' in p && (typeof p.aside !== 'string' || p.aside.length > 200)) throw new Error('Invalid aside.');
   if ('sort' in p && !sorts.includes(p.sort)) throw new Error('Invalid sort.');
   for (const field of ['cabinOnly', 'nonstopOnly', 'refresh']) if (field in p && typeof p[field] !== 'boolean') throw new Error(`Invalid ${field}.`);
   if ('maxPriceUsd' in p && p.maxPriceUsd !== null && (typeof p.maxPriceUsd !== 'number' || !Number.isFinite(p.maxPriceUsd) || p.maxPriceUsd <= 0)) throw new Error('Budget must be a positive USD amount or null.');
@@ -226,6 +228,11 @@ export class SearchConversation {
       validatePatch(patch);
       const today = this.today();
       if (!validDate(today)) throw new Error('Invalid test clock.');
+      // An off-topic question asked alongside a flight request is answered in
+      // one line above the results. It is copy for this reply only, so it is
+      // reviewed like any other model text and never merged into the trip.
+      const aside = 'aside' in patch ? safeCustomerCopy(patch.aside, '') : '';
+      if ('aside' in patch) { patch = { ...patch }; delete patch.aside; }
       const candidates = ambiguousDates(patch.dates, today);
       if (candidates) { patch = { ...patch }; delete patch.dates; }
 
@@ -297,7 +304,7 @@ export class SearchConversation {
       next.snapshot = response;
       next.lastQuery = key;
       this.trace('search_result', { query, cached: Boolean(cached), count: response.totalFound, searchId: response.searchId });
-      return present(next, response, Boolean(cached), this.adapter.mode);
+      return present(next, response, Boolean(cached), this.adapter.mode, { aside });
     } catch (error) {
       const internal = error instanceof Error ? error.message : String(error);
       this.trace('error', { text: internal });
@@ -362,7 +369,7 @@ export function productSearchPath(state) {
 }
 export const productSearchUrl = state => { const path = productSearchPath(state); return path ? `${PRODUCT_WEB_BASE}${path}` : null; };
 
-function present(state, response, cached, mode = 'synthetic') {
+function present(state, response, cached, mode = 'synthetic', { aside = '' } = {}) {
   const staging = mode === 'staging' || mode === 'replay';
   const replay = mode === 'replay';
   const d = state.dates;
@@ -389,6 +396,7 @@ function present(state, response, cached, mode = 'synthetic') {
   const dateSummary=d.from===d.to?readableDate(d.from):`${readableDate(d.from)} – ${readableDate(d.to)}`;
   const text = [
     !staging?'SYNTHETIC FLIGHT DATA. These are example results.':replay?'Saved results. This is not a fresh availability check.':null,
+    aside||null,
     `${state.origin.label} → ${state.destination.label}\n${dateSummary} · ${cabinLabel(state)} · One-way${state.maxPriceUsd !== null ? ` · Up to USD ${state.maxPriceUsd}` : ''}${state.nonstopOnly ? ' · Nonstop only' : ''}`,
     state.originFromPreference?`Using your saved home airport, ${state.origin.label}. Say where you are flying from to change it.`:null,
     cached?'Using the same results. Say “refresh availability” for a new check.':null,

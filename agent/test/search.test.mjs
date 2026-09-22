@@ -385,6 +385,37 @@ test('a payment request is refused deterministically and points to checkout',()=
   }
 });
 
+// Held-out v2 E2: "London to New York 1 Oct, also is Lisbon nice in winter?"
+// searched and said nothing about the second question.
+test('an off-topic question asked with a flight request is answered above the results',async()=>{
+  const {c}=setup();
+  const aside='I can’t say much about Lisbon in winter. I can search flights there if you like.';
+  const reply=await c.find({...route,aside});
+  assert.equal(reply.status,'results');
+  assert.ok(reply.text.startsWith(`SYNTHETIC FLIGHT DATA. These are example results.\n\n${aside}`),reply.text.slice(0,200));
+  assert.equal('aside' in c.publicState(),false,'an aside is copy for one reply, not trip state');
+  const next=await c.find({sort:'cheapest'});
+  assert.ok(!next.text.includes('Lisbon'),'the aside does not persist into the next reply');
+});
+
+test('an unsafe or oversized aside cannot reach the traveler',async()=>{
+  const {c}=setup();
+  const claimed=await c.find({...route,aside:'I have booked that for you.'});
+  assert.ok(!claimed.text.includes('booked that for you'),'a claimed booking is dropped');
+  assert.equal(claimed.status,'results');
+  const internal=await c.find({...route,aside:'The policy snapshot has no weather data.'});
+  assert.ok(!internal.text.includes('policy snapshot'),'internal detail is dropped');
+  const tooLong=await c.find({...route,aside:'x'.repeat(201)});
+  assert.equal(tooLong.status,'error');
+});
+
+test('the prompt tells the model to decline an off-topic question and still search',()=>{
+  const {c}=setup();
+  const prompt=systemPrompt(c,'Europe/London',{});
+  assert.match(prompt,/aside field/);
+  assert.match(prompt,/still call find_flights/);
+});
+
 // Held-out v2 F1: after a results reply carrying the checkout link, "book it"
 // reached the model and came back with "booking and checkout are not available
 // here", ignoring the link shown one message earlier.
@@ -536,11 +567,11 @@ test('every advertised top-level field is accepted together',async()=>{
   const reply=await c.find({
     origin:'LHR',destination:'JFK',dates:sampleDates('exact'),
     cabin:schemaProps.cabin.enum[0],cabinOnly:false,
-    sort:schemaProps.sort.enum[0],maxPriceUsd:900,nonstopOnly:false,
+    sort:schemaProps.sort.enum[0],maxPriceUsd:900,nonstopOnly:false,aside:'I can’t help with that.',
   });
   assert.notEqual(reply.status,'error');
   const declared=Object.keys(schemaProps);
-  const covered=['origin','destination','dates','cabin','cabinOnly','sort','maxPriceUsd','nonstopOnly','refresh'];
+  const covered=['origin','destination','dates','cabin','cabinOnly','sort','maxPriceUsd','nonstopOnly','refresh','aside'];
   const uncovered=declared.filter(key=>!covered.includes(key));
   assert.deepEqual(uncovered,[],`schema fields with no acceptance test: ${uncovered.join(', ')}`);
 });
