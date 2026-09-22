@@ -5,6 +5,8 @@ import {readFile,readdir,stat} from 'node:fs/promises';
 import {fileURLToPath} from 'node:url';
 import {join} from 'node:path';
 import {createChatService} from './chat-service.mjs';
+import {storeFromEnvironment,isVisitorId} from './store.mjs';
+import {randomUUID as newVisitorId} from 'node:crypto';
 import {OpenRouterModel} from './model.mjs';
 import {HOSTED_MODEL_OPTIONS,hostedModelSettings} from './hosted-model-options.mjs';
 import {clientErrorMessage,createCredentialGuard} from './hosted-security.mjs';
@@ -27,7 +29,12 @@ const preferenceStore={
  async read(){return {...preferences};},
  async replace(value){preferences={...value};return {...preferences};},
 };
+// Conversation storage is off unless CONVERSATION_STORE=postgres and
+// DATABASE_URL are set. Expired conversations are purged on start and hourly.
+const conversationStore=storeFromEnvironment();
+if(conversationStore){const purge=()=>conversationStore.purgeExpired().catch(error=>console.error('purge failed',error.message));purge();setInterval(purge,3600000).unref();}
 const chat=createChatService({
+ conversationStore,
  preferenceStore,
  capturesLoader:async()=>[],
  status:async()=>({connected:false,reason:'not-used',expiresAt:null}),
@@ -67,6 +74,12 @@ const hostedHtml=html=>html
  .replaceAll('href="/chat"','href="/agent"');
 const equal=(a,b)=>{const x=Buffer.from(a),y=Buffer.from(b);return x.length===y.length&&timingSafeEqual(x,y);};
 const sessionCookie='commonswyft_demo';
+// A random id per browser, set only when conversation storage is on. It is
+// not a person: it scopes stored conversations and remembered origin to the
+// browser that made them.
+const visitorCookie='commonswyft_visitor';
+const readCookie=(req,name)=>(req.headers.cookie||'').split(';').map(v=>v.trim()).find(v=>v.startsWith(`${name}=`))?.slice(name.length+1)||'';
+const visitorFor=req=>{if(!conversationStore)return {id:null,headers:{}};const current=readCookie(req,visitorCookie);if(isVisitorId(current))return {id:current,headers:{}};const id=newVisitorId();return {id,headers:{'Set-Cookie':`${visitorCookie}=${id}; HttpOnly; Secure; SameSite=Strict; Path=/; Max-Age=31536000`}};};
 const sessionToken=createHmac('sha256',password).update(`session-v1:${username}`).digest('base64url');
 const credentialGuard=createCredentialGuard({username,password});
 const cookieValue=req=>(req.headers.cookie||'').split(';').map(v=>v.trim()).find(v=>v.startsWith(`${sessionCookie}=`))?.slice(sessionCookie.length+1)||'';
@@ -134,7 +147,7 @@ const server=http.createServer(async(req,res)=>{
   const input=await readJson(req,res);if(!input)return;
   if(url.pathname==='/api/chat/welcome')return send(res,200,await chat.welcome('staging-public'));
   if(url.pathname==='/api/chat/deals')return send(res,200,await chat.welcomeDeals('staging-public'));
-  if(url.pathname==='/api/chat/start'){const settings=hostedModelSettings(input.model??defaultSettings.model);return send(res,200,await chat.start('staging-public',settings.model,settings.effort,typeof input.welcomeKey==='string'?input.welcomeKey.slice(0,300):null));}
+  if(url.pathname==='/api/chat/start'){const settings=hostedModelSettings(input.model??defaultSettings.model);const visitor=visitorFor(req);return send(res,200,await chat.start('staging-public',settings.model,settings.effort,typeof input.welcomeKey==='string'?input.welcomeKey.slice(0,300):null,visitor.id),'application/json',visitor.headers);}
   if(url.pathname==='/api/chat/turn')return send(res,200,await chat.turn(input.id,input.text));
   if(url.pathname==='/api/chat/close')return send(res,200,chat.close(input.id));
   return send(res,404,{error:'Not found.'});
