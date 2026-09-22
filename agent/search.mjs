@@ -401,15 +401,48 @@ export function describeApplied(previous, next, patch) {
   return applied;
 }
 
+// Held-out v2 C1: "premium instead" under a USD 700 budget answered "No
+// flights match those preferences in these results. Would you like to try
+// different dates?" while the cached results held premium fares from USD
+// 1,113. The date was never the problem. Name the filter that removed them,
+// and keep the date suggestion for when nothing matches at all.
+function activeFilters(state) {
+  const d = state.dates;
+  const filters = [];
+  if (state.maxPriceUsd !== null) filters.push({ key: 'budget', keep: r => displayPriceUsd(r) <= state.maxPriceUsd });
+  if (state.nonstopOnly) filters.push({ key: 'nonstop', keep: r => r.direct });
+  if (state.cabinOnly && state.cabin !== 'any') filters.push({ key: 'cabinOnly', keep: r => r.cabin === state.cabin });
+  if (d.strict) filters.push({ key: 'dates', keep: r => r.date >= d.from && r.date <= d.to });
+  return filters;
+}
+
+export function blockedByFilter(state, unfiltered, filters = activeFilters(state)) {
+  if (!filters.length || !unfiltered.length) return null;
+  const without = key => unfiltered.filter(row => filters.every(f => f.key === key || f.keep(row)));
+  const when = state.dates.from === state.dates.to ? `on ${readableDate(state.dates.from)}` : 'in this date range';
+  const cabinWord = state.cabin === 'any' ? 'Flights' : cabinName(state.cabin).replace(/^./, c => c.toUpperCase());
+
+  const overBudget = without('budget');
+  if (overBudget.length) {
+    const inCabin = state.cabin === 'any' ? overBudget : overBudget.filter(r => r.cabin === state.cabin);
+    const rows = inCabin.length ? inCabin : overBudget;
+    const cheapest = Math.min(...rows.map(displayPriceUsd));
+    const label = inCabin.length ? cabinWord : 'The cheapest fare';
+    return `${label} ${when} starts at USD ${cheapest.toLocaleString('en-US', { maximumFractionDigits: 0 })}, above your USD ${state.maxPriceUsd} budget. Raise or remove the budget?`;
+  }
+  if (without('nonstop').length) return `Nothing nonstop is in these results ${when}. Shall I include flights with a connection?`;
+  if (without('cabinOnly').length) return `No ${cabinName(state.cabin)} fares are in these results ${when}. Shall I show the other cabins?`;
+  if (without('dates').length) return 'Nothing matches inside those exact dates. Shall I show nearby dates?';
+  return 'Nothing in these results matches all of those filters together. Which one should I relax?';
+}
+
 function present(state, response, cached, mode = 'synthetic', { aside = '', applied = [] } = {}) {
   const staging = mode === 'staging' || mode === 'replay';
   const replay = mode === 'replay';
   const d = state.dates;
-  let results = response.results.filter(r => r.origin !== r.destination);
-  if (state.maxPriceUsd !== null) results = results.filter(r => displayPriceUsd(r) <= state.maxPriceUsd);
-  if (state.nonstopOnly) results = results.filter(r => r.direct);
-  if (state.cabinOnly && state.cabin !== 'any') results = results.filter(r => r.cabin === state.cabin);
-  if (d.strict) results = results.filter(r => r.date >= d.from && r.date <= d.to);
+  const unfiltered = response.results.filter(r => r.origin !== r.destination);
+  const filters = activeFilters(state);
+  const results = unfiltered.filter(row => filters.every(f => f.keep(row)));
   const view = getResultsView(results, state.sort);
   const matching = [], alternatives = [];
   for (const r of view.results) {
@@ -434,7 +467,7 @@ function present(state, response, cached, mode = 'synthetic', { aside = '', appl
     applied.length
       ? `${applied.join(' ')}${cached ? ' This uses the same search. Say “refresh availability” for a new check.' : ''}`
       : cached ? 'Using the same results. Say “refresh availability” for a new check.' : null,
-    shortlist.length?`I found ${shortlist.length===1?'one option':`${shortlist.length} options`} for you${alternatives.length&&!matching.length?' on nearby dates or with different flight details':''}:`:'No flights match those preferences in these results. Would you like to try different dates?',
+    shortlist.length?`I found ${shortlist.length===1?'one option':`${shortlist.length} options`} for you${alternatives.length&&!matching.length?' on nearby dates or with different flight details':''}:`:(blockedByFilter(state,unfiltered,filters)??'No flights match those preferences in these results. Would you like to try different dates?'),
     ...shortlist.map((r,i)=>`${String.fromCharCode(65+i)}. ${r.text}`),
     shortlist.length?'Prices are estimates and may change.':null,
     !staging?'Missing flight times and exact seat counts are not available.':null,

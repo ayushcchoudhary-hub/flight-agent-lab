@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { SearchConversation, findTool, resolveLocation, isoToday } from '../search.mjs';
+import { SearchConversation, blockedByFilter, findTool, resolveLocation, isoToday } from '../search.mjs';
 import { makeFixtureAdapter } from '../fixtures.mjs';
 import { AIRPORTS } from '../shared.mjs';
 import { Agent, OpenRouterModel, PROMPT_VERSION, ScriptedDemoModel, bookingHandoff, compactForHistory, deterministicBoundary, repairExplicitToolArguments, systemPrompt } from '../model.mjs';
@@ -383,6 +383,33 @@ test('a payment request is refused deterministically and points to checkout',()=
     assert.equal(reply.status,'clarify');
     assert.match(reply.text,/checkout/i,`${request} must route the traveler to checkout`);
   }
+});
+
+// Held-out v2 C1: "premium instead" under a USD 700 budget suggested other
+// dates while the same results held premium fares from USD 1,113.
+test('an empty list names the filter that removed the fares',async()=>{
+  const {c}=setup();
+  await c.find({origin:'London',destination:'New York',dates:{mode:'exact',start:'2026-10-03'},cabin:'premium',maxPriceUsd:700});
+  const blocked=await c.find({});
+  assert.equal(blocked.shortlist.length,0);
+  assert.match(blocked.text,/above your USD 700 budget\. Raise or remove the budget\?/);
+  assert.match(blocked.text,/starts at USD [\d,]+/);
+  assert.ok(!/try different dates/.test(blocked.text),'the date was never the blocker');
+  const dropped=await c.find({maxPriceUsd:null});
+  assert.ok(dropped.shortlist.length>0,'the fares were there all along');
+});
+
+test('a nonstop-only filter that empties the list says so',()=>{
+  const state={cabin:'business',maxPriceUsd:null,nonstopOnly:true,cabinOnly:false,dates:{from:'2026-10-03',to:'2026-10-03',strict:false}};
+  const rows=[{cabin:'business',direct:false,date:'2026-10-03',priceUsd:900}];
+  assert.match(blockedByFilter(state,rows),/Nothing nonstop is in these results on/);
+});
+
+test('nothing at all in the results still suggests other dates',async()=>{
+  const {c}=setup('empty');
+  const reply=await c.find(route);
+  assert.equal(reply.shortlist.length,0);
+  assert.match(reply.text,/Would you like to try different dates\?/);
 });
 
 // Held-out v2 C1 and C2: a sort, nonstop or budget change was answered with
