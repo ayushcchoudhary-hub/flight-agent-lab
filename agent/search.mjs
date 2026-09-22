@@ -214,7 +214,9 @@ export class SearchConversation {
   constructor({ adapter, today = () => isoToday(), trace = () => {} }) {
     this.adapter = adapter; this.today = today; this.trace = trace; this.state = newState();
   }
-  publicState() { const { snapshot, lastQuery, ...state } = this.state; return state; }
+  // hasResults marks a search that actually returned, so a caller can tell a
+  // completed trip apart from one whose search failed.
+  publicState() { const { snapshot, lastQuery, ...state } = this.state; return { ...state, hasResults: Boolean(snapshot) }; }
   async choose(number) {
     const pending = this.state.pending;
     if (!pending) return { status: 'clarify', text: 'There is no active numbered menu. Please type the city, airport or preference you want to change.' };

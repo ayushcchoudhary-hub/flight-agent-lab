@@ -38,7 +38,10 @@ const namedOption = text => text.match(/\b(?:option|flight)\s+([a-c])\b/i)?.[1]?
 
 export function bookingHandoff(text, state) {
   if (!BARE_BOOKING.test(String(text ?? '').trim())) return null;
-  const link = state ? productSearchUrl(state) : null;
+  // A trip can be complete while its search failed, and no link was ever
+  // shown. Point at results the traveler actually received, or ask for a
+  // search first.
+  const link = state?.hasResults ? productSearchUrl(state) : null;
   if (!link) return { status: 'clarify', text: 'Booking happens on CommonSwyft. Tell me the route and date you want, then I can point you to that search there.' };
   const option = namedOption(text);
   const pointer = option ? `\n\nLook for option ${option} from the list above on that page.` : '';

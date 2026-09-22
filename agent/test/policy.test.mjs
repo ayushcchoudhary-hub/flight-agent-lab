@@ -101,6 +101,12 @@ test('a retention answer falls back to retrieval when the evidence changes',()=>
   assert.equal(groundedPolicyAnswer('how long do you keep my searches?',missingSupport),null);
 });
 
+test('a retention question about another subject is not given the analytics periods',()=>{
+  for(const question of ['how long do you keep my card details?','how long do you store passport details?','how long do you keep my booking reference?']){
+    assert.equal(groundedPolicyAnswer(question),null,`${question} has a different answer from analytics retention`);
+  }
+});
+
 test('questions the snapshot does not settle still reach retrieval',()=>{
   for(const question of ['what is your refund policy?','do you store card details?','can I change my seat?']){
     assert.equal(groundedPolicyAnswer(question),null,`${question} must not be answered deterministically`);

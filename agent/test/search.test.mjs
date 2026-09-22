@@ -526,6 +526,15 @@ test('a question about booking is not treated as an instruction to hand off',()=
   }
 });
 
+test('a failed search gets no checkout link',async()=>{
+  const {c}=setup('unavailable');
+  const failed=await c.find(route);
+  assert.equal(failed.status,'error');
+  const reply=bookingHandoff('book it',c.publicState());
+  assert.match(reply.text,/Tell me the route and date you want/);
+  assert.ok(!/https?:\/\//.test(reply.text),'no link for results the traveler never saw');
+});
+
 test('a policy question about payment still reaches grounded retrieval',()=>{
   // The refusal must not swallow questions the privacy snapshot answers.
   for(const question of ['do you sell my data?','what is your privacy policy?','do you store card details?','what are your terms?']){
