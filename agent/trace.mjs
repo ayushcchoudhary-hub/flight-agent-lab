@@ -8,7 +8,13 @@ export function redact(value) {
     .replace(/sk-[A-Za-z0-9_-]+/g, '[REDACTED_KEY]')
     .replace(/Bearer\s+\S+/gi, 'Bearer [REDACTED]')
     .replace(/[\w.+-]+@[\w.-]+\.[A-Za-z]{2,}/g, '[EMAIL]')
-    .replace(/(?:\d[ -]?){13,19}/g, '[LONG_NUMBER]');
+    .replace(/(?:\d[ -]?){13,19}/g, '[LONG_NUMBER]')
+    // Travelers type identity documents into chats. A passport number after
+    // the word is removed; the details belong on the website, never in a log.
+    .replace(/\b(passport(?:\s*(?:no\.?|number|num|#))?\s*(?:is|:)?\s*)[A-Z0-9]{6,12}\b/gi, '$1[PASSPORT]')
+    // Phone numbers: 10 to 15 digits with common separators. Dates have 8
+    // digits and prices use commas, so neither is caught.
+    .replace(/\+?\d[\d ().-]{8,20}\d/g, match => { const digits = match.replace(/\D/g, '').length; return digits >= 10 && digits <= 15 ? '[PHONE]' : match; });
   return value;
 }
 export function fileTrace(directory, sessionId) {
