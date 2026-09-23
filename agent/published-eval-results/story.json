@@ -1,0 +1,144 @@
+{
+  "about": "Curated reading order for the published hardening runs. Numbers are computed from each run's report, never typed here. Every published hardening run must appear once, as a milestone, a head-to-head run or a supporting run with a reason. Nothing is deleted: history stays append-only.",
+  "before": "Before these milestones, a 42-case development set was used while the agent was being built (30 of 42 on 20 Sept). The agent had been tuned against it, so a fresh held-out set was written and frozen before the agent ever saw it. The chart starts there.",
+  "milestones": [
+    {
+      "run": "live-hardening-judge-2026-09-20T15-56-09.018Z",
+      "date": "20 Sept",
+      "title": "Held-out baseline",
+      "changed": [
+        "30 new cases, frozen before the first run",
+        "Known gaps deliberately left unfixed so the score is honest"
+      ],
+      "why": "An honest starting point on requests the agent had never been tuned on."
+    },
+    {
+      "run": "live-hardening-judge-2026-09-20T21-36-05.848Z",
+      "date": "20 Sept",
+      "title": "Places, money, payment, dates",
+      "changed": [
+        "Real airport list for country menus and misspellings",
+        "Budgets in USD only",
+        "A saved card never authorises payment",
+        "No invented dates",
+        "Policy answers grounded in the published snapshot"
+      ],
+      "why": "The baseline failed on the basics: unknown cities, currency loops, and payment wording. Two frozen expectations were wrong and were corrected, with the reasoning kept beside the cases."
+    },
+    {
+      "run": "live-hardening-judge-2026-09-21T09-03-42.412Z",
+      "date": "21 Sept",
+      "title": "Ask, don’t guess",
+      "changed": [
+        "Ambiguous requests get a question, not a search on a guess",
+        "Place names kept exactly as typed",
+        "No invented dates or cabin labels"
+      ],
+      "why": "The remaining exact failures were the model guessing: “Sidney”, “make it the 3rd”, “back to business”."
+    },
+    {
+      "run": "live-hardening-judge-2026-09-21T09-19-47.073Z",
+      "date": "21 Sept",
+      "title": "A steadier judge",
+      "changed": [
+        "Judge effort raised from low to medium",
+        "Test-contract corrections and an article fix"
+      ],
+      "why": "At low effort the judge passed and failed identical replies on consecutive runs. Every exact check passes from here.",
+      "judgeChange": "Sonnet 4.6, low → medium effort"
+    },
+    {
+      "run": "live-hardening-judge-2026-09-22T21-37-08.996Z",
+      "date": "22 Sept",
+      "title": "Checkout link, six reply fixes",
+      "changed": [
+        "Every results reply links to the same search on commonswyft.com",
+        "Six reply fixes, each with a new held-out case",
+        "Stricter judge: Opus 5.5"
+      ],
+      "why": "Six new cases pin the checkout link and the reply fixes. The stricter judge flags wording the old judge let through, so some judge flags are new without any change to those replies.",
+      "judgeChange": "Sonnet 4.6 → Opus 5.5"
+    },
+    {
+      "run": "live-hardening-judge-2026-09-22T22-08-41.016Z",
+      "date": "22 Sept",
+      "title": "Take me anywhere added",
+      "changed": [
+        "Deals from the product’s public deals feed",
+        "11 new Discover cases (G1–G11)"
+      ],
+      "why": "All 11 new cases failed exact checks on the first run. The model sent empty values (a blank region, a zero budget) and the app treated them as real filters. That was fixed next."
+    },
+    {
+      "run": "live-hardening-judge-2026-09-23T08-38-21.184Z",
+      "date": "23 Sept",
+      "title": "Empty values, memory",
+      "changed": [
+        "Empty or zero values are ignored, in both tools",
+        "Last-used origin remembered and disclosed",
+        "Saying your home airport saves it",
+        "The deals feed decides what is current"
+      ],
+      "why": "Fixes the Discover failures and adds the memory rules agreed on 23 Sept. G5, C1 and A8 still failed and were fixed next."
+    },
+    {
+      "run": [
+        "live-hardening-judge-2026-09-23T10-08-32.825Z",
+        "live-hardening-judge-2026-09-23T10-17-28.508Z"
+      ],
+      "date": "23 Sept",
+      "title": "Home disclosure, invented cabins",
+      "changed": [
+        "A saved home airport is disclosed when it sets the deals city",
+        "A cabin the traveler never mentioned is dropped",
+        "A8 accepts a clarifying question as well as the overlap check"
+      ],
+      "why": "Fixes the three exact failures from the run before: G5 and A8 now pass, and C1 is correct with a judge note on wording. One new exact failure: in G9 the model asked for economy deals the traveler never mentioned. Run in two parts after a provider timeout at case 16."
+    }
+  ],
+  "headToHead": [
+    {
+      "title": "Terra vs Sol · 36 cases",
+      "date": "22 Sept",
+      "commit": "058482d",
+      "runs": [
+        "live-hardening-judge-2026-09-22T21-37-08.996Z",
+        "live-hardening-judge-2026-09-22T21-48-08.811Z"
+      ],
+      "note": "Same code, same cases, same judge, run back to back. Before take me anywhere existed."
+    },
+    {
+      "title": "Terra vs Sol · 47 cases",
+      "date": "23 Sept",
+      "commit": "52d80c5",
+      "runs": [
+        [
+          "live-hardening-judge-2026-09-23T10-08-32.825Z",
+          "live-hardening-judge-2026-09-23T10-17-28.508Z"
+        ],
+        "live-hardening-judge-2026-09-23T09-53-41.562Z"
+      ],
+      "note": "Same code, same 47 cases, same judge, run back to back. Terra ran in two parts after a provider timeout.",
+      "finding": "Sol sent a garbled destination (“SingaporeAirport (SIN)?”) in D3, so the app asked which city was meant, and in G2 it invented a Europe region, a USD 1,000 budget and a weather filter nobody asked for. Terra asked for economy deals nobody mentioned in G9. All three are the model adding things the traveler did not say."
+    }
+  ],
+  "supporting": {
+    "live-hardening-judge-2026-09-20T09-36-59.244Z": "Development set (v1). The first judged run: 30 of 42. Retired because the agent was tuned on it.",
+    "live-hardening-judge-2026-09-20T09-48-35.308Z": "Development set: 12 failing cases rerun after fixes.",
+    "live-hardening-judge-2026-09-20T09-52-20.731Z": "Development set: 5 policy cases rerun after policy fixes.",
+    "live-hardening-judge-2026-09-20T09-55-08.109Z": "Development set: last 3 policy cases verified.",
+    "live-hardening-judge-2026-09-20T15-23-53.919Z": "Development set: rerun stopped by hand after 7 cases.",
+    "live-hardening-judge-2026-09-20T15-38-37.144Z": "Development set: full rerun that stopped at B03 on a frozen expectation (32 of 33 run).",
+    "live-hardening-judge-2026-09-20T21-17-26.623Z": "Started on the development set by a flag typo. Kept, not meaningful.",
+    "live-hardening-judge-2026-09-20T21-19-27.470Z": "Held-out set: stopped after 17 cases. Rerun complete in the next milestone.",
+    "live-hardening-judge-2026-09-20T21-28-42.746Z": "Held-out set: stopped after 19 cases. Rerun complete in the next milestone.",
+    "live-hardening-judge-2026-09-21T09-15-53.436Z": "Held-out set: the judge’s answers were cut off after 13 cases. Rerun with room to answer.",
+    "live-hardening-judge-2026-09-22T20-47-52.256Z": "Six reply fixes, part 1 of 2 (20 cases). Split by a judge rate limit. Full run in the next milestone.",
+    "live-hardening-judge-2026-09-22T20-55-17.504Z": "Six reply fixes, part 2 of 2 (16 cases).",
+    "live-hardening-judge-2026-09-22T22-23-59.766Z": "Targeted check: G1–G11 and A8 after the empty-value fix. 12 of 12.",
+    "live-hardening-judge-2026-09-23T08-20-15.806Z": "Targeted check: D1–D5 after last-origin memory. 5 of 5.",
+    "live-hardening-judge-2026-09-23T08-34-00.946Z": "Targeted check: D-series and G7, stopped by a judge rate limit.",
+    "live-hardening-judge-2026-09-23T08-35-36.893Z": "Targeted check: D4, D5 and G7, the rest of the stopped run.",
+    "live-hardening-judge-2026-09-23T08-53-10.627Z": "Sol head-to-head that stopped after 3 cases when credit ran out. Rerun in the 47-case head-to-head."
+  }
+}

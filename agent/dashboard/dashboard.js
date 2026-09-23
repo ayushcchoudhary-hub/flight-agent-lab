@@ -1,11 +1,14 @@
+import {modelName,pickerGroups,renderStory} from './story.js';
 const $=s=>document.querySelector(s);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const pretty=s=>JSON.stringify(s,null,2);
-const short=m=>({'gpt-6-astra':'Astra','gpt-5.6-luna':'Luna','openai/gpt-5.6-terra':'Terra medium','anthropic/claude-sonnet-4.6':'Claude Sonnet 4.6'}[m]||m.replace('gpt-',''));
+const short=m=>({'gpt-6-astra':'Astra','gpt-5.6-luna':'Luna','openai/gpt-5.6-terra':'Terra medium','anthropic/claude-sonnet-4.6':'Claude Sonnet 4.6','openai/gpt-6-sol':'Sol medium','anthropic/claude-opus-5.5':'Claude Opus 5.5','anthropic/claude-opus-5':'Claude Opus 5'}[m]||m.replace('gpt-',''));
 const median=xs=>{const a=[...xs].sort((x,y)=>x-y);return a.length?(a[Math.floor((a.length-1)/2)]+a[Math.ceil((a.length-1)/2)])/2:0;};
 const families={G:'Conversation and authority boundaries',A:'Ambiguity and unsupported constraints',N:'Nearby alternatives',L:'Live public staging',S:'Staging integration',R:'Complete route',M:'Missing information',D:'Dates',F:'Follow-up changes',U:'Unsupported request',E:'API failure or empty results',V:'Input validation'};
 const explanations={R1:'London → New York; R2–R5 cover four other routes. With both cities and 1 October supplied, search immediately using the business default.',R2:'New York → San Francisco on 1 October. Search immediately; preserve the city airport groups and use business.',R3:'San Francisco → Singapore on 1 October. Search immediately; preserve the city airport groups and use business.',R4:'Singapore → Dubai on 1 October. Search immediately; preserve the city airport groups and use business.',R5:'Dubai → London on 1 October. Search immediately; preserve the city airport groups and use business.',M1:'Origin only: ask for the destination before searching. Then interpret a numbered menu choice and apply the date and cabin defaults.',M2:'Destination only: ask for the origin before searching. Then interpret a numbered menu choice and apply the date and cabin defaults.',M3:'Both cities, no date: search using 18–25 September and business. Do not ask an unnecessary date question.',D1:'Resolve “next week” against the fixed test clock: 21–27 September 2026.',F1:'Three turns: economy under $600; narrow to Heathrow; switch to business. Preserve the unchanged preferences, including the budget. Return no matches if nothing qualifies.',U1:'Round trip is outside this version. Explain the limitation without silently searching one-way.',U2:'Two travelers are outside this version. Clarify before searching instead of assuming one traveler.',E1:'Simulated API outage: say the search is unavailable rather than claiming there are no flights.',E2:'Successful search with no matches: return an empty result, not an outage.',V1:'Reject 30 February before calling the search API.'};
-let data=null,chosen=null,activeRun=new URLSearchParams(location.search).get('run')||'',tab='conversation',lastSignature='',busy=false;
+const params=new URLSearchParams(location.search);
+let story=null,wantedCase=params.get('case');
+let data=null,chosen=null,activeRun=params.get('run')||'',tab='conversation',lastSignature='',busy=false;
 function selectedRuns(){return data.report.results.filter(r=>r.caseId===chosen?.caseId&&r.model===chosen?.model);}
 const defaultMethod=$('#run-method').innerHTML;
 const defaultExplanation=$('#run-explanation').textContent;
@@ -20,9 +23,10 @@ function render(){
  if(data.report.evaluationKind==='llm-judge-hardening'){
  $('#judge-banner').hidden=false;
  $('#judge-banner-copy').textContent=`${data.report.results.filter(row=>row.communicationPass).length} of ${data.report.results.length} replies cleared the judge threshold in this saved run. Exact checks still decide whether routes, dates, state and tool behavior are correct.`;
- $('#data-intro').textContent='Held-out Terra conversations graded with exact checks and an independent LLM judge.';
+ const candidate=modelName(data.report.models?.[0]),judge=modelName(data.report.judge?.model)||'the judge';
+ $('#data-intro').textContent=`Held-out ${candidate} conversations graded with exact checks and an independent LLM judge.`;
  $('#flight-source').textContent='Controlled fixtures and policy evidence';
- $('#run-explanation').textContent='Terra proposes each action. Code checks routes, dates, state and tool behavior. Claude Sonnet independently scores the visible reply. A judge score cannot override an exact failure.';
+ $('#run-explanation').textContent=`${candidate} proposes each action. Code checks routes, dates, state and tool behavior. ${judge} independently scores the visible reply. A judge score cannot override an exact failure.`;
  $('#run-method').innerHTML='<summary>How to read the judge</summary><p><b>Exact checks remain authoritative.</b> The LLM judge reviews clarity, concision, tone, next step, honest limitations and internal leakage. A pass requires every score to be at least 4 out of 5, no major or critical issue and all exact checks to pass.</p><p>Each held-out case runs once. The judge sees the requirement and visible conversation but not the candidate model name or private reasoning. Review disagreements manually before changing prompts or scope.</p>';
  }
  if(data.report.flightData==='mixed'){
@@ -71,14 +75,17 @@ async function refresh(){
  if(busy)return;busy=true;
  try{
   const list=await(await fetch('/api/runs')).json();
-  if(!list.runs?.length){$('#connection').textContent='No evaluation reports yet.';return;}
-  if(!activeRun)activeRun=list.runs[0];
-  if([...$('#run').options].map(x=>x.value).join('|')!==list.runs.join('|'))$('#run').innerHTML=list.runs.map(id=>`<option value="${esc(id)}">${esc(id.replace('live-','').replace('T',' · ').replace(/\.\d+Z$/, ' UTC'))}</option>`).join('');
+  if(!story){story=await(await fetch('/api/story')).json().catch(()=>null)??{milestones:[],headToHead:[],supporting:{}};renderStory($('#story'),story,{onOpen:openRun});}
+  if(!list.runs?.length&&!story.milestones.length){$('#connection').textContent='No evaluation reports yet.';return;}
+  const groups=pickerGroups(story,list.runs??[]),values=groups.flatMap(([,items])=>items.map(x=>x.value));
+  if(!activeRun||!values.includes(activeRun))activeRun=story.milestones.at(-1)?.run??values[0];
+  if([...$('#run').options].map(x=>x.value).join('|')!==values.join('|'))$('#run').innerHTML=groups.map(([label,items])=>`<optgroup label="${esc(label)}">${items.map(x=>`<option value="${esc(x.value)}">${esc(x.text)}</option>`).join('')}</optgroup>`).join('');
   $('#run').value=activeRun;
   const res=await fetch('/api/report?id='+encodeURIComponent(activeRun));if(!res.ok)throw new Error('Report is updating; keeping the last results.');
   data=await res.json();const sig=activeRun+data.updatedAt;
-  if(data.report.label)$('#run').selectedOptions[0].textContent=(data.report.evaluationKind==='llm-judge-hardening'?'LLM judge · ':'')+data.report.label;
+  const note=story.supporting[activeRun];$('#run-note').hidden=!note;$('#run-note').textContent=note?`Supporting run: ${note}`:'';
   $('#progress-meta').title=data.report.label||activeRun;
+  if(wantedCase&&data.cases.some(c=>c.id===wantedCase)){chosen={caseId:wantedCase,model:data.report.models[0],repeat:1};wantedCase=null;lastSignature='';}
   if(!chosen||!data.cases.some(c=>c.id===chosen.caseId))chosen={caseId:data.cases[0].id,model:data.report.models[0],repeat:1};
   if(sig!==lastSignature){render();lastSignature=sig;}
   const age=Math.max(0,Math.round((Date.now()-Date.parse(data.updatedAt))/1000));
@@ -86,7 +93,8 @@ async function refresh(){
   $('#alert').hidden=true;
  }catch(e){$('#connection').textContent='Connection paused';$('#alert').hidden=false;$('#alert').textContent=e.message;}finally{busy=false;}
 }
-$('#run').onchange=()=>{activeRun=$('#run').value;lastSignature='';chosen=null;refresh();};
+function openRun(run,caseId=null){activeRun=run;wantedCase=caseId;lastSignature='';chosen=null;$('#run').value=run;history.replaceState(null,'',`/evals?run=${encodeURIComponent(run)}${caseId?`&case=${encodeURIComponent(caseId)}`:''}`);refresh().then(()=>$('#summary').scrollIntoView({behavior:'smooth',block:'start'}));}
+$('#run').onchange=()=>openRun($('#run').value);
 $('#failures').onchange=()=>data&&render();
 let dark=localStorage.getItem('flight-lab-theme')==='dark';
 function setTheme(){document.body.classList.toggle('dark',dark);$('#theme').textContent=dark?'Light mode':'Dark mode';}

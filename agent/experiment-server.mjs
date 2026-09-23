@@ -4,6 +4,8 @@ import http from 'node:http';
 import {readFile,readdir,stat} from 'node:fs/promises';
 import {fileURLToPath} from 'node:url';
 import {join} from 'node:path';
+import {existsSync} from 'node:fs';
+import {isRunKey,loadStory,readReport} from './eval-story.mjs';
 import {createChatService} from './chat-service.mjs';
 import {storeFromEnvironment,isVisitorId} from './store.mjs';
 import {randomUUID as newVisitorId} from 'node:crypto';
@@ -58,7 +60,7 @@ const assets={
  '/policy-examples':['policy-examples.html','text/html'],
  '/reply-preview':['reply-preview.html','text/html'],
  '/experiment.js':['experiment.js','text/javascript'],
- '/dashboard.js':['dashboard.js','text/javascript'],
+ '/dashboard.js':['dashboard.js','text/javascript'],'/story.js':['story.js','text/javascript'],
  '/compare.js':['compare.js','text/javascript'],
  '/overview.js':['overview.js','text/javascript'],
  '/dashboard.css':['dashboard.css','text/css'],
@@ -128,16 +130,15 @@ const server=http.createServer(async(req,res)=>{
     return send(res,200,JSON.parse(await readFile(join(root,'eval-results',id,'report.json'),'utf8')));
    }
    if(url.pathname==='/api/runs'){
-    const names=(await readdir(join(root,'eval-results'),{withFileTypes:true})).filter(x=>x.isDirectory()&&/^live-[\w.-]+$/.test(x.name)).map(x=>x.name).sort().reverse();
+    const names=(await readdir(join(root,'eval-results'),{withFileTypes:true})).filter(x=>x.isDirectory()&&/^live-[\w.-]+$/.test(x.name)&&existsSync(join(root,'eval-results',x.name,'report.json'))).map(x=>x.name).sort().reverse();
     return send(res,200,{runs:names});
    }
+   if(url.pathname==='/api/story')return send(res,200,await loadStory(root)??{milestones:[],headToHead:[],supporting:{}});
    if(url.pathname==='/api/report'){
     const id=url.searchParams.get('id');
-    if(!id||!/^live-[\w.-]+$/.test(id))return send(res,400,{error:'Invalid report.'});
-    const path=join(root,'eval-results',id,'report.json');
-    const report=JSON.parse(await readFile(path,'utf8'));
-    const cases=JSON.parse(await readFile(join(root,'eval-results',id,'cases.json'),'utf8'));
-    return send(res,200,{report,cases,updatedAt:(await stat(path)).mtime.toISOString()});
+    if(!isRunKey(id))return send(res,400,{error:'Invalid report.'});
+    const {report,cases}=await readReport(join(root,'eval-results'),id);
+    return send(res,200,{report,cases,updatedAt:(await stat(join(root,'eval-results',id.split('+').at(-1),'report.json'))).mtime.toISOString()});
    }
    const asset=assets[url.pathname];if(!asset)return send(res,404,{error:'Not found.'});
    const body=await readFile(join(root,'dashboard',asset[0]),'utf8');

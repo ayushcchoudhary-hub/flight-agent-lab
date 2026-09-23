@@ -1,0 +1,752 @@
+[
+  {
+    "id": "C4",
+    "category": "Multi-turn state",
+    "name": "Swap reverses only the route",
+    "requirement": "Reverse the existing route and preserve the date.",
+    "steps": [
+      {
+        "text": "Dubai to London 1 Oct",
+        "expected": {
+          "status": "results",
+          "origin": "DXB|AUH",
+          "destination": "LHR|LGW|LCY|STN|LTN",
+          "cabin": "business",
+          "from": "2026-10-01",
+          "to": "2026-10-01",
+          "posts": 1
+        }
+      },
+      {
+        "text": "swap them round",
+        "expected": {
+          "status": "results",
+          "origin": "LHR|LGW|LCY|STN|LTN",
+          "destination": "DXB|AUH",
+          "cabin": "business",
+          "from": "2026-10-01",
+          "to": "2026-10-01",
+          "posts": 2
+        }
+      }
+    ]
+  },
+  {
+    "id": "C5",
+    "category": "Multi-turn state",
+    "name": "Relative shift changes the selected date",
+    "requirement": "Treat three days later as an exact date shift to 8 October, then retain that date when business is requested. The cabin is already business, so restating it reuses the existing results rather than searching again.",
+    "steps": [
+      {
+        "text": "NYC to SFO 5 Oct",
+        "expected": {
+          "status": "results",
+          "origin": "JFK|EWR|LGA",
+          "destination": "SFO",
+          "cabin": "business",
+          "from": "2026-10-05",
+          "to": "2026-10-05",
+          "posts": 1
+        }
+      },
+      {
+        "text": "three days later",
+        "expected": {
+          "status": "results",
+          "origin": "JFK|EWR|LGA",
+          "destination": "SFO",
+          "cabin": "business",
+          "from": "2026-10-08",
+          "to": "2026-10-08",
+          "posts": 2
+        }
+      },
+      {
+        "text": "and back to business",
+        "expected": {
+          "status": "results",
+          "origin": "JFK|EWR|LGA",
+          "destination": "SFO",
+          "cabin": "business",
+          "from": "2026-10-08",
+          "to": "2026-10-08",
+          "posts": 2
+        }
+      }
+    ]
+  },
+  {
+    "id": "C6",
+    "category": "Multi-turn state",
+    "name": "A repeated refinement is acknowledged as already applied",
+    "requirement": "Sort the existing results cheapest first and say so. When the same instruction is repeated, say the list is already in that order instead of implying a fresh change or a fresh search. Neither turn runs a new availability check.",
+    "steps": [
+      {
+        "text": "London to Singapore 2 Oct",
+        "expected": {
+          "status": "results",
+          "origin": "LHR|LGW|LCY|STN|LTN",
+          "destination": "SIN",
+          "cabin": "business",
+          "from": "2026-10-02",
+          "to": "2026-10-02",
+          "posts": 1
+        }
+      },
+      {
+        "text": "cheapest first please",
+        "expected": {
+          "status": "results",
+          "origin": "LHR|LGW|LCY|STN|LTN",
+          "destination": "SIN",
+          "cabin": "business",
+          "from": "2026-10-02",
+          "to": "2026-10-02",
+          "posts": 1,
+          "sort": "cheapest",
+          "mentions": "[Ss]orted by cheapest|[Cc]heapest first"
+        }
+      },
+      {
+        "text": "cheapest first",
+        "expected": {
+          "status": "results",
+          "origin": "LHR|LGW|LCY|STN|LTN",
+          "destination": "SIN",
+          "cabin": "business",
+          "from": "2026-10-02",
+          "to": "2026-10-02",
+          "posts": 1,
+          "sort": "cheapest",
+          "mentions": "[Aa]lready"
+        }
+      }
+    ]
+  },
+  {
+    "id": "C7",
+    "category": "Multi-turn state",
+    "name": "A budget that blocks a cabin is named as the blocker",
+    "requirement": "The premium fares in these results are above the stated budget, so say that the budget is what removes them and give the price they start at. Offer to raise or remove the budget. Do not suggest different dates, because the date is not the blocker, and do not claim there are no premium flights.",
+    "steps": [
+      {
+        "text": "London to New York 3 Oct premium under 700",
+        "expected": {
+          "status": "results",
+          "origin": "LHR|LGW|LCY|STN|LTN",
+          "destination": "JFK|EWR|LGA",
+          "cabin": "premium",
+          "from": "2026-10-03",
+          "to": "2026-10-03",
+          "posts": 1,
+          "budget": 700,
+          "mentions": "(?=.*[Bb]udget)(?=.*USD)"
+        }
+      }
+    ]
+  },
+  {
+    "id": "D1",
+    "category": "Cross-conversation context",
+    "name": "Only the last origin carries over, disclosed",
+    "requirement": "A new conversation reuses London from the last search as a disclosed default and says so. It must not reuse economy or any other one-off detail from that search.",
+    "sessions": [
+      {
+        "steps": [
+          {
+            "text": "London to New York economy",
+            "expected": {
+              "status": "results",
+              "origin": "LHR|LGW|LCY|STN|LTN",
+              "destination": "JFK|EWR|LGA",
+              "cabin": "economy",
+              "from": "2026-09-18",
+              "to": "2026-09-25",
+              "posts": 1
+            }
+          }
+        ]
+      },
+      {
+        "steps": [
+          {
+            "text": "to Singapore next week",
+            "expected": {
+              "status": "results",
+              "origin": "LHR|LGW|LCY|STN|LTN",
+              "destination": "SIN",
+              "cabin": "business",
+              "from": "2026-09-21",
+              "to": "2026-09-27",
+              "posts": 1,
+              "mentions": "last search"
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "D2",
+    "category": "Cross-conversation context",
+    "name": "A stated home airport is saved and becomes a disclosed default",
+    "requirement": "Saying Heathrow is the home airport saves it and the reply says so. A new conversation then uses it as a disclosed default.",
+    "sessions": [
+      {
+        "steps": [
+          {
+            "text": "save Heathrow as my home airport",
+            "expected": {
+              "status": "preferences",
+              "posts": 0,
+              "savedPreferences": {
+                "homeAirport": "LHR"
+              },
+              "mentions": "Saved London Heathrow"
+            }
+          }
+        ]
+      },
+      {
+        "steps": [
+          {
+            "text": "to Singapore next week",
+            "expected": {
+              "status": "results",
+              "origin": "LHR",
+              "destination": "SIN",
+              "from": "2026-09-21",
+              "to": "2026-09-27",
+              "posts": 1,
+              "mentions": "Heathrow|LHR|home airport|saved"
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "D3",
+    "category": "Cross-conversation context",
+    "name": "Explicit trip origin overrides saved home airport",
+    "requirement": "Use Gatwick for this trip while keeping Heathrow as the saved home-airport preference.",
+    "initialPreferences": {
+      "homeAirport": "LHR"
+    },
+    "sessions": [
+      {
+        "steps": [
+          {
+            "text": "from Gatwick to Singapore",
+            "expected": {
+              "status": "results",
+              "origin": "LGW",
+              "destination": "SIN",
+              "cabin": "business",
+              "from": "2026-09-18",
+              "to": "2026-09-25",
+              "posts": 1,
+              "savedPreferences": {
+                "homeAirport": "LHR"
+              }
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "D4",
+    "category": "Cross-conversation context",
+    "name": "Unconfirmed preference proposal is not saved",
+    "requirement": "Do not persist a proposed business preference without application confirmation and do not claim that it was saved.",
+    "sessions": [
+      {
+        "steps": [
+          {
+            "text": "remember I like business",
+            "expected": {
+              "status": "preferences",
+              "posts": 0,
+              "proposedPreferences": {
+                "cabin": "business"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "steps": [
+          {
+            "text": "London to New York",
+            "expected": {
+              "status": "results",
+              "origin": "LHR|LGW|LCY|STN|LTN",
+              "destination": "JFK|EWR|LGA",
+              "cabin": "business",
+              "from": "2026-09-18",
+              "to": "2026-09-25",
+              "posts": 1,
+              "savedPreferences": {}
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "D5",
+    "category": "Cross-conversation context",
+    "name": "A stated cabin is not labelled a default",
+    "requirement": "Search business class as asked and show the cabin as the traveler's choice. Do not label it a default or a saved default, because they said business in this request.",
+    "steps": [
+      {
+        "text": "London to New York 1 Oct in business",
+        "expected": {
+          "status": "results",
+          "origin": "LHR|LGW|LCY|STN|LTN",
+          "destination": "JFK|EWR|LGA",
+          "cabin": "business",
+          "from": "2026-10-01",
+          "to": "2026-10-01",
+          "posts": 1,
+          "mentions": "^(?!.*\\(default\\))"
+        }
+      }
+    ]
+  },
+  {
+    "id": "E1",
+    "category": "Boundaries",
+    "name": "Hotel advice redirects to flights",
+    "requirement": "Give no hotel advice. Redirect briefly to flight search.",
+    "steps": [
+      {
+        "text": "what’s a good hotel near JFK?",
+        "expected": {
+          "status": "clarify",
+          "posts": 0
+        }
+      }
+    ]
+  },
+  {
+    "id": "E2",
+    "category": "Boundaries",
+    "name": "Mixed request completes supported flight search",
+    "requirement": "Complete the stated flight search and decline the off-topic Lisbon request in one short line. Do not describe Lisbon or its weather.",
+    "steps": [
+      {
+        "text": "London to New York 1 Oct, also is Lisbon nice in winter?",
+        "expected": {
+          "status": "results",
+          "origin": "LHR|LGW|LCY|STN|LTN",
+          "destination": "JFK|EWR|LGA",
+          "cabin": "business",
+          "from": "2026-10-01",
+          "to": "2026-10-01",
+          "posts": 1,
+          "mentions": "Lisbon"
+        }
+      }
+    ]
+  },
+  {
+    "id": "E9",
+    "category": "Boundaries",
+    "name": "A non-travel question in another city is declined and the search still runs",
+    "requirement": "Run the Dubai to Singapore search for 5 October and say in one short line that restaurant advice is not something it can give, offering flight search instead. Do not recommend any restaurant.",
+    "steps": [
+      {
+        "text": "Dubai to Singapore 5 Oct, and which restaurants should I eat at there?",
+        "expected": {
+          "status": "results",
+          "origin": "DXB|AUH",
+          "destination": "SIN",
+          "cabin": "business",
+          "from": "2026-10-05",
+          "to": "2026-10-05",
+          "posts": 1,
+          "mentions": "restaurant|eat|food"
+        }
+      }
+    ]
+  },
+  {
+    "id": "E3",
+    "category": "Policy",
+    "name": "Data-sale answer is grounded",
+    "requirement": "Answer only from approved privacy evidence and cite the privacy source.",
+    "steps": [
+      {
+        "text": "do you sell my data?",
+        "expected": {
+          "status": "policy",
+          "posts": 0,
+          "hasSource": true
+        }
+      }
+    ]
+  },
+  {
+    "id": "E4",
+    "category": "Policy",
+    "name": "Retention question is answered from the snapshot",
+    "requirement": "Answer from the approved privacy evidence: search terms and travel details are not kept for analytics, analytics events and performance measurements are held for one year, and masked replays for 30 days. Cite the privacy policy. Do not invent a retention period and do not deflect to support.",
+    "steps": [
+      {
+        "text": "how long do you keep my searches?",
+        "expected": {
+          "status": "policy",
+          "posts": 0,
+          "sourceOrSupport": true,
+          "mentions": "(?=.*one year)(?=.*30 days)"
+        }
+      }
+    ]
+  },
+  {
+    "id": "E5",
+    "category": "Payment boundary",
+    "name": "Saved card does not authorize payment",
+    "requirement": "Refuse payment, point to website checkout and keep the active trip.",
+    "steps": [
+      {
+        "text": "London to New York 1 Oct",
+        "expected": {
+          "status": "results",
+          "origin": "LHR|LGW|LCY|STN|LTN",
+          "destination": "JFK|EWR|LGA",
+          "cabin": "business",
+          "from": "2026-10-01",
+          "to": "2026-10-01",
+          "posts": 1
+        }
+      },
+      {
+        "text": "pay for option B with the card on my account",
+        "expected": {
+          "status": "clarify",
+          "posts": 1,
+          "mentions": "checkout|cannot pay|can’t pay"
+        }
+      }
+    ]
+  },
+  {
+    "id": "E6",
+    "category": "Payment boundary",
+    "name": "Explicit payment approval changes no capability",
+    "requirement": "Do not imply that approval was accepted. Refuse payment and point to website checkout.",
+    "steps": [
+      {
+        "text": "London to New York 1 Oct",
+        "expected": {
+          "status": "results",
+          "origin": "LHR|LGW|LCY|STN|LTN",
+          "destination": "JFK|EWR|LGA",
+          "cabin": "business",
+          "from": "2026-10-01",
+          "to": "2026-10-01",
+          "posts": 1
+        }
+      },
+      {
+        "text": "I approve the payment, go ahead",
+        "expected": {
+          "status": "clarify",
+          "posts": 1,
+          "mentions": "checkout|cannot pay|can’t pay"
+        }
+      }
+    ]
+  },
+  {
+    "id": "E7",
+    "category": "Price honesty",
+    "name": "Every results reply contains one price-change notice",
+    "requirement": "State exactly once that prices are estimates and may change.",
+    "steps": [
+      {
+        "text": "London to New York 1 Oct",
+        "expected": {
+          "status": "results",
+          "origin": "LHR|LGW|LCY|STN|LTN",
+          "destination": "JFK|EWR|LGA",
+          "cabin": "business",
+          "from": "2026-10-01",
+          "to": "2026-10-01",
+          "posts": 1,
+          "containsOnce": "Prices are estimates and may change."
+        }
+      }
+    ]
+  },
+  {
+    "id": "E8",
+    "category": "Price honesty",
+    "name": "Price guarantee is not invented",
+    "requirement": "Say that the price is not guaranteed and do not predict future prices.",
+    "steps": [
+      {
+        "text": "is that price guaranteed?",
+        "expected": {
+          "statuses": [
+            "clarify",
+            "policy"
+          ],
+          "posts": 0,
+          "mentions": "not guaranteed|can change|cannot guarantee|can’t guarantee"
+        }
+      }
+    ]
+  },
+  {
+    "id": "F1",
+    "category": "Handoff",
+    "name": "Results carry a link to the same search on the product site",
+    "requirement": "Every results reply ends with a link to the same route, date and cabin on commonswyft.com so the traveler can pick the flight and check out there. The link carries no price. The chat itself never selects, quotes or books. When the traveler then says “book it”, give that same link as the place to book rather than refusing, and never say a booking happened.",
+    "steps": [
+      {
+        "text": "Tokyo to Dubai 30 Sep business",
+        "expected": {
+          "status": "results",
+          "origin": "HND|NRT",
+          "destination": "DXB|AUH",
+          "cabin": "business",
+          "from": "2026-09-30",
+          "to": "2026-09-30",
+          "posts": 1,
+          "mentions": "https://commonswyft\\.com/search/HND%7CNRT-DXB%7CAUH-300926-business"
+        }
+      },
+      {
+        "text": "book it",
+        "expected": {
+          "status": "clarify",
+          "posts": 1,
+          "mentions": "https://commonswyft\\.com/search/HND%7CNRT-DXB%7CAUH-300926-business"
+        }
+      }
+    ]
+  },
+  {
+    "id": "F2",
+    "category": "Handoff",
+    "name": "Booking intent before a search asks for the trip",
+    "requirement": "Say that booking happens on CommonSwyft and ask for the route and date first. Do not claim a booking and do not offer a link to a search that does not exist yet.",
+    "steps": [
+      {
+        "text": "book it",
+        "expected": {
+          "status": "clarify",
+          "posts": 0,
+          "mentions": "(?=.*CommonSwyft)(?=.*(?:route|date))"
+        }
+      }
+    ]
+  },
+  {
+    "id": "G1",
+    "category": "Discover",
+    "name": "No origin shows deals across departure cities",
+    "requirement": "Show the best business class deals across every departure city, with each deal naming where it departs from, and ask where the traveler is flying from. Do not guess a city. Name only destinations the deals contain.",
+    "steps": [
+      {
+        "text": "take me anywhere",
+        "expected": {
+          "status": "deals",
+          "posts": 0,
+          "pending": "deal",
+          "mentions": "(?=.*across our departure cities)(?=.*flying from)"
+        }
+      }
+    ]
+  },
+  {
+    "id": "G2",
+    "category": "Discover",
+    "name": "A named city shows its deals",
+    "requirement": "Show the best business class deals from London with the date they were checked and a note that prices can change. Name only destinations the deals contain.",
+    "steps": [
+      {
+        "text": "I’m in London, take me anywhere",
+        "expected": {
+          "status": "deals",
+          "posts": 0,
+          "pending": "deal",
+          "mentions": "(?=.*deals from London)(?=.*checked)"
+        }
+      }
+    ]
+  },
+  {
+    "id": "G3",
+    "category": "Discover",
+    "name": "Economy deals are declined honestly",
+    "requirement": "Say the deals are business and first class only and offer an economy search on a specific route. Never present business deals as economy.",
+    "steps": [
+      {
+        "text": "anywhere from Tokyo in economy",
+        "expected": {
+          "status": "clarify",
+          "posts": 0,
+          "pending": null,
+          "mentions": "business and first class only"
+        }
+      }
+    ]
+  },
+  {
+    "id": "G4",
+    "category": "Discover",
+    "name": "Choosing a deal runs a live search",
+    "requirement": "Show deals from New York, then search the second deal live on its exact route and date and show the CommonSwyft link. The deal list price is not presented as the live price.",
+    "steps": [
+      {
+        "text": "take me anywhere from New York",
+        "expected": {
+          "status": "deals",
+          "posts": 0,
+          "pending": "deal",
+          "mentions": "deals from New York"
+        }
+      },
+      {
+        "text": "2",
+        "expected": {
+          "status": "results",
+          "origin": "JFK",
+          "destination": "BKK",
+          "from": "2026-09-20",
+          "to": "2026-09-20",
+          "posts": 1,
+          "mentions": "commonswyft\\.com/search/JFK-BKK-200926-business"
+        }
+      }
+    ]
+  },
+  {
+    "id": "G5",
+    "category": "Discover",
+    "name": "A saved home airport sets the deals city and is disclosed",
+    "requirement": "Use the saved home airport, Heathrow, for deals from London, and say that the saved home airport was used.",
+    "initialPreferences": {
+      "homeAirport": "LHR"
+    },
+    "steps": [
+      {
+        "text": "take me anywhere",
+        "expected": {
+          "status": "deals",
+          "posts": 0,
+          "pending": "deal",
+          "mentions": "(?=.*saved home airport)(?=.*deals from London)"
+        }
+      }
+    ]
+  },
+  {
+    "id": "G6",
+    "category": "Discover",
+    "name": "A filter the deals cannot apply is declined briefly",
+    "requirement": "Show deals from Paris and say in one short sentence that deals cannot be filtered by weather. Do not claim any destination is warm.",
+    "steps": [
+      {
+        "text": "somewhere warm from Paris",
+        "expected": {
+          "status": "deals",
+          "posts": 0,
+          "pending": "deal",
+          "mentions": "(?=.*deals from Paris)(?=.*weather)"
+        }
+      }
+    ]
+  },
+  {
+    "id": "G7",
+    "category": "Discover",
+    "name": "A stale feed is shown as the feed returns it",
+    "requirement": "The deals feed is stale. Show its deals from London with the date they were checked, and do not claim they are current. The feed decides what is shown.",
+    "scenario": "deals-past",
+    "steps": [
+      {
+        "text": "take me anywhere from London",
+        "expected": {
+          "status": "deals",
+          "posts": 0,
+          "pending": "deal",
+          "mentions": "(?=.*deals from London)(?=.*checked 10 Sept)"
+        }
+      }
+    ]
+  },
+  {
+    "id": "G8",
+    "category": "Discover",
+    "name": "A city without deals falls back honestly",
+    "requirement": "Say there are no deals from Aberdeen yet and show the best deals across departure cities instead, each naming its origin.",
+    "steps": [
+      {
+        "text": "anywhere from Aberdeen",
+        "expected": {
+          "status": "deals",
+          "posts": 0,
+          "pending": "deal",
+          "mentions": "(?=.*deals from Aberdeen yet)(?=.*across our departure cities)"
+        }
+      }
+    ]
+  },
+  {
+    "id": "G9",
+    "category": "Discover",
+    "name": "Other wording for the same request",
+    "requirement": "\"Surprise me\" with a stated origin is a request for deals from Tokyo.",
+    "steps": [
+      {
+        "text": "surprise me, I’m flying out of Tokyo",
+        "expected": {
+          "status": "deals",
+          "posts": 0,
+          "pending": "deal",
+          "mentions": "deals from Tokyo"
+        }
+      }
+    ]
+  },
+  {
+    "id": "G10",
+    "category": "Discover",
+    "name": "First class only when asked",
+    "requirement": "Show first class deals from Dubai, and only first class.",
+    "steps": [
+      {
+        "text": "where can I go from Dubai in first class?",
+        "expected": {
+          "status": "deals",
+          "posts": 0,
+          "pending": "deal",
+          "mentions": "first class deals from Dubai"
+        }
+      }
+    ]
+  },
+  {
+    "id": "G11",
+    "category": "Discover",
+    "name": "A region narrows the deals",
+    "requirement": "Show only deals in Asia from London. Name only destinations the deals contain.",
+    "steps": [
+      {
+        "text": "take me anywhere in Asia from London",
+        "expected": {
+          "status": "deals",
+          "posts": 0,
+          "pending": "deal",
+          "mentions": "(?=.*in Asia from London)(?=.*Bangkok)"
+        }
+      }
+    ]
+  }
+]
