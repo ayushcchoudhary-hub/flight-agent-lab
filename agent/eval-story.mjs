@@ -121,7 +121,12 @@ export function mergeReports(parts) {
   for (const part of parts) for (const c of part.cases) if (!seen.has(c.id)) { seen.add(c.id); cases.push(c); }
   const order = new Map(cases.map((c, i) => [c.id, i]));
   const first = parts[0].report;
-  const results = parts.flatMap(part => part.report.results).sort((a, b) => order.get(a.caseId) - order.get(b.caseId));
+  // A later part's result for a case replaces an earlier one: a part reruns
+  // cases the earlier part did not really run (a provider error, or a call
+  // cap that ran out mid-case before the harness stopped on it).
+  const byCase = new Map();
+  for (const part of parts) for (const row of part.report.results) byCase.set(row.caseId, row);
+  const results = [...byCase.values()].sort((a, b) => order.get(a.caseId) - order.get(b.caseId));
   const sum = key => parts.reduce((n, part) => n + (Number(part.report[key]) || 0), 0);
   return {
     report: { ...first, runId: parts.map(part => part.report.runId).join('+'), label: `${first.label} · ${parts.length} parts`, results,

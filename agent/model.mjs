@@ -387,6 +387,11 @@ export class Agent {
       this.trace('reply', result);
       return result;
     } catch (error) {
+      // An eval's spending cap must stop the run, not become a traveler-facing
+      // error that is then graded as a failure. The Sonnet 5 run on 2026-09-23
+      // hit its call cap at G9 and scored G9-G11 as failed. Only the eval
+      // harness raises this code.
+      if (error?.code === 'EVAL_BUDGET') throw error;
       this.trace('agent_failure', { message: error instanceof Error ? error.message : String(error) });
       const result = { status: 'error', text: SAFE_FAILURE };
       this.trace('reply', result);

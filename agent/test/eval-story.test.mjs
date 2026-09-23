@@ -69,6 +69,15 @@ test('merging a run finished in two parts keeps case order and each case once', 
   assert.equal(merged.report.actualCostUsd, 3);
 });
 
+test('a later part replaces an earlier part’s result for the same case', () => {
+  const cases = ['A', 'B'].map(id => ({ id, name: id }));
+  const merged = mergeReports([
+    { report: { runId: 'p1', label: 'Run', results: [row('A', true), row('B', false)], status: 'complete' }, cases },
+    { report: { runId: 'p2', label: 'Run part 2', results: [row('B', true)], status: 'complete' }, cases: cases.slice(1) },
+  ]);
+  assert.deepEqual(merged.report.results.map(r => [r.caseId, r.pass]), [['A', true], ['B', true]]);
+});
+
 test('report keys accept run ids and joined parts, nothing else', () => {
   assert.ok(isRunKey('live-hardening-judge-2026-09-23T10-08-32.825Z'));
   assert.ok(isRunKey('live-a+live-b'));

@@ -158,3 +158,22 @@ test('made-up values are counted per case even when a guard caught them', async 
   // A clean call from the traveler's own words counts nothing.
   assert.deepEqual(madeUpValues(row('deals in Japan from London', [{ type: 'tool_call', data: { name: 'discover_flights', arguments: { origin: 'London', region: 'Japan' } } }])), []);
 });
+
+// ---- Claude Sonnet 5 held-out run, 2026-09-23.
+
+test('E8 (Sonnet): a price-guarantee question routed to policy says prices are not guaranteed', () => {
+  const evidence = retrievePolicy({ query: 'price guarantee' });
+  for (const question of ['Is the displayed flight price guaranteed?', 'is that price guaranteed?', 'will the fare stay the same?']) {
+    const text = renderPolicyAnswer({ answer: '', citations: [], needsSupport: true }, evidence, question).text;
+    assert.match(text, /aren’t guaranteed/, question);
+  }
+  assert.doesNotMatch(renderPolicyAnswer({ answer: '', citations: [], needsSupport: true }, evidence, 'what is your refund policy?').text, /guaranteed/);
+});
+
+test('an eval spending cap stops the run instead of becoming a graded error reply', async () => {
+  const { c } = setup();
+  const capped = { complete: async () => { throw Object.assign(new Error('Evaluation call cap reached.'), { code: 'EVAL_BUDGET' }); } };
+  await assert.rejects(new Agent({ conversation: c, model: capped }).respond('surprise me, I’m flying out of Tokyo'), /call cap/);
+  const broken = { complete: async () => { throw new Error('provider down'); } };
+  assert.equal((await new Agent({ conversation: c, model: broken }).respond('London to Paris')).status, 'error');
+});
