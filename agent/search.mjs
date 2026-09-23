@@ -363,6 +363,14 @@ export class SearchConversation {
   // A remembered last origin, applied as a disclosed default the same way as a
   // saved home airport: the repair layer keeps it a default until the
   // traveler names an origin, and every reply that uses it says so.
+  // A home airport saved during this conversation applies at once, unless the
+  // traveler has already named an origin for this trip.
+  useHome(code) {
+    const place = typeof code === 'string' ? resolveLocation(code).find(choice => choice.code === code) : null;
+    if (!place || (this.state.origin && !this.state.originFromPreference)) return false;
+    this.state.origin = place; this.state.originFromPreference = true; this.state.originDefault = 'home';
+    return true;
+  }
   rememberOrigin(code) {
     const place = typeof code === 'string' ? resolveLocation(code).find(choice => choice.code === code) : null;
     if (!place || this.state.origin) return false;

@@ -35,6 +35,7 @@ const conversationStore=storeFromEnvironment();
 if(conversationStore){const purge=()=>conversationStore.purgeExpired().catch(error=>console.error('purge failed',error.message));purge();setInterval(purge,3600000).unref();}
 const chat=createChatService({
  conversationStore,
+ homeAirportScope:'visitor',
  preferenceStore,
  capturesLoader:async()=>[],
  status:async()=>({connected:false,reason:'not-used',expiresAt:null}),

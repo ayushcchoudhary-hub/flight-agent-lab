@@ -179,3 +179,73 @@ test('a saved home airport stops memory being applied in the harness too', () =>
   assert.equal(applyMemory({ lastOrigin: 'HND|NRT' }, conversation, { homeAirport: 'LHR' }), false);
   assert.equal(conversation.publicState().origin.code, 'LHR');
 });
+
+// Saying your home airport saves it (2026-09-23). Where it is kept depends on
+// the deployment, and the reply never claims more than was kept.
+const HOME_CALLS = { ...CALLS, 'my home airport is Heathrow': null };
+const homeModel = { complete: async messages => {
+  const text = messages.at(-1).content;
+  const call = text === 'my home airport is Heathrow' ? { name: 'travel_preferences', arguments: { action: 'propose', homeAirport: 'Heathrow' } } : { name: 'find_flights', arguments: HOME_CALLS[text] };
+  return { tool_calls: [{ id: 't', type: 'function', function: { name: call.name, arguments: JSON.stringify(call.arguments) } }] };
+} };
+const hosted = ({ store = null } = {}) => createChatService({ conversationStore: store, homeAirportScope: 'visitor',
+  stagingFactory: () => Object.assign(makeFixtureAdapter('normal'), { snapshots: [] }), modelFactory: async () => homeModel,
+  preferenceStore: { label: 'shared', read: async () => ({}), replace: async () => { throw new Error('the shared preference object must never be written'); } } });
+
+test('hosted with storage: a stated home airport is saved for this browser and used next time', async () => {
+  const store = createMemoryStore(), id = visitor();
+  const first = hosted({ store });
+  const chat = await first.start('staging-public', undefined, undefined, null, id);
+  const saved = (await first.turn(chat.id, 'my home airport is Heathrow')).result;
+  assert.match(saved.text, /^Saved London Heathrow Airport \(LHR\) as your home airport\./);
+  const now = await first.turn(chat.id, 'to Singapore next week');
+  assert.equal(now.state.origin.code, 'LHR', 'it applies in this conversation straight away');
+  await first.settle();
+  assert.equal((await store.memory(id)).homeOrigin, 'LHR');
+  const next = hosted({ store });
+  const turn = await next.turn((await next.start('staging-public', undefined, undefined, null, id)).id, 'to Singapore next week');
+  assert.equal(turn.state.origin.code, 'LHR');
+  assert.match(turn.result.text, /saved home airport/);
+});
+
+test('a stated home airport beats the last-used origin', async () => {
+  const store = createMemoryStore(), id = visitor();
+  await store.touchVisitor(id); await store.rememberLastOrigin(id, 'HND|NRT'); await store.rememberHome(id, 'LHR');
+  const svc = hosted({ store });
+  const turn = await svc.turn((await svc.start('staging-public', undefined, undefined, null, id)).id, 'to Singapore next week');
+  assert.equal(turn.state.origin.code, 'LHR');
+});
+
+test('hosted without storage: the reply says the home airport is for this conversation only', async () => {
+  const svc = hosted();
+  const chat = await svc.start('staging-public', undefined, undefined, null, visitor());
+  const reply = (await svc.turn(chat.id, 'my home airport is Heathrow')).result;
+  assert.match(reply.text, /^I’ll use London Heathrow Airport \(LHR\) as your home airport in this conversation\. It isn’t kept between conversations yet\./);
+  assert.ok(!/^Saved/.test(reply.text));
+});
+
+test('the local dashboard keeps a stated home airport in its preference store', async () => {
+  let kept = {};
+  const svc = createChatService({ stagingFactory: () => Object.assign(makeFixtureAdapter('normal'), { snapshots: [] }), modelFactory: async () => homeModel,
+    preferenceStore: { label: 'local', read: async () => ({ ...kept }), replace: async p => (kept = { ...p }) } });
+  await svc.turn((await svc.start('staging-public')).id, 'my home airport is Heathrow');
+  assert.deepEqual(kept, { homeAirport: 'LHR' });
+});
+
+test('held-out D2 is satisfiable: stating Heathrow saves it, the next conversation uses it', async () => {
+  const item = HARDENING_CASES_V2.find(c => c.id === 'D2'); let saved = {}; const memory = {};
+  const calls = { 'save Heathrow as my home airport': { name: 'travel_preferences', arguments: { action: 'propose', homeAirport: 'Heathrow', cabin: '', preferNonstop: '' } },
+    'to Singapore next week': { name: 'find_flights', arguments: { origin: '', destination: 'Singapore', dates: { mode: 'nextWeek' }, maxPriceUsd: 0, aside: '' } } };
+  for (const session of item.sessions) {
+    const adapter = makeFixtureAdapter('normal'), conversation = new SearchConversation({ adapter, today: () => HARDENING_V2_CLOCK });
+    applyPreferences(conversation, saved); applyMemory(memory, conversation, saved);
+    const agent = new Agent({ conversation, preferences: saved, model: { complete: async m => { const c = calls[m.at(-1).content]; return { tool_calls: [{ id: 'r', type: 'function', function: { name: c.name, arguments: JSON.stringify(c.arguments) } }] }; } } });
+    for (const step of session.steps) {
+      const result = await agent.respond(step.text);
+      rememberFromStep(memory, result, conversation);
+      if (result.savedPreferences?.homeAirport) saved = { ...saved, homeAirport: result.savedPreferences.homeAirport };
+      const grade = gradeV2Step(step.expected, result, conversation, adapter, saved);
+      assert.ok(grade.pass, `"${step.text}": ${JSON.stringify(grade.checks.filter(c => !c.pass))}`);
+    }
+  }
+});

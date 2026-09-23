@@ -15,7 +15,10 @@ export async function connectionStatus() {
  } catch {return {connected:false,reason:'disconnected',expiresAt:null};}
 }
 const defaultModelFactory=(trace,settings)=>new OpenRouterModel({apiKey:process.env.OPENROUTER_API_KEY,model:settings.model,reasoningEffort:settings.effort,maxCalls:15,trace});
-export function createChatService({modelFactory=defaultModelFactory,capturesLoader=loadCaptures,status=connectionStatus,stagingFactory=makeStagingAdapter,preferenceStore=localPreferenceStore(),modelOptions=HOSTED_MODEL_OPTIONS,settingsFor=hostedModelSettings,defaultModel='openai/gpt-5.6-terra',defaultEffort='medium',maxTotalTurns=40,maxSessions=8,maxSessionTurns=15,idleMs=3600000,conversationStore=null}={}) {
+export function createChatService({modelFactory=defaultModelFactory,capturesLoader=loadCaptures,status=connectionStatus,stagingFactory=makeStagingAdapter,preferenceStore=localPreferenceStore(),modelOptions=HOSTED_MODEL_OPTIONS,settingsFor=hostedModelSettings,defaultModel='openai/gpt-5.6-terra',defaultEffort='medium',maxTotalTurns=40,maxSessions=8,maxSessionTurns=15,idleMs=3600000,conversationStore=null,homeAirportScope='store'}={}) {
+ // Where a stated home airport is kept: 'store' writes the preference store
+ // (the local dashboard, one user); 'visitor' writes the per-browser store and
+ // never the shared preference object (the hosted site, many visitors).
  const sessions=new Map();let turns=0,active=false;
  // Conversation storage, off unless a store is passed in. Writes queue per
  // conversation after the reply is sent and a failure is traced, never shown.
@@ -67,7 +70,8 @@ export function createChatService({modelFactory=defaultModelFactory,capturesLoad
    try{
     await conversationStore.touchVisitor(visitorId);
     const memory=await conversationStore.memory(visitorId);
-    if(!preferences.homeAirport&&memory.lastOrigin)rememberedOrigin=conversation.rememberOrigin(memory.lastOrigin);
+    if(!preferences.homeAirport&&memory.homeOrigin){preferences.homeAirport=memory.homeOrigin;conversation.useHome(memory.homeOrigin);}
+    else if(!preferences.homeAirport&&memory.lastOrigin)rememberedOrigin=conversation.rememberOrigin(memory.lastOrigin);
     store={visitorId,conversationId:await conversationStore.startConversation({visitorId,model:settings.model,promptVersion:PROMPT_VERSION}),seq:0,chain:null};
    }catch(error){trace('store_error',{label:'start',message:error instanceof Error?error.message:String(error)});store=null;}
   }
@@ -92,6 +96,13 @@ export function createChatService({modelFactory=defaultModelFactory,capturesLoad
    const usedFlightApi=events.some(e=>e.type==='flight_api');
    const flightSearchLatencyMs=usedFlightApi?events.filter(e=>e.type==='action_latency'&&e.data.name==='find_flights').reduce((total,e)=>total+(Number(e.data.latencyMs)||0),0):0;
    const otherLatencyMs=Math.max(0,latencyMs-modelLatencyMs-flightSearchLatencyMs);
+   // A home airport stated in this turn is kept where this deployment keeps it.
+   if(result.savedPreferences&&'homeAirport' in result.savedPreferences){
+    const home=result.savedPreferences.homeAirport;
+    if(homeAirportScope==='store'){const current=await preferenceStore.read();const next={...current};if(home===null)delete next.homeAirport;else next.homeAirport=home;await preferenceStore.replace(next);}
+    else if(s.store)queue(s,'home',()=>s.store.api.rememberHome(s.store.visitorId,home));
+    else if(home)result.text=result.text.replace(/^Saved (.+?) as your home airport\. I’ll use it when you don’t say where you’re flying from\./,'I’ll use $1 as your home airport in this conversation. It isn’t kept between conversations yet.');
+   }
    if(s.store){
     const records=turnRecords({text,result,toolCalls:events.filter(e=>e.type==='tool_call').map(e=>e.data),latencyMs});
     const from=s.store.seq;s.store.seq+=records.length;

@@ -54,13 +54,13 @@ try{
    // The judge reads only the conversation, so a save pressed in the app
    // between sessions is invisible to it and a disclosed default looks
    // invented (held-out v2 D2). Say what happened off screen.
-   if(index>0)notes.push(`After the previous reply the traveler pressed Save defaults in the app, then started a new conversation. Saved preferences now: ${JSON.stringify(savedPreferences)}.`);
+   if(index>0)notes.push(`The traveler then started a new conversation. Saved preferences now: ${JSON.stringify(savedPreferences)}.`);
    const adapter=makeFixtureAdapter(item.scenario??'normal',trace),conversation=new SearchConversation({adapter,today:()=>clock,trace});
    applyPreferences(conversation,savedPreferences);
    if(applyMemory(memory,conversation,savedPreferences))notes.push(`The app remembers the last origin this browser searched from and offers it as a disclosed default: ${memory.lastOrigin}.`);
    const candidate=new OpenRouterModel({apiKey:process.env.OPENROUTER_API_KEY,model:candidateModel,reasoningEffort:candidateEffort,maxCalls:session.steps.length*3,trace,beforeRequest,provider:{data_collection:'deny'}});
    const agent=new Agent({conversation,model:candidate,preferences:savedPreferences,trace});
-   for(const step of session.steps){const started=performance.now();const result=await agent.respond(step.text);rememberFromStep(memory,result,conversation);if(step.saveProposed&&result.proposedPreferences)savedPreferences={...result.proposedPreferences};const grade=suite==='v2'?gradeV2Step(step.expected,result,conversation,adapter,savedPreferences):gradeStep(step.expected,result,conversation,adapter);steps.push({input:step.text,expected:step.expected,result,latencyMs:Math.round(performance.now()-started),grade});}
+   for(const step of session.steps){const started=performance.now();const result=await agent.respond(step.text);rememberFromStep(memory,result,conversation);if(step.saveProposed&&result.proposedPreferences)savedPreferences={...result.proposedPreferences};if(result.savedPreferences&&'homeAirport' in result.savedPreferences){savedPreferences={...savedPreferences};if(result.savedPreferences.homeAirport===null)delete savedPreferences.homeAirport;else savedPreferences.homeAirport=result.savedPreferences.homeAirport;}const grade=suite==='v2'?gradeV2Step(step.expected,result,conversation,adapter,savedPreferences):gradeStep(step.expected,result,conversation,adapter);steps.push({input:step.text,expected:step.expected,result,latencyMs:Math.round(performance.now()-started),grade});}
   }
   const deterministicPass=steps.every(step=>step.grade.pass);
   if(!deterministicPass){

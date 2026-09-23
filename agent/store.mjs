@@ -4,7 +4,8 @@
 // - Everything written is redacted first (see trace.mjs redact).
 // - A visitor is a random browser id, not a person. Only that visitor's own
 //   conversations can be read back, and there is no route that lists them.
-// - Memory holds origins only: the last origin a traveler searched from.
+// - Memory holds origins only: a home airport the traveler stated, and the
+//   last origin they searched from.
 //   Dates, cabins and budgets are one-off details and are never stored.
 // - Conversations expire after retentionDays and purgeExpired() removes them.
 // - A storage failure never reaches the traveler. Callers catch and trace.
@@ -65,8 +66,13 @@ export function createPostgresStore({ url, retentionDays = 90, poolSize = 3 }) {
     },
     async memory(visitorId) {
       checkVisitor(visitorId);
-      const row = (await pool.query('SELECT last_origin FROM visitor_memory WHERE visitor_id = $1', [visitorId])).rows[0];
-      return { lastOrigin: row?.last_origin ?? null };
+      const row = (await pool.query('SELECT home_origin, last_origin FROM visitor_memory WHERE visitor_id = $1', [visitorId])).rows[0];
+      return { homeOrigin: row?.home_origin ?? null, lastOrigin: row?.last_origin ?? null };
+    },
+    // A home airport the traveler stated. null forgets it.
+    async rememberHome(visitorId, code) {
+      checkVisitor(visitorId); if (code !== null) checkOrigin(code);
+      await pool.query('INSERT INTO visitor_memory (visitor_id, home_origin) VALUES ($1, $2) ON CONFLICT (visitor_id) DO UPDATE SET home_origin = EXCLUDED.home_origin, updated_at = now()', [visitorId, code]);
     },
     async rememberLastOrigin(visitorId, code) {
       checkVisitor(visitorId); checkOrigin(code);
@@ -92,7 +98,7 @@ export function createPostgresStore({ url, retentionDays = 90, poolSize = 3 }) {
 // Same interface, in memory. For tests, and to exercise the chat service's
 // storage path without a database.
 export function createMemoryStore({ retentionDays = 90, now = () => Date.now() } = {}) {
-  const visitors = new Set(), memory = new Map(), conversations = new Map();
+  const visitors = new Set(), memory = new Map(), homes = new Map(), conversations = new Map();
   return {
     kind: 'memory', conversations,
     async touchVisitor(visitorId) { checkVisitor(visitorId); visitors.add(visitorId); },
@@ -106,7 +112,8 @@ export function createMemoryStore({ retentionDays = 90, now = () => Date.now() }
       const c = conversations.get(conversationId); if (!c) throw new Error('Unknown conversation.');
       records.forEach((r, i) => c.messages.push({ seq: fromSeq + i, ...r }));
     },
-    async memory(visitorId) { checkVisitor(visitorId); return { lastOrigin: memory.get(visitorId) ?? null }; },
+    async memory(visitorId) { checkVisitor(visitorId); return { homeOrigin: homes.get(visitorId) ?? null, lastOrigin: memory.get(visitorId) ?? null }; },
+    async rememberHome(visitorId, code) { checkVisitor(visitorId); if (code !== null) checkOrigin(code); if (code === null) homes.delete(visitorId); else homes.set(visitorId, code); },
     async rememberLastOrigin(visitorId, code) { checkVisitor(visitorId); checkOrigin(code); memory.set(visitorId, code); },
     async conversationsFor(visitorId, limit = 20) {
       checkVisitor(visitorId);

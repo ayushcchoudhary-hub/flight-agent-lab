@@ -1,10 +1,11 @@
+import { labelForValue } from './shared.mjs';
 import {readFile,mkdir,writeFile,rename} from 'node:fs/promises';
 import {dirname} from 'node:path';
 import {randomUUID} from 'node:crypto';
 import {resolveLocation} from './search.mjs';
 export function validatePreferences(p) {
  if(!p||Array.isArray(p)||typeof p!=='object'||Object.keys(p).some(k=>!['homeAirport','cabin','preferNonstop'].includes(k)))throw Error('Unsupported preference.');
- if(p.homeAirport!==undefined&&(!/^[A-Z]{3}$/.test(p.homeAirport)||!resolveLocation(p.homeAirport).some(a=>a.code===p.homeAirport)))throw Error('Choose a recognized three-letter airport code.');
+ if(p.homeAirport!==undefined&&(!/^[A-Z]{3}(\|[A-Z]{3})*$/.test(p.homeAirport)||!resolveLocation(p.homeAirport).some(a=>a.code===p.homeAirport)))throw Error('Choose a recognized airport or city.');
  if(p.cabin!==undefined&&!['economy','premium_economy','business','first'].includes(p.cabin))throw Error('Choose a supported cabin.');
  if(p.preferNonstop!==undefined&&typeof p.preferNonstop!=='boolean')throw Error('Nonstop preference must be true or false.');
  return {...p};
@@ -29,12 +30,34 @@ export function applyPreferences(conversation,p) {
  if(p.cabin){conversation.state.cabin=p.cabin==='premium_economy'?'premium':p.cabin;conversation.state.cabinSource='preference';}
  if(p.preferNonstop)conversation.state.sort='nonstop';
 }
-export const preferencesTool={type:'function',function:{name:'travel_preferences',description:'Show saved defaults or propose changes only when explicitly asked to remember, save, change defaults, or forget. Proposal requires the user to press Save in dashboard; never claims already saved. Current-trip changes use find_flights.',parameters:{type:'object',additionalProperties:false,required:['action'],properties:{action:{type:'string',enum:['show','propose']},homeAirport:{type:['string','null'],description:'A specific airport name or three-letter IATA code, e.g. Heathrow or LHR. Ask which airport if the city has several. Null forgets the saved airport.'},cabin:{type:['string','null'],enum:['economy','premium_economy','business','first',null]},preferNonstop:{type:['boolean','null']}}}}};
+export const preferencesTool={type:'function',function:{name:'travel_preferences',description:'Show saved defaults, save a home airport, or propose other defaults, only when the traveler explicitly asks to remember, save, change or forget one, or states their home airport or home city ("my home airport is Heathrow", "I live in London, save that"). A home airport is saved as soon as it is stated. A cabin or nonstop default is only a proposal the traveler confirms in the dashboard. A place mentioned only for this trip ("I am in Tokyo this week") is not a home airport. Current-trip changes use find_flights.',parameters:{type:'object',additionalProperties:false,required:['action'],properties:{action:{type:'string',enum:['show','propose']},homeAirport:{type:['string','null'],description:'A specific airport name or three-letter IATA code, e.g. Heathrow or LHR. Ask which airport if the city has several. Null forgets the saved airport.'},cabin:{type:['string','null'],enum:['economy','premium_economy','business','first',null]},preferNonstop:{type:['boolean','null']}}}}};
+// Product decision 2026-09-23: saying your home airport saves it, with no
+// separate confirmation. Cabin and nonstop defaults stay proposals the
+// traveler confirms (held-out D4). Where the saved home airport is stored is
+// the chat service's job; this only decides and words it.
 export function preferenceAction(args,saved) {
  if(!args||typeof args!=='object'||Array.isArray(args)||!['show','propose'].includes(args.action)||Object.keys(args).some(k=>!['action','homeAirport','cabin','preferNonstop'].includes(k)))throw Error('Invalid preference action.');
- if(args.action==='show')return {status:'preferences',text:`Saved preferences\nHome airport: ${saved.homeAirport??'Not set'}\nCabin: ${saved.cabin??'Business class'}\nNonstop: ${saved.preferNonstop?'Preferred':'No preference'}`,preferences:saved};
- const next={...saved};for(const k of ['homeAirport','cabin','preferNonstop'])if(k in args){if(args[k]===null)delete next[k];else next[k]=args[k];}
- if(typeof next.homeAirport==='string'){const matches=resolveLocation(next.homeAirport);if(matches.length!==1||!/^[A-Z]{3}$/.test(matches[0].code))throw Error('Which specific airport would you like to save as your home airport?');next.homeAirport=matches[0].code;}
- validatePreferences(next);
- return {status:'preferences',text:'Review the proposed defaults in Saved preferences, then press Save defaults. Nothing has been saved yet. Changes apply to new conversations. This trip stays unchanged.',proposedPreferences:next};
+ if(args.action==='show')return {status:'preferences',text:`Saved preferences\nHome airport: ${saved.homeAirport?labelForValue(saved.homeAirport):'Not set'}\nCabin: ${saved.cabin??'Business class'}\nNonstop: ${saved.preferNonstop?'Preferred':'No preference'}`,preferences:saved};
+ const lines=[],out={status:'preferences'};
+ if('homeAirport' in args&&args.homeAirport!==''){
+  if(args.homeAirport===null){out.savedPreferences={homeAirport:null};lines.push('Removed your saved home airport.');}
+  else{
+   const matches=resolveLocation(String(args.homeAirport));
+   // One place, airport or city, is saved. Anything else is a question, never a guess.
+   if(matches.length!==1)return {status:'clarify',text:`Which airport or city should I save as your home airport?${matches.length?` For example ${matches.slice(0,3).map(m=>m.label).join(', ')}.`:''}`};
+   out.savedPreferences={homeAirport:matches[0].code};
+   lines.push(`Saved ${matches[0].label} as your home airport. I’ll use it when you don’t say where you’re flying from.`);
+  }
+ }
+ const others={};for(const k of ['cabin','preferNonstop'])if(k in args&&args[k]!==''&&!(k==='preferNonstop'&&args[k]===false&&!('preferNonstop' in saved)))others[k]=args[k];
+ if(Object.keys(others).length){
+  const next={...saved};for(const [k,v] of Object.entries(others)){if(v===null)delete next[k];else next[k]=v;}
+  if(out.savedPreferences?.homeAirport!==undefined){if(out.savedPreferences.homeAirport===null)delete next.homeAirport;else next.homeAirport=out.savedPreferences.homeAirport;}
+  validatePreferences(next);
+  out.proposedPreferences=next;
+  lines.push(lines.length?'Review the other proposed defaults in Saved preferences, then press Save defaults. Nothing else has been saved yet.':'Review the proposed defaults in Saved preferences, then press Save defaults. Nothing has been saved yet.');
+ }
+ if(!lines.length)return {status:'clarify',text:'Tell me the home airport or city to save, or the default you want to change.'};
+ out.text=lines.join('\n\n');
+ return out;
 }

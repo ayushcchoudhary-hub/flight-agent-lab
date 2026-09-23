@@ -27,7 +27,7 @@ customer data or raw backend captures.
   session follow-ups and explicit preference proposals.
 - Booking, payment, account servicing, autonomous purchasing, WhatsApp and MCP
   remain outside the implemented scope.
-- The deterministic suite currently contains 235 passing checks.
+- The deterministic suite currently contains 240 passing checks.
 - The first 42-case Terra hardening run passed 30 cases. Every observed issue
   later received a focused passing verification. A later full rerun passed 32
   cases, then stopped at B03 after a safe policy handoff failed the frozen
@@ -189,8 +189,13 @@ off unless `CONVERSATION_STORE=postgres` and `DATABASE_URL` are set.
   passport numbers). Conversations expire after 90 days and are purged hourly.
 - A visitor is a random browser cookie, set only when storage is on. A
   browser can read back only its own conversations; no route lists them.
-- Memory holds the last origin only. Cabin, dates and budget stay one-off.
-  A saved home airport takes precedence.
+- Memory holds origins only: a home airport the traveler stated, then the
+  last origin they searched from. Cabin, dates and budget stay one-off.
+- Stating a home airport saves it, with no separate Save step (decision
+  2026-09-23; held-out D2). On the hosted site it is kept per browser, and
+  only when storage is on; with storage off the reply says it applies to
+  this conversation only. The shared preference object is never written.
+  Cabin and nonstop defaults remain proposals (held-out D4).
 - A storage failure is traced and never reaches the traveler.
 - `agent/tools/store-smoke.mjs` checks all of this against a real database.
 

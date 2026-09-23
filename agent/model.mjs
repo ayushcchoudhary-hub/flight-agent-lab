@@ -284,7 +284,12 @@ export class Agent {
       try {
         if (call.function.name === 'find_flights') result = await this.conversation.find(args);
         else if (call.function.name === 'discover_flights') result = await this.conversation.discover(args);
-        else if (call.function.name === 'travel_preferences') result = preferenceAction(args,this.preferences);
+        else if (call.function.name === 'travel_preferences') {
+          result = preferenceAction(args,this.preferences);
+          const home = result.savedPreferences?.homeAirport;
+          if (home) { this.preferences = { ...this.preferences, homeAirport: home }; this.conversation.useHome(home); }
+          else if (home === null) { const { homeAirport, ...rest } = this.preferences; this.preferences = rest; }
+        }
         else if (call.function.name === 'lookup_policy') {
           try { result = await answerPolicy({model:this.model,query:args,question:text,history:this.turns.flat().filter(m=>m.role==='user'||m.role==='assistant').map(m=>({role:m.role,content:m.content})),trace:this.trace}); }
           catch (error) { this.trace('policy_failure',{message:error.message}); result={status:'policy',text:supportReply,sources:[]}; }
