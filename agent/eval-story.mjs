@@ -54,11 +54,12 @@ export function summarizeRun(run, report, cases) {
 // first is wording (and sometimes a stricter judge) and the second is behavior.
 export function delta(before, after) {
   const item = id => ({ id, name: after.names[id] ?? before.names[id] ?? id });
-  const out = { fixed: [], newJudgeFlags: [], newExactFailures: [], added: [], removed: [] };
+  const out = { fixed: [], nowCorrect: [], newJudgeFlags: [], newExactFailures: [], added: [], removed: [] };
   for (const [id, now] of Object.entries(after.outcomes)) {
     const was = before.outcomes[id];
     if (!was) { out.added.push({ ...item(id), outcome: now }); continue; }
     if (was !== 'pass' && now === 'pass') out.fixed.push(item(id));
+    else if (was === 'exact' && now === 'judge') out.nowCorrect.push(item(id));
     else if (was !== 'exact' && now === 'exact') out.newExactFailures.push(item(id));
     else if (was === 'pass' && now === 'judge') out.newJudgeFlags.push(item(id));
   }

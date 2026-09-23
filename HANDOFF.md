@@ -27,7 +27,7 @@ customer data or raw backend captures.
   session follow-ups and explicit preference proposals.
 - Booking, payment, account servicing, autonomous purchasing, WhatsApp and MCP
   remain outside the implemented scope.
-- The deterministic suite currently contains 254 passing checks.
+- The deterministic suite currently contains 255 passing checks.
 - The first 42-case Terra hardening run passed 30 cases. Every observed issue
   later received a focused passing verification. A later full rerun passed 32
   cases, then stopped at B03 after a safe policy handoff failed the frozen
@@ -59,6 +59,13 @@ customer data or raw backend captures.
   support redirect although the snapshot says analytics excludes search
   terms. Judge medium effort needs max_tokens above 900 or its JSON
   truncates; the harness now sets 2500 above low.
+- A same-code head-to-head on 2026-09-23 (47 cases, Opus 5.5 judge, commit
+  52d80c5) tied on cases passed: Terra 38 and Sol 38. Terra passed 46 exact
+  contracts and Sol 45. Sol's median model call was faster (2.6 s against
+  3.1 s) and its model cost per 1,000 traveler turns lower ($3.51 against
+  $4.13). All three exact failures were the model adding something the
+  traveler did not say. Terra ran in two parts after a provider timeout at
+  case 16. The default model has not been changed.
 
 The Evals page opens on a milestone chart: one bar per complete run of the
 held-out set, with what changed, why, and which cases were fixed, newly

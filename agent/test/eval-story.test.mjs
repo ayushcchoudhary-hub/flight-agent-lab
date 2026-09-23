@@ -39,6 +39,12 @@ test('delta separates fixes, new judge flags, new exact failures and new cases',
   assert.deepEqual(d.removed.map(x => x.id), ['R']);
 });
 
+test('an exact failure that now only has a judge flag is reported as now correct', () => {
+  const d = delta(run('a', [row('A', false)]), run('b', [row('A', false, true)]));
+  assert.deepEqual(d.nowCorrect.map(x => x.id), ['A']);
+  assert.deepEqual([d.fixed, d.newJudgeFlags, d.newExactFailures].map(x => x.length), [0, 0, 0]);
+});
+
 test('a judge flag that becomes an exact failure counts as a new exact failure', () => {
   const d = delta(run('a', [row('A', false, true)]), run('b', [row('A', false)]));
   assert.deepEqual(d.newExactFailures.map(x => x.id), ['A']);

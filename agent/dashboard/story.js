@@ -52,6 +52,7 @@ function detail(m, i, story) {
   const d = m.delta, prev = story.milestones[i - 1];
   const moves = d ? [
     group('Fixed', d.fixed, m.run, 'pass', 'Failed before, pass now.'),
+    group('Now correct, wording flagged', d.nowCorrect, m.run, 'judge', 'Failed an exact check before. Exact checks pass now; the judge still wants clearer wording.'),
     group('New cases', d.added, m.run, '', 'Colored by how they did on this run.'),
     group('New exact failures', d.newExactFailures, m.run, 'exact', 'Behavior that got worse. These matter most.'),
     group('Newly flagged by the judge', d.newJudgeFlags, m.run, 'judge', m.judgeChange ? 'Exact checks still pass. The judge changed on this run, so some flags are the stricter judge, not a new problem.' : 'Exact checks still pass. The judge wants clearer wording.'),
@@ -111,6 +112,7 @@ export function renderHeadToHead(el, story, index = story.headToHead.length - 1)
     el.innerHTML = `<div class="section-head"><div><p class="eyebrow">CURRENT QUESTION</p><h2>${esc(runs.map(r => modelName(r.model)).join(' or '))}?</h2><p class="quiet">${esc(pair.note)} Code ${esc(pair.commit)} · judge ${esc(modelName(runs[0].judge?.model))} ${esc(runs[0].judge?.effort ?? '')}.</p></div>
       ${pairs.length > 1 ? `<div class="h2h-tabs" role="tablist">${pairs.map((p, j) => `<button role="tab" aria-selected="${j === i}" data-pair="${j}">${esc(p.date)} · ${esc(p.title)}</button>`).join('')}</div>` : ''}</div>
       <div class="h2h-cards">${runs.map(card).join('')}</div>
+      ${pair.finding ? `<p class="h2h-decision"><b>What the exact failures were:</b> ${esc(pair.finding)}</p>` : ''}
       ${pair.decision ? `<p class="h2h-decision"><b>Decision:</b> ${esc(pair.decision)}</p>` : ''}
       <h3 class="h2h-sub">Where they differ <span class="quiet">${pair.disagreements.length} of ${runs[0].cases} cases</span></h3>
       ${pair.disagreements.length ? `<div class="table-scroll"><table class="h2h-table"><thead><tr><th>Case</th>${runs.map(r => `<th>${esc(modelName(r.model))}</th>`).join('')}</tr></thead><tbody>${pair.disagreements.map(d => `<tr><td><b>${esc(d.id)}</b> ${esc(d.name)}</td>${runs.map(r => `<td><a class="outcome ${d.outcomes[r.run]}" href="/evals?run=${encodeURIComponent(r.run)}&case=${encodeURIComponent(d.id)}">${esc(OUTCOME[d.outcomes[r.run]])}</a></td>`).join('')}</tr>`).join('')}</tbody></table></div>` : '<p class="quiet">Both models got the same outcome on every case.</p>'}
