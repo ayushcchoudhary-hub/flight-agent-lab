@@ -27,7 +27,7 @@ customer data or raw backend captures.
   session follow-ups and explicit preference proposals.
 - Booking, payment, account servicing, autonomous purchasing, WhatsApp and MCP
   remain outside the implemented scope.
-- The deterministic suite currently contains 231 passing checks.
+- The deterministic suite currently contains 235 passing checks.
 - The first 42-case Terra hardening run passed 30 cases. Every observed issue
   later received a focused passing verification. A later full rerun passed 32
   cases, then stopped at B03 after a safe policy handoff failed the frozen
@@ -197,11 +197,9 @@ off unless `CONVERSATION_STORE=postgres` and `DATABASE_URL` are set.
 Before switching it on:
 
 1. Add a privacy-page sentence on conversation storage and its retention.
-2. Decide on held-out case D1. It asserts that a new conversation must not
-   reuse London from a closed search. Remembering the last origin changes
-   that for the origin only (economy must still not carry over). The case
-   runs without storage, so it passes today, but its requirement no longer
-   describes the product once storage is on.
+2. Held-out case D1 was updated on 2026-09-23 to the memory rule: the last
+   origin carries over as a disclosed default, economy does not. The eval
+   harness applies the same memory between sessions.
 
 ## Recommended next decision
 

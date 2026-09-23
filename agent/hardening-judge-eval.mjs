@@ -7,7 +7,7 @@ import {makeFixtureAdapter} from './fixtures.mjs';
 import {gradeStep} from './edge-cases.mjs';
 import {HARDENING_CASES,HARDENING_CLOCK} from './hardening-cases.mjs';
 import {HARDENING_CASES_V2,HARDENING_V2_CLOCK} from './hardening-cases-v2.mjs';
-import {gradeV2Step} from './hardening-v2.mjs';
+import {gradeV2Step,rememberFromStep,applyMemory} from './hardening-v2.mjs';
 import {JUDGE_RUBRIC_VERSION,OpenRouterJudge,evaluateJudgeConsensus} from './judge.mjs';
 import {applyPreferences} from './preferences.mjs';
 
@@ -47,7 +47,7 @@ let stopError=null;
 try{
  for(const item of cases){
   const events=[],trace=(type,data)=>{events.push({type,data});if(type==='model_usage'||type==='judge_usage')account({type,data});};
-  let savedPreferences={...(item.initialPreferences??{})};const steps=[],notes=[];
+  let savedPreferences={...(item.initialPreferences??{})};const steps=[],notes=[],memory={};
   if(Object.keys(savedPreferences).length)notes.push(`Before the conversation the traveler had saved preferences: ${JSON.stringify(savedPreferences)}.`);
   const sessions=item.sessions??[{steps:item.steps}];
   for(const [index,session] of sessions.entries()){
@@ -57,9 +57,10 @@ try{
    if(index>0)notes.push(`After the previous reply the traveler pressed Save defaults in the app, then started a new conversation. Saved preferences now: ${JSON.stringify(savedPreferences)}.`);
    const adapter=makeFixtureAdapter(item.scenario??'normal',trace),conversation=new SearchConversation({adapter,today:()=>clock,trace});
    applyPreferences(conversation,savedPreferences);
+   if(applyMemory(memory,conversation,savedPreferences))notes.push(`The app remembers the last origin this browser searched from and offers it as a disclosed default: ${memory.lastOrigin}.`);
    const candidate=new OpenRouterModel({apiKey:process.env.OPENROUTER_API_KEY,model:candidateModel,reasoningEffort:candidateEffort,maxCalls:session.steps.length*3,trace,beforeRequest,provider:{data_collection:'deny'}});
    const agent=new Agent({conversation,model:candidate,preferences:savedPreferences,trace});
-   for(const step of session.steps){const started=performance.now();const result=await agent.respond(step.text);if(step.saveProposed&&result.proposedPreferences)savedPreferences={...result.proposedPreferences};const grade=suite==='v2'?gradeV2Step(step.expected,result,conversation,adapter,savedPreferences):gradeStep(step.expected,result,conversation,adapter);steps.push({input:step.text,expected:step.expected,result,latencyMs:Math.round(performance.now()-started),grade});}
+   for(const step of session.steps){const started=performance.now();const result=await agent.respond(step.text);rememberFromStep(memory,result,conversation);if(step.saveProposed&&result.proposedPreferences)savedPreferences={...result.proposedPreferences};const grade=suite==='v2'?gradeV2Step(step.expected,result,conversation,adapter,savedPreferences):gradeStep(step.expected,result,conversation,adapter);steps.push({input:step.text,expected:step.expected,result,latencyMs:Math.round(performance.now()-started),grade});}
   }
   const deterministicPass=steps.every(step=>step.grade.pass);
   if(!deterministicPass){

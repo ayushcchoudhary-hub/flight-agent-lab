@@ -148,3 +148,34 @@ test('expired conversations are purged, current ones kept', async () => {
   now += 89 * 86400000; assert.equal(await store.purgeExpired(), 0);
   now += 2 * 86400000; assert.equal(await store.purgeExpired(), 1);
 });
+
+// D1 with memory: replay the intended calls through the harness's own memory
+// helpers, so the case is known satisfiable before a paid run.
+import { SearchConversation } from '../search.mjs';
+import { Agent } from '../model.mjs';
+import { applyPreferences } from '../preferences.mjs';
+import { HARDENING_CASES_V2, HARDENING_V2_CLOCK } from '../hardening-cases-v2.mjs';
+import { gradeV2Step, rememberFromStep, applyMemory } from '../hardening-v2.mjs';
+test('held-out D1 is satisfiable: London carries over disclosed, economy does not', async () => {
+  const item = HARDENING_CASES_V2.find(c => c.id === 'D1'), memory = {}, saved = {};
+  // Model-style calls: every field present, as the model sends them.
+  const intended = { 'London to New York economy': { origin: 'London', destination: 'New York', cabin: 'economy' }, 'to Singapore next week': { origin: '', destination: 'Singapore', dates: { mode: 'nextWeek' }, maxPriceUsd: 0, aside: '' } };
+  for (const session of item.sessions) {
+    const adapter = makeFixtureAdapter('normal'), conversation = new SearchConversation({ adapter, today: () => HARDENING_V2_CLOCK });
+    applyPreferences(conversation, saved); applyMemory(memory, conversation, saved);
+    const agent = new Agent({ conversation, preferences: saved, model: { complete: async m => ({ tool_calls: [{ id: 'r', type: 'function', function: { name: 'find_flights', arguments: JSON.stringify(intended[m.at(-1).content]) } }] }) } });
+    for (const step of session.steps) {
+      const result = await agent.respond(step.text);
+      rememberFromStep(memory, result, conversation);
+      const grade = gradeV2Step(step.expected, result, conversation, adapter, saved);
+      assert.ok(grade.pass, `"${step.text}": ${JSON.stringify(grade.checks.filter(c => !c.pass))}`);
+    }
+  }
+});
+
+test('a saved home airport stops memory being applied in the harness too', () => {
+  const conversation = new SearchConversation({ adapter: makeFixtureAdapter('normal'), today: () => HARDENING_V2_CLOCK });
+  applyPreferences(conversation, { homeAirport: 'LHR' });
+  assert.equal(applyMemory({ lastOrigin: 'HND|NRT' }, conversation, { homeAirport: 'LHR' }), false);
+  assert.equal(conversation.publicState().origin.code, 'LHR');
+});
