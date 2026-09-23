@@ -20,6 +20,10 @@ const one=(id,category,name,text,expected,requirement)=>({id,category,name,requi
 // the honest answer. Adding refund text to the snapshot would mean inventing
 // policy.
 //
+// A8 changed 2026-09-23: a clarifying question that names the same-city
+// problem is as correct as the application's overlap check. It missed 2 of 4
+// runs only because the model asked directly instead of calling the tool.
+//
 // D2 changed by product decision on 2026-09-23: stating a home airport saves
 // it, with no separate Save step. D4 (a cabin default) is still a proposal.
 //
@@ -58,7 +62,7 @@ export const HARDENING_CASES_V2=[
  one('A5','Places','Two close place matches are clarified','fly me to Sidney',clarify({destination:null,pending:'destination',mentions:'(?=.*Sydney)(?=.*Sidney)'}),'Ask whether the traveler means Sydney in Australia or Sidney in the United States. Do not guess either.'),
  one('A6','Places','Ambiguous numeric date is clarified with trip retained','lhr-jfk 2/10 biz',clarify({origin:'LHR',destination:'JFK',cabin:'business',mentions:'2 October|10 February|date'}),'Ask one short date question and retain LHR, JFK and business class.'),
  {id:'A7',category:'Places',name:'Unsupported city is never silently replaced',requirement:'Search Paris to New York when supported. Otherwise state the Paris limitation plainly. Never substitute another origin.',steps:[{text:'Paris to New York on 1 October',expected:{outcomes:[{status:'results',origin:'CDG|ORY',destination:CITY_CODES['New York'],from:'2026-10-01',to:'2026-10-01',posts:1},{status:'clarify',posts:0,mentions:'Paris.*not supported|not supported.*Paris'}]}}]},
- one('A8','Places','Same origin and destination are clarified','Dubai to Dubai tomorrow',clarify({origin:CITY_CODES.Dubai,destination:CITY_CODES.Dubai,mentions:'same|different'}),'Point out that origin and destination are the same and ask for the intended route.'),
+ {id:'A8',category:'Places',name:'Same origin and destination are clarified',requirement:'Point out that origin and destination are the same and ask for the intended route. Either the application\'s own overlap check or a direct clarifying question is correct; no search runs.',steps:[{text:'Dubai to Dubai tomorrow',expected:{outcomes:[clarify({origin:CITY_CODES.Dubai,destination:CITY_CODES.Dubai,mentions:'same|different'}),{status:'clarify',posts:0,mentions:'(?=.*Dubai)(?=.*(same|both|different|departure and arrival|overlap))'}]}}]},
 
  one('B1','Missing information','No date uses the stated rolling window','London to New York',rolling(CITY_CODES.London,CITY_CODES['New York']),'Search the documented seven-day window, state the dates, use business class and invite a date change.'),
  one('B2','Missing information','Destination and cabin ask only for origin','I want to go to Dubai in business',clarify({destination:CITY_CODES.Dubai,cabin:'business',pending:'origin'}),'Keep Dubai and business class. Ask only where the traveler is flying from, without asking for a date.'),
