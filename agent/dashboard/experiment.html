@@ -22,10 +22,12 @@
       <p class="eyebrow">CONVERSATIONAL FLIGHT SEARCH</p>
       <h1>Where would you like to fly?</h1>
       <p class="intro">Search CommonSwyft staging inventory in natural language. One-way only. Checkout happens on CommonSwyft.</p>
-      <section class="examples" id="examples">
-        <button type="button">London to New York on 3 October, business</button>
-        <button type="button">I want to go to Singapore next week</button>
-        <button type="button">Do you store my card details?</button>
+      <section class="examples" id="examples" aria-label="Example requests">
+        <div class="example-group"><span>Search</span><button type="button" title="Held-out case: Baseline">London to New York on 3 October, business</button><button type="button" title="Held-out case: B3">I want to go to Singapore next week</button><button type="button" title="Held-out case: A1">London to Japan next week</button><button type="button" title="Held-out case: A3">Singapor to Londn 1 oct</button><button type="button" title="Held-out case: A5">fly me to Sidney</button></div>
+        <div class="example-group"><span>Tricky</span><button type="button" title="Held-out case: A6">lhr-jfk 2/10 biz</button><button type="button" title="Held-out case: C1, then try “make it the 3rd”">London to New York 1 Oct economy under 700</button><button type="button" title="Held-out case: A8">Dubai to Dubai tomorrow</button><button type="button" title="Held-out case: E2">London to New York 1 Oct, also is Lisbon nice in winter?</button></div>
+        <div class="example-group"><span>Take me anywhere</span><button type="button" title="Held-out case: G1">take me anywhere</button><button type="button" title="Held-out case: G2">I’m in London, take me anywhere</button><button type="button" title="Held-out case: G3">anywhere from Tokyo in economy</button><button type="button" title="Held-out case: G6">somewhere warm from Paris</button><button type="button" title="Held-out case: G10">where can I go from Dubai in first class?</button></div>
+        <div class="example-group"><span>Memory</span><button type="button" title="Held-out case: D2">my home airport is Heathrow</button><button type="button" title="Held-out case: D4">remember I like business</button></div>
+        <div class="example-group"><span>Policy and booking</span><button type="button" title="Held-out case: Policy">Do you store my card details?</button><button type="button" title="Held-out case: E3">do you sell my data?</button><button type="button" title="Held-out case: E4">how long do you keep my searches?</button><button type="button" title="Held-out case: F1, after a search">book it</button></div>
       </section>
       <section class="chat-controls" aria-label="Live model selection">
         <label for="model">Model configuration<select id="model" disabled><option>Loading evaluated models…</option></select></label>

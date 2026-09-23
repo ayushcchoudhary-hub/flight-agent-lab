@@ -219,14 +219,15 @@ test('the latest menu wins over an older deals menu', async () => {
 });
 
 // ---- The welcome.
-test('the welcome shows the top seven business class deals across departure cities', async () => {
+test('the welcome shows the top three business class deals across departure cities', async () => {
+  // Three, decided 2026-09-23 after seeing seven on the page.
   const { c } = setup();
   const offer = await c.welcomeDeals();
   assert.match(offer.text, /^Top deals/);
   const rows = offer.text.split('\n').filter(line => /^\d+\. /.test(line));
-  assert.equal(rows.length, 7);
+  assert.equal(rows.length, 3);
   assert.ok(rows.every(line => / → /.test(line)));
-  assert.equal(offer.choices.length, 7);
+  assert.equal(offer.choices.length, 3);
 });
 
 test('the welcome has no deals section only when the feed is unavailable', async () => {
