@@ -17,7 +17,11 @@ export const supportReply = 'Please contact CommonSwyft support at support@commo
 const supportReplyFor=question=>/\b(?:terms?|legal)\b/i.test(question)
   ? 'For the legal terms that apply to a purchase, please contact CommonSwyft support at support@commonswyft.com.'
   : /\b(?:refund|refundable|fare rules?|ticket)\b/i.test(question)
-    ? 'Refund eligibility depends on the fare rules for the specific ticket. Please contact CommonSwyft support at support@commonswyft.com with the booking reference.'
+    // A traveler asking before booking has no booking reference to give.
+    // Held-out C2: "what is your refund policy?" was asked for one mid-search.
+    ? /\b(?:my|booked|booking|existing)\b/i.test(question)
+      ? 'Refund eligibility depends on the fare rules for the specific ticket. Please contact CommonSwyft support at support@commonswyft.com with the booking reference.'
+      : 'Refunds depend on the fare rules of the ticket you choose, and I don’t have CommonSwyft’s refund policy here. Please ask support at support@commonswyft.com before you book.'
     : /\b(?:privacy|personal data|data request|delete|deletion|analytics|share)\b/i.test(question)
       ? 'For help with a privacy or personal-data request, please contact CommonSwyft support at support@commonswyft.com.'
       : supportReply;

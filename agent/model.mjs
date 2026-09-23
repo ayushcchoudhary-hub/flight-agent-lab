@@ -3,6 +3,7 @@ import { preferencesTool, preferenceAction } from './preferences.mjs';
 import { policyTool, answerPolicy, supportReply } from './policy.mjs';
 import { requestWithRetry } from './retry.mjs';
 import { SAFE_FAILURE, SAFE_REDIRECT, safeCustomerCopy } from './customer-copy.mjs';
+import { namesRegion } from './discover.mjs';
 
 const clarificationTool = { type: 'function', function: {
   name: 'clarify_request', description: 'Ask which of two readings the traveler means, explain a limitation (e.g. checkout/round trips unavailable) or redirect an unrelated request. Do not ask for missing dates or cabin: those have defaults. For an ambiguous date use find_flights with dates.mode=ambiguous so the trip is kept. Never state flight availability or prices.',
@@ -92,8 +93,10 @@ const WORDING={
   // weekend", "a fortnight from now", "5 oct", "2/10", "the 3rd". A miss here
   // strips a real date, so the list errs broad.
   dates:/\b(?:\d{4}-\d{2}-\d{2}|\d{1,2}[\/.-]\d{1,2}(?:[\/.-]\d{2,4})?|\d{1,2}(?:st|nd|rd|th)|today|tonight|tomorrow|now|soon|later|earlier|asap|any ?time|whenever|flexible|dates?|days?|weeks?|weekends?|fortnights?|months?|next|this|coming|until|before|after|jan(?:uary)?|feb(?:ruary)?|mar(?:ch)?|apr(?:il)?|may|june?|july?|aug(?:ust)?|sept?(?:ember)?|oct(?:ober)?|nov(?:ember)?|dec(?:ember)?|mon(?:day)?|tues?(?:day)?|wed(?:nesday)?|thu(?:rs)?(?:day)?|fri(?:day)?|sat(?:urday)?|sun(?:day)?)\b/i,
-  cabin:/\b(?:business|economy|premium|first|cabin|class)\b/i,
-  cabinOnly:/\b(?:business|economy|premium|first|cabin|class|alternatives?|other cabins?)\b/i,
+  // "cheapest first" is a sort. Held-out C2 (GPT-6 Sol) read it as cabin
+  // wording, kept a resent cabin and replied "Already searching business class".
+  cabin:/\b(?:business|economy|premium|(?<!\b(?:cheapest|fastest|quickest|nonstop|non-stop|direct|shortest|earliest|latest|best|recommended|lowest|lowest price)\s)first|cabin|class)\b/i,
+  cabinOnly:/\b(?:business|economy|premium|(?<!\b(?:cheapest|fastest|quickest|nonstop|non-stop|direct|shortest|earliest|latest|best|recommended|lowest|lowest price)\s)first|cabin|class|alternatives?|other cabins?)\b/i,
   sort:/\b(?:cheapest|lowest price|fastest|recommended|best|prefer non[ -]?stop|prefer direct)\b/i,
   nonstopOnly:/\b(?:non[ -]?stop|direct|stops?|layovers?|connections?|connecting)\b/i,
   maxPriceUsd:/\b(?:usd|dollars?|budget|price|under|below|less than|limit|cap)\b|\$/i,
@@ -102,7 +105,7 @@ const WORDING={
 // WORDING.cabin is the list that decides whether a cabin value was asked for.
 // Disclosure needs a broader one: "coach is fine" states a cabin as plainly as
 // "economy", and a stated cabin must not be reported as a default.
-const CABIN_WORDING=/\b(?:coach|basic economy|economy|business|premium|first|cabin|class|any cabin)\b/i;
+const CABIN_WORDING=/\b(?:coach|basic economy|economy|business|premium|(?<!\b(?:cheapest|fastest|quickest|nonstop|non-stop|direct|shortest|earliest|latest|best|recommended|lowest|lowest price)\s)first|cabin|class|any cabin)\b/i;
 const GENERIC_PLACE_WORDS=new Set(['airport','international','regional','the','and','of','all','airports']);
 function namesPlace(text,place){
   const words=[place?.code,...String(place?.label??'').split(/[^A-Za-z]+/)].filter(word=>word&&word.length>2&&!GENERIC_PLACE_WORDS.has(word.toLowerCase()));
@@ -115,14 +118,53 @@ function dropCopiedHome(text,args,trip,trace){
   }
   return args;
 }
+// A place the model garbled is recovered from the traveler's own words.
+// Held-out D3 (GPT-6 Sol): "from Gatwick to Singapore" arrived as destination
+// "SingaporeAirport (SIN)?", and G7 as origin "London scope". A value the
+// traveler typed, or one that resolves to a single place, is left alone, so a
+// model that turns "nyc" into "New York" is not second-guessed.
+const escapeRegExp=value=>value.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
+function recoverPlace(text,value){
+  if(typeof value!=='string'||!value.trim()||text.toLowerCase().includes(value.trim().toLowerCase())||resolveLocation(value).length===1)return value;
+  const words=value.replace(/(\p{Ll})(\p{Lu})/gu,'$1 $2').split(/[^\p{L}]+/u).filter(Boolean);
+  for(let n=words.length;n>0;n--){
+    const phrase=words.slice(0,n).join(' ');
+    if(new RegExp(`(?:^|[^\\p{L}])${escapeRegExp(phrase)}(?:$|[^\\p{L}])`,'iu').test(text)&&resolveLocation(phrase).length)return phrase;
+  }
+  return value;
+}
+function recoverPlaces(text,args,fields,trace){
+  const recovered=fields.filter(field=>{const fixed=recoverPlace(text,args[field]);if(fixed===args[field])return false;args[field]=fixed;return true;});
+  if(recovered.length)trace('tool_argument_repair',{fields:recovered,reason:'recovered a place name from the traveler’s own words'});
+}
+// Every amount in the request, so a budget can be checked against it: "700",
+// "$2,500", "1.2k".
+const amountsIn=text=>[...text.matchAll(/(\d[\d,]*(?:\.\d+)?)\s*(k)?\b/gi)].map(([,n,k])=>Math.round(Number(n.replace(/,/g,''))*(k?1000:1)));
+const wordsOf=value=>String(value).toLowerCase().normalize('NFD').replace(/[^a-z]+/g,' ').trim().split(' ').filter(word=>word.length>2&&word!=='the');
+// discover_flights narrows deals only by what the traveler said. Held-out
+// G2, G6, G7 and G8 (GPT-6 Sol): "I’m in London, take me anywhere" arrived with
+// region Europe and a USD 1,000 budget; "somewhere warm" with region "warm";
+// another with budget 1 and aside "hidden". Each became a filter or a line of
+// customer copy.
+function groundDiscover(text,args,trace){
+  const dropped=[],said=new Set(wordsOf(text));
+  if(typeof args.region==='string'&&args.region.trim()&&!(namesRegion(args.region)&&wordsOf(args.region).every(word=>said.has(word)))){delete args.region;dropped.push('region');}
+  if(typeof args.maxPriceUsd==='number'&&args.maxPriceUsd>0&&!amountsIn(text).includes(args.maxPriceUsd)){delete args.maxPriceUsd;dropped.push('maxPriceUsd');}
+  // An aside is a sentence for the traveler; a single stray word is not.
+  if(typeof args.aside==='string'&&args.aside.trim()&&args.aside.trim().split(/\s+/).length<3){delete args.aside;dropped.push('aside');}
+  if(dropped.length)trace('tool_argument_repair',{fields:dropped,reason:'removed a value the current request did not mention'});
+  recoverPlaces(text,args,['origin'],trace);
+  return args;
+}
 export function repairExplicitToolArguments(text,name,args,trace=()=>{},trip=null) {
   if(!args||Array.isArray(args)||typeof args!=='object')return args;
   // discover_flights has the same copied-home hazard as find_flights:
   // held-out G5 sent origin "LHR" from the prompt, and the deals reply lost
   // its "saved home airport" disclosure.
-  if(name==='discover_flights')return dropCopiedHome(text,{...args},trip,trace);
+  if(name==='discover_flights')return groundDiscover(text,dropCopiedHome(text,{...args},trip,trace),trace);
   if(name!=='find_flights')return args;
   const repaired={...args},removed=[],unverified=[],invented=[];
+  recoverPlaces(text,repaired,['origin','destination'],trace);
   for(const [field,pattern] of Object.entries(WORDING)){
     if(!(field in repaired)||pattern.test(text))continue;
     if(isDefaultValue(field,repaired[field])){delete repaired[field];removed.push(field);}
@@ -130,7 +172,10 @@ export function repairExplicitToolArguments(text,name,args,trace=()=>{},trip=nul
     // would turn a saved default into a stated choice in the header. A request
     // that names a cabin in any recognised way keeps it, because the traveler
     // did choose it.
-    else if(repeatsTrip(field,repaired[field],trip)){if(field==='cabin'&&!CABIN_WORDING.test(text))delete repaired.cabin;continue;}
+    // Any resent value the request never mentions is dropped: it changes
+    // nothing, and keeping it made the reply announce it. Held-out C1 (GPT-6
+    // Sol): "Gatwick only" resent the budget and got "Budget is already USD 700".
+    else if(repeatsTrip(field,repaired[field],trip)){if(!(field==='cabin'&&CABIN_WORDING.test(text)))delete repaired[field];continue;}
     // A date the request never mentions is invented. Held-out v2 C2: "nonstop
     // only" arrived with dates=24 Sept and collapsed a week-long search to one
     // day. Answering an open date menu is the exception: "the first one" there

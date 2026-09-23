@@ -205,7 +205,7 @@ test('observed model airport labels resolve without accepting conflicting labels
 test('clarification reflects retained preferences, not misleading defaults', async () => {
   const { c } = setup();
   const r = await c.find({ origin: 'London', cabin: 'economy', dates: { mode: 'exact', start: '2026-10-01' } });
-  assert.match(r.text, /I'll keep Economy · Thu, 1 Oct 2026/);
+  assert.match(r.text, /I'll keep the flight from London · Economy · Thu, 1 Oct 2026/);
   assert.ok(!r.text.includes('Defaults: business'));
 });
 

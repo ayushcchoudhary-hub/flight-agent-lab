@@ -61,7 +61,7 @@ test('the cabin label says whether it is assumed, saved or asked for',async()=>{
  assert.match(await header(null,{origin:'London',destination:'New York'}),/Business class \(default\)/);
  assert.match(await header({cabin:'economy'},{origin:'London',destination:'New York'}),/Economy \(saved default\)/);
  const asked=await header(null,{origin:'London',destination:'New York',cabin:'premium'});
- assert.match(asked,/· Premium ·/);
+ assert.match(asked,/· Premium economy ·/);
  assert.ok(!/default\)/.test(asked),'a cabin the traveler chose is not a default');
  // Found reading held-out v2 F1: the traveler typed "business" and the header
  // still read "Business class (default)", because the cabin matched the value
