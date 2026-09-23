@@ -6,6 +6,7 @@ import { existsSync } from 'node:fs';
 import { loadEnvFile } from 'node:process';
 import { fileURLToPath } from 'node:url';
 import { join } from 'node:path';
+import { isRunKey, loadStory, readReport } from './eval-story.mjs';
 const envFile=fileURLToPath(new URL('./.env',import.meta.url));
 if(existsSync(envFile))loadEnvFile(envFile);
 const { createChatService }=await import('./chat-service.mjs');
@@ -15,7 +16,7 @@ const chat=createChatService(preferenceStore?{preferenceStore}:{});
 const csrf=randomBytes(32).toString('hex');
 const root=fileURLToPath(new URL('.',import.meta.url));
 const port=Number(process.env.AGENT_DASHBOARD_PORT||5180);
-const assets={'/scope':['scope.html','text/html'],'/policy-examples':['policy-examples.html','text/html'],'/reply-preview':['reply-preview.html','text/html'],'/compare':['compare.html','text/html'],'/compare.js':['compare.js','text/javascript'],'/compare.css':['compare.css','text/css'],'/chat':['chat.html','text/html'],'/chat.js':['chat.js','text/javascript'],'/chat.css':['chat.css','text/css'],'/evals':['index.html','text/html'],'/':['overview.html','text/html'],'/overview.css':['overview.css','text/css'],'/overview.js':['overview.js','text/javascript'],'/dashboard.js':['dashboard.js','text/javascript'],'/dashboard.css':['dashboard.css','text/css']};
+const assets={'/scope':['scope.html','text/html'],'/policy-examples':['policy-examples.html','text/html'],'/reply-preview':['reply-preview.html','text/html'],'/compare':['compare.html','text/html'],'/compare.js':['compare.js','text/javascript'],'/compare.css':['compare.css','text/css'],'/chat':['chat.html','text/html'],'/chat.js':['chat.js','text/javascript'],'/chat.css':['chat.css','text/css'],'/evals':['index.html','text/html'],'/':['overview.html','text/html'],'/overview.css':['overview.css','text/css'],'/overview.js':['overview.js','text/javascript'],'/dashboard.js':['dashboard.js','text/javascript'],'/story.js':['story.js','text/javascript'],'/dashboard.css':['dashboard.css','text/css']};
 const send=(res,status,value,type='application/json')=>{res.writeHead(status,{'Content-Type':type+'; charset=utf-8','Cache-Control':'no-store','X-Content-Type-Options':'nosniff','Content-Security-Policy':"default-src 'self'; script-src 'self'; style-src 'self'; connect-src 'self'; img-src 'self' data:; frame-ancestors 'none'"});res.end(typeof value==='string'?value:JSON.stringify(value));};
 const server=http.createServer(async(req,res)=>{
   if(![`127.0.0.1:${port}`,`localhost:${port}`].includes(req.headers.host))return send(res,403,{error:'Local access only.'});
@@ -49,17 +50,16 @@ const server=http.createServer(async(req,res)=>{
       return send(res,200,JSON.parse(await readFile(join(root,'eval-results',id,'report.json'),'utf8')));
     }
     if(url.pathname==='/api/runs'){
-      const names=(await readdir(join(root,'eval-results'),{withFileTypes:true})).filter(x=>x.isDirectory()&&/^live-[\w.-]+$/.test(x.name)).map(x=>x.name).sort().reverse();
+      const names=(await readdir(join(root,'eval-results'),{withFileTypes:true})).filter(x=>x.isDirectory()&&/^live-[\w.-]+$/.test(x.name)&&existsSync(join(root,'eval-results',x.name,'report.json'))).map(x=>x.name).sort().reverse();
       return send(res,200,{runs:names});
     }
+    if(url.pathname==='/api/story')return send(res,200,await loadStory(root)??{milestones:[],headToHead:[],supporting:{}});
     if(url.pathname==='/api/report'){
       const id=url.searchParams.get('id');
-      if(!id||!/^live-[\w.-]+$/.test(id))return send(res,400,{error:'Invalid report.'});
-      const path=join(root,'eval-results',id,'report.json');
+      if(!isRunKey(id))return send(res,400,{error:'Invalid report.'});
       // A writer may be midway through replacing this local file; retry on the next poll.
-      const report=JSON.parse(await readFile(path,'utf8'));
-      const cases=JSON.parse(await readFile(join(root,'eval-results',id,'cases.json'),'utf8'));
-      return send(res,200,{report,cases,updatedAt:(await stat(path)).mtime.toISOString()});
+      const {report,cases}=await readReport(join(root,'eval-results'),id);
+      return send(res,200,{report,cases,updatedAt:(await stat(join(root,'eval-results',id.split('+').at(-1),'report.json'))).mtime.toISOString()});
     }
     return send(res,404,{error:'Not found.'});
   }catch(e){return send(res,e instanceof SyntaxError?503:404,{error:e instanceof SyntaxError?'Report updating; retry shortly.':'Report unavailable.'});}

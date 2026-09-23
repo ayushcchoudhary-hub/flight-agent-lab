@@ -27,7 +27,7 @@ customer data or raw backend captures.
   session follow-ups and explicit preference proposals.
 - Booking, payment, account servicing, autonomous purchasing, WhatsApp and MCP
   remain outside the implemented scope.
-- The deterministic suite currently contains 245 passing checks.
+- The deterministic suite currently contains 254 passing checks.
 - The first 42-case Terra hardening run passed 30 cases. Every observed issue
   later received a focused passing verification. A later full rerun passed 32
   cases, then stopped at B03 after a safe policy handoff failed the frozen
@@ -59,6 +59,15 @@ customer data or raw backend captures.
   support redirect although the snapshot says analytics excludes search
   terms. Judge medium effort needs max_tokens above 900 or its JSON
   truncates; the harness now sets 2500 above low.
+
+The Evals page opens on a milestone chart: one bar per complete run of the
+held-out set, with what changed, why, and which cases were fixed, newly
+flagged or newly failing. The prose lives in
+`agent/published-eval-results/story.json`; every number is computed from the
+reports by `agent/eval-story.mjs`. A test fails when a published hardening run
+has no place in the story, so each new run must be added as a milestone, a
+head-to-head run or a supporting run with a one-line reason. The Model
+comparison page opens on the latest head-to-head pair from the same file.
 
 Read these files in order when more detail is needed:
 
