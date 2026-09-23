@@ -23,3 +23,14 @@ export function gradeV2Step(expected,result,conversation,adapter,savedPreference
  if(expected.savedPreferences)add('saved preferences',expected.savedPreferences,savedPreferences,same(savedPreferences,expected.savedPreferences)&&Object.keys(savedPreferences).length===Object.keys(expected.savedPreferences).length);
  return {pass:checks.every(check=>check.pass),actual:{...grade.actual,sort:state.sort,nonstopOnly:state.nonstopOnly,sources:result.sources??[],proposedPreferences:result.proposedPreferences,savedPreferences},checks};
 }
+
+// Cross-conversation memory as the product applies it when storage is on:
+// the last origin the traveler chose carries into the next conversation as a
+// disclosed default, unless a saved home airport exists. Nothing else carries.
+export function rememberFromStep(memory,result,conversation){
+ const state=conversation.publicState();
+ if(result?.status==='results'&&state.origin?.code&&!state.originFromPreference)memory.lastOrigin=state.origin.code;
+}
+export function applyMemory(memory,conversation,savedPreferences={}){
+ return !savedPreferences.homeAirport&&memory.lastOrigin?conversation.rememberOrigin(memory.lastOrigin):false;
+}

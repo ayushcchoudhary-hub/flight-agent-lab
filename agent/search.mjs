@@ -21,7 +21,7 @@ export function validDate(value) {
   return Number.isFinite(d.valueOf()) && d.toISOString().slice(0, 10) === value;
 }
 export function newState() {
-  return { origin: null, destination: null, cabin: 'business', dates: null, sort: 'recommended', maxPriceUsd: null, nonstopOnly: false, cabinOnly: false, pending: null, originFromPreference: false, cabinSource: 'default', snapshot: null, lastQuery: null };
+  return { origin: null, destination: null, cabin: 'business', dates: null, sort: 'recommended', maxPriceUsd: null, nonstopOnly: false, cabinOnly: false, pending: null, originFromPreference: false, originDefault: null, cabinSource: 'default', snapshot: null, lastQuery: null };
 }
 
 const choiceOf = entry => ({ code: entry.code, label: entry.label ?? fullAirport(entry.code) });
@@ -225,7 +225,7 @@ function mergeTripState(current, patch, today) {
     const choices = resolveLocation(patch[field]);
     if (choices.length === 1) {
       next[field] = choices[0];
-      if (field === 'origin') next.originFromPreference = false;
+      if (field === 'origin') { next.originFromPreference = false; next.originDefault = null; }
       next.pending = null;
     } else {
       next[field] = null;
@@ -322,7 +322,7 @@ export class SearchConversation {
       if (!response?.feed) return { status: 'clarify', text: noCurrentDeals(city) };
       const feed = response.feed, originCity = feed.multiOrigin ? null : city;
       const disclosure = !originCity ? null
-        : source === 'preference' ? `Using your saved home airport, ${this.state.origin.label}.`
+        : source === 'preference' ? (this.state.originDefault === 'last' ? `Using ${this.state.origin.label} from your last search.` : `Using your saved home airport, ${this.state.origin.label}.`)
         : source === 'trip' ? `Using ${originCity} from your current search.` : null;
       let deals = filterDeals(feed.deals, { today, cabin, region: args.region ?? null, maxPriceUsd: args.maxPriceUsd ?? null });
       let region = args.region ?? null;
@@ -359,6 +359,23 @@ export class SearchConversation {
       this.trace('error', { text: error instanceof Error ? error.message : String(error) });
       return null;
     }
+  }
+  // A remembered last origin, applied as a disclosed default the same way as a
+  // saved home airport: the repair layer keeps it a default until the
+  // traveler names an origin, and every reply that uses it says so.
+  // A home airport saved during this conversation applies at once, unless the
+  // traveler has already named an origin for this trip.
+  useHome(code) {
+    const place = typeof code === 'string' ? resolveLocation(code).find(choice => choice.code === code) : null;
+    if (!place || (this.state.origin && !this.state.originFromPreference)) return false;
+    this.state.origin = place; this.state.originFromPreference = true; this.state.originDefault = 'home';
+    return true;
+  }
+  rememberOrigin(code) {
+    const place = typeof code === 'string' ? resolveLocation(code).find(choice => choice.code === code) : null;
+    if (!place || this.state.origin) return false;
+    this.state.origin = place; this.state.originFromPreference = true; this.state.originDefault = 'last';
+    return true;
   }
   // Make the welcome's deals answerable by number in the conversation that
   // follows, when no other menu is open.
@@ -606,7 +623,7 @@ function present(state, response, cached, mode = 'synthetic', { aside = '', appl
     !staging?'SYNTHETIC FLIGHT DATA. These are example results.':replay?'Saved results. This is not a fresh availability check.':null,
     aside||null,
     `${state.origin.label} → ${state.destination.label}\n${dateSummary} · ${cabinLabel(state)} · One-way${state.maxPriceUsd !== null ? ` · Up to USD ${state.maxPriceUsd}` : ''}${state.nonstopOnly ? ' · Nonstop only' : ''}${SORT_HEADER[state.sort] ? ` · ${SORT_HEADER[state.sort]}` : ''}`,
-    state.originFromPreference?`Using your saved home airport, ${state.origin.label}. Say where you are flying from to change it.`:null,
+    state.originFromPreference?(state.originDefault==='last'?`Using ${state.origin.label} from your last search. Say where you are flying from to change it.`:`Using your saved home airport, ${state.origin.label}. Say where you are flying from to change it.`):null,
     applied.length
       ? `${applied.join(' ')}${cached ? ' This uses the same search. Say “refresh availability” for a new check.' : ''}`
       : cached ? 'Using the same results. Say “refresh availability” for a new check.' : null,

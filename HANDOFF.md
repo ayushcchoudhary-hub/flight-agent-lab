@@ -22,12 +22,12 @@ customer data or raw backend captures.
 - Terra medium is the default model. DeepSeek V4.1 Flash low and GLM 5.3 high
   remain optional research controls in the live chat.
 - All model traffic uses the OpenRouter adapter.
-- The current prompt contract is `flight-search-v1.4.1`.
+- The current prompt contract is `flight-search-v1.6.0`.
 - The supported product scope is one-way flight search, policy retrieval,
   session follow-ups and explicit preference proposals.
 - Booking, payment, account servicing, autonomous purchasing, WhatsApp and MCP
   remain outside the implemented scope.
-- The deterministic suite currently contains 143 passing checks.
+- The deterministic suite currently contains 245 passing checks.
 - The first 42-case Terra hardening run passed 30 cases. Every observed issue
   later received a focused passing verification. A later full rerun passed 32
   cases, then stopped at B03 after a safe policy handoff failed the frozen
@@ -153,10 +153,9 @@ copied into a handoff bundle.
 
 ## Checkout handoff: where it stands (2026-09-22)
 
-Phase 1 is built on branch `claude/search-handoff-link` and not yet merged:
-every results reply links to the same search on commonswyft.com, so
-selection, quoting and checkout happen on the product site. Held-out case
-F1 pins it.
+Phase 1 is live (PR #7, revision 00026-run onwards): every results reply
+links to the same search on commonswyft.com, so selection, quoting and
+checkout happen on the product site. Held-out case F1 pins it.
 
 Phase 2, a checkout link by quote id, needs a Clerk session for the member:
 `POST /checkout-quotes` is Clerk-authenticated and binds the quote to the
@@ -172,6 +171,40 @@ account. Options discussed, none decided:
 
 Questions for the CommonSwyft team are drafted in the chat history for
 2026-09-21 and should be recorded here once answered.
+
+## Conversation storage and memory: built, off (2026-09-22)
+
+Conversations can be stored in Postgres for evaluation, and the last origin
+a browser searched from can be offered back as a disclosed default. Both are
+off unless `CONVERSATION_STORE=postgres` and `DATABASE_URL` are set.
+
+- Schema: `agent/db/migrations/`, applied with `agent/tools/migrate.mjs` using
+  the database owner login, passed for that command only and never stored.
+- The application login is created by `agent/tools/create-app-role.mjs` in
+  SQL, with row access only. Do not create it through a provider console:
+  Neon adds console-created roles to an admin group.
+- Development database: Neon, Frankfurt, Postgres 16. Production would move
+  to the product's Postgres; the schema has nothing provider-specific.
+- Text is redacted before it is written (emails, keys, card, phone and
+  passport numbers). Conversations expire after 90 days and are purged hourly.
+- A visitor is a random browser cookie, set only when storage is on. A
+  browser can read back only its own conversations; no route lists them.
+- Memory holds origins only: a home airport the traveler stated, then the
+  last origin they searched from. Cabin, dates and budget stay one-off.
+- Stating a home airport saves it, with no separate Save step (decision
+  2026-09-23; held-out D2). On the hosted site it is kept per browser, and
+  only when storage is on; with storage off the reply says it applies to
+  this conversation only. The shared preference object is never written.
+  Cabin and nonstop defaults remain proposals (held-out D4).
+- A storage failure is traced and never reaches the traveler.
+- `agent/tools/store-smoke.mjs` checks all of this against a real database.
+
+Before switching it on:
+
+1. Add a privacy-page sentence on conversation storage and its retention.
+2. Held-out case D1 was updated on 2026-09-23 to the memory rule: the last
+   origin carries over as a disclosed default, economy does not. The eval
+   harness applies the same memory between sessions.
 
 ## Recommended next decision
 

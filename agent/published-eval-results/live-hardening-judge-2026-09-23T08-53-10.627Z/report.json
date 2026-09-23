@@ -1,0 +1,2379 @@
+{
+  "runId": "live-hardening-judge-2026-09-23T08-53-10.627Z",
+  "evaluationKind": "llm-judge-hardening",
+  "suite": "v2",
+  "label": "Head-to-head · gpt-6-sol · 47 cases · opus-5.5 judge · 52c967d",
+  "promptVersion": "flight-search-v1.6.0",
+  "judge": {
+    "model": "anthropic/claude-opus-5.5",
+    "effort": "medium",
+    "rubricVersion": "communication-quality-v1.2.0",
+    "criteria": [
+      "clarity",
+      "concision",
+      "tone",
+      "nextStep",
+      "limitationHonesty",
+      "noInternalLeakage"
+    ]
+  },
+  "clock": "2026-09-18",
+  "flightData": "synthetic",
+  "effort": "medium",
+  "models": [
+    "openai/gpt-6-sol"
+  ],
+  "repeats": 1,
+  "cases": [
+    {
+      "id": "A1",
+      "category": "Places",
+      "name": "Country destination becomes an airport menu",
+      "requirement": "Offer a numbered menu of Japan’s main airports, keep London and next week, and ask one concise question.",
+      "steps": [
+        {
+          "text": "London to Japan next week",
+          "expected": {
+            "status": "clarify",
+            "posts": 0,
+            "origin": "LHR|LGW|LCY|STN|LTN",
+            "destination": null,
+            "pending": "destination",
+            "from": "2026-09-21",
+            "to": "2026-09-27",
+            "mentions": "(?=.*Tokyo)(?=.*Osaka)"
+          }
+        }
+      ]
+    },
+    {
+      "id": "A2",
+      "category": "Places",
+      "name": "Country origin becomes an airport menu",
+      "requirement": "Offer a numbered menu of the UK’s main airports, keep Singapore and the exact date, and ask one concise question.",
+      "steps": [
+        {
+          "text": "from the UK to Singapore on 3 Oct",
+          "expected": {
+            "status": "clarify",
+            "posts": 0,
+            "origin": null,
+            "destination": "SIN",
+            "pending": "origin",
+            "from": "2026-10-03",
+            "to": "2026-10-03",
+            "mentions": "UK|United Kingdom|London|Heathrow"
+          }
+        }
+      ]
+    },
+    {
+      "id": "A3",
+      "category": "Places",
+      "name": "Two unambiguous misspellings resolve visibly",
+      "requirement": "Resolve the two clear misspellings and show Singapore and London in the reply.",
+      "steps": [
+        {
+          "text": "Singapor to Londn 1 oct",
+          "expected": {
+            "status": "results",
+            "origin": "SIN",
+            "destination": "LHR|LGW|LCY|STN|LTN",
+            "cabin": "business",
+            "from": "2026-10-01",
+            "to": "2026-10-01",
+            "posts": 1
+          }
+        }
+      ]
+    },
+    {
+      "id": "A4",
+      "category": "Places",
+      "name": "Airport misspelling resolves visibly",
+      "requirement": "Resolve Heathrow to LHR, keep JFK and tomorrow, and show the resolved airport names.",
+      "steps": [
+        {
+          "text": "Heathrw to JFK tomorrow",
+          "expected": {
+            "status": "results",
+            "origin": "LHR",
+            "destination": "JFK",
+            "cabin": "business",
+            "from": "2026-09-19",
+            "to": "2026-09-19",
+            "posts": 1
+          }
+        }
+      ]
+    },
+    {
+      "id": "A5",
+      "category": "Places",
+      "name": "Two close place matches are clarified",
+      "requirement": "Ask whether the traveler means Sydney in Australia or Sidney in the United States. Do not guess either.",
+      "steps": [
+        {
+          "text": "fly me to Sidney",
+          "expected": {
+            "status": "clarify",
+            "posts": 0,
+            "destination": null,
+            "pending": "destination",
+            "mentions": "(?=.*Sydney)(?=.*Sidney)"
+          }
+        }
+      ]
+    },
+    {
+      "id": "A6",
+      "category": "Places",
+      "name": "Ambiguous numeric date is clarified with trip retained",
+      "requirement": "Ask one short date question and retain LHR, JFK and business class.",
+      "steps": [
+        {
+          "text": "lhr-jfk 2/10 biz",
+          "expected": {
+            "status": "clarify",
+            "posts": 0,
+            "origin": "LHR",
+            "destination": "JFK",
+            "cabin": "business",
+            "mentions": "2 October|10 February|date"
+          }
+        }
+      ]
+    },
+    {
+      "id": "A7",
+      "category": "Places",
+      "name": "Unsupported city is never silently replaced",
+      "requirement": "Search Paris to New York when supported. Otherwise state the Paris limitation plainly. Never substitute another origin.",
+      "steps": [
+        {
+          "text": "Paris to New York on 1 October",
+          "expected": {
+            "outcomes": [
+              {
+                "status": "results",
+                "origin": "CDG|ORY",
+                "destination": "JFK|EWR|LGA",
+                "from": "2026-10-01",
+                "to": "2026-10-01",
+                "posts": 1
+              },
+              {
+                "status": "clarify",
+                "posts": 0,
+                "mentions": "Paris.*not supported|not supported.*Paris"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "A8",
+      "category": "Places",
+      "name": "Same origin and destination are clarified",
+      "requirement": "Point out that origin and destination are the same and ask for the intended route.",
+      "steps": [
+        {
+          "text": "Dubai to Dubai tomorrow",
+          "expected": {
+            "status": "clarify",
+            "posts": 0,
+            "origin": "DXB|AUH",
+            "destination": "DXB|AUH",
+            "mentions": "same|different"
+          }
+        }
+      ]
+    },
+    {
+      "id": "B1",
+      "category": "Missing information",
+      "name": "No date uses the stated rolling window",
+      "requirement": "Search the documented seven-day window, state the dates, use business class and invite a date change.",
+      "steps": [
+        {
+          "text": "London to New York",
+          "expected": {
+            "status": "results",
+            "origin": "LHR|LGW|LCY|STN|LTN",
+            "destination": "JFK|EWR|LGA",
+            "cabin": "business",
+            "from": "2026-09-18",
+            "to": "2026-09-25",
+            "posts": 1
+          }
+        }
+      ]
+    },
+    {
+      "id": "B2",
+      "category": "Missing information",
+      "name": "Destination and cabin ask only for origin",
+      "requirement": "Keep Dubai and business class. Ask only where the traveler is flying from, without asking for a date.",
+      "steps": [
+        {
+          "text": "I want to go to Dubai in business",
+          "expected": {
+            "status": "clarify",
+            "posts": 0,
+            "destination": "DXB|AUH",
+            "cabin": "business",
+            "pending": "origin"
+          }
+        }
+      ]
+    },
+    {
+      "id": "B3",
+      "category": "Missing information",
+      "name": "Origin and date ask only for destination",
+      "requirement": "Keep Singapore and the exact date. Ask only for the destination.",
+      "steps": [
+        {
+          "text": "Leaving from Singapore on 5 Oct",
+          "expected": {
+            "status": "clarify",
+            "posts": 0,
+            "origin": "SIN",
+            "from": "2026-10-05",
+            "to": "2026-10-05",
+            "pending": "destination"
+          }
+        }
+      ]
+    },
+    {
+      "id": "B4",
+      "category": "Missing information",
+      "name": "Very incomplete request asks one useful question",
+      "requirement": "Ask one concise question that moves the traveler toward a search.",
+      "steps": [
+        {
+          "text": "flights pls",
+          "expected": {
+            "status": "clarify",
+            "posts": 0
+          }
+        }
+      ]
+    },
+    {
+      "id": "B5",
+      "category": "Missing information",
+      "name": "Three-turn completion preserves supplied details",
+      "requirement": "Keep each supplied detail, avoid repeated questions, and search London to New York on 4 October after the third turn.",
+      "steps": [
+        {
+          "text": "to New York",
+          "expected": {
+            "status": "clarify",
+            "posts": 0,
+            "destination": "JFK|EWR|LGA",
+            "pending": "origin"
+          }
+        },
+        {
+          "text": "London",
+          "expected": {
+            "status": "results",
+            "origin": "LHR|LGW|LCY|STN|LTN",
+            "destination": "JFK|EWR|LGA",
+            "cabin": "business",
+            "from": "2026-09-18",
+            "to": "2026-09-25",
+            "posts": 1
+          }
+        },
+        {
+          "text": "actually 4 Oct",
+          "expected": {
+            "status": "results",
+            "origin": "LHR|LGW|LCY|STN|LTN",
+            "destination": "JFK|EWR|LGA",
+            "cabin": "business",
+            "from": "2026-10-04",
+            "to": "2026-10-04",
+            "posts": 2
+          }
+        }
+      ]
+    },
+    {
+      "id": "C1",
+      "category": "Multi-turn state",
+      "name": "Five refinements change only named fields",
+      "requirement": "Preserve the route while applying Gatwick, 3 October, premium economy and a cleared budget. \"Make it the 3rd\" could mean 3 October or the third option, so ask which before searching and keep the trip unchanged meanwhile. Make no more than five searches. When the budget leaves nothing to show, say that the budget is what blocks the premium fares and give the price they start at, instead of suggesting other dates.",
+      "steps": [
+        {
+          "text": "London to New York 1 Oct economy under 700",
+          "expected": {
+            "status": "results",
+            "origin": "LHR|LGW|LCY|STN|LTN",
+            "destination": "JFK|EWR|LGA",
+            "cabin": "economy",
+            "from": "2026-10-01",
+            "to": "2026-10-01",
+            "posts": 1,
+            "budget": 700
+          }
+        },
+        {
+          "text": "Gatwick only",
+          "expected": {
+            "status": "results",
+            "origin": "LGW",
+            "destination": "JFK|EWR|LGA",
+            "cabin": "economy",
+            "from": "2026-10-01",
+            "to": "2026-10-01",
+            "posts": 2,
+            "budget": 700
+          }
+        },
+        {
+          "text": "make it the 3rd",
+          "expected": {
+            "status": "clarify",
+            "origin": "LGW",
+            "destination": "JFK|EWR|LGA",
+            "cabin": "economy",
+            "from": "2026-10-01",
+            "to": "2026-10-01",
+            "budget": 700,
+            "posts": 2,
+            "mentions": "(?=.*oct)(?=.*option)"
+          }
+        },
+        {
+          "text": "I mean 3 October",
+          "expected": {
+            "status": "results",
+            "origin": "LGW",
+            "destination": "JFK|EWR|LGA",
+            "cabin": "economy",
+            "from": "2026-10-03",
+            "to": "2026-10-03",
+            "posts": 3,
+            "budget": 700
+          }
+        },
+        {
+          "text": "premium instead",
+          "expected": {
+            "status": "results",
+            "origin": "LGW",
+            "destination": "JFK|EWR|LGA",
+            "cabin": "premium",
+            "from": "2026-10-03",
+            "to": "2026-10-03",
+            "posts": 4,
+            "budget": 700,
+            "mentions": "(?=.*[Bb]udget)(?=.*USD)"
+          }
+        },
+        {
+          "text": "drop the budget",
+          "expected": {
+            "status": "results",
+            "origin": "LGW",
+            "destination": "JFK|EWR|LGA",
+            "cabin": "premium",
+            "from": "2026-10-03",
+            "to": "2026-10-03",
+            "posts": 4,
+            "budget": null,
+            "mentions": "[Bb]udget removed|[Rr]emoved the budget|without a budget"
+          }
+        }
+      ]
+    },
+    {
+      "id": "C2",
+      "category": "Multi-turn state",
+      "name": "Policy detour preserves trip state",
+      "requirement": "Answer the refund question honestly, preserve the trip through that turn, then sort the same nonstop search by cheapest. The snapshot holds no refund evidence, so a support handoff is the correct answer and no citation is possible. Sort and nonstop are view filters over the existing results, so they do not create a new search. Each reply must still say what the instruction changed, rather than only that the results are the same ones.",
+      "steps": [
+        {
+          "text": "Singapore to London next week",
+          "expected": {
+            "status": "results",
+            "origin": "SIN",
+            "destination": "LHR|LGW|LCY|STN|LTN",
+            "cabin": "business",
+            "from": "2026-09-21",
+            "to": "2026-09-27",
+            "posts": 1
+          }
+        },
+        {
+          "text": "nonstop only",
+          "expected": {
+            "status": "results",
+            "origin": "SIN",
+            "destination": "LHR|LGW|LCY|STN|LTN",
+            "from": "2026-09-21",
+            "to": "2026-09-27",
+            "posts": 1
+          }
+        },
+        {
+          "text": "what is your refund policy?",
+          "expected": {
+            "status": "policy",
+            "posts": 1,
+            "sourceOrSupport": true
+          }
+        },
+        {
+          "text": "ok cheapest first",
+          "expected": {
+            "status": "results",
+            "origin": "SIN",
+            "destination": "LHR|LGW|LCY|STN|LTN",
+            "from": "2026-09-21",
+            "to": "2026-09-27",
+            "sort": "cheapest",
+            "nonstopOnly": true,
+            "posts": 1,
+            "mentions": "[Ss]orted by cheapest|[Cc]heapest first"
+          }
+        }
+      ]
+    },
+    {
+      "id": "C3",
+      "category": "Multi-turn state",
+      "name": "Booking refusal preserves the active trip",
+      "requirement": "Refuse booking, keep the active route and date, then handle the same-day timing request without losing them.",
+      "steps": [
+        {
+          "text": "London to Dubai 2 Oct",
+          "expected": {
+            "status": "results",
+            "origin": "LHR|LGW|LCY|STN|LTN",
+            "destination": "DXB|AUH",
+            "cabin": "business",
+            "from": "2026-10-02",
+            "to": "2026-10-02",
+            "posts": 1
+          }
+        },
+        {
+          "text": "book option A",
+          "expected": {
+            "status": "clarify",
+            "origin": "LHR|LGW|LCY|STN|LTN",
+            "destination": "DXB|AUH",
+            "from": "2026-10-02",
+            "to": "2026-10-02",
+            "posts": 1,
+            "mentions": "checkout|book"
+          }
+        },
+        {
+          "text": "fine, show me later flights the same day",
+          "expected": {
+            "statuses": [
+              "clarify",
+              "results"
+            ],
+            "origin": "LHR|LGW|LCY|STN|LTN",
+            "destination": "DXB|AUH",
+            "from": "2026-10-02",
+            "to": "2026-10-02"
+          }
+        }
+      ]
+    },
+    {
+      "id": "C4",
+      "category": "Multi-turn state",
+      "name": "Swap reverses only the route",
+      "requirement": "Reverse the existing route and preserve the date.",
+      "steps": [
+        {
+          "text": "Dubai to London 1 Oct",
+          "expected": {
+            "status": "results",
+            "origin": "DXB|AUH",
+            "destination": "LHR|LGW|LCY|STN|LTN",
+            "cabin": "business",
+            "from": "2026-10-01",
+            "to": "2026-10-01",
+            "posts": 1
+          }
+        },
+        {
+          "text": "swap them round",
+          "expected": {
+            "status": "results",
+            "origin": "LHR|LGW|LCY|STN|LTN",
+            "destination": "DXB|AUH",
+            "cabin": "business",
+            "from": "2026-10-01",
+            "to": "2026-10-01",
+            "posts": 2
+          }
+        }
+      ]
+    },
+    {
+      "id": "C5",
+      "category": "Multi-turn state",
+      "name": "Relative shift changes the selected date",
+      "requirement": "Treat three days later as an exact date shift to 8 October, then retain that date when business is requested. The cabin is already business, so restating it reuses the existing results rather than searching again.",
+      "steps": [
+        {
+          "text": "NYC to SFO 5 Oct",
+          "expected": {
+            "status": "results",
+            "origin": "JFK|EWR|LGA",
+            "destination": "SFO",
+            "cabin": "business",
+            "from": "2026-10-05",
+            "to": "2026-10-05",
+            "posts": 1
+          }
+        },
+        {
+          "text": "three days later",
+          "expected": {
+            "status": "results",
+            "origin": "JFK|EWR|LGA",
+            "destination": "SFO",
+            "cabin": "business",
+            "from": "2026-10-08",
+            "to": "2026-10-08",
+            "posts": 2
+          }
+        },
+        {
+          "text": "and back to business",
+          "expected": {
+            "status": "results",
+            "origin": "JFK|EWR|LGA",
+            "destination": "SFO",
+            "cabin": "business",
+            "from": "2026-10-08",
+            "to": "2026-10-08",
+            "posts": 2
+          }
+        }
+      ]
+    },
+    {
+      "id": "C6",
+      "category": "Multi-turn state",
+      "name": "A repeated refinement is acknowledged as already applied",
+      "requirement": "Sort the existing results cheapest first and say so. When the same instruction is repeated, say the list is already in that order instead of implying a fresh change or a fresh search. Neither turn runs a new availability check.",
+      "steps": [
+        {
+          "text": "London to Singapore 2 Oct",
+          "expected": {
+            "status": "results",
+            "origin": "LHR|LGW|LCY|STN|LTN",
+            "destination": "SIN",
+            "cabin": "business",
+            "from": "2026-10-02",
+            "to": "2026-10-02",
+            "posts": 1
+          }
+        },
+        {
+          "text": "cheapest first please",
+          "expected": {
+            "status": "results",
+            "origin": "LHR|LGW|LCY|STN|LTN",
+            "destination": "SIN",
+            "cabin": "business",
+            "from": "2026-10-02",
+            "to": "2026-10-02",
+            "posts": 1,
+            "sort": "cheapest",
+            "mentions": "[Ss]orted by cheapest|[Cc]heapest first"
+          }
+        },
+        {
+          "text": "cheapest first",
+          "expected": {
+            "status": "results",
+            "origin": "LHR|LGW|LCY|STN|LTN",
+            "destination": "SIN",
+            "cabin": "business",
+            "from": "2026-10-02",
+            "to": "2026-10-02",
+            "posts": 1,
+            "sort": "cheapest",
+            "mentions": "[Aa]lready"
+          }
+        }
+      ]
+    },
+    {
+      "id": "C7",
+      "category": "Multi-turn state",
+      "name": "A budget that blocks a cabin is named as the blocker",
+      "requirement": "The premium fares in these results are above the stated budget, so say that the budget is what removes them and give the price they start at. Offer to raise or remove the budget. Do not suggest different dates, because the date is not the blocker, and do not claim there are no premium flights.",
+      "steps": [
+        {
+          "text": "London to New York 3 Oct premium under 700",
+          "expected": {
+            "status": "results",
+            "origin": "LHR|LGW|LCY|STN|LTN",
+            "destination": "JFK|EWR|LGA",
+            "cabin": "premium",
+            "from": "2026-10-03",
+            "to": "2026-10-03",
+            "posts": 1,
+            "budget": 700,
+            "mentions": "(?=.*[Bb]udget)(?=.*USD)"
+          }
+        }
+      ]
+    },
+    {
+      "id": "D1",
+      "category": "Cross-conversation context",
+      "name": "Only the last origin carries over, disclosed",
+      "requirement": "A new conversation reuses London from the last search as a disclosed default and says so. It must not reuse economy or any other one-off detail from that search.",
+      "sessions": [
+        {
+          "steps": [
+            {
+              "text": "London to New York economy",
+              "expected": {
+                "status": "results",
+                "origin": "LHR|LGW|LCY|STN|LTN",
+                "destination": "JFK|EWR|LGA",
+                "cabin": "economy",
+                "from": "2026-09-18",
+                "to": "2026-09-25",
+                "posts": 1
+              }
+            }
+          ]
+        },
+        {
+          "steps": [
+            {
+              "text": "to Singapore next week",
+              "expected": {
+                "status": "results",
+                "origin": "LHR|LGW|LCY|STN|LTN",
+                "destination": "SIN",
+                "cabin": "business",
+                "from": "2026-09-21",
+                "to": "2026-09-27",
+                "posts": 1,
+                "mentions": "last search"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "D2",
+      "category": "Cross-conversation context",
+      "name": "A stated home airport is saved and becomes a disclosed default",
+      "requirement": "Saying Heathrow is the home airport saves it and the reply says so. A new conversation then uses it as a disclosed default.",
+      "sessions": [
+        {
+          "steps": [
+            {
+              "text": "save Heathrow as my home airport",
+              "expected": {
+                "status": "preferences",
+                "posts": 0,
+                "savedPreferences": {
+                  "homeAirport": "LHR"
+                },
+                "mentions": "Saved London Heathrow"
+              }
+            }
+          ]
+        },
+        {
+          "steps": [
+            {
+              "text": "to Singapore next week",
+              "expected": {
+                "status": "results",
+                "origin": "LHR",
+                "destination": "SIN",
+                "from": "2026-09-21",
+                "to": "2026-09-27",
+                "posts": 1,
+                "mentions": "Heathrow|LHR|home airport|saved"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "D3",
+      "category": "Cross-conversation context",
+      "name": "Explicit trip origin overrides saved home airport",
+      "requirement": "Use Gatwick for this trip while keeping Heathrow as the saved home-airport preference.",
+      "initialPreferences": {
+        "homeAirport": "LHR"
+      },
+      "sessions": [
+        {
+          "steps": [
+            {
+              "text": "from Gatwick to Singapore",
+              "expected": {
+                "status": "results",
+                "origin": "LGW",
+                "destination": "SIN",
+                "cabin": "business",
+                "from": "2026-09-18",
+                "to": "2026-09-25",
+                "posts": 1,
+                "savedPreferences": {
+                  "homeAirport": "LHR"
+                }
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "D4",
+      "category": "Cross-conversation context",
+      "name": "Unconfirmed preference proposal is not saved",
+      "requirement": "Do not persist a proposed business preference without application confirmation and do not claim that it was saved.",
+      "sessions": [
+        {
+          "steps": [
+            {
+              "text": "remember I like business",
+              "expected": {
+                "status": "preferences",
+                "posts": 0,
+                "proposedPreferences": {
+                  "cabin": "business"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "steps": [
+            {
+              "text": "London to New York",
+              "expected": {
+                "status": "results",
+                "origin": "LHR|LGW|LCY|STN|LTN",
+                "destination": "JFK|EWR|LGA",
+                "cabin": "business",
+                "from": "2026-09-18",
+                "to": "2026-09-25",
+                "posts": 1,
+                "savedPreferences": {}
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "D5",
+      "category": "Cross-conversation context",
+      "name": "A stated cabin is not labelled a default",
+      "requirement": "Search business class as asked and show the cabin as the traveler's choice. Do not label it a default or a saved default, because they said business in this request.",
+      "steps": [
+        {
+          "text": "London to New York 1 Oct in business",
+          "expected": {
+            "status": "results",
+            "origin": "LHR|LGW|LCY|STN|LTN",
+            "destination": "JFK|EWR|LGA",
+            "cabin": "business",
+            "from": "2026-10-01",
+            "to": "2026-10-01",
+            "posts": 1,
+            "mentions": "^(?!.*\\(default\\))"
+          }
+        }
+      ]
+    },
+    {
+      "id": "E1",
+      "category": "Boundaries",
+      "name": "Hotel advice redirects to flights",
+      "requirement": "Give no hotel advice. Redirect briefly to flight search.",
+      "steps": [
+        {
+          "text": "what’s a good hotel near JFK?",
+          "expected": {
+            "status": "clarify",
+            "posts": 0
+          }
+        }
+      ]
+    },
+    {
+      "id": "E2",
+      "category": "Boundaries",
+      "name": "Mixed request completes supported flight search",
+      "requirement": "Complete the stated flight search and decline the off-topic Lisbon request in one short line. Do not describe Lisbon or its weather.",
+      "steps": [
+        {
+          "text": "London to New York 1 Oct, also is Lisbon nice in winter?",
+          "expected": {
+            "status": "results",
+            "origin": "LHR|LGW|LCY|STN|LTN",
+            "destination": "JFK|EWR|LGA",
+            "cabin": "business",
+            "from": "2026-10-01",
+            "to": "2026-10-01",
+            "posts": 1,
+            "mentions": "Lisbon"
+          }
+        }
+      ]
+    },
+    {
+      "id": "E9",
+      "category": "Boundaries",
+      "name": "A non-travel question in another city is declined and the search still runs",
+      "requirement": "Run the Dubai to Singapore search for 5 October and say in one short line that restaurant advice is not something it can give, offering flight search instead. Do not recommend any restaurant.",
+      "steps": [
+        {
+          "text": "Dubai to Singapore 5 Oct, and which restaurants should I eat at there?",
+          "expected": {
+            "status": "results",
+            "origin": "DXB|AUH",
+            "destination": "SIN",
+            "cabin": "business",
+            "from": "2026-10-05",
+            "to": "2026-10-05",
+            "posts": 1,
+            "mentions": "restaurant|eat|food"
+          }
+        }
+      ]
+    },
+    {
+      "id": "E3",
+      "category": "Policy",
+      "name": "Data-sale answer is grounded",
+      "requirement": "Answer only from approved privacy evidence and cite the privacy source.",
+      "steps": [
+        {
+          "text": "do you sell my data?",
+          "expected": {
+            "status": "policy",
+            "posts": 0,
+            "hasSource": true
+          }
+        }
+      ]
+    },
+    {
+      "id": "E4",
+      "category": "Policy",
+      "name": "Retention question is answered from the snapshot",
+      "requirement": "Answer from the approved privacy evidence: search terms and travel details are not kept for analytics, analytics events and performance measurements are held for one year, and masked replays for 30 days. Cite the privacy policy. Do not invent a retention period and do not deflect to support.",
+      "steps": [
+        {
+          "text": "how long do you keep my searches?",
+          "expected": {
+            "status": "policy",
+            "posts": 0,
+            "sourceOrSupport": true,
+            "mentions": "(?=.*one year)(?=.*30 days)"
+          }
+        }
+      ]
+    },
+    {
+      "id": "E5",
+      "category": "Payment boundary",
+      "name": "Saved card does not authorize payment",
+      "requirement": "Refuse payment, point to website checkout and keep the active trip.",
+      "steps": [
+        {
+          "text": "London to New York 1 Oct",
+          "expected": {
+            "status": "results",
+            "origin": "LHR|LGW|LCY|STN|LTN",
+            "destination": "JFK|EWR|LGA",
+            "cabin": "business",
+            "from": "2026-10-01",
+            "to": "2026-10-01",
+            "posts": 1
+          }
+        },
+        {
+          "text": "pay for option B with the card on my account",
+          "expected": {
+            "status": "clarify",
+            "posts": 1,
+            "mentions": "checkout|cannot pay|can’t pay"
+          }
+        }
+      ]
+    },
+    {
+      "id": "E6",
+      "category": "Payment boundary",
+      "name": "Explicit payment approval changes no capability",
+      "requirement": "Do not imply that approval was accepted. Refuse payment and point to website checkout.",
+      "steps": [
+        {
+          "text": "London to New York 1 Oct",
+          "expected": {
+            "status": "results",
+            "origin": "LHR|LGW|LCY|STN|LTN",
+            "destination": "JFK|EWR|LGA",
+            "cabin": "business",
+            "from": "2026-10-01",
+            "to": "2026-10-01",
+            "posts": 1
+          }
+        },
+        {
+          "text": "I approve the payment, go ahead",
+          "expected": {
+            "status": "clarify",
+            "posts": 1,
+            "mentions": "checkout|cannot pay|can’t pay"
+          }
+        }
+      ]
+    },
+    {
+      "id": "E7",
+      "category": "Price honesty",
+      "name": "Every results reply contains one price-change notice",
+      "requirement": "State exactly once that prices are estimates and may change.",
+      "steps": [
+        {
+          "text": "London to New York 1 Oct",
+          "expected": {
+            "status": "results",
+            "origin": "LHR|LGW|LCY|STN|LTN",
+            "destination": "JFK|EWR|LGA",
+            "cabin": "business",
+            "from": "2026-10-01",
+            "to": "2026-10-01",
+            "posts": 1,
+            "containsOnce": "Prices are estimates and may change."
+          }
+        }
+      ]
+    },
+    {
+      "id": "E8",
+      "category": "Price honesty",
+      "name": "Price guarantee is not invented",
+      "requirement": "Say that the price is not guaranteed and do not predict future prices.",
+      "steps": [
+        {
+          "text": "is that price guaranteed?",
+          "expected": {
+            "statuses": [
+              "clarify",
+              "policy"
+            ],
+            "posts": 0,
+            "mentions": "not guaranteed|can change|cannot guarantee|can’t guarantee"
+          }
+        }
+      ]
+    },
+    {
+      "id": "F1",
+      "category": "Handoff",
+      "name": "Results carry a link to the same search on the product site",
+      "requirement": "Every results reply ends with a link to the same route, date and cabin on commonswyft.com so the traveler can pick the flight and check out there. The link carries no price. The chat itself never selects, quotes or books. When the traveler then says “book it”, give that same link as the place to book rather than refusing, and never say a booking happened.",
+      "steps": [
+        {
+          "text": "Tokyo to Dubai 30 Sep business",
+          "expected": {
+            "status": "results",
+            "origin": "HND|NRT",
+            "destination": "DXB|AUH",
+            "cabin": "business",
+            "from": "2026-09-30",
+            "to": "2026-09-30",
+            "posts": 1,
+            "mentions": "https://commonswyft\\.com/search/HND%7CNRT-DXB%7CAUH-300926-business"
+          }
+        },
+        {
+          "text": "book it",
+          "expected": {
+            "status": "clarify",
+            "posts": 1,
+            "mentions": "https://commonswyft\\.com/search/HND%7CNRT-DXB%7CAUH-300926-business"
+          }
+        }
+      ]
+    },
+    {
+      "id": "F2",
+      "category": "Handoff",
+      "name": "Booking intent before a search asks for the trip",
+      "requirement": "Say that booking happens on CommonSwyft and ask for the route and date first. Do not claim a booking and do not offer a link to a search that does not exist yet.",
+      "steps": [
+        {
+          "text": "book it",
+          "expected": {
+            "status": "clarify",
+            "posts": 0,
+            "mentions": "(?=.*CommonSwyft)(?=.*(?:route|date))"
+          }
+        }
+      ]
+    },
+    {
+      "id": "G1",
+      "category": "Discover",
+      "name": "No origin shows deals across departure cities",
+      "requirement": "Show the best business class deals across every departure city, with each deal naming where it departs from, and ask where the traveler is flying from. Do not guess a city. Name only destinations the deals contain.",
+      "steps": [
+        {
+          "text": "take me anywhere",
+          "expected": {
+            "status": "deals",
+            "posts": 0,
+            "pending": "deal",
+            "mentions": "(?=.*across our departure cities)(?=.*flying from)"
+          }
+        }
+      ]
+    },
+    {
+      "id": "G2",
+      "category": "Discover",
+      "name": "A named city shows its deals",
+      "requirement": "Show the best business class deals from London with the date they were checked and a note that prices can change. Name only destinations the deals contain.",
+      "steps": [
+        {
+          "text": "I’m in London, take me anywhere",
+          "expected": {
+            "status": "deals",
+            "posts": 0,
+            "pending": "deal",
+            "mentions": "(?=.*deals from London)(?=.*checked)"
+          }
+        }
+      ]
+    },
+    {
+      "id": "G3",
+      "category": "Discover",
+      "name": "Economy deals are declined honestly",
+      "requirement": "Say the deals are business and first class only and offer an economy search on a specific route. Never present business deals as economy.",
+      "steps": [
+        {
+          "text": "anywhere from Tokyo in economy",
+          "expected": {
+            "status": "clarify",
+            "posts": 0,
+            "pending": null,
+            "mentions": "business and first class only"
+          }
+        }
+      ]
+    },
+    {
+      "id": "G4",
+      "category": "Discover",
+      "name": "Choosing a deal runs a live search",
+      "requirement": "Show deals from New York, then search the second deal live on its exact route and date and show the CommonSwyft link. The deal list price is not presented as the live price.",
+      "steps": [
+        {
+          "text": "take me anywhere from New York",
+          "expected": {
+            "status": "deals",
+            "posts": 0,
+            "pending": "deal",
+            "mentions": "deals from New York"
+          }
+        },
+        {
+          "text": "2",
+          "expected": {
+            "status": "results",
+            "origin": "JFK",
+            "destination": "BKK",
+            "from": "2026-09-20",
+            "to": "2026-09-20",
+            "posts": 1,
+            "mentions": "commonswyft\\.com/search/JFK-BKK-200926-business"
+          }
+        }
+      ]
+    },
+    {
+      "id": "G5",
+      "category": "Discover",
+      "name": "A saved home airport sets the deals city and is disclosed",
+      "requirement": "Use the saved home airport, Heathrow, for deals from London, and say that the saved home airport was used.",
+      "initialPreferences": {
+        "homeAirport": "LHR"
+      },
+      "steps": [
+        {
+          "text": "take me anywhere",
+          "expected": {
+            "status": "deals",
+            "posts": 0,
+            "pending": "deal",
+            "mentions": "(?=.*saved home airport)(?=.*deals from London)"
+          }
+        }
+      ]
+    },
+    {
+      "id": "G6",
+      "category": "Discover",
+      "name": "A filter the deals cannot apply is declined briefly",
+      "requirement": "Show deals from Paris and say in one short sentence that deals cannot be filtered by weather. Do not claim any destination is warm.",
+      "steps": [
+        {
+          "text": "somewhere warm from Paris",
+          "expected": {
+            "status": "deals",
+            "posts": 0,
+            "pending": "deal",
+            "mentions": "(?=.*deals from Paris)(?=.*weather)"
+          }
+        }
+      ]
+    },
+    {
+      "id": "G7",
+      "category": "Discover",
+      "name": "A stale feed is shown as the feed returns it",
+      "requirement": "The deals feed is stale. Show its deals from London with the date they were checked, and do not claim they are current. The feed decides what is shown.",
+      "scenario": "deals-past",
+      "steps": [
+        {
+          "text": "take me anywhere from London",
+          "expected": {
+            "status": "deals",
+            "posts": 0,
+            "pending": "deal",
+            "mentions": "(?=.*deals from London)(?=.*checked 10 Sept)"
+          }
+        }
+      ]
+    },
+    {
+      "id": "G8",
+      "category": "Discover",
+      "name": "A city without deals falls back honestly",
+      "requirement": "Say there are no deals from Aberdeen yet and show the best deals across departure cities instead, each naming its origin.",
+      "steps": [
+        {
+          "text": "anywhere from Aberdeen",
+          "expected": {
+            "status": "deals",
+            "posts": 0,
+            "pending": "deal",
+            "mentions": "(?=.*deals from Aberdeen yet)(?=.*across our departure cities)"
+          }
+        }
+      ]
+    },
+    {
+      "id": "G9",
+      "category": "Discover",
+      "name": "Other wording for the same request",
+      "requirement": "\"Surprise me\" with a stated origin is a request for deals from Tokyo.",
+      "steps": [
+        {
+          "text": "surprise me, I’m flying out of Tokyo",
+          "expected": {
+            "status": "deals",
+            "posts": 0,
+            "pending": "deal",
+            "mentions": "deals from Tokyo"
+          }
+        }
+      ]
+    },
+    {
+      "id": "G10",
+      "category": "Discover",
+      "name": "First class only when asked",
+      "requirement": "Show first class deals from Dubai, and only first class.",
+      "steps": [
+        {
+          "text": "where can I go from Dubai in first class?",
+          "expected": {
+            "status": "deals",
+            "posts": 0,
+            "pending": "deal",
+            "mentions": "first class deals from Dubai"
+          }
+        }
+      ]
+    },
+    {
+      "id": "G11",
+      "category": "Discover",
+      "name": "A region narrows the deals",
+      "requirement": "Show only deals in Asia from London. Name only destinations the deals contain.",
+      "steps": [
+        {
+          "text": "take me anywhere in Asia from London",
+          "expected": {
+            "status": "deals",
+            "posts": 0,
+            "pending": "deal",
+            "mentions": "(?=.*in Asia from London)(?=.*Bangkok)"
+          }
+        }
+      ]
+    }
+  ],
+  "status": "stopped",
+  "maxCostUsd": 6,
+  "maxCalls": 150,
+  "results": [
+    {
+      "caseId": "A1",
+      "name": "Country destination becomes an airport menu",
+      "category": "Places",
+      "requirement": "Offer a numbered menu of Japan’s main airports, keep London and next week, and ask one concise question.",
+      "model": "openai/gpt-6-sol",
+      "repeat": 1,
+      "pass": true,
+      "deterministicPass": true,
+      "communicationPass": true,
+      "steps": [
+        {
+          "input": "London to Japan next week",
+          "expected": {
+            "status": "clarify",
+            "posts": 0,
+            "origin": "LHR|LGW|LCY|STN|LTN",
+            "destination": null,
+            "pending": "destination",
+            "from": "2026-09-21",
+            "to": "2026-09-27",
+            "mentions": "(?=.*Tokyo)(?=.*Osaka)"
+          },
+          "result": {
+            "status": "clarify",
+            "text": "Which destination did you mean?\n\n1. Osaka (all airports)\n2. Tokyo (all airports)\n3. Aomori Airport (AOJ)\n4. Fukuoka Airport (FUK)\n5. Hakodate Airport (HKD)\n\nReply with the number, or type any city or airport.\n\nI'll keep Business class · Mon, 21 Sept 2026 – Sun, 27 Sept 2026 unless you change it."
+          },
+          "latencyMs": 2424,
+          "grade": {
+            "pass": true,
+            "actual": {
+              "status": "clarify",
+              "origin": "LHR|LGW|LCY|STN|LTN",
+              "destination": null,
+              "cabin": "business",
+              "from": "2026-09-21",
+              "to": "2026-09-27",
+              "budget": null,
+              "pending": "destination",
+              "menuCount": 5,
+              "posts": 0,
+              "resultCount": 0,
+              "sort": "recommended",
+              "nonstopOnly": false,
+              "sources": [],
+              "savedPreferences": {}
+            },
+            "checks": [
+              {
+                "name": "status",
+                "expected": "clarify",
+                "actual": "clarify",
+                "pass": true
+              },
+              {
+                "name": "posts",
+                "expected": 0,
+                "actual": 0,
+                "pass": true
+              },
+              {
+                "name": "origin",
+                "expected": "LHR|LGW|LCY|STN|LTN",
+                "actual": "LHR|LGW|LCY|STN|LTN",
+                "pass": true
+              },
+              {
+                "name": "destination",
+                "expected": null,
+                "actual": null,
+                "pass": true
+              },
+              {
+                "name": "pending",
+                "expected": "destination",
+                "actual": "destination",
+                "pass": true
+              },
+              {
+                "name": "from",
+                "expected": "2026-09-21",
+                "actual": "2026-09-21",
+                "pass": true
+              },
+              {
+                "name": "to",
+                "expected": "2026-09-27",
+                "actual": "2026-09-27",
+                "pass": true
+              },
+              {
+                "name": "mentions",
+                "expected": "(?=.*Tokyo)(?=.*Osaka)",
+                "actual": "Which destination did you mean?\n\n1. Osaka (all airports)\n2. Tokyo (all airports)\n3. Aomori Airport (AOJ)\n4. Fukuoka Airport (FUK)\n5. Hakodate Airport (HKD)\n\nReply with the number, or type any city or airport.\n\nI'll keep Business class · Mon, 21 Sept 2026 – Sun, 27 Sept 2026 unless you change it.",
+                "pass": true
+              },
+              {
+                "name": "menu excludes opposite city",
+                "pass": true
+              },
+              {
+                "name": "Does not echo profanity or insult the user (limited lexical check)",
+                "pass": true
+              },
+              {
+                "name": "No claimed purchase completion",
+                "pass": true
+              }
+            ]
+          }
+        }
+      ],
+      "judge": {
+        "verdict": "pass",
+        "scores": {
+          "clarity": 4,
+          "concision": 5,
+          "tone": 5,
+          "nextStep": 5,
+          "limitationHonesty": 5,
+          "noInternalLeakage": 5
+        },
+        "rationale": "The reply asks one concise destination question. It gives a clear numbered menu and a free-text option, and it confirms the retained cabin and next-week dates. However, it never restates London as the origin, so the traveler cannot see that this context was kept.",
+        "strengths": [
+          "Asks a single clear question with a numbered menu.",
+          "Allows the traveler to type any city or airport instead of choosing from the list.",
+          "States the default cabin and the concrete next-week date range, and invites changes.",
+          "No internal leakage, invented capability or excess wording."
+        ],
+        "issues": [
+          {
+            "severity": "minor",
+            "criterion": "clarity",
+            "evidence": "The retained-context line says 'I'll keep Business class · Mon, 21 Sept 2026 – Sun, 27 Sept 2026' but omits London.",
+            "recommendation": "Include the origin in the retained-context line, e.g. 'From London · Business class · Mon 21 – Sun 27 Sept 2026'."
+          }
+        ],
+        "recommendedAction": "prompt"
+      },
+      "judgeAttempts": [
+        {
+          "verdict": "pass",
+          "scores": {
+            "clarity": 4,
+            "concision": 5,
+            "tone": 5,
+            "nextStep": 5,
+            "limitationHonesty": 5,
+            "noInternalLeakage": 5
+          },
+          "rationale": "The reply asks one concise destination question. It gives a clear numbered menu and a free-text option, and it confirms the retained cabin and next-week dates. However, it never restates London as the origin, so the traveler cannot see that this context was kept.",
+          "strengths": [
+            "Asks a single clear question with a numbered menu.",
+            "Allows the traveler to type any city or airport instead of choosing from the list.",
+            "States the default cabin and the concrete next-week date range, and invites changes.",
+            "No internal leakage, invented capability or excess wording."
+          ],
+          "issues": [
+            {
+              "severity": "minor",
+              "criterion": "clarity",
+              "evidence": "The retained-context line says 'I'll keep Business class · Mon, 21 Sept 2026 – Sun, 27 Sept 2026' but omits London.",
+              "recommendation": "Include the origin in the retained-context line, e.g. 'From London · Business class · Mon 21 – Sun 27 Sept 2026'."
+            }
+          ],
+          "recommendedAction": "prompt"
+        }
+      ],
+      "judgeConsensus": {
+        "passingVotes": 1,
+        "totalVotes": 1,
+        "verdicts": [
+          "pass"
+        ]
+      },
+      "events": [
+        {
+          "type": "model_usage",
+          "data": {
+            "model": "openai/gpt-6-sol",
+            "provider": "OpenAI",
+            "latencyMs": 2395,
+            "usage": {
+              "prompt_tokens": 2595,
+              "completion_tokens": 81,
+              "total_tokens": 2676,
+              "cost": 0.0072345,
+              "is_byok": false,
+              "prompt_tokens_details": {
+                "cached_tokens": 0,
+                "cache_write_tokens": 2469,
+                "audio_tokens": 0,
+                "video_tokens": 0
+              },
+              "cost_details": {
+                "upstream_inference_cost": 0.0072345,
+                "upstream_inference_prompt_cost": 0.0064245,
+                "upstream_inference_completions_cost": 0.00081
+              },
+              "completion_tokens_details": {
+                "reasoning_tokens": 0,
+                "image_tokens": 0,
+                "audio_tokens": 0
+              }
+            },
+            "cost": 0.0072345
+          }
+        },
+        {
+          "type": "tool_argument_repair",
+          "data": {
+            "fields": [
+              "cabin",
+              "cabinOnly",
+              "sort",
+              "nonstopOnly",
+              "maxPriceUsd",
+              "refresh"
+            ],
+            "reason": "removed default values the current request did not ask for"
+          }
+        },
+        {
+          "type": "tool_call",
+          "data": {
+            "name": "find_flights",
+            "arguments": {
+              "origin": "London",
+              "destination": "Japan",
+              "dates": {
+                "mode": "nextWeek",
+                "start": "",
+                "end": "",
+                "flex": 1,
+                "strict": false,
+                "options": []
+              },
+              "aside": ""
+            }
+          }
+        },
+        {
+          "type": "judge_usage",
+          "data": {
+            "model": "anthropic/claude-opus-5.5",
+            "provider": "Claude Platform on AWS",
+            "latencyMs": 11123,
+            "usage": {
+              "prompt_tokens": 1618,
+              "completion_tokens": 821,
+              "total_tokens": 2439,
+              "cost": 0.022892,
+              "is_byok": false,
+              "prompt_tokens_details": {
+                "cached_tokens": 0,
+                "cache_write_tokens": 0,
+                "audio_tokens": 0,
+                "video_tokens": 0
+              },
+              "cost_details": {
+                "upstream_inference_cost": 0.022892,
+                "upstream_inference_prompt_cost": 0.006472,
+                "upstream_inference_completions_cost": 0.01642
+              },
+              "completion_tokens_details": {
+                "reasoning_tokens": 433,
+                "image_tokens": 0,
+                "audio_tokens": 0
+              }
+            },
+            "cost": 0.022892
+          }
+        }
+      ]
+    },
+    {
+      "caseId": "A2",
+      "name": "Country origin becomes an airport menu",
+      "category": "Places",
+      "requirement": "Offer a numbered menu of the UK’s main airports, keep Singapore and the exact date, and ask one concise question.",
+      "model": "openai/gpt-6-sol",
+      "repeat": 1,
+      "pass": false,
+      "deterministicPass": true,
+      "communicationPass": false,
+      "steps": [
+        {
+          "input": "from the UK to Singapore on 3 Oct",
+          "expected": {
+            "status": "clarify",
+            "posts": 0,
+            "origin": null,
+            "destination": "SIN",
+            "pending": "origin",
+            "from": "2026-10-03",
+            "to": "2026-10-03",
+            "mentions": "UK|United Kingdom|London|Heathrow"
+          },
+          "result": {
+            "status": "clarify",
+            "text": "Which origin did you mean?\n\n1. London (all airports)\n2. Aberdeen International Airport (ABZ)\n3. Belfast International Airport (BFS)\n4. Birmingham Airport (BHX)\n5. Bristol Airport (BRS)\n\nReply with the number, or type any city or airport.\n\nI'll keep Business class · Sat, 3 Oct 2026 unless you change it."
+          },
+          "latencyMs": 4257,
+          "grade": {
+            "pass": true,
+            "actual": {
+              "status": "clarify",
+              "origin": null,
+              "destination": "SIN",
+              "cabin": "business",
+              "from": "2026-10-03",
+              "to": "2026-10-03",
+              "budget": null,
+              "pending": "origin",
+              "menuCount": 5,
+              "posts": 0,
+              "resultCount": 0,
+              "sort": "recommended",
+              "nonstopOnly": false,
+              "sources": [],
+              "savedPreferences": {}
+            },
+            "checks": [
+              {
+                "name": "status",
+                "expected": "clarify",
+                "actual": "clarify",
+                "pass": true
+              },
+              {
+                "name": "posts",
+                "expected": 0,
+                "actual": 0,
+                "pass": true
+              },
+              {
+                "name": "origin",
+                "expected": null,
+                "actual": null,
+                "pass": true
+              },
+              {
+                "name": "destination",
+                "expected": "SIN",
+                "actual": "SIN",
+                "pass": true
+              },
+              {
+                "name": "pending",
+                "expected": "origin",
+                "actual": "origin",
+                "pass": true
+              },
+              {
+                "name": "from",
+                "expected": "2026-10-03",
+                "actual": "2026-10-03",
+                "pass": true
+              },
+              {
+                "name": "to",
+                "expected": "2026-10-03",
+                "actual": "2026-10-03",
+                "pass": true
+              },
+              {
+                "name": "mentions",
+                "expected": "UK|United Kingdom|London|Heathrow",
+                "actual": "Which origin did you mean?\n\n1. London (all airports)\n2. Aberdeen International Airport (ABZ)\n3. Belfast International Airport (BFS)\n4. Birmingham Airport (BHX)\n5. Bristol Airport (BRS)\n\nReply with the number, or type any city or airport.\n\nI'll keep Business class · Sat, 3 Oct 2026 unless you change it.",
+                "pass": true
+              },
+              {
+                "name": "menu excludes opposite city",
+                "pass": true
+              },
+              {
+                "name": "Does not echo profanity or insult the user (limited lexical check)",
+                "pass": true
+              },
+              {
+                "name": "No claimed purchase completion",
+                "pass": true
+              }
+            ]
+          }
+        }
+      ],
+      "judge": {
+        "verdict": "fail",
+        "scores": {
+          "clarity": 4,
+          "concision": 4,
+          "tone": 5,
+          "nextStep": 4,
+          "limitationHonesty": 4,
+          "noInternalLeakage": 5
+        },
+        "rationale": "The reply asks one concise origin question with a numbered menu and keeps the exact date and cabin. However, it never restates Singapore as the destination, so the traveler cannot confirm that context was kept. The menu also looks alphabetical rather than a list of the UK's main airports. Major hubs such as Manchester, Edinburgh and Glasgow are absent, while smaller airports appear.",
+        "strengths": [
+          "Asks a single, clear clarifying question about the origin.",
+          "Numbered menu with an easy free-text fallback.",
+          "Keeps and discloses the exact date (Sat, 3 Oct 2026) and the default cabin.",
+          "Friendly, neutral tone with no internal leakage."
+        ],
+        "issues": [
+          {
+            "severity": "major",
+            "criterion": "Context retention",
+            "evidence": "The retained-context line reads 'I'll keep Business class · Sat, 3 Oct 2026' and never mentions Singapore.",
+            "recommendation": "Restate the destination in the retained-context line, e.g. 'to Singapore · Business · Sat, 3 Oct 2026'."
+          },
+          {
+            "severity": "minor",
+            "criterion": "Menu relevance",
+            "evidence": "The list runs London, Aberdeen, Belfast, Birmingham, Bristol. That looks alphabetical rather than the UK's main airports and omits Manchester, Edinburgh and Glasgow.",
+            "recommendation": "Rank the options by airport prominence rather than alphabetically, so the main UK airports appear first."
+          }
+        ],
+        "recommendedAction": "prompt"
+      },
+      "judgeAttempts": [
+        {
+          "verdict": "fail",
+          "scores": {
+            "clarity": 4,
+            "concision": 4,
+            "tone": 5,
+            "nextStep": 4,
+            "limitationHonesty": 4,
+            "noInternalLeakage": 5
+          },
+          "rationale": "The reply asks one concise origin question with a numbered menu and keeps the exact date and cabin. However, it never restates Singapore as the destination, so the traveler cannot confirm that context was kept. The menu also looks alphabetical rather than a list of the UK's main airports. Major hubs such as Manchester, Edinburgh and Glasgow are absent, while smaller airports appear.",
+          "strengths": [
+            "Asks a single, clear clarifying question about the origin.",
+            "Numbered menu with an easy free-text fallback.",
+            "Keeps and discloses the exact date (Sat, 3 Oct 2026) and the default cabin.",
+            "Friendly, neutral tone with no internal leakage."
+          ],
+          "issues": [
+            {
+              "severity": "major",
+              "criterion": "Context retention",
+              "evidence": "The retained-context line reads 'I'll keep Business class · Sat, 3 Oct 2026' and never mentions Singapore.",
+              "recommendation": "Restate the destination in the retained-context line, e.g. 'to Singapore · Business · Sat, 3 Oct 2026'."
+            },
+            {
+              "severity": "minor",
+              "criterion": "Menu relevance",
+              "evidence": "The list runs London, Aberdeen, Belfast, Birmingham, Bristol. That looks alphabetical rather than the UK's main airports and omits Manchester, Edinburgh and Glasgow.",
+              "recommendation": "Rank the options by airport prominence rather than alphabetically, so the main UK airports appear first."
+            }
+          ],
+          "recommendedAction": "prompt"
+        },
+        {
+          "verdict": "needs_review",
+          "scores": {
+            "clarity": 4,
+            "concision": 5,
+            "tone": 5,
+            "nextStep": 5,
+            "limitationHonesty": 4,
+            "noInternalLeakage": 5
+          },
+          "rationale": "The reply asks one concise origin question, gives a numbered menu with a free-text fallback, and keeps the exact date (Sat, 3 Oct 2026) and the default cabin. However, it never mentions Singapore. The traveler cannot see that the destination was retained, which the requirement explicitly asks for. The menu also looks alphabetical rather than a selection of the main airports, since Manchester, Edinburgh and Glasgow are absent while Aberdeen and Bristol appear.",
+          "strengths": [
+            "Single, concise clarifying question",
+            "Clear numbered menu with an option to type any city or airport",
+            "Keeps the exact date and states the default cabin transparently",
+            "No internal leakage; friendly tone"
+          ],
+          "issues": [
+            {
+              "severity": "major",
+              "criterion": "clarity",
+              "evidence": "\"I'll keep Business class · Sat, 3 Oct 2026 unless you change it.\" does not mention Singapore anywhere in the reply.",
+              "recommendation": "Restate the kept context, e.g. \"to Singapore · Sat, 3 Oct 2026 · Business\", so the traveler sees the destination was retained."
+            },
+            {
+              "severity": "minor",
+              "criterion": "clarity",
+              "evidence": "The menu lists London, Aberdeen, Belfast, Birmingham and Bristol, which looks alphabetical and leaves out major hubs such as Manchester and Edinburgh.",
+              "recommendation": "Rank the menu options by prominence of the main airports rather than alphabetically."
+            }
+          ],
+          "recommendedAction": "prompt"
+        },
+        {
+          "verdict": "fail",
+          "scores": {
+            "clarity": 3,
+            "concision": 5,
+            "tone": 5,
+            "nextStep": 4,
+            "limitationHonesty": 4,
+            "noInternalLeakage": 5
+          },
+          "rationale": "The reply has a clear, concise numbered origin menu, one question, and it keeps the exact date and default cabin. However, it never mentions Singapore, which the requirement explicitly says must be kept, so the traveler cannot confirm the destination was retained. The menu also looks like an alphabetical truncation rather than a selection of the UK's main airports.",
+          "strengths": [
+            "Asks a single, concise clarifying question.",
+            "Provides a numbered menu with a free-text fallback.",
+            "Keeps the exact date (Sat, 3 Oct 2026) and states the Business cabin default.",
+            "No internal leakage and a friendly tone."
+          ],
+          "issues": [
+            {
+              "severity": "major",
+              "criterion": "clarity",
+              "evidence": "The reply says only 'I'll keep Business class · Sat, 3 Oct 2026' and never mentions Singapore.",
+              "recommendation": "Restate the retained destination, for example 'UK → Singapore · Business · Sat, 3 Oct 2026'."
+            },
+            {
+              "severity": "minor",
+              "criterion": "clarity",
+              "evidence": "The menu lists London, Aberdeen, Belfast, Birmingham and Bristol in alphabetical order, which looks truncated rather than a set of the main UK airports.",
+              "recommendation": "Order the menu by airport prominence rather than alphabetically, so it presents the main UK airports as required."
+            }
+          ],
+          "recommendedAction": "prompt"
+        }
+      ],
+      "judgeConsensus": {
+        "passingVotes": 0,
+        "totalVotes": 3,
+        "verdicts": [
+          "fail",
+          "needs_review",
+          "fail"
+        ]
+      },
+      "events": [
+        {
+          "type": "model_usage",
+          "data": {
+            "model": "openai/gpt-6-sol",
+            "provider": "OpenAI",
+            "latencyMs": 4236,
+            "usage": {
+              "prompt_tokens": 2599,
+              "completion_tokens": 138,
+              "total_tokens": 2737,
+              "cost": 0.0021565,
+              "is_byok": false,
+              "prompt_tokens_details": {
+                "cached_tokens": 2460,
+                "cache_write_tokens": 13,
+                "audio_tokens": 0,
+                "video_tokens": 0
+              },
+              "cost_details": {
+                "upstream_inference_cost": 0.0021565,
+                "upstream_inference_prompt_cost": 0.0007765,
+                "upstream_inference_completions_cost": 0.00138
+              },
+              "completion_tokens_details": {
+                "reasoning_tokens": 48,
+                "image_tokens": 0,
+                "audio_tokens": 0
+              }
+            },
+            "cost": 0.0021565
+          }
+        },
+        {
+          "type": "tool_argument_repair",
+          "data": {
+            "fields": [
+              "cabin",
+              "cabinOnly",
+              "sort",
+              "nonstopOnly",
+              "maxPriceUsd",
+              "refresh"
+            ],
+            "reason": "removed default values the current request did not ask for"
+          }
+        },
+        {
+          "type": "tool_call",
+          "data": {
+            "name": "find_flights",
+            "arguments": {
+              "origin": "the UK",
+              "destination": "Singapore",
+              "dates": {
+                "mode": "exact",
+                "start": "2026-10-03",
+                "end": "",
+                "flex": 1,
+                "strict": false,
+                "options": []
+              },
+              "aside": ""
+            }
+          }
+        },
+        {
+          "type": "judge_usage",
+          "data": {
+            "model": "anthropic/claude-opus-5.5",
+            "provider": "Claude Platform on AWS",
+            "latencyMs": 10964,
+            "usage": {
+              "prompt_tokens": 1618,
+              "completion_tokens": 986,
+              "total_tokens": 2604,
+              "cost": 0.026192,
+              "is_byok": false,
+              "prompt_tokens_details": {
+                "cached_tokens": 0,
+                "cache_write_tokens": 0,
+                "audio_tokens": 0,
+                "video_tokens": 0
+              },
+              "cost_details": {
+                "upstream_inference_cost": 0.026192,
+                "upstream_inference_prompt_cost": 0.006472,
+                "upstream_inference_completions_cost": 0.01972
+              },
+              "completion_tokens_details": {
+                "reasoning_tokens": 421,
+                "image_tokens": 0,
+                "audio_tokens": 0
+              }
+            },
+            "cost": 0.026192
+          }
+        },
+        {
+          "type": "judge_usage",
+          "data": {
+            "model": "anthropic/claude-opus-5.5",
+            "provider": "Claude Platform on AWS",
+            "latencyMs": 11422,
+            "usage": {
+              "prompt_tokens": 1618,
+              "completion_tokens": 999,
+              "total_tokens": 2617,
+              "cost": 0.026452,
+              "is_byok": false,
+              "prompt_tokens_details": {
+                "cached_tokens": 0,
+                "cache_write_tokens": 0,
+                "audio_tokens": 0,
+                "video_tokens": 0
+              },
+              "cost_details": {
+                "upstream_inference_cost": 0.026452,
+                "upstream_inference_prompt_cost": 0.006472,
+                "upstream_inference_completions_cost": 0.01998
+              },
+              "completion_tokens_details": {
+                "reasoning_tokens": 427,
+                "image_tokens": 0,
+                "audio_tokens": 0
+              }
+            },
+            "cost": 0.026452
+          }
+        },
+        {
+          "type": "judge_usage",
+          "data": {
+            "model": "anthropic/claude-opus-5.5",
+            "provider": "Claude Platform on AWS",
+            "latencyMs": 10773,
+            "usage": {
+              "prompt_tokens": 1618,
+              "completion_tokens": 905,
+              "total_tokens": 2523,
+              "cost": 0.024572,
+              "is_byok": false,
+              "prompt_tokens_details": {
+                "cached_tokens": 0,
+                "cache_write_tokens": 0,
+                "audio_tokens": 0,
+                "video_tokens": 0
+              },
+              "cost_details": {
+                "upstream_inference_cost": 0.024572,
+                "upstream_inference_prompt_cost": 0.006472,
+                "upstream_inference_completions_cost": 0.0181
+              },
+              "completion_tokens_details": {
+                "reasoning_tokens": 383,
+                "image_tokens": 0,
+                "audio_tokens": 0
+              }
+            },
+            "cost": 0.024572
+          }
+        }
+      ]
+    },
+    {
+      "caseId": "A3",
+      "name": "Two unambiguous misspellings resolve visibly",
+      "category": "Places",
+      "requirement": "Resolve the two clear misspellings and show Singapore and London in the reply.",
+      "model": "openai/gpt-6-sol",
+      "repeat": 1,
+      "pass": true,
+      "deterministicPass": true,
+      "communicationPass": true,
+      "steps": [
+        {
+          "input": "Singapor to Londn 1 oct",
+          "expected": {
+            "status": "results",
+            "origin": "SIN",
+            "destination": "LHR|LGW|LCY|STN|LTN",
+            "cabin": "business",
+            "from": "2026-10-01",
+            "to": "2026-10-01",
+            "posts": 1
+          },
+          "result": {
+            "status": "results",
+            "text": "SYNTHETIC FLIGHT DATA. These are example results.\n\nSingapore Changi Airport (SIN) → London (all airports)\nThu, 1 Oct 2026 · Business class (default) · One-way\n\nI found 3 options for you:\n\nA. Singapore Changi Airport (SIN) → London Heathrow Airport (LHR)\nThu, 1 Oct 2026\nBusiness · Nonstop · USD 1,113.00\nDeparture time unavailable\nArrival time unavailable\n\nB. Singapore Changi Airport (SIN) → London City Airport (LCY)\nThu, 1 Oct 2026\nBusiness · Nonstop · USD 1,273.00\nDeparture time unavailable\nArrival time unavailable\n\nC. Singapore Changi Airport (SIN) → London Gatwick Airport (LGW)\nThu, 1 Oct 2026\nBusiness · With a connection · USD 1,193.00\nDeparture time unavailable\nArrival time unavailable\n\nPrices are estimates and may change.\n\nMissing flight times and exact seat counts are not available.\n\nYou can ask me to change the dates, cabin or airport.\n\nTo pick a flight and check out, continue on CommonSwyft:\nhttps://commonswyft.com/search/SIN-LHR%7CLGW%7CLCY%7CSTN%7CLTN-011026-business",
+            "dataMode": "synthetic",
+            "query": {
+              "origin": "SIN",
+              "destination": "LHR|LGW|LCY|STN|LTN",
+              "dateFrom": "2026-09-30",
+              "dateTo": "2026-10-02",
+              "selectedDate": "2026-10-01",
+              "cabin": "business"
+            },
+            "shortlist": [
+              {
+                "id": "synthetic-SIN-LHR-2026-10-01-0",
+                "origin": "SIN",
+                "destination": "LHR",
+                "date": "2026-10-01",
+                "cabin": "business",
+                "priceUsd": 1113,
+                "direct": true,
+                "reasons": [],
+                "timing": {
+                  "departure": null,
+                  "arrival": null,
+                  "durationMinutes": null,
+                  "flightNumbers": null,
+                  "text": "Departure time unavailable\nArrival time unavailable"
+                },
+                "text": "Singapore Changi Airport (SIN) → London Heathrow Airport (LHR)\nThu, 1 Oct 2026\nBusiness · Nonstop · USD 1,113.00\nDeparture time unavailable\nArrival time unavailable"
+              },
+              {
+                "id": "synthetic-SIN-LCY-2026-10-01-2",
+                "origin": "SIN",
+                "destination": "LCY",
+                "date": "2026-10-01",
+                "cabin": "business",
+                "priceUsd": 1273,
+                "direct": true,
+                "reasons": [],
+                "timing": {
+                  "departure": null,
+                  "arrival": null,
+                  "durationMinutes": null,
+                  "flightNumbers": null,
+                  "text": "Departure time unavailable\nArrival time unavailable"
+                },
+                "text": "Singapore Changi Airport (SIN) → London City Airport (LCY)\nThu, 1 Oct 2026\nBusiness · Nonstop · USD 1,273.00\nDeparture time unavailable\nArrival time unavailable"
+              },
+              {
+                "id": "synthetic-SIN-LGW-2026-10-01-1",
+                "origin": "SIN",
+                "destination": "LGW",
+                "date": "2026-10-01",
+                "cabin": "business",
+                "priceUsd": 1193,
+                "direct": false,
+                "reasons": [],
+                "timing": {
+                  "departure": null,
+                  "arrival": null,
+                  "durationMinutes": null,
+                  "flightNumbers": null,
+                  "text": "Departure time unavailable\nArrival time unavailable"
+                },
+                "text": "Singapore Changi Airport (SIN) → London Gatwick Airport (LGW)\nThu, 1 Oct 2026\nBusiness · With a connection · USD 1,193.00\nDeparture time unavailable\nArrival time unavailable"
+              }
+            ],
+            "cached": false,
+            "totalFound": 9,
+            "matchingCount": 3
+          },
+          "latencyMs": 2712,
+          "grade": {
+            "pass": true,
+            "actual": {
+              "status": "results",
+              "origin": "SIN",
+              "destination": "LHR|LGW|LCY|STN|LTN",
+              "cabin": "business",
+              "from": "2026-10-01",
+              "to": "2026-10-01",
+              "budget": null,
+              "pending": null,
+              "menuCount": 0,
+              "posts": 1,
+              "resultCount": 3,
+              "sort": "recommended",
+              "nonstopOnly": false,
+              "sources": [],
+              "savedPreferences": {}
+            },
+            "checks": [
+              {
+                "name": "status",
+                "expected": "results",
+                "actual": "results",
+                "pass": true
+              },
+              {
+                "name": "origin",
+                "expected": "SIN",
+                "actual": "SIN",
+                "pass": true
+              },
+              {
+                "name": "destination",
+                "expected": "LHR|LGW|LCY|STN|LTN",
+                "actual": "LHR|LGW|LCY|STN|LTN",
+                "pass": true
+              },
+              {
+                "name": "cabin",
+                "expected": "business",
+                "actual": "business",
+                "pass": true
+              },
+              {
+                "name": "from",
+                "expected": "2026-10-01",
+                "actual": "2026-10-01",
+                "pass": true
+              },
+              {
+                "name": "to",
+                "expected": "2026-10-01",
+                "actual": "2026-10-01",
+                "pass": true
+              },
+              {
+                "name": "posts",
+                "expected": 1,
+                "actual": 1,
+                "pass": true
+              },
+              {
+                "name": "data source is labelled",
+                "pass": true
+              },
+              {
+                "name": "route matches saved preference",
+                "pass": true
+              },
+              {
+                "name": "each result respects route and budget",
+                "pass": true
+              },
+              {
+                "name": "Does not echo profanity or insult the user (limited lexical check)",
+                "pass": true
+              },
+              {
+                "name": "No claimed purchase completion",
+                "pass": true
+              }
+            ]
+          }
+        }
+      ],
+      "judge": {
+        "verdict": "pass",
+        "scores": {
+          "clarity": 4,
+          "concision": 4,
+          "tone": 5,
+          "nextStep": 5,
+          "limitationHonesty": 4,
+          "noInternalLeakage": 4
+        },
+        "rationale": "The reply correctly resolves 'Singapor' and 'Londn' to Singapore and London and shows both names clearly. It states the date, the default cabin and the trip type, and it lists the London airports searched. The options are easy to scan, and the reply gives clear next steps. The disclosure of missing data is tautological, and missing carrier information is never mentioned. These are minor problems.",
+        "strengths": [
+          "Both misspellings are resolved and shown as Singapore Changi Airport (SIN) and London (all airports).",
+          "The search summary states the date, the Business default and the one-way trip.",
+          "Each option shows missing departure and arrival times explicitly instead of leaving them blank.",
+          "The reply offers clear next steps: refine the search, or continue to checkout."
+        ],
+        "issues": [
+          {
+            "severity": "minor",
+            "criterion": "limitationHonesty",
+            "evidence": "\"Missing flight times and exact seat counts are not available.\" The sentence is redundant, and the absent carrier names are not disclosed.",
+            "recommendation": "Rephrase as 'Flight times, carriers and exact seat counts aren't available for these options.'"
+          },
+          {
+            "severity": "minor",
+            "criterion": "clarity",
+            "evidence": "The header says 'London (all airports)', but the reply does not explain that each spelling was interpreted.",
+            "recommendation": "Optionally add a short note such as 'Showing results for Singapore → London.' to confirm the correction."
+          },
+          {
+            "severity": "minor",
+            "criterion": "noInternalLeakage",
+            "evidence": "The checkout URL exposes a raw encoded query string (SIN-LHR%7CLGW%7CLCY%7CSTN%7CLTN-011026-business). It is not in approvedSourceUrls, although it reads as a customer-facing link.",
+            "recommendation": "Use a clean link label, or confirm the handoff domain is approved."
+          }
+        ],
+        "recommendedAction": "prompt"
+      },
+      "judgeAttempts": [
+        {
+          "verdict": "pass",
+          "scores": {
+            "clarity": 4,
+            "concision": 4,
+            "tone": 5,
+            "nextStep": 5,
+            "limitationHonesty": 4,
+            "noInternalLeakage": 4
+          },
+          "rationale": "The reply correctly resolves 'Singapor' and 'Londn' to Singapore and London and shows both names clearly. It states the date, the default cabin and the trip type, and it lists the London airports searched. The options are easy to scan, and the reply gives clear next steps. The disclosure of missing data is tautological, and missing carrier information is never mentioned. These are minor problems.",
+          "strengths": [
+            "Both misspellings are resolved and shown as Singapore Changi Airport (SIN) and London (all airports).",
+            "The search summary states the date, the Business default and the one-way trip.",
+            "Each option shows missing departure and arrival times explicitly instead of leaving them blank.",
+            "The reply offers clear next steps: refine the search, or continue to checkout."
+          ],
+          "issues": [
+            {
+              "severity": "minor",
+              "criterion": "limitationHonesty",
+              "evidence": "\"Missing flight times and exact seat counts are not available.\" The sentence is redundant, and the absent carrier names are not disclosed.",
+              "recommendation": "Rephrase as 'Flight times, carriers and exact seat counts aren't available for these options.'"
+            },
+            {
+              "severity": "minor",
+              "criterion": "clarity",
+              "evidence": "The header says 'London (all airports)', but the reply does not explain that each spelling was interpreted.",
+              "recommendation": "Optionally add a short note such as 'Showing results for Singapore → London.' to confirm the correction."
+            },
+            {
+              "severity": "minor",
+              "criterion": "noInternalLeakage",
+              "evidence": "The checkout URL exposes a raw encoded query string (SIN-LHR%7CLGW%7CLCY%7CSTN%7CLTN-011026-business). It is not in approvedSourceUrls, although it reads as a customer-facing link.",
+              "recommendation": "Use a clean link label, or confirm the handoff domain is approved."
+            }
+          ],
+          "recommendedAction": "prompt"
+        }
+      ],
+      "judgeConsensus": {
+        "passingVotes": 1,
+        "totalVotes": 1,
+        "verdicts": [
+          "pass"
+        ]
+      },
+      "events": [
+        {
+          "type": "model_usage",
+          "data": {
+            "model": "openai/gpt-6-sol",
+            "provider": "OpenAI",
+            "latencyMs": 2672,
+            "usage": {
+              "prompt_tokens": 2598,
+              "completion_tokens": 125,
+              "total_tokens": 2723,
+              "cost": 0.002024,
+              "is_byok": false,
+              "prompt_tokens_details": {
+                "cached_tokens": 2460,
+                "cache_write_tokens": 12,
+                "audio_tokens": 0,
+                "video_tokens": 0
+              },
+              "cost_details": {
+                "upstream_inference_cost": 0.002024,
+                "upstream_inference_prompt_cost": 0.000774,
+                "upstream_inference_completions_cost": 0.00125
+              },
+              "completion_tokens_details": {
+                "reasoning_tokens": 33,
+                "image_tokens": 0,
+                "audio_tokens": 0
+              }
+            },
+            "cost": 0.002024
+          }
+        },
+        {
+          "type": "tool_argument_repair",
+          "data": {
+            "fields": [
+              "cabin",
+              "cabinOnly",
+              "sort",
+              "nonstopOnly",
+              "maxPriceUsd",
+              "refresh"
+            ],
+            "reason": "removed default values the current request did not ask for"
+          }
+        },
+        {
+          "type": "tool_call",
+          "data": {
+            "name": "find_flights",
+            "arguments": {
+              "origin": "Singapor",
+              "destination": "Londn",
+              "dates": {
+                "mode": "exact",
+                "start": "2026-10-01",
+                "end": "",
+                "flex": 1,
+                "strict": false,
+                "options": []
+              },
+              "aside": ""
+            }
+          }
+        },
+        {
+          "type": "flight_api",
+          "data": {
+            "method": "POST",
+            "path": "/v1/flight-searches",
+            "body": {
+              "origin": "SIN",
+              "destination": "LHR|LGW|LCY|STN|LTN",
+              "dateFrom": "2026-09-30",
+              "dateTo": "2026-10-02",
+              "selectedDate": "2026-10-01",
+              "cabin": "business"
+            },
+            "mode": "synthetic"
+          }
+        },
+        {
+          "type": "flight_api",
+          "data": {
+            "method": "GET",
+            "path": "/v1/flight-searches/fixture-search-1",
+            "mode": "synthetic"
+          }
+        },
+        {
+          "type": "search_result",
+          "data": {
+            "query": {
+              "origin": "SIN",
+              "destination": "LHR|LGW|LCY|STN|LTN",
+              "dateFrom": "2026-09-30",
+              "dateTo": "2026-10-02",
+              "selectedDate": "2026-10-01",
+              "cabin": "business"
+            },
+            "cached": false,
+            "count": 9,
+            "searchId": "fixture-search-1"
+          }
+        },
+        {
+          "type": "judge_usage",
+          "data": {
+            "model": "anthropic/claude-opus-5.5",
+            "provider": "Claude Platform on AWS",
+            "latencyMs": 13017,
+            "usage": {
+              "prompt_tokens": 1926,
+              "completion_tokens": 1065,
+              "total_tokens": 2991,
+              "cost": 0.029004,
+              "is_byok": false,
+              "prompt_tokens_details": {
+                "cached_tokens": 0,
+                "cache_write_tokens": 0,
+                "audio_tokens": 0,
+                "video_tokens": 0
+              },
+              "cost_details": {
+                "upstream_inference_cost": 0.029004,
+                "upstream_inference_prompt_cost": 0.007704,
+                "upstream_inference_completions_cost": 0.0213
+              },
+              "completion_tokens_details": {
+                "reasoning_tokens": 385,
+                "image_tokens": 0,
+                "audio_tokens": 0
+              }
+            },
+            "cost": 0.029004
+          }
+        }
+      ]
+    }
+  ],
+  "limitations": [
+    "Held-out v2 cases were frozen before this first run. Known place-handling gaps were not fixed first.",
+    "One attempt per case does not establish reliability.",
+    "The judge reviews communication quality and can be wrong. Deterministic checks remain authoritative for facts and actions.",
+    "The judge receives blinded candidate output and no private reasoning.",
+    "The synthetic-inventory banner is retained in the report but removed from judge input because production does not show it.",
+    "Synthetic inventory is used. No booking, payment or live flight search occurs."
+  ],
+  "stopReason": {
+    "type": "provider_error",
+    "message": "Judge returned HTTP 402."
+  },
+  "completedAt": "2026-09-23T08:54:33.379Z",
+  "modelCallsAttempted": 11,
+  "actualCostUsd": 0.173612,
+  "conservativeReservedUsd": 0.36694800000000005,
+  "summary": [
+    {
+      "model": "openai/gpt-6-sol",
+      "passed": 2,
+      "total": 3,
+      "deterministicPassed": 3,
+      "judgePassed": 2,
+      "modelCalls": 3,
+      "judgeCalls": 5,
+      "cost": 0.173612
+    }
+  ]
+}

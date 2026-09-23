@@ -20,8 +20,20 @@ const one=(id,category,name,text,expected,requirement)=>({id,category,name,requi
 // the honest answer. Adding refund text to the snapshot would mean inventing
 // policy.
 //
+// A8 changed 2026-09-23: a clarifying question that names the same-city
+// problem is as correct as the application's overlap check. It missed 2 of 4
+// runs only because the model asked directly instead of calling the tool.
+//
+// D2 changed by product decision on 2026-09-23: stating a home airport saves
+// it, with no separate Save step. D4 (a cabin default) is still a proposal.
+//
 // G7 changed by product decision on 2026-09-23: the feed decides, so a stale
 // feed's past-dated deals are shown with their check date, not hidden.
+//
+// D1 changed by product decision on 2026-09-23. It asserted that a new
+// conversation must not reuse London from a closed search. The product now
+// remembers the last origin used, discloses it, and still forgets cabin,
+// dates and budget. The eval harness applies that memory between sessions.
 //
 // C1 changed by product decision on 2026-09-21. "Make it the 3rd", straight
 // after three lettered options, could mean 3 October or the third option. The
@@ -50,7 +62,7 @@ export const HARDENING_CASES_V2=[
  one('A5','Places','Two close place matches are clarified','fly me to Sidney',clarify({destination:null,pending:'destination',mentions:'(?=.*Sydney)(?=.*Sidney)'}),'Ask whether the traveler means Sydney in Australia or Sidney in the United States. Do not guess either.'),
  one('A6','Places','Ambiguous numeric date is clarified with trip retained','lhr-jfk 2/10 biz',clarify({origin:'LHR',destination:'JFK',cabin:'business',mentions:'2 October|10 February|date'}),'Ask one short date question and retain LHR, JFK and business class.'),
  {id:'A7',category:'Places',name:'Unsupported city is never silently replaced',requirement:'Search Paris to New York when supported. Otherwise state the Paris limitation plainly. Never substitute another origin.',steps:[{text:'Paris to New York on 1 October',expected:{outcomes:[{status:'results',origin:'CDG|ORY',destination:CITY_CODES['New York'],from:'2026-10-01',to:'2026-10-01',posts:1},{status:'clarify',posts:0,mentions:'Paris.*not supported|not supported.*Paris'}]}}]},
- one('A8','Places','Same origin and destination are clarified','Dubai to Dubai tomorrow',clarify({origin:CITY_CODES.Dubai,destination:CITY_CODES.Dubai,mentions:'same|different'}),'Point out that origin and destination are the same and ask for the intended route.'),
+ {id:'A8',category:'Places',name:'Same origin and destination are clarified',requirement:'Point out that origin and destination are the same and ask for the intended route. Either the application\'s own overlap check or a direct clarifying question is correct; no search runs.',steps:[{text:'Dubai to Dubai tomorrow',expected:{outcomes:[clarify({origin:CITY_CODES.Dubai,destination:CITY_CODES.Dubai,mentions:'same|different'}),{status:'clarify',posts:0,mentions:'(?=.*Dubai)(?=.*(same|both|different|departure and arrival|overlap))'}]}}]},
 
  one('B1','Missing information','No date uses the stated rolling window','London to New York',rolling(CITY_CODES.London,CITY_CODES['New York']),'Search the documented seven-day window, state the dates, use business class and invite a date change.'),
  one('B2','Missing information','Destination and cabin ask only for origin','I want to go to Dubai in business',clarify({destination:CITY_CODES.Dubai,cabin:'business',pending:'origin'}),'Keep Dubai and business class. Ask only where the traveler is flying from, without asking for a date.'),
@@ -71,8 +83,8 @@ export const HARDENING_CASES_V2=[
  // results still hold fares.
  {id:'C7',category:'Multi-turn state',name:'A budget that blocks a cabin is named as the blocker',requirement:'The premium fares in these results are above the stated budget, so say that the budget is what removes them and give the price they start at. Offer to raise or remove the budget. Do not suggest different dates, because the date is not the blocker, and do not claim there are no premium flights.',steps:[{text:'London to New York 3 Oct premium under 700',expected:{...exact(CITY_CODES.London,CITY_CODES['New York'],'2026-10-03','premium'),budget:700,mentions:'(?=.*[Bb]udget)(?=.*USD)'}}]},
 
- {id:'D1',category:'Cross-conversation context',name:'One-off trip details do not become memory',requirement:'A new conversation must not reuse London or economy from a closed one-off search.',sessions:[{steps:[{text:'London to New York economy',expected:rolling(CITY_CODES.London,CITY_CODES['New York'],'economy')}]},{steps:[{text:'to Singapore next week',expected:clarify({origin:null,destination:CITY_CODES.Singapore,pending:'origin',from:'2026-09-21',to:'2026-09-27'})}]}]},
- {id:'D2',category:'Cross-conversation context',name:'Confirmed home airport becomes a soft default',requirement:'Save Heathrow only after explicit application confirmation, then use it as a disclosed soft default in a new conversation.',sessions:[{steps:[{text:'save Heathrow as my home airport',expected:{status:'preferences',posts:0,proposedPreferences:{homeAirport:'LHR'}},saveProposed:true}]},{steps:[{text:'to Singapore next week',expected:{status:'results',origin:'LHR',destination:CITY_CODES.Singapore,from:'2026-09-21',to:'2026-09-27',posts:1,mentions:'Heathrow|LHR|home airport|saved'}}]}]},
+ {id:'D1',category:'Cross-conversation context',name:'Only the last origin carries over, disclosed',requirement:'A new conversation reuses London from the last search as a disclosed default and says so. It must not reuse economy or any other one-off detail from that search.',sessions:[{steps:[{text:'London to New York economy',expected:rolling(CITY_CODES.London,CITY_CODES['New York'],'economy')}]},{steps:[{text:'to Singapore next week',expected:{status:'results',origin:CITY_CODES.London,destination:CITY_CODES.Singapore,cabin:'business',from:'2026-09-21',to:'2026-09-27',posts:1,mentions:'last search'}}]}]},
+ {id:'D2',category:'Cross-conversation context',name:'A stated home airport is saved and becomes a disclosed default',requirement:'Saying Heathrow is the home airport saves it and the reply says so. A new conversation then uses it as a disclosed default.',sessions:[{steps:[{text:'save Heathrow as my home airport',expected:{status:'preferences',posts:0,savedPreferences:{homeAirport:'LHR'},mentions:'Saved London Heathrow'}}]},{steps:[{text:'to Singapore next week',expected:{status:'results',origin:'LHR',destination:CITY_CODES.Singapore,from:'2026-09-21',to:'2026-09-27',posts:1,mentions:'Heathrow|LHR|home airport|saved'}}]}]},
  {id:'D3',category:'Cross-conversation context',name:'Explicit trip origin overrides saved home airport',requirement:'Use Gatwick for this trip while keeping Heathrow as the saved home-airport preference.',initialPreferences:{homeAirport:'LHR'},sessions:[{steps:[{text:'from Gatwick to Singapore',expected:{...rolling('LGW',CITY_CODES.Singapore),savedPreferences:{homeAirport:'LHR'}}}]}]},
  {id:'D4',category:'Cross-conversation context',name:'Unconfirmed preference proposal is not saved',requirement:'Do not persist a proposed business preference without application confirmation and do not claim that it was saved.',sessions:[{steps:[{text:'remember I like business',expected:{status:'preferences',posts:0,proposedPreferences:{cabin:'business'}}}]},{steps:[{text:'London to New York',expected:{...rolling(CITY_CODES.London,CITY_CODES['New York']),savedPreferences:{}}}]}]},
 

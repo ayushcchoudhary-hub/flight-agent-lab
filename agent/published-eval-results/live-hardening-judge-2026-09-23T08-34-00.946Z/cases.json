@@ -1,0 +1,190 @@
+[
+  {
+    "id": "D1",
+    "category": "Cross-conversation context",
+    "name": "Only the last origin carries over, disclosed",
+    "requirement": "A new conversation reuses London from the last search as a disclosed default and says so. It must not reuse economy or any other one-off detail from that search.",
+    "sessions": [
+      {
+        "steps": [
+          {
+            "text": "London to New York economy",
+            "expected": {
+              "status": "results",
+              "origin": "LHR|LGW|LCY|STN|LTN",
+              "destination": "JFK|EWR|LGA",
+              "cabin": "economy",
+              "from": "2026-09-18",
+              "to": "2026-09-25",
+              "posts": 1
+            }
+          }
+        ]
+      },
+      {
+        "steps": [
+          {
+            "text": "to Singapore next week",
+            "expected": {
+              "status": "results",
+              "origin": "LHR|LGW|LCY|STN|LTN",
+              "destination": "SIN",
+              "cabin": "business",
+              "from": "2026-09-21",
+              "to": "2026-09-27",
+              "posts": 1,
+              "mentions": "last search"
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "D2",
+    "category": "Cross-conversation context",
+    "name": "A stated home airport is saved and becomes a disclosed default",
+    "requirement": "Saying Heathrow is the home airport saves it and the reply says so. A new conversation then uses it as a disclosed default.",
+    "sessions": [
+      {
+        "steps": [
+          {
+            "text": "save Heathrow as my home airport",
+            "expected": {
+              "status": "preferences",
+              "posts": 0,
+              "savedPreferences": {
+                "homeAirport": "LHR"
+              },
+              "mentions": "Saved London Heathrow"
+            }
+          }
+        ]
+      },
+      {
+        "steps": [
+          {
+            "text": "to Singapore next week",
+            "expected": {
+              "status": "results",
+              "origin": "LHR",
+              "destination": "SIN",
+              "from": "2026-09-21",
+              "to": "2026-09-27",
+              "posts": 1,
+              "mentions": "Heathrow|LHR|home airport|saved"
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "D3",
+    "category": "Cross-conversation context",
+    "name": "Explicit trip origin overrides saved home airport",
+    "requirement": "Use Gatwick for this trip while keeping Heathrow as the saved home-airport preference.",
+    "initialPreferences": {
+      "homeAirport": "LHR"
+    },
+    "sessions": [
+      {
+        "steps": [
+          {
+            "text": "from Gatwick to Singapore",
+            "expected": {
+              "status": "results",
+              "origin": "LGW",
+              "destination": "SIN",
+              "cabin": "business",
+              "from": "2026-09-18",
+              "to": "2026-09-25",
+              "posts": 1,
+              "savedPreferences": {
+                "homeAirport": "LHR"
+              }
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "D4",
+    "category": "Cross-conversation context",
+    "name": "Unconfirmed preference proposal is not saved",
+    "requirement": "Do not persist a proposed business preference without application confirmation and do not claim that it was saved.",
+    "sessions": [
+      {
+        "steps": [
+          {
+            "text": "remember I like business",
+            "expected": {
+              "status": "preferences",
+              "posts": 0,
+              "proposedPreferences": {
+                "cabin": "business"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "steps": [
+          {
+            "text": "London to New York",
+            "expected": {
+              "status": "results",
+              "origin": "LHR|LGW|LCY|STN|LTN",
+              "destination": "JFK|EWR|LGA",
+              "cabin": "business",
+              "from": "2026-09-18",
+              "to": "2026-09-25",
+              "posts": 1,
+              "savedPreferences": {}
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "D5",
+    "category": "Cross-conversation context",
+    "name": "A stated cabin is not labelled a default",
+    "requirement": "Search business class as asked and show the cabin as the traveler's choice. Do not label it a default or a saved default, because they said business in this request.",
+    "steps": [
+      {
+        "text": "London to New York 1 Oct in business",
+        "expected": {
+          "status": "results",
+          "origin": "LHR|LGW|LCY|STN|LTN",
+          "destination": "JFK|EWR|LGA",
+          "cabin": "business",
+          "from": "2026-10-01",
+          "to": "2026-10-01",
+          "posts": 1,
+          "mentions": "^(?!.*\\(default\\))"
+        }
+      }
+    ]
+  },
+  {
+    "id": "G7",
+    "category": "Discover",
+    "name": "A stale feed is shown as the feed returns it",
+    "requirement": "The deals feed is stale. Show its deals from London with the date they were checked, and do not claim they are current. The feed decides what is shown.",
+    "scenario": "deals-past",
+    "steps": [
+      {
+        "text": "take me anywhere from London",
+        "expected": {
+          "status": "deals",
+          "posts": 0,
+          "pending": "deal",
+          "mentions": "(?=.*deals from London)(?=.*checked 10 Sept)"
+        }
+      }
+    ]
+  }
+]
