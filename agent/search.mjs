@@ -288,6 +288,12 @@ export class SearchConversation {
   // travels with it: the traveler sees the live result, and is told when the
   // exact deal is no longer there.
   async chooseDeal(deal) {
+    // A deal dated before today cannot be searched on its own date. Search
+    // the same route from today and say so.
+    if (deal.date < this.today()) {
+      const result = await this.find({ origin: deal.origin, destination: deal.airport, dates: { mode: 'rolling' }, cabin: deal.cabin });
+      return result.status === 'results' ? { ...result, text: `That deal’s date has passed. Here’s the same route over the next 7 days.\n\n${result.text}` } : result;
+    }
     const result = await this.find({ origin: deal.origin, destination: deal.airport, dates: { mode: 'exact', start: deal.date }, cabin: deal.cabin });
     if (result.status !== 'results') return result;
     const stillThere = (result.shortlist ?? []).some(row => row.date === deal.date && row.destination === deal.airport);

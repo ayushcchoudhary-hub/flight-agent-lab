@@ -20,6 +20,9 @@ const one=(id,category,name,text,expected,requirement)=>({id,category,name,requi
 // the honest answer. Adding refund text to the snapshot would mean inventing
 // policy.
 //
+// G7 changed by product decision on 2026-09-23: the feed decides, so a stale
+// feed's past-dated deals are shown with their check date, not hidden.
+//
 // C1 changed by product decision on 2026-09-21. "Make it the 3rd", straight
 // after three lettered options, could mean 3 October or the third option. The
 // rule agreed for ambiguity is to ask rather than search on a guess, so the
@@ -105,7 +108,7 @@ export const HARDENING_CASES_V2=[
  {id:'G4',category:'Discover',name:'Choosing a deal runs a live search',requirement:'Show deals from New York, then search the second deal live on its exact route and date and show the CommonSwyft link. The deal list price is not presented as the live price.',steps:[{text:'take me anywhere from New York',expected:{status:'deals',posts:0,pending:'deal',mentions:'deals from New York'}},{text:'2',expected:{status:'results',origin:'JFK',destination:'BKK',from:'2026-09-20',to:'2026-09-20',posts:1,mentions:'commonswyft\\.com/search/JFK-BKK-200926-business'}}]},
  {id:'G5',category:'Discover',name:'A saved home airport sets the deals city and is disclosed',requirement:'Use the saved home airport, Heathrow, for deals from London, and say that the saved home airport was used.',initialPreferences:{homeAirport:'LHR'},steps:[{text:'take me anywhere',expected:{status:'deals',posts:0,pending:'deal',mentions:'(?=.*saved home airport)(?=.*deals from London)'}}]},
  {id:'G6',category:'Discover',name:'A filter the deals cannot apply is declined briefly',requirement:'Show deals from Paris and say in one short sentence that deals cannot be filtered by weather. Do not claim any destination is warm.',steps:[{text:'somewhere warm from Paris',expected:{status:'deals',posts:0,pending:'deal',mentions:'(?=.*deals from Paris)(?=.*weather)'}}]},
- {id:'G7',category:'Discover',name:'Nothing current is said plainly',requirement:'The deals feed has only past deals. Say there are no current deals from London and offer to search a destination. Show no list.',scenario:'deals-past',steps:[{text:'take me anywhere from London',expected:{status:'clarify',posts:0,pending:null,mentions:'have current deals from London'}}]},
+ {id:'G7',category:'Discover',name:'A stale feed is shown as the feed returns it',requirement:'The deals feed is stale. Show its deals from London with the date they were checked, and do not claim they are current. The feed decides what is shown.',scenario:'deals-past',steps:[{text:'take me anywhere from London',expected:{status:'deals',posts:0,pending:'deal',mentions:'(?=.*deals from London)(?=.*checked 10 Sept)'}}]},
  {id:'G8',category:'Discover',name:'A city without deals falls back honestly',requirement:'Say there are no deals from Aberdeen yet and show the best deals across departure cities instead, each naming its origin.',steps:[{text:'anywhere from Aberdeen',expected:{status:'deals',posts:0,pending:'deal',mentions:'(?=.*deals from Aberdeen yet)(?=.*across our departure cities)'}}]},
  {id:'G9',category:'Discover',name:'Other wording for the same request',requirement:'"Surprise me" with a stated origin is a request for deals from Tokyo.',steps:[{text:'surprise me, I’m flying out of Tokyo',expected:{status:'deals',posts:0,pending:'deal',mentions:'deals from Tokyo'}}]},
  {id:'G10',category:'Discover',name:'First class only when asked',requirement:'Show first class deals from Dubai, and only first class.',steps:[{text:'where can I go from Dubai in first class?',expected:{status:'deals',posts:0,pending:'deal',mentions:'first class deals from Dubai'}}]},

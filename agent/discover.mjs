@@ -6,7 +6,7 @@ import { readableDate } from './flight-details.mjs';
 
 export const EVERYWHERE = 'Everywhere';
 export const DEALS_SHOWN = 5;
-export const WELCOME_DEALS_SHOWN = 3;
+export const WELCOME_DEALS_SHOWN = 7;
 export const DEAL_FOOTNOTE = 'Deals can change or sell out quickly.';
 const CABIN_NAMES = { business: 'business class', first: 'first class' };
 const regionNames = (() => { try { return new Intl.DisplayNames(['en'], { type: 'region' }); } catch { return null; } })();
@@ -66,10 +66,12 @@ const matchesRegion = (deal, region) => {
   return [deal.region, deal.subRegion, deal.country, deal.city].some(v => v && v.toLowerCase().includes(want));
 };
 
-// Past-dated deals are dropped: they cannot be booked. Nothing else is cut;
-// the feed decides what is current.
-export function filterDeals(deals, { today, cabin = 'business', region = null, maxPriceUsd = null }) {
-  return deals.filter(deal => deal.date >= today && deal.cabin === cabin && matchesRegion(deal, region) && (maxPriceUsd === null || deal.priceUsd <= maxPriceUsd));
+// The feed decides what is current: product decision 2026-09-23. Deals are
+// shown in the feed's order even when dated in the past, which should only
+// happen on a stale staging feed. A past deal chosen by number is searched
+// from today instead (see SearchConversation.chooseDeal).
+export function filterDeals(deals, { cabin = 'business', region = null, maxPriceUsd = null } = {}) {
+  return deals.filter(deal => deal.cabin === cabin && matchesRegion(deal, region) && (maxPriceUsd === null || deal.priceUsd <= maxPriceUsd));
 }
 
 const shortDate = iso => { const [, month, day] = iso.split('-').map(Number); return `${day} ${['Jan', 'Feb', 'Mar', 'Apr', 'May', 'June', 'July', 'Aug', 'Sept', 'Oct', 'Nov', 'Dec'][month - 1]}`; };
@@ -100,7 +102,7 @@ export function renderDeals({ feed, deals, cabin = 'business', originCity = null
 
 export function renderWelcomeDeals({ feed, deals }) {
   return [
-    'Great deals this week',
+    'Top deals',
     deals.map((deal, i) => dealLines(deal, i, { showOrigin: true })).join('\n'),
     `Checked ${shortDate(feed.generatedAt)}. ${DEAL_FOOTNOTE} Reply with a number to search one.`,
   ].join('\n\n');

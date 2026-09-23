@@ -112,13 +112,24 @@ test('origin order: named now, then the current trip, then a saved home airport,
 });
 
 // ---- Honesty.
-test('past-dated deals are dropped, and a feed with nothing current says so without a list', async () => {
+test('deals are shown as the feed returns them, past-dated ones included', async () => {
+  // Product decision 2026-09-23: the feed decides. Past dates should only
+  // appear on a stale staging feed, and the check date says how old it is.
   const { c } = setup('deals-past');
   const reply = await c.discover({ origin: 'London' });
-  assert.equal(reply.status, 'clarify');
-  assert.match(reply.text, /don’t have current deals from London/);
-  assert.ok(!/^\d+\. /m.test(reply.text));
-  assert.equal(c.publicState().pending, null);
+  assert.equal(reply.status, 'deals');
+  assert.ok(listed(reply.text).length > 0);
+  assert.match(reply.text, /checked 10 Sept/);
+});
+
+test('choosing a past-dated deal searches that route from today, and says so', async () => {
+  const { adapter, c } = setup('deals-past');
+  await c.discover({ origin: 'London' });
+  const reply = await c.choose(1);
+  assert.equal(reply.status, 'results');
+  assert.match(reply.text, /^That deal’s date has passed\. Here’s the same route over the next 7 days\./);
+  assert.equal(c.publicState().dates.from, TODAY);
+  assert.equal(posts(adapter), 1);
 });
 
 test('an unpublished feed says so without a list', async () => {
@@ -208,19 +219,19 @@ test('the latest menu wins over an older deals menu', async () => {
 });
 
 // ---- The welcome.
-test('the welcome shows the top three business class deals across departure cities', async () => {
+test('the welcome shows the top seven business class deals across departure cities', async () => {
   const { c } = setup();
   const offer = await c.welcomeDeals();
-  assert.match(offer.text, /^Great deals this week/);
+  assert.match(offer.text, /^Top deals/);
   const rows = offer.text.split('\n').filter(line => /^\d+\. /.test(line));
-  assert.equal(rows.length, 3);
+  assert.equal(rows.length, 7);
   assert.ok(rows.every(line => / → /.test(line)));
-  assert.equal(offer.choices.length, 3);
+  assert.equal(offer.choices.length, 7);
 });
 
-test('the welcome has no deals section when the feed has nothing current', async () => {
-  assert.equal(await setup('deals-past').c.welcomeDeals(), null);
+test('the welcome has no deals section only when the feed is unavailable', async () => {
   assert.equal(await setup('deals-unavailable').c.welcomeDeals(), null);
+  assert.ok((await setup('deals-past').c.welcomeDeals()).text, 'a stale feed still shows its deals');
 });
 
 test('a welcome deal can be chosen by number once the chat starts', async () => {
@@ -346,11 +357,3 @@ test('the welcome is the agreed short copy', async () => {
 
 // Staging's deals were all past-dated on 2026-09-23, so the real follow-up
 // correctly shows nothing. A preview lets the layout be reviewed, labelled.
-test('sample deals appear only when previewed, and say they are samples', async () => {
-  const svc = createChatService({ stagingFactory: () => Object.assign(makeFixtureAdapter('deals-past'), { snapshots: [] }), modelFactory: async () => ({}),
-    preferenceStore: { label: 'test', read: async () => ({}), replace: async () => ({}) } });
-  assert.equal((await svc.welcomeDeals('staging-public')).text, null, 'nothing current, nothing shown');
-  const preview = await svc.welcomeDeals('staging-public', { preview: true });
-  assert.match(preview.text, /^SAMPLE DEALS for layout review\. These are not real prices\./);
-  assert.match(preview.text, /Great deals this week/);
-});
