@@ -249,3 +249,15 @@ test('held-out D2 is satisfiable: stating Heathrow saves it, the next conversati
     }
   }
 });
+
+test('held-out D4 with model-style nulls keeps the saved home airport', async () => {
+  const store = createMemoryStore(), id = visitor();
+  await store.touchVisitor(id); await store.rememberHome(id, 'LHR');
+  const nullModel = { complete: async () => ({ tool_calls: [{ id: 't', type: 'function', function: { name: 'travel_preferences', arguments: JSON.stringify({ action: 'propose', homeAirport: null, cabin: 'business', preferNonstop: null }) } }] }) };
+  const svc = createChatService({ conversationStore: store, homeAirportScope: 'visitor', stagingFactory: () => Object.assign(makeFixtureAdapter('normal'), { snapshots: [] }), modelFactory: async () => nullModel,
+    preferenceStore: { label: 'shared', read: async () => ({}), replace: async () => { throw new Error('never write the shared object'); } } });
+  const reply = (await svc.turn((await svc.start('staging-public', undefined, undefined, null, id)).id, 'remember I like business')).result;
+  await svc.settle();
+  assert.ok(!/Removed/.test(reply.text));
+  assert.equal((await store.memory(id)).homeOrigin, 'LHR');
+});

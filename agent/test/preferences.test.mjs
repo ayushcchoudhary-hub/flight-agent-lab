@@ -21,7 +21,7 @@ test('new chat sessions reload saved defaults while existing trips stay unchange
 });
 
 // Changed 2026-09-23: a city is a valid home (all its airports); an ambiguous place is asked about, never guessed.
-test('airport names and cities save as home, an ambiguous place is asked about',()=>{assert.equal(preferenceAction({action:'propose',homeAirport:'Heathrow'},{}).savedPreferences.homeAirport,'LHR');assert.equal(preferenceAction({action:'propose',homeAirport:'London'},{}).savedPreferences.homeAirport,'LHR|LGW|LCY|STN|LTN');const q=preferenceAction({action:'propose',homeAirport:'Sydney'},{});assert.equal(q.status,'clarify');assert.equal(q.savedPreferences,undefined);assert.deepEqual(preferenceAction({action:'propose',homeAirport:null},{homeAirport:'LHR'}).savedPreferences,{homeAirport:null});});
+test('airport names and cities save as home, an ambiguous place is asked about',()=>{assert.equal(preferenceAction({action:'propose',homeAirport:'Heathrow'},{}).savedPreferences.homeAirport,'LHR');assert.equal(preferenceAction({action:'propose',homeAirport:'London'},{}).savedPreferences.homeAirport,'LHR|LGW|LCY|STN|LTN');const q=preferenceAction({action:'propose',homeAirport:'Sydney'},{});assert.equal(q.status,'clarify');assert.equal(q.savedPreferences,undefined);assert.deepEqual(preferenceAction({action:'propose',forget:['homeAirport']},{homeAirport:'LHR'}).savedPreferences,{homeAirport:null});});
 
 test('authenticated development backend persists preferences and isolates two users',async()=>{
  const dir=await mkdtemp(join(tmpdir(),'flight-account-prefs-')),dataFile=join(dir,'accounts.json'),accounts=new Map([['token-a','user-a'],['token-b','user-b']]);
@@ -82,4 +82,18 @@ test('a cabin resent with no cabin wording stays a saved default',()=>{
  // A synonym states a cabin as plainly as the canonical name.
  const synonym=repairExplicitToolArguments('coach is fine','find_flights',{cabin:'economy'},()=>{},trip);
  assert.equal(synonym.cabin,'economy','a stated cabin survives even when it repeats the saved one');
+});
+
+// Held-out D4 (2026-09-23): "remember I like business" arrived with
+// homeAirport:null, which used to mean forget, and wiped the saved home.
+test('a null or empty field never forgets a saved default; only an explicit forget does',()=>{
+ const saved={homeAirport:'LHR',preferNonstop:true};
+ for(const args of [{action:'propose',homeAirport:null,cabin:'business',preferNonstop:null},{action:'propose',homeAirport:'',cabin:'business',preferNonstop:''}]){
+  const r=preferenceAction(args,saved);
+  assert.equal(r.savedPreferences,undefined,'nothing saved or removed');
+  assert.deepEqual(r.proposedPreferences,{homeAirport:'LHR',preferNonstop:true,cabin:'business'});
+  assert.ok(!/Removed/.test(r.text));
+ }
+ assert.deepEqual(preferenceAction({action:'propose',forget:['cabin']},{cabin:'economy'}).proposedPreferences,{});
+ assert.throws(()=>preferenceAction({action:'propose',forget:['everything']},{}));
 });
