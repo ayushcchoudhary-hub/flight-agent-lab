@@ -108,8 +108,20 @@ function namesPlace(text,place){
   const words=[place?.code,...String(place?.label??'').split(/[^A-Za-z]+/)].filter(word=>word&&word.length>2&&!GENERIC_PLACE_WORDS.has(word.toLowerCase()));
   return words.some(word=>new RegExp(`\\b${word}\\b`,'i').test(text));
 }
+function dropCopiedHome(text,args,trip,trace){
+  if(trip?.originFromPreference&&typeof args.origin==='string'&&args.origin.trim()){
+    const match=resolveLocation(args.origin);
+    if(match.length===1&&match[0].code===trip.origin?.code&&!namesPlace(text,trip.origin)){delete args.origin;trace('tool_argument_repair',{fields:['origin'],reason:'removed default values the current request did not ask for'});}
+  }
+  return args;
+}
 export function repairExplicitToolArguments(text,name,args,trace=()=>{},trip=null) {
-  if(name!=='find_flights'||!args||Array.isArray(args))return args;
+  if(!args||Array.isArray(args)||typeof args!=='object')return args;
+  // discover_flights has the same copied-home hazard as find_flights:
+  // held-out G5 sent origin "LHR" from the prompt, and the deals reply lost
+  // its "saved home airport" disclosure.
+  if(name==='discover_flights')return dropCopiedHome(text,{...args},trip,trace);
+  if(name!=='find_flights')return args;
   const repaired={...args},removed=[],unverified=[],invented=[];
   for(const [field,pattern] of Object.entries(WORDING)){
     if(!(field in repaired)||pattern.test(text))continue;
@@ -124,6 +136,10 @@ export function repairExplicitToolArguments(text,name,args,trace=()=>{},trip=nul
     // day. Answering an open date menu is the exception: "the first one" there
     // is a date answer with no date words in it.
     else if(field==='dates'&&trip?.pending?.field!=='dates'){delete repaired.dates;invented.push('dates');}
+    // A cabin in a request with no cabin wording at all is invented, like a
+    // date. Held-out C1: "Gatwick only" arrived with cabin "any". Synonyms such
+    // as "coach" count as cabin wording, so they are kept.
+    else if(field==='cabin'&&!CABIN_WORDING.test(text)){delete repaired.cabin;invented.push('cabin');}
     else unverified.push(field);
   }
   // A saved home airport reaches the prompt, so the model can copy it into the
@@ -135,7 +151,7 @@ export function repairExplicitToolArguments(text,name,args,trace=()=>{},trip=nul
     if(match.length===1&&match[0].code===trip.origin?.code&&!namesPlace(text,trip.origin)){delete repaired.origin;removed.push('origin');}
   }
   if(removed.length)trace('tool_argument_repair',{fields:removed,reason:'removed default values the current request did not ask for'});
-  if(invented.length)trace('tool_argument_repair',{fields:invented,reason:'removed a date the current request did not mention'});
+  if(invented.length)trace('tool_argument_repair',{fields:invented,reason:'removed a value the current request did not mention'});
   if(unverified.length)trace('tool_argument_unverified',{fields:unverified,reason:'kept a non-default value with no matching wording in the current request'});
   if(repaired.dates||/\b(return|returning|round[ -]?trip)\b/i.test(text))return repaired;
   const dates=[...new Set([...(text.match(/\b\d{4}-\d{2}-\d{2}\b/g)??[]).filter(validDate),explicitNamedDate(text)].filter(Boolean))];

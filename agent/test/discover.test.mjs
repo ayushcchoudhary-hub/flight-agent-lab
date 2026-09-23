@@ -323,14 +323,15 @@ for (const item of HARDENING_CASES_V2.filter(c => c.category === 'Discover')) {
 // aside ""), and validation rejected the zero budget. The reference replay
 // above missed it because its calls were written the way a person would.
 // These replay the calls the way the model actually sends them.
-const modelStyle = intended => ({ origin: '', cabin: 'business', region: '', maxPriceUsd: 0, aside: '', ...intended });
+// G5 as the model actually sent it: the saved home airport copied in as origin.
+const modelStyle = (intended, item) => ({ origin: item?.initialPreferences?.homeAirport ?? '', cabin: 'business', region: '', maxPriceUsd: 0, aside: '', ...intended });
 for (const item of HARDENING_CASES_V2.filter(c => c.category === 'Discover')) {
   test(`held-out ${item.id} passes when the model fills every field`, async () => {
     const adapter = makeFixtureAdapter(item.scenario ?? 'normal');
     const conversation = new SearchConversation({ adapter, today: () => HARDENING_V2_CLOCK });
     const preferences = { ...(item.initialPreferences ?? {}) };
     applyPreferences(conversation, preferences);
-    const model = { complete: async messages => ({ tool_calls: [{ id: 'ref', type: 'function', function: { name: 'discover_flights', arguments: JSON.stringify(modelStyle(INTENDED[messages.at(-1).content])) } }] }) };
+    const model = { complete: async messages => ({ tool_calls: [{ id: 'ref', type: 'function', function: { name: 'discover_flights', arguments: JSON.stringify(modelStyle(INTENDED[messages.at(-1).content], item)) } }] }) };
     const agent = new Agent({ conversation, model, preferences });
     for (const step of item.steps) {
       const result = await agent.respond(step.text);

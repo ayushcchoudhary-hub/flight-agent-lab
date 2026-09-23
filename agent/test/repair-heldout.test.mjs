@@ -78,7 +78,7 @@ test('a date the request never mentions is removed',()=>{
   const events=[];
   const out=repairExplicitToolArguments('nonstop only','find_flights',{dates:{mode:'exact',start:'2026-09-24'},nonstopOnly:true},(type,data)=>events.push({type,data}),WEEK);
   assert.deepEqual(out,{nonstopOnly:true});
-  assert.ok(events.some(e=>e.data.reason==='removed a date the current request did not mention'));
+  assert.ok(events.some(e=>e.data.reason==='removed a value the current request did not mention'));
 });
 
 test('any time expression counts as date wording',()=>{
@@ -104,4 +104,22 @@ test('a home airport the traveler names is theirs',()=>{
   for(const text of ['from Heathrow to Singapore','LHR to Singapore','London to Singapore']){
     assert.ok('origin' in repairExplicitToolArguments(text,'find_flights',{origin:'LHR',destination:'Singapore'},()=>{},HOME),`${text} names the origin`);
   }
+});
+
+// Held-out C1, 2026-09-23 head-to-head: "Gatwick only" arrived with cabin
+// "any" and the search widened to every cabin.
+test('a cabin the request never mentions is removed; a cabin synonym is kept',()=>{
+  const trip={cabin:'economy',dates:{from:'2026-10-01',to:'2026-10-01'}};
+  assert.equal('cabin' in repairExplicitToolArguments('Gatwick only','find_flights',{origin:'Gatwick',cabin:'any'},()=>{},trip),false);
+  assert.equal(repairExplicitToolArguments('coach is fine','find_flights',{cabin:'economy'},()=>{},{cabin:'business'}).cabin,'economy');
+  assert.equal(repairExplicitToolArguments('any cabin is fine','find_flights',{cabin:'any'},()=>{},trip).cabin,'any');
+});
+
+// Held-out G5: discover_flights received the saved home "LHR" copied from the
+// prompt, so the deals reply never said the saved home airport was used.
+test('a home airport copied into discover_flights stays a default',()=>{
+  const trip={originFromPreference:true,origin:{code:'LHR',label:'London Heathrow Airport (LHR)'}};
+  assert.equal('origin' in repairExplicitToolArguments('take me anywhere','discover_flights',{origin:'LHR',cabin:'business',region:''},()=>{},trip),false);
+  assert.equal(repairExplicitToolArguments('take me anywhere from Heathrow','discover_flights',{origin:'LHR'},()=>{},trip).origin,'LHR');
+  assert.equal(repairExplicitToolArguments('take me anywhere from Tokyo','discover_flights',{origin:'Tokyo'},()=>{},trip).origin,'Tokyo');
 });
