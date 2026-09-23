@@ -133,27 +133,45 @@ function recoverPlace(text,value){
   }
   return value;
 }
-function recoverPlaces(text,args,fields,trace){
-  const recovered=fields.filter(field=>{const fixed=recoverPlace(text,args[field]);if(fixed===args[field])return false;args[field]=fixed;return true;});
-  if(recovered.length)trace('tool_argument_repair',{fields:recovered,reason:'recovered a place name from the traveler’s own words'});
+function recoverPlaces(args,places,trace){
+  for(const [field,value] of Object.entries(places))args[field]=value;
+  if(Object.keys(places).length)trace('tool_argument_repair',{fields:Object.keys(places),reason:'recovered a place name from the traveler’s own words'});
 }
 // Every amount in the request, so a budget can be checked against it: "700",
 // "$2,500", "1.2k".
 const amountsIn=text=>[...text.matchAll(/(\d[\d,]*(?:\.\d+)?)\s*(k)?\b/gi)].map(([,n,k])=>Math.round(Number(n.replace(/,/g,''))*(k?1000:1)));
 const wordsOf=value=>String(value).toLowerCase().normalize('NFD').replace(/[^a-z]+/g,' ').trim().split(' ').filter(word=>word.length>2&&word!=='the');
+// Which values in a tool call the traveler never said. The repair layer drops
+// or recovers them, and the eval pages count them per model: a guard keeps the
+// reply right, but the model still made the value up, and that matters when
+// choosing a model.
+//
 // discover_flights narrows deals only by what the traveler said. Held-out
 // G2, G6, G7 and G8 (GPT-6 Sol): "I’m in London, take me anywhere" arrived with
 // region Europe and a USD 1,000 budget; "somewhere warm" with region "warm";
-// another with budget 1 and aside "hidden". Each became a filter or a line of
-// customer copy.
+// another with budget 1 and aside "hidden". Held-out G9 (Terra): "surprise me,
+// I’m flying out of Tokyo" asked for economy deals.
+export function unsupportedArguments(text,name,args){
+  const invented=[],places={};
+  if(!args||Array.isArray(args)||typeof args!=='object')return {invented,places};
+  if(name==='discover_flights'){
+    const said=new Set(wordsOf(text));
+    if(typeof args.region==='string'&&args.region.trim()&&!(namesRegion(args.region)&&wordsOf(args.region).every(word=>said.has(word))))invented.push('region');
+    if(typeof args.maxPriceUsd==='number'&&args.maxPriceUsd>0&&!amountsIn(text).includes(args.maxPriceUsd))invented.push('maxPriceUsd');
+    // An aside is a sentence for the traveler; a single stray word is not.
+    if(typeof args.aside==='string'&&args.aside.trim()&&args.aside.trim().split(/\s+/).length<3)invented.push('aside');
+    // Business is the deals default, so only another cabin needs the words.
+    if(typeof args.cabin==='string'&&args.cabin.trim()&&args.cabin!=='business'&&!CABIN_WORDING.test(text))invented.push('cabin');
+  }
+  const placeFields=name==='discover_flights'?['origin']:name==='find_flights'?['origin','destination']:[];
+  for(const field of placeFields){const fixed=recoverPlace(text,args[field]);if(fixed!==args[field])places[field]=fixed;}
+  return {invented,places};
+}
 function groundDiscover(text,args,trace){
-  const dropped=[],said=new Set(wordsOf(text));
-  if(typeof args.region==='string'&&args.region.trim()&&!(namesRegion(args.region)&&wordsOf(args.region).every(word=>said.has(word)))){delete args.region;dropped.push('region');}
-  if(typeof args.maxPriceUsd==='number'&&args.maxPriceUsd>0&&!amountsIn(text).includes(args.maxPriceUsd)){delete args.maxPriceUsd;dropped.push('maxPriceUsd');}
-  // An aside is a sentence for the traveler; a single stray word is not.
-  if(typeof args.aside==='string'&&args.aside.trim()&&args.aside.trim().split(/\s+/).length<3){delete args.aside;dropped.push('aside');}
-  if(dropped.length)trace('tool_argument_repair',{fields:dropped,reason:'removed a value the current request did not mention'});
-  recoverPlaces(text,args,['origin'],trace);
+  const {invented,places}=unsupportedArguments(text,'discover_flights',args);
+  for(const field of invented)delete args[field];
+  if(invented.length)trace('tool_argument_repair',{fields:invented,reason:'removed a value the current request did not mention'});
+  recoverPlaces(args,places,trace);
   return args;
 }
 export function repairExplicitToolArguments(text,name,args,trace=()=>{},trip=null) {
@@ -164,7 +182,7 @@ export function repairExplicitToolArguments(text,name,args,trace=()=>{},trip=nul
   if(name==='discover_flights')return groundDiscover(text,dropCopiedHome(text,{...args},trip,trace),trace);
   if(name!=='find_flights')return args;
   const repaired={...args},removed=[],unverified=[],invented=[];
-  recoverPlaces(text,repaired,['origin','destination'],trace);
+  recoverPlaces(repaired,unsupportedArguments(text,'find_flights',repaired).places,trace);
   for(const [field,pattern] of Object.entries(WORDING)){
     if(!(field in repaired)||pattern.test(text))continue;
     if(isDefaultValue(field,repaired[field])){delete repaired[field];removed.push(field);}

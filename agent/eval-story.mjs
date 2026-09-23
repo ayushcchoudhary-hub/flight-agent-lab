@@ -6,6 +6,7 @@
 import { existsSync } from 'node:fs';
 import { readFile, readdir } from 'node:fs/promises';
 import { join } from 'node:path';
+import { unsupportedArguments } from './model.mjs';
 
 const RUN = /^live-hardening-judge-[\w.-]+$/;
 // A run interrupted by a provider error and finished with the remaining cases
@@ -16,6 +17,28 @@ export const runKey = entry => partsOf(entry).join('+');
 export const isRunKey = value => typeof value === 'string' && value.length < 400 && value.split('+').every(part => /^live-[\w.-]+$/.test(part));
 const median = xs => { const a = [...xs].sort((x, y) => x - y); return a.length ? (a[Math.floor((a.length - 1) / 2)] + a[Math.ceil((a.length - 1) / 2)]) / 2 : null; };
 const outcome = row => row.pass ? 'pass' : row.deterministicPass ? 'judge' : 'exact';
+
+// Values the model put in a tool call that the traveler never said. A guard
+// that catches one keeps the reply right, so the case can still pass, but the
+// model made it up, and that is worth seeing when choosing a model. Two
+// sources: the guard's own trace, and, for runs recorded before a guard
+// existed, the recorded tool calls checked against everything the traveler
+// typed in that case (a generous check, so it undercounts rather than
+// overcounts). Dates are left out: a follow-up often resends the trip's dates
+// in another form ("next week" as a mode), which the date guard drops but
+// which is not an invention.
+const MADE_UP = /did not mention|recovered a place/;
+export function madeUpValues(row) {
+  const fields = [];
+  for (const e of row.events) if (e.type === 'tool_argument_repair' && MADE_UP.test(e.data?.reason ?? '')) fields.push(...(e.data.fields ?? [e.data.field]).filter(Boolean));
+  const said = row.steps.map(step => step.input ?? '').join('\n');
+  for (const e of row.events) {
+    if (e.type !== 'tool_call') continue;
+    const { invented, places } = unsupportedArguments(said, e.data?.name, e.data?.arguments);
+    fields.push(...invented, ...Object.keys(places));
+  }
+  return fields.filter(field => field !== 'dates');
+}
 
 // The container copies published-eval-results to eval-results. Locally the
 // raw eval-results folder holds unpublished runs too, so read the story from
@@ -44,6 +67,7 @@ export function summarizeRun(run, report, cases) {
     medianCallMs: median(usage.map(u => u.latencyMs).filter(Number.isFinite)),
     candidateCostUsd, judgeCostUsd: cost(judgeUsage), turns,
     costPer1000TurnsUsd: turns ? candidateCostUsd / turns * 1000 : null,
+    madeUp: rows.map(r => ({ id: r.caseId, fields: madeUpValues(r) })).filter(x => x.fields.length),
     outcomes: Object.fromEntries(rows.map(r => [r.caseId, outcome(r)])),
     names: Object.fromEntries(cases.map(c => [c.id, c.name])),
   };

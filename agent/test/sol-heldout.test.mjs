@@ -130,3 +130,31 @@ test('C2: a general refund question gets a pre-booking handoff', () => {
   assert.match(general, /before you book/);
   assert.match(renderPolicyAnswer({ answer: '', citations: [], needsSupport: true }, evidence, 'Is my ticket refundable?').text, /booking reference/);
 });
+
+// ---- Made-up values are guarded and counted, not hidden.
+
+test('G9 (Terra): a cabin nobody mentioned is dropped from a deals request', async () => {
+  const { c } = setup();
+  const r = await say(c, 'surprise me, I’m flying out of Tokyo', 'discover_flights', { origin: 'Tokyo', cabin: 'economy', region: '', maxPriceUsd: 0, aside: '' });
+  assert.equal(r.status, 'deals');
+  assert.match(r.text, /business class deals from Tokyo/);
+});
+
+test('made-up values are counted per case even when a guard caught them', async () => {
+  const { madeUpValues } = await import('../eval-story.mjs');
+  const row = (input, events) => ({ steps: [{ input }], events });
+  // Recorded before the guard existed: found by checking the tool call itself.
+  assert.deepEqual(madeUpValues(row('I’m in London, take me anywhere', [{ type: 'tool_call', data: { name: 'discover_flights', arguments: { origin: 'London', region: 'Europe', maxPriceUsd: 1000 } } }])), ['region', 'maxPriceUsd']);
+  // Recorded after: the call is already clean, so the guard's trace is counted.
+  assert.deepEqual(madeUpValues(row('from Gatwick to Singapore', [
+    { type: 'tool_argument_repair', data: { fields: ['destination'], reason: 'recovered a place name from the traveler’s own words' } },
+    { type: 'tool_call', data: { name: 'find_flights', arguments: { origin: 'Gatwick', destination: 'Singapore' } } },
+  ])), ['destination']);
+  // Dropped defaults and resent dates are not inventions.
+  assert.deepEqual(madeUpValues(row('Gatwick only', [
+    { type: 'tool_argument_repair', data: { fields: ['cabin', 'sort'], reason: 'removed default values the current request did not ask for' } },
+    { type: 'tool_argument_repair', data: { fields: ['dates'], reason: 'removed a value the current request did not mention' } },
+  ])), []);
+  // A clean call from the traveler's own words counts nothing.
+  assert.deepEqual(madeUpValues(row('deals in Japan from London', [{ type: 'tool_call', data: { name: 'discover_flights', arguments: { origin: 'London', region: 'Japan' } } }])), []);
+});
