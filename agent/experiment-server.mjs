@@ -132,7 +132,9 @@ const server=http.createServer(async(req,res)=>{
   if(req.method!=='POST')return send(res,405,{error:'Method unavailable.'});
   if(req.headers.origin!==originFor(req)||req.headers['content-type']!=='application/json')return send(res,403,{error:'Send requests from the experiment page.'});
   const input=await readJson(req,res);if(!input)return;
-  if(url.pathname==='/api/chat/start'){const settings=hostedModelSettings(input.model??defaultSettings.model);return send(res,200,await chat.start('staging-public',settings.model,settings.effort));}
+  if(url.pathname==='/api/chat/welcome')return send(res,200,await chat.welcome('staging-public'));
+  if(url.pathname==='/api/chat/deals')return send(res,200,await chat.welcomeDeals('staging-public'));
+  if(url.pathname==='/api/chat/start'){const settings=hostedModelSettings(input.model??defaultSettings.model);return send(res,200,await chat.start('staging-public',settings.model,settings.effort,typeof input.welcomeKey==='string'?input.welcomeKey.slice(0,300):null));}
   if(url.pathname==='/api/chat/turn')return send(res,200,await chat.turn(input.id,input.text));
   if(url.pathname==='/api/chat/close')return send(res,200,chat.close(input.id));
   return send(res,404,{error:'Not found.'});

@@ -19,6 +19,13 @@ starts a new baseline version.
   in the repository policy snapshot, with validated citations.
 - A support handoff when the reference material cannot safely answer a relevant
   policy question.
+- “Take me anywhere” (added 22 September 2026): ranked business and first
+  class deals from the product's public deals feed, for a stated city, the
+  current trip's origin, a saved home airport, or every departure city.
+  Choosing a deal runs a normal live search. Deals are shown only as the feed
+  provides them, with the date they were checked.
+- A link from every results reply to the same search on CommonSwyft, where
+  selection and checkout happen.
 - Explicit saved defaults for home airport, usual cabin, and a soft preference
   for nonstop flights. A proposed change is saved only after user action.
 - Professional handling of frustration, prompt injection, unrelated requests,
@@ -28,14 +35,22 @@ starts a new baseline version.
 
 ## Deliberately unsupported
 
-- Round trip, multi-city, multiple travelers, and “take me anywhere.”
-- Booking, checkout, payment, cancellation, or any other consequential action.
+- Round trip, multi-city and multiple travelers.
+- Booking, payment, cancellation, or any other consequential action in the chat.
+  Checkout happens on CommonSwyft through the results link.
 - Ticket-specific refundability or booking lookup.
 - Baggage guarantees, airline exclusions, or constraints absent from the search
   API contract.
 - Automatic preference inference from location or search history.
 - Production inventory, production deployment, WhatsApp delivery, or a
   deployed account-backed preference connection.
+
+## Scope changes after the freeze
+
+Each is recorded here with its date and the held-out cases that pin it.
+
+- 22 September 2026: “take me anywhere” moved into scope. Held-out cases
+  G1–G11. Prompt contract `flight-search-v1.6.0`.
 
 ## Baseline rule
 

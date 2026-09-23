@@ -56,6 +56,15 @@ information into this repository or the evaluation suite. Low traffic is
 qualitative evidence. It should shape hypotheses, not produce false statistical
 confidence.
 
+## Destination discovery
+
+“Take me anywhere” reuses the product's public deals feed rather than asking
+the model for ideas. The agent shows only deals the feed contains, with the
+date they were checked, and turns a chosen deal into a normal live search, so
+the checkout path is the same as any other search. It depends on the product
+publishing current deals; with nothing current, the agent says so and offers
+a normal search.
+
 ## Decision order
 
 1. Keep Terra medium as the default and harden the search-only contract.

@@ -16,11 +16,33 @@ export async function connectionStatus() {
 const defaultModelFactory=(trace,settings)=>new OpenRouterModel({apiKey:process.env.OPENROUTER_API_KEY,model:settings.model,reasoningEffort:settings.effort,maxCalls:15,trace});
 export function createChatService({modelFactory=defaultModelFactory,capturesLoader=loadCaptures,status=connectionStatus,stagingFactory=makeStagingAdapter,preferenceStore=localPreferenceStore(),modelOptions=HOSTED_MODEL_OPTIONS,settingsFor=hostedModelSettings,defaultModel='openai/gpt-5.6-terra',defaultEffort='medium',maxTotalTurns=40,maxSessions=8,maxSessionTurns=15,idleMs=3600000}={}) {
  const sessions=new Map();let turns=0,active=false;
+ // Deals shown on a welcome, by key, so the conversation that starts next can
+ // answer "1" with the same deal the traveler saw. Short-lived and bounded.
+ const welcomeOffers=new Map(),OFFER_MS=15*60*1000;
+ const pruneOffers=()=>{for(const [k,v] of welcomeOffers)if(Date.now()-v.at>OFFER_MS)welcomeOffers.delete(k);while(welcomeOffers.size>100)welcomeOffers.delete(welcomeOffers.keys().next().value);};
+ const welcomeText=(mode,preferences)=>{const savedLabels=[
+   preferences.homeAirport ? 'Home airport: '+fullAirport(preferences.homeAirport) : null,
+   preferences.cabin ? {economy:'Economy',premium_economy:'Premium economy',business:'Business class',first:'First class'}[preferences.cabin] : null,
+   preferences.preferNonstop===true ? 'Prefer nonstop flights' : preferences.preferNonstop===false ? 'Open to connecting flights' : null,
+  ].filter(Boolean);
+  return welcomeFor(mode==='staging-public'?'staging':mode)+(savedLabels.length?'\n\nYour saved preferences: '+savedLabels.join(' · ')+'.':'');};
  const prune=()=>{for(const [id,s] of sessions)if(!s.busy&&Date.now()-s.updated>idleMs)sessions.delete(id);};
  return {
  async status(){const captures=await capturesLoader(),defaults=settingsFor(defaultModel,defaultEffort);return {preferences:await preferenceStore.read(),preferenceProfile:preferenceStore.label,live:await status(),publicSearch:{available:true,verifiedAt:'2026-09-19',accountLinked:false},models:modelOptions,model:defaults.model,label:defaults.label,effort:defaults.effort,remainingTurns:Math.max(0,maxTotalTurns-turns),replay:{available:captures.length>0,clock:captures.at(-1)?.clock,examples:[...new Set(captures.map(c=>c.input))].filter(x=>typeof x==='string'&&/ to /i.test(x))}};},
  async savePreferences(p){if(active)throw Error('Wait for the current reply before saving defaults.');const saved=await preferenceStore.replace(p);for(const s of sessions.values())s.agent.preferences=saved;return {preferences:saved,profile:preferenceStore.label};},
- async start(mode,model=defaultModel,effort=defaultEffort){
+ // The welcome, before any chat exists, so the page can show it at once.
+ async welcome(mode){if(!['staging','staging-public','replay'].includes(mode))throw new Error('Choose live staging or recorded staging.');return {text:welcomeText(mode,await preferenceStore.read())};},
+ // "Great deals this week", fetched separately so a slow or failed deals feed
+ // never delays or breaks the welcome. Null text means show nothing.
+ async welcomeDeals(mode){
+  if(mode!=='staging-public'&&mode!=='staging')return {text:null};
+  const trace=()=>{},adapter=stagingFactory({trace,maxSearches:0,authMode:'public'});
+  const offer=await new SearchConversation({adapter,today:()=>isoToday(),trace}).welcomeDeals();
+  if(!offer)return {text:null};
+  pruneOffers();welcomeOffers.set(offer.key,{choices:offer.choices,at:Date.now()});
+  return {text:offer.text,key:offer.key};
+ },
+ async start(mode,model=defaultModel,effort=defaultEffort,welcomeKey=null){
   const settings=settingsFor(model,effort);
   prune();if(!['staging','staging-public','replay'].includes(mode))throw new Error('Choose live staging or recorded staging.');
   if(sessions.size>=maxSessions)throw new Error('The demo is at its active-chat limit. Close a chat before starting another.');
@@ -32,14 +54,10 @@ export function createChatService({modelFactory=defaultModelFactory,capturesLoad
   const adapter=mode==='replay'?makeReplayAdapter({captures,trace}):stagingFactory({trace,maxSearches:12,authMode:mode==='staging-public'?'public':'session'});
   const conversation=new SearchConversation({adapter,today:()=>clock,trace});
   const preferences=await preferenceStore.read();applyPreferences(conversation,preferences);
+  pruneOffers();const offer=typeof welcomeKey==='string'?welcomeOffers.get(welcomeKey):null;if(offer)conversation.offerDeals(offer.choices);
   const agent=new Agent({conversation,preferences,model:await modelFactory(trace,settings),trace});
   const id=randomUUID();sessions.set(id,{agent,adapter,conversation,events,mode,settings,updated:Date.now(),busy:false,turns:0});
-  const savedLabels=[
-   preferences.homeAirport ? 'Home airport: '+fullAirport(preferences.homeAirport) : null,
-   preferences.cabin ? {economy:'Economy',premium_economy:'Premium economy',business:'Business class',first:'First class'}[preferences.cabin] : null,
-   preferences.preferNonstop===true ? 'Prefer nonstop flights' : preferences.preferNonstop===false ? 'Open to connecting flights' : null,
-  ].filter(Boolean);
-  return {id,mode,clock,...settings,text:welcomeFor(mode==='staging-public'?'staging':mode)+(savedLabels.length?'\n\nYour saved preferences: '+savedLabels.join(' · ')+'.':'')};
+  return {id,mode,clock,...settings,text:welcomeText(mode,preferences),dealsOffered:Boolean(offer)};
  },
  async turn(id,text){
   prune();const s=sessions.get(id);if(!s)throw new Error('This chat expired. Start a new chat.');
