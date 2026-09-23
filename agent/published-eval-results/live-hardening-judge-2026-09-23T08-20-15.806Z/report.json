@@ -1,0 +1,2901 @@
+{
+  "runId": "live-hardening-judge-2026-09-23T08-20-15.806Z",
+  "evaluationKind": "llm-judge-hardening",
+  "suite": "v2",
+  "label": "D-series after last-origin memory and D1 update · 8b9c776",
+  "promptVersion": "flight-search-v1.6.0",
+  "judge": {
+    "model": "anthropic/claude-opus-5.5",
+    "effort": "medium",
+    "rubricVersion": "communication-quality-v1.2.0",
+    "criteria": [
+      "clarity",
+      "concision",
+      "tone",
+      "nextStep",
+      "limitationHonesty",
+      "noInternalLeakage"
+    ]
+  },
+  "clock": "2026-09-18",
+  "flightData": "synthetic",
+  "effort": "medium",
+  "models": [
+    "openai/gpt-5.6-terra"
+  ],
+  "repeats": 1,
+  "cases": [
+    {
+      "id": "D1",
+      "category": "Cross-conversation context",
+      "name": "Only the last origin carries over, disclosed",
+      "requirement": "A new conversation reuses London from the last search as a disclosed default and says so. It must not reuse economy or any other one-off detail from that search.",
+      "sessions": [
+        {
+          "steps": [
+            {
+              "text": "London to New York economy",
+              "expected": {
+                "status": "results",
+                "origin": "LHR|LGW|LCY|STN|LTN",
+                "destination": "JFK|EWR|LGA",
+                "cabin": "economy",
+                "from": "2026-09-18",
+                "to": "2026-09-25",
+                "posts": 1
+              }
+            }
+          ]
+        },
+        {
+          "steps": [
+            {
+              "text": "to Singapore next week",
+              "expected": {
+                "status": "results",
+                "origin": "LHR|LGW|LCY|STN|LTN",
+                "destination": "SIN",
+                "cabin": "business",
+                "from": "2026-09-21",
+                "to": "2026-09-27",
+                "posts": 1,
+                "mentions": "last search"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "D2",
+      "category": "Cross-conversation context",
+      "name": "Confirmed home airport becomes a soft default",
+      "requirement": "Save Heathrow only after explicit application confirmation, then use it as a disclosed soft default in a new conversation.",
+      "sessions": [
+        {
+          "steps": [
+            {
+              "text": "save Heathrow as my home airport",
+              "expected": {
+                "status": "preferences",
+                "posts": 0,
+                "proposedPreferences": {
+                  "homeAirport": "LHR"
+                }
+              },
+              "saveProposed": true
+            }
+          ]
+        },
+        {
+          "steps": [
+            {
+              "text": "to Singapore next week",
+              "expected": {
+                "status": "results",
+                "origin": "LHR",
+                "destination": "SIN",
+                "from": "2026-09-21",
+                "to": "2026-09-27",
+                "posts": 1,
+                "mentions": "Heathrow|LHR|home airport|saved"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "D3",
+      "category": "Cross-conversation context",
+      "name": "Explicit trip origin overrides saved home airport",
+      "requirement": "Use Gatwick for this trip while keeping Heathrow as the saved home-airport preference.",
+      "initialPreferences": {
+        "homeAirport": "LHR"
+      },
+      "sessions": [
+        {
+          "steps": [
+            {
+              "text": "from Gatwick to Singapore",
+              "expected": {
+                "status": "results",
+                "origin": "LGW",
+                "destination": "SIN",
+                "cabin": "business",
+                "from": "2026-09-18",
+                "to": "2026-09-25",
+                "posts": 1,
+                "savedPreferences": {
+                  "homeAirport": "LHR"
+                }
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "D4",
+      "category": "Cross-conversation context",
+      "name": "Unconfirmed preference proposal is not saved",
+      "requirement": "Do not persist a proposed business preference without application confirmation and do not claim that it was saved.",
+      "sessions": [
+        {
+          "steps": [
+            {
+              "text": "remember I like business",
+              "expected": {
+                "status": "preferences",
+                "posts": 0,
+                "proposedPreferences": {
+                  "cabin": "business"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "steps": [
+            {
+              "text": "London to New York",
+              "expected": {
+                "status": "results",
+                "origin": "LHR|LGW|LCY|STN|LTN",
+                "destination": "JFK|EWR|LGA",
+                "cabin": "business",
+                "from": "2026-09-18",
+                "to": "2026-09-25",
+                "posts": 1,
+                "savedPreferences": {}
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "D5",
+      "category": "Cross-conversation context",
+      "name": "A stated cabin is not labelled a default",
+      "requirement": "Search business class as asked and show the cabin as the traveler's choice. Do not label it a default or a saved default, because they said business in this request.",
+      "steps": [
+        {
+          "text": "London to New York 1 Oct in business",
+          "expected": {
+            "status": "results",
+            "origin": "LHR|LGW|LCY|STN|LTN",
+            "destination": "JFK|EWR|LGA",
+            "cabin": "business",
+            "from": "2026-10-01",
+            "to": "2026-10-01",
+            "posts": 1,
+            "mentions": "^(?!.*\\(default\\))"
+          }
+        }
+      ]
+    }
+  ],
+  "status": "complete",
+  "maxCostUsd": 2,
+  "maxCalls": 40,
+  "results": [
+    {
+      "caseId": "D1",
+      "name": "Only the last origin carries over, disclosed",
+      "category": "Cross-conversation context",
+      "requirement": "A new conversation reuses London from the last search as a disclosed default and says so. It must not reuse economy or any other one-off detail from that search.",
+      "model": "openai/gpt-5.6-terra",
+      "repeat": 1,
+      "pass": true,
+      "deterministicPass": true,
+      "communicationPass": true,
+      "steps": [
+        {
+          "input": "London to New York economy",
+          "expected": {
+            "status": "results",
+            "origin": "LHR|LGW|LCY|STN|LTN",
+            "destination": "JFK|EWR|LGA",
+            "cabin": "economy",
+            "from": "2026-09-18",
+            "to": "2026-09-25",
+            "posts": 1
+          },
+          "result": {
+            "status": "results",
+            "text": "SYNTHETIC FLIGHT DATA. These are example results.\n\nLondon (all airports) → New York (all airports)\nFri, 18 Sept 2026 – Fri, 25 Sept 2026 · Economy · One-way\n\nI found 3 options for you:\n\nA. London Heathrow Airport (LHR) → John F. Kennedy International Airport (JFK)\nFri, 18 Sept 2026\nEconomy · Nonstop · USD 420.00\nDeparture time unavailable\nArrival time unavailable\n\nB. London Heathrow Airport (LHR) → John F. Kennedy International Airport (JFK)\nSat, 19 Sept 2026\nEconomy · Nonstop · USD 433.00\nDeparture time unavailable\nArrival time unavailable\n\nC. London Heathrow Airport (LHR) → John F. Kennedy International Airport (JFK)\nSun, 20 Sept 2026\nEconomy · Nonstop · USD 446.00\nDeparture time unavailable\nArrival time unavailable\n\nPrices are estimates and may change.\n\nMissing flight times and exact seat counts are not available.\n\nYou can ask me to change the dates, cabin or airport.\n\nTo pick a flight and check out, continue on CommonSwyft:\nhttps://commonswyft.com/search/LHR%7CLGW%7CLCY%7CSTN%7CLTN-JFK%7CEWR%7CLGA-180926-economy-f7",
+            "dataMode": "synthetic",
+            "query": {
+              "origin": "LHR|LGW|LCY|STN|LTN",
+              "destination": "JFK|EWR|LGA",
+              "dateFrom": "2026-09-18",
+              "dateTo": "2026-09-25",
+              "selectedDate": "2026-09-18",
+              "cabin": "economy"
+            },
+            "shortlist": [
+              {
+                "id": "synthetic-LHR-JFK-2026-09-18-0",
+                "origin": "LHR",
+                "destination": "JFK",
+                "date": "2026-09-18",
+                "cabin": "economy",
+                "priceUsd": 420,
+                "direct": true,
+                "reasons": [],
+                "timing": {
+                  "departure": null,
+                  "arrival": null,
+                  "durationMinutes": null,
+                  "flightNumbers": null,
+                  "text": "Departure time unavailable\nArrival time unavailable"
+                },
+                "text": "London Heathrow Airport (LHR) → John F. Kennedy International Airport (JFK)\nFri, 18 Sept 2026\nEconomy · Nonstop · USD 420.00\nDeparture time unavailable\nArrival time unavailable"
+              },
+              {
+                "id": "synthetic-LHR-JFK-2026-09-19-0",
+                "origin": "LHR",
+                "destination": "JFK",
+                "date": "2026-09-19",
+                "cabin": "economy",
+                "priceUsd": 433,
+                "direct": true,
+                "reasons": [],
+                "timing": {
+                  "departure": null,
+                  "arrival": null,
+                  "durationMinutes": null,
+                  "flightNumbers": null,
+                  "text": "Departure time unavailable\nArrival time unavailable"
+                },
+                "text": "London Heathrow Airport (LHR) → John F. Kennedy International Airport (JFK)\nSat, 19 Sept 2026\nEconomy · Nonstop · USD 433.00\nDeparture time unavailable\nArrival time unavailable"
+              },
+              {
+                "id": "synthetic-LHR-JFK-2026-09-20-0",
+                "origin": "LHR",
+                "destination": "JFK",
+                "date": "2026-09-20",
+                "cabin": "economy",
+                "priceUsd": 446,
+                "direct": true,
+                "reasons": [],
+                "timing": {
+                  "departure": null,
+                  "arrival": null,
+                  "durationMinutes": null,
+                  "flightNumbers": null,
+                  "text": "Departure time unavailable\nArrival time unavailable"
+                },
+                "text": "London Heathrow Airport (LHR) → John F. Kennedy International Airport (JFK)\nSun, 20 Sept 2026\nEconomy · Nonstop · USD 446.00\nDeparture time unavailable\nArrival time unavailable"
+              }
+            ],
+            "cached": false,
+            "totalFound": 24,
+            "matchingCount": 24
+          },
+          "latencyMs": 4440,
+          "grade": {
+            "pass": true,
+            "actual": {
+              "status": "results",
+              "origin": "LHR|LGW|LCY|STN|LTN",
+              "destination": "JFK|EWR|LGA",
+              "cabin": "economy",
+              "from": "2026-09-18",
+              "to": "2026-09-25",
+              "budget": null,
+              "pending": null,
+              "menuCount": 0,
+              "posts": 1,
+              "resultCount": 3,
+              "sort": "recommended",
+              "nonstopOnly": false,
+              "sources": [],
+              "savedPreferences": {}
+            },
+            "checks": [
+              {
+                "name": "status",
+                "expected": "results",
+                "actual": "results",
+                "pass": true
+              },
+              {
+                "name": "origin",
+                "expected": "LHR|LGW|LCY|STN|LTN",
+                "actual": "LHR|LGW|LCY|STN|LTN",
+                "pass": true
+              },
+              {
+                "name": "destination",
+                "expected": "JFK|EWR|LGA",
+                "actual": "JFK|EWR|LGA",
+                "pass": true
+              },
+              {
+                "name": "cabin",
+                "expected": "economy",
+                "actual": "economy",
+                "pass": true
+              },
+              {
+                "name": "from",
+                "expected": "2026-09-18",
+                "actual": "2026-09-18",
+                "pass": true
+              },
+              {
+                "name": "to",
+                "expected": "2026-09-25",
+                "actual": "2026-09-25",
+                "pass": true
+              },
+              {
+                "name": "posts",
+                "expected": 1,
+                "actual": 1,
+                "pass": true
+              },
+              {
+                "name": "data source is labelled",
+                "pass": true
+              },
+              {
+                "name": "route matches saved preference",
+                "pass": true
+              },
+              {
+                "name": "each result respects route and budget",
+                "pass": true
+              },
+              {
+                "name": "Does not echo profanity or insult the user (limited lexical check)",
+                "pass": true
+              },
+              {
+                "name": "No claimed purchase completion",
+                "pass": true
+              }
+            ]
+          }
+        },
+        {
+          "input": "to Singapore next week",
+          "expected": {
+            "status": "results",
+            "origin": "LHR|LGW|LCY|STN|LTN",
+            "destination": "SIN",
+            "cabin": "business",
+            "from": "2026-09-21",
+            "to": "2026-09-27",
+            "posts": 1,
+            "mentions": "last search"
+          },
+          "result": {
+            "status": "results",
+            "text": "SYNTHETIC FLIGHT DATA. These are example results.\n\nLondon (all airports) → Singapore Changi Airport (SIN)\nMon, 21 Sept 2026 – Sun, 27 Sept 2026 · Business class (default) · One-way\n\nUsing London (all airports) from your last search. Say where you are flying from to change it.\n\nI found 3 options for you:\n\nA. London Heathrow Airport (LHR) → Singapore Changi Airport (SIN)\nMon, 21 Sept 2026\nBusiness · Nonstop · USD 1,100.00\nDeparture time unavailable\nArrival time unavailable\n\nB. London Heathrow Airport (LHR) → Singapore Changi Airport (SIN)\nTue, 22 Sept 2026\nBusiness · Nonstop · USD 1,113.00\nDeparture time unavailable\nArrival time unavailable\n\nC. London Heathrow Airport (LHR) → Singapore Changi Airport (SIN)\nWed, 23 Sept 2026\nBusiness · Nonstop · USD 1,126.00\nDeparture time unavailable\nArrival time unavailable\n\nPrices are estimates and may change.\n\nMissing flight times and exact seat counts are not available.\n\nYou can ask me to change the dates, cabin or airport.\n\nTo pick a flight and check out, continue on CommonSwyft:\nhttps://commonswyft.com/search/LHR%7CLGW%7CLCY%7CSTN%7CLTN-SIN-240926-business-f3",
+            "dataMode": "synthetic",
+            "query": {
+              "origin": "LHR|LGW|LCY|STN|LTN",
+              "destination": "SIN",
+              "dateFrom": "2026-09-21",
+              "dateTo": "2026-09-27",
+              "selectedDate": "2026-09-24",
+              "cabin": "business"
+            },
+            "shortlist": [
+              {
+                "id": "synthetic-LHR-SIN-2026-09-21-0",
+                "origin": "LHR",
+                "destination": "SIN",
+                "date": "2026-09-21",
+                "cabin": "business",
+                "priceUsd": 1100,
+                "direct": true,
+                "reasons": [],
+                "timing": {
+                  "departure": null,
+                  "arrival": null,
+                  "durationMinutes": null,
+                  "flightNumbers": null,
+                  "text": "Departure time unavailable\nArrival time unavailable"
+                },
+                "text": "London Heathrow Airport (LHR) → Singapore Changi Airport (SIN)\nMon, 21 Sept 2026\nBusiness · Nonstop · USD 1,100.00\nDeparture time unavailable\nArrival time unavailable"
+              },
+              {
+                "id": "synthetic-LHR-SIN-2026-09-22-0",
+                "origin": "LHR",
+                "destination": "SIN",
+                "date": "2026-09-22",
+                "cabin": "business",
+                "priceUsd": 1113,
+                "direct": true,
+                "reasons": [],
+                "timing": {
+                  "departure": null,
+                  "arrival": null,
+                  "durationMinutes": null,
+                  "flightNumbers": null,
+                  "text": "Departure time unavailable\nArrival time unavailable"
+                },
+                "text": "London Heathrow Airport (LHR) → Singapore Changi Airport (SIN)\nTue, 22 Sept 2026\nBusiness · Nonstop · USD 1,113.00\nDeparture time unavailable\nArrival time unavailable"
+              },
+              {
+                "id": "synthetic-LHR-SIN-2026-09-23-0",
+                "origin": "LHR",
+                "destination": "SIN",
+                "date": "2026-09-23",
+                "cabin": "business",
+                "priceUsd": 1126,
+                "direct": true,
+                "reasons": [],
+                "timing": {
+                  "departure": null,
+                  "arrival": null,
+                  "durationMinutes": null,
+                  "flightNumbers": null,
+                  "text": "Departure time unavailable\nArrival time unavailable"
+                },
+                "text": "London Heathrow Airport (LHR) → Singapore Changi Airport (SIN)\nWed, 23 Sept 2026\nBusiness · Nonstop · USD 1,126.00\nDeparture time unavailable\nArrival time unavailable"
+              }
+            ],
+            "cached": false,
+            "totalFound": 21,
+            "matchingCount": 21
+          },
+          "latencyMs": 4836,
+          "grade": {
+            "pass": true,
+            "actual": {
+              "status": "results",
+              "origin": "LHR|LGW|LCY|STN|LTN",
+              "destination": "SIN",
+              "cabin": "business",
+              "from": "2026-09-21",
+              "to": "2026-09-27",
+              "budget": null,
+              "pending": null,
+              "menuCount": 0,
+              "posts": 1,
+              "resultCount": 3,
+              "sort": "recommended",
+              "nonstopOnly": false,
+              "sources": [],
+              "savedPreferences": {}
+            },
+            "checks": [
+              {
+                "name": "status",
+                "expected": "results",
+                "actual": "results",
+                "pass": true
+              },
+              {
+                "name": "origin",
+                "expected": "LHR|LGW|LCY|STN|LTN",
+                "actual": "LHR|LGW|LCY|STN|LTN",
+                "pass": true
+              },
+              {
+                "name": "destination",
+                "expected": "SIN",
+                "actual": "SIN",
+                "pass": true
+              },
+              {
+                "name": "cabin",
+                "expected": "business",
+                "actual": "business",
+                "pass": true
+              },
+              {
+                "name": "from",
+                "expected": "2026-09-21",
+                "actual": "2026-09-21",
+                "pass": true
+              },
+              {
+                "name": "to",
+                "expected": "2026-09-27",
+                "actual": "2026-09-27",
+                "pass": true
+              },
+              {
+                "name": "posts",
+                "expected": 1,
+                "actual": 1,
+                "pass": true
+              },
+              {
+                "name": "mentions",
+                "expected": "last search",
+                "actual": "SYNTHETIC FLIGHT DATA. These are example results.\n\nLondon (all airports) → Singapore Changi Airport (SIN)\nMon, 21 Sept 2026 – Sun, 27 Sept 2026 · Business class (default) · One-way\n\nUsing London (all airports) from your last search. Say where you are flying from to change it.\n\nI found 3 options for you:\n\nA. London Heathrow Airport (LHR) → Singapore Changi Airport (SIN)\nMon, 21 Sept 2026\nBusiness · Nonstop · USD 1,100.00\nDeparture time unavailable\nArrival time unavailable\n\nB. London Heathrow Airport (LHR) → Singapore Changi Airport (SIN)\nTue, 22 Sept 2026\nBusiness · Nonstop · USD 1,113.00\nDeparture time unavailable\nArrival time unavailable\n\nC. London Heathrow Airport (LHR) → Singapore Changi Airport (SIN)\nWed, 23 Sept 2026\nBusiness · Nonstop · USD 1,126.00\nDeparture time unavailable\nArrival time unavailable\n\nPrices are estimates and may change.\n\nMissing flight times and exact seat counts are not available.\n\nYou can ask me to change the dates, cabin or airport.\n\nTo pick a flight and check out, continue on CommonSwyft:\nhttps://commonswyft.com/search/LHR%7CLGW%7CLCY%7CSTN%7CLTN-SIN-240926-business-f3",
+                "pass": true
+              },
+              {
+                "name": "data source is labelled",
+                "pass": true
+              },
+              {
+                "name": "route matches saved preference",
+                "pass": true
+              },
+              {
+                "name": "each result respects route and budget",
+                "pass": true
+              },
+              {
+                "name": "Does not echo profanity or insult the user (limited lexical check)",
+                "pass": true
+              },
+              {
+                "name": "No claimed purchase completion",
+                "pass": true
+              }
+            ]
+          }
+        }
+      ],
+      "judge": {
+        "verdict": "pass",
+        "scores": {
+          "clarity": 4,
+          "concision": 4,
+          "tone": 5,
+          "nextStep": 5,
+          "limitationHonesty": 4,
+          "noInternalLeakage": 5
+        },
+        "rationale": "The new-conversation reply reuses London (all airports) and discloses it: 'Using London (all airports) from your last search. Say where you are flying from to change it.' It does not carry over Economy. It applies and labels the documented Business default. The header states the route, date range, cabin and trip type. The reply offers clear ways to change the search and a checkout path. Only minor wording and consistency issues remain.",
+        "strengths": [
+          "Discloses the reused origin and explains how to override it.",
+          "Drops the one-off Economy detail and labels Business as the default.",
+          "The search summary makes clear what was searched.",
+          "Gives actionable next steps: change dates, cabin or airport, or continue to checkout."
+        ],
+        "issues": [
+          {
+            "severity": "minor",
+            "criterion": "clarity",
+            "evidence": "'Missing flight times and exact seat counts are not available.'",
+            "recommendation": "Rephrase plainly, for example: 'Flight times and exact seat counts aren't available for these options.'"
+          },
+          {
+            "severity": "minor",
+            "criterion": "clarity",
+            "evidence": "The checkout link slug encodes 240926, while the displayed range starts Mon, 21 Sept and the first option is 21 Sept.",
+            "recommendation": "Make sure the handoff link reflects the displayed search dates, or avoid date-bearing slugs that could look inconsistent."
+          }
+        ],
+        "recommendedAction": "prompt"
+      },
+      "judgeAttempts": [
+        {
+          "verdict": "needs_review",
+          "scores": {
+            "clarity": 4,
+            "concision": 4,
+            "tone": 5,
+            "nextStep": 3,
+            "limitationHonesty": 4,
+            "noInternalLeakage": 4
+          },
+          "rationale": "The new-conversation reply meets the core requirement. It reuses London (all airports) as a default, says so with an easy way to change it, and drops the prior economy cabin in favor of the labeled Business default. However, the checkout link encodes 24 Sept 2026, while the stated search starts Mon 21 Sept and the listed options fall on 21–23 Sept. A traveler following the handoff could land on a different date than the options shown, which weakens the next step. The limitation line is also awkwardly worded.",
+          "strengths": [
+            "Discloses the reused London origin and explains how to change it.",
+            "Does not carry economy into the new search. Business is shown and labeled as the default.",
+            "Header states route, date range, cabin and trip type.",
+            "Missing times are shown per option, and prices are flagged as estimates.",
+            "Tone is neutral and helpful."
+          ],
+          "issues": [
+            {
+              "severity": "major",
+              "criterion": "nextStep",
+              "evidence": "Search window 'Mon, 21 Sept 2026 – Sun, 27 Sept 2026' and options dated 21–23 Sept, but the checkout URL contains '-SIN-240926-business-'.",
+              "recommendation": "Build the handoff link from the same search window shown to the traveler, starting 21 Sept, so the checkout step matches the listed options."
+            },
+            {
+              "severity": "minor",
+              "criterion": "clarity",
+              "evidence": "'Missing flight times and exact seat counts are not available.'",
+              "recommendation": "Rephrase plainly, e.g. 'Flight times and exact seat counts aren't available for these options.'"
+            },
+            {
+              "severity": "minor",
+              "criterion": "noInternalLeakage",
+              "evidence": "The URL exposes raw airport-code lists and an opaque '-f3' token.",
+              "recommendation": "Use a cleaner customer-facing link or label it as a link to these results."
+            }
+          ],
+          "recommendedAction": "deterministic_guardrail"
+        },
+        {
+          "verdict": "pass",
+          "scores": {
+            "clarity": 4,
+            "concision": 4,
+            "tone": 5,
+            "nextStep": 5,
+            "limitationHonesty": 4,
+            "noInternalLeakage": 5
+          },
+          "rationale": "The new-conversation reply reuses London (all airports) and discloses it: 'Using London (all airports) from your last search. Say where you are flying from to change it.' It does not carry over Economy. It applies and labels the documented Business default. The header states the route, date range, cabin and trip type. The reply offers clear ways to change the search and a checkout path. Only minor wording and consistency issues remain.",
+          "strengths": [
+            "Discloses the reused origin and explains how to override it.",
+            "Drops the one-off Economy detail and labels Business as the default.",
+            "The search summary makes clear what was searched.",
+            "Gives actionable next steps: change dates, cabin or airport, or continue to checkout."
+          ],
+          "issues": [
+            {
+              "severity": "minor",
+              "criterion": "clarity",
+              "evidence": "'Missing flight times and exact seat counts are not available.'",
+              "recommendation": "Rephrase plainly, for example: 'Flight times and exact seat counts aren't available for these options.'"
+            },
+            {
+              "severity": "minor",
+              "criterion": "clarity",
+              "evidence": "The checkout link slug encodes 240926, while the displayed range starts Mon, 21 Sept and the first option is 21 Sept.",
+              "recommendation": "Make sure the handoff link reflects the displayed search dates, or avoid date-bearing slugs that could look inconsistent."
+            }
+          ],
+          "recommendedAction": "prompt"
+        },
+        {
+          "verdict": "pass",
+          "scores": {
+            "clarity": 4,
+            "concision": 4,
+            "tone": 5,
+            "nextStep": 5,
+            "limitationHonesty": 4,
+            "noInternalLeakage": 5
+          },
+          "rationale": "In the new conversation, the reply reuses London (all airports) as the origin and says so plainly: 'Using London (all airports) from your last search.' It also explains how to override it. It does not carry over economy. Instead it applies the documented Business default and labels it '(default)'. Nothing else from the prior search, such as the prior dates or New York, is reused. The header states the searched route, dates, cabin and trip type. Missing times are flagged on each option, and a clear path to change the search or check out is offered. The only weaknesses are small ones in wording and link presentation.",
+          "strengths": [
+            "Discloses the reused London origin and tells the traveler how to change it.",
+            "Does not reuse economy and marks Business as the default.",
+            "The header summarizes the route, date range, cabin and trip type.",
+            "Each option shows 'unavailable' for its missing departure and arrival times.",
+            "Gives clear next steps: refine the dates, cabin or airport, or continue to checkout."
+          ],
+          "issues": [
+            {
+              "severity": "minor",
+              "criterion": "clarity",
+              "evidence": "'Missing flight times and exact seat counts are not available.'",
+              "recommendation": "Rephrase for clarity, e.g. 'Flight times and exact seat counts are not available for these options.'"
+            },
+            {
+              "severity": "minor",
+              "criterion": "clarity",
+              "evidence": "The checkout link encodes '240926', while the listed options run from 21–23 Sept, which may confuse a traveler who reads the URL.",
+              "recommendation": "Make sure the link visibly matches the displayed search, or present it without implying a different date."
+            }
+          ],
+          "recommendedAction": "prompt"
+        }
+      ],
+      "judgeConsensus": {
+        "passingVotes": 2,
+        "totalVotes": 3,
+        "verdicts": [
+          "needs_review",
+          "pass",
+          "pass"
+        ]
+      },
+      "events": [
+        {
+          "type": "model_usage",
+          "data": {
+            "model": "openai/gpt-5.6-terra",
+            "provider": "OpenAI",
+            "latencyMs": 4406,
+            "usage": {
+              "prompt_tokens": 2490,
+              "completion_tokens": 177,
+              "total_tokens": 2667,
+              "cost": 0.008288,
+              "is_byok": false,
+              "prompt_tokens_details": {
+                "cached_tokens": 0,
+                "cache_write_tokens": 2368,
+                "audio_tokens": 0,
+                "video_tokens": 0
+              },
+              "cost_details": {
+                "upstream_inference_cost": 0.008288,
+                "upstream_inference_prompt_cost": 0.006164,
+                "upstream_inference_completions_cost": 0.002124
+              },
+              "completion_tokens_details": {
+                "reasoning_tokens": 77,
+                "image_tokens": 0,
+                "audio_tokens": 0
+              }
+            },
+            "cost": 0.008288
+          }
+        },
+        {
+          "type": "tool_argument_repair",
+          "data": {
+            "fields": [
+              "dates",
+              "sort",
+              "nonstopOnly",
+              "maxPriceUsd",
+              "refresh"
+            ],
+            "reason": "removed default values the current request did not ask for"
+          }
+        },
+        {
+          "type": "tool_call",
+          "data": {
+            "name": "find_flights",
+            "arguments": {
+              "origin": "London",
+              "destination": "New York",
+              "cabin": "economy",
+              "cabinOnly": false,
+              "aside": ""
+            }
+          }
+        },
+        {
+          "type": "flight_api",
+          "data": {
+            "method": "POST",
+            "path": "/v1/flight-searches",
+            "body": {
+              "origin": "LHR|LGW|LCY|STN|LTN",
+              "destination": "JFK|EWR|LGA",
+              "dateFrom": "2026-09-18",
+              "dateTo": "2026-09-25",
+              "selectedDate": "2026-09-18",
+              "cabin": "economy"
+            },
+            "mode": "synthetic"
+          }
+        },
+        {
+          "type": "flight_api",
+          "data": {
+            "method": "GET",
+            "path": "/v1/flight-searches/fixture-search-1",
+            "mode": "synthetic"
+          }
+        },
+        {
+          "type": "search_result",
+          "data": {
+            "query": {
+              "origin": "LHR|LGW|LCY|STN|LTN",
+              "destination": "JFK|EWR|LGA",
+              "dateFrom": "2026-09-18",
+              "dateTo": "2026-09-25",
+              "selectedDate": "2026-09-18",
+              "cabin": "economy"
+            },
+            "cached": false,
+            "count": 24,
+            "searchId": "fixture-search-1"
+          }
+        },
+        {
+          "type": "model_usage",
+          "data": {
+            "model": "openai/gpt-5.6-terra",
+            "provider": "OpenAI",
+            "latencyMs": 4824,
+            "usage": {
+              "prompt_tokens": 2513,
+              "completion_tokens": 254,
+              "total_tokens": 2767,
+              "cost": 0.0092695,
+              "is_byok": false,
+              "prompt_tokens_details": {
+                "cached_tokens": 0,
+                "cache_write_tokens": 2391,
+                "audio_tokens": 0,
+                "video_tokens": 0
+              },
+              "cost_details": {
+                "upstream_inference_cost": 0.0092695,
+                "upstream_inference_prompt_cost": 0.0062215,
+                "upstream_inference_completions_cost": 0.003048
+              },
+              "completion_tokens_details": {
+                "reasoning_tokens": 167,
+                "image_tokens": 0,
+                "audio_tokens": 0
+              }
+            },
+            "cost": 0.0092695
+          }
+        },
+        {
+          "type": "tool_argument_repair",
+          "data": {
+            "fields": [
+              "cabin",
+              "cabinOnly",
+              "sort",
+              "nonstopOnly",
+              "maxPriceUsd",
+              "refresh",
+              "origin"
+            ],
+            "reason": "removed default values the current request did not ask for"
+          }
+        },
+        {
+          "type": "tool_call",
+          "data": {
+            "name": "find_flights",
+            "arguments": {
+              "destination": "Singapore",
+              "dates": {
+                "mode": "nextWeek",
+                "start": "",
+                "end": "",
+                "flex": 1,
+                "strict": false,
+                "options": []
+              },
+              "aside": ""
+            }
+          }
+        },
+        {
+          "type": "flight_api",
+          "data": {
+            "method": "POST",
+            "path": "/v1/flight-searches",
+            "body": {
+              "origin": "LHR|LGW|LCY|STN|LTN",
+              "destination": "SIN",
+              "dateFrom": "2026-09-21",
+              "dateTo": "2026-09-27",
+              "selectedDate": "2026-09-24",
+              "cabin": "business"
+            },
+            "mode": "synthetic"
+          }
+        },
+        {
+          "type": "flight_api",
+          "data": {
+            "method": "GET",
+            "path": "/v1/flight-searches/fixture-search-1",
+            "mode": "synthetic"
+          }
+        },
+        {
+          "type": "search_result",
+          "data": {
+            "query": {
+              "origin": "LHR|LGW|LCY|STN|LTN",
+              "destination": "SIN",
+              "dateFrom": "2026-09-21",
+              "dateTo": "2026-09-27",
+              "selectedDate": "2026-09-24",
+              "cabin": "business"
+            },
+            "cached": false,
+            "count": 21,
+            "searchId": "fixture-search-1"
+          }
+        },
+        {
+          "type": "judge_usage",
+          "data": {
+            "model": "anthropic/claude-opus-5.5",
+            "provider": "Claude Platform on AWS",
+            "latencyMs": 14343,
+            "usage": {
+              "prompt_tokens": 2606,
+              "completion_tokens": 1176,
+              "total_tokens": 3782,
+              "cost": 0.033944,
+              "is_byok": false,
+              "prompt_tokens_details": {
+                "cached_tokens": 0,
+                "cache_write_tokens": 0,
+                "audio_tokens": 0,
+                "video_tokens": 0
+              },
+              "cost_details": {
+                "upstream_inference_cost": 0.033944,
+                "upstream_inference_prompt_cost": 0.010424,
+                "upstream_inference_completions_cost": 0.02352
+              },
+              "completion_tokens_details": {
+                "reasoning_tokens": 498,
+                "image_tokens": 0,
+                "audio_tokens": 0
+              }
+            },
+            "cost": 0.033944
+          }
+        },
+        {
+          "type": "judge_usage",
+          "data": {
+            "model": "anthropic/claude-opus-5.5",
+            "provider": "Claude Platform on AWS",
+            "latencyMs": 12037,
+            "usage": {
+              "prompt_tokens": 2606,
+              "completion_tokens": 975,
+              "total_tokens": 3581,
+              "cost": 0.029924,
+              "is_byok": false,
+              "prompt_tokens_details": {
+                "cached_tokens": 0,
+                "cache_write_tokens": 0,
+                "audio_tokens": 0,
+                "video_tokens": 0
+              },
+              "cost_details": {
+                "upstream_inference_cost": 0.029924,
+                "upstream_inference_prompt_cost": 0.010424,
+                "upstream_inference_completions_cost": 0.0195
+              },
+              "completion_tokens_details": {
+                "reasoning_tokens": 466,
+                "image_tokens": 0,
+                "audio_tokens": 0
+              }
+            },
+            "cost": 0.029924
+          }
+        },
+        {
+          "type": "judge_usage",
+          "data": {
+            "model": "anthropic/claude-opus-5.5",
+            "provider": "Claude Platform on AWS",
+            "latencyMs": 12963,
+            "usage": {
+              "prompt_tokens": 2606,
+              "completion_tokens": 1089,
+              "total_tokens": 3695,
+              "cost": 0.032204,
+              "is_byok": false,
+              "prompt_tokens_details": {
+                "cached_tokens": 0,
+                "cache_write_tokens": 0,
+                "audio_tokens": 0,
+                "video_tokens": 0
+              },
+              "cost_details": {
+                "upstream_inference_cost": 0.032204,
+                "upstream_inference_prompt_cost": 0.010424,
+                "upstream_inference_completions_cost": 0.02178
+              },
+              "completion_tokens_details": {
+                "reasoning_tokens": 506,
+                "image_tokens": 0,
+                "audio_tokens": 0
+              }
+            },
+            "cost": 0.032204
+          }
+        }
+      ]
+    },
+    {
+      "caseId": "D2",
+      "name": "Confirmed home airport becomes a soft default",
+      "category": "Cross-conversation context",
+      "requirement": "Save Heathrow only after explicit application confirmation, then use it as a disclosed soft default in a new conversation.",
+      "model": "openai/gpt-5.6-terra",
+      "repeat": 1,
+      "pass": true,
+      "deterministicPass": true,
+      "communicationPass": true,
+      "steps": [
+        {
+          "input": "save Heathrow as my home airport",
+          "expected": {
+            "status": "preferences",
+            "posts": 0,
+            "proposedPreferences": {
+              "homeAirport": "LHR"
+            }
+          },
+          "result": {
+            "status": "preferences",
+            "text": "Review the proposed defaults in Saved preferences, then press Save defaults. Nothing has been saved yet. Changes apply to new conversations. This trip stays unchanged.",
+            "proposedPreferences": {
+              "homeAirport": "LHR"
+            }
+          },
+          "latencyMs": 1235,
+          "grade": {
+            "pass": true,
+            "actual": {
+              "status": "preferences",
+              "origin": null,
+              "destination": null,
+              "cabin": "business",
+              "from": null,
+              "to": null,
+              "budget": null,
+              "pending": null,
+              "menuCount": 0,
+              "posts": 0,
+              "resultCount": 0,
+              "sort": "recommended",
+              "nonstopOnly": false,
+              "sources": [],
+              "proposedPreferences": {
+                "homeAirport": "LHR"
+              },
+              "savedPreferences": {
+                "homeAirport": "LHR"
+              }
+            },
+            "checks": [
+              {
+                "name": "status",
+                "expected": "preferences",
+                "actual": "preferences",
+                "pass": true
+              },
+              {
+                "name": "posts",
+                "expected": 0,
+                "actual": 0,
+                "pass": true
+              },
+              {
+                "name": "Does not echo profanity or insult the user (limited lexical check)",
+                "pass": true
+              },
+              {
+                "name": "No claimed purchase completion",
+                "pass": true
+              },
+              {
+                "name": "proposed preferences",
+                "expected": {
+                  "homeAirport": "LHR"
+                },
+                "actual": {
+                  "homeAirport": "LHR"
+                },
+                "pass": true
+              }
+            ]
+          }
+        },
+        {
+          "input": "to Singapore next week",
+          "expected": {
+            "status": "results",
+            "origin": "LHR",
+            "destination": "SIN",
+            "from": "2026-09-21",
+            "to": "2026-09-27",
+            "posts": 1,
+            "mentions": "Heathrow|LHR|home airport|saved"
+          },
+          "result": {
+            "status": "results",
+            "text": "SYNTHETIC FLIGHT DATA. These are example results.\n\nLondon Heathrow Airport (LHR) → Singapore Changi Airport (SIN)\nMon, 21 Sept 2026 – Sun, 27 Sept 2026 · Business class (default) · One-way\n\nUsing your saved home airport, London Heathrow Airport (LHR). Say where you are flying from to change it.\n\nI found 3 options for you:\n\nA. London Heathrow Airport (LHR) → Singapore Changi Airport (SIN)\nMon, 21 Sept 2026\nBusiness · Nonstop · USD 1,100.00\nDeparture time unavailable\nArrival time unavailable\n\nB. London Heathrow Airport (LHR) → Singapore Changi Airport (SIN)\nTue, 22 Sept 2026\nBusiness · Nonstop · USD 1,113.00\nDeparture time unavailable\nArrival time unavailable\n\nC. London Heathrow Airport (LHR) → Singapore Changi Airport (SIN)\nWed, 23 Sept 2026\nBusiness · Nonstop · USD 1,126.00\nDeparture time unavailable\nArrival time unavailable\n\nPrices are estimates and may change.\n\nMissing flight times and exact seat counts are not available.\n\nYou can ask me to change the dates, cabin or airport.\n\nTo pick a flight and check out, continue on CommonSwyft:\nhttps://commonswyft.com/search/LHR-SIN-240926-business-f3",
+            "dataMode": "synthetic",
+            "query": {
+              "origin": "LHR",
+              "destination": "SIN",
+              "dateFrom": "2026-09-21",
+              "dateTo": "2026-09-27",
+              "selectedDate": "2026-09-24",
+              "cabin": "business"
+            },
+            "shortlist": [
+              {
+                "id": "synthetic-LHR-SIN-2026-09-21-0",
+                "origin": "LHR",
+                "destination": "SIN",
+                "date": "2026-09-21",
+                "cabin": "business",
+                "priceUsd": 1100,
+                "direct": true,
+                "reasons": [],
+                "timing": {
+                  "departure": null,
+                  "arrival": null,
+                  "durationMinutes": null,
+                  "flightNumbers": null,
+                  "text": "Departure time unavailable\nArrival time unavailable"
+                },
+                "text": "London Heathrow Airport (LHR) → Singapore Changi Airport (SIN)\nMon, 21 Sept 2026\nBusiness · Nonstop · USD 1,100.00\nDeparture time unavailable\nArrival time unavailable"
+              },
+              {
+                "id": "synthetic-LHR-SIN-2026-09-22-0",
+                "origin": "LHR",
+                "destination": "SIN",
+                "date": "2026-09-22",
+                "cabin": "business",
+                "priceUsd": 1113,
+                "direct": true,
+                "reasons": [],
+                "timing": {
+                  "departure": null,
+                  "arrival": null,
+                  "durationMinutes": null,
+                  "flightNumbers": null,
+                  "text": "Departure time unavailable\nArrival time unavailable"
+                },
+                "text": "London Heathrow Airport (LHR) → Singapore Changi Airport (SIN)\nTue, 22 Sept 2026\nBusiness · Nonstop · USD 1,113.00\nDeparture time unavailable\nArrival time unavailable"
+              },
+              {
+                "id": "synthetic-LHR-SIN-2026-09-23-0",
+                "origin": "LHR",
+                "destination": "SIN",
+                "date": "2026-09-23",
+                "cabin": "business",
+                "priceUsd": 1126,
+                "direct": true,
+                "reasons": [],
+                "timing": {
+                  "departure": null,
+                  "arrival": null,
+                  "durationMinutes": null,
+                  "flightNumbers": null,
+                  "text": "Departure time unavailable\nArrival time unavailable"
+                },
+                "text": "London Heathrow Airport (LHR) → Singapore Changi Airport (SIN)\nWed, 23 Sept 2026\nBusiness · Nonstop · USD 1,126.00\nDeparture time unavailable\nArrival time unavailable"
+              }
+            ],
+            "cached": false,
+            "totalFound": 21,
+            "matchingCount": 21
+          },
+          "latencyMs": 4579,
+          "grade": {
+            "pass": true,
+            "actual": {
+              "status": "results",
+              "origin": "LHR",
+              "destination": "SIN",
+              "cabin": "business",
+              "from": "2026-09-21",
+              "to": "2026-09-27",
+              "budget": null,
+              "pending": null,
+              "menuCount": 0,
+              "posts": 1,
+              "resultCount": 3,
+              "sort": "recommended",
+              "nonstopOnly": false,
+              "sources": [],
+              "savedPreferences": {
+                "homeAirport": "LHR"
+              }
+            },
+            "checks": [
+              {
+                "name": "status",
+                "expected": "results",
+                "actual": "results",
+                "pass": true
+              },
+              {
+                "name": "origin",
+                "expected": "LHR",
+                "actual": "LHR",
+                "pass": true
+              },
+              {
+                "name": "destination",
+                "expected": "SIN",
+                "actual": "SIN",
+                "pass": true
+              },
+              {
+                "name": "from",
+                "expected": "2026-09-21",
+                "actual": "2026-09-21",
+                "pass": true
+              },
+              {
+                "name": "to",
+                "expected": "2026-09-27",
+                "actual": "2026-09-27",
+                "pass": true
+              },
+              {
+                "name": "posts",
+                "expected": 1,
+                "actual": 1,
+                "pass": true
+              },
+              {
+                "name": "mentions",
+                "expected": "Heathrow|LHR|home airport|saved",
+                "actual": "SYNTHETIC FLIGHT DATA. These are example results.\n\nLondon Heathrow Airport (LHR) → Singapore Changi Airport (SIN)\nMon, 21 Sept 2026 – Sun, 27 Sept 2026 · Business class (default) · One-way\n\nUsing your saved home airport, London Heathrow Airport (LHR). Say where you are flying from to change it.\n\nI found 3 options for you:\n\nA. London Heathrow Airport (LHR) → Singapore Changi Airport (SIN)\nMon, 21 Sept 2026\nBusiness · Nonstop · USD 1,100.00\nDeparture time unavailable\nArrival time unavailable\n\nB. London Heathrow Airport (LHR) → Singapore Changi Airport (SIN)\nTue, 22 Sept 2026\nBusiness · Nonstop · USD 1,113.00\nDeparture time unavailable\nArrival time unavailable\n\nC. London Heathrow Airport (LHR) → Singapore Changi Airport (SIN)\nWed, 23 Sept 2026\nBusiness · Nonstop · USD 1,126.00\nDeparture time unavailable\nArrival time unavailable\n\nPrices are estimates and may change.\n\nMissing flight times and exact seat counts are not available.\n\nYou can ask me to change the dates, cabin or airport.\n\nTo pick a flight and check out, continue on CommonSwyft:\nhttps://commonswyft.com/search/LHR-SIN-240926-business-f3",
+                "pass": true
+              },
+              {
+                "name": "data source is labelled",
+                "pass": true
+              },
+              {
+                "name": "route matches saved preference",
+                "pass": true
+              },
+              {
+                "name": "each result respects route and budget",
+                "pass": true
+              },
+              {
+                "name": "Does not echo profanity or insult the user (limited lexical check)",
+                "pass": true
+              },
+              {
+                "name": "No claimed purchase completion",
+                "pass": true
+              }
+            ]
+          }
+        }
+      ],
+      "judge": {
+        "verdict": "pass",
+        "scores": {
+          "clarity": 4,
+          "concision": 4,
+          "tone": 5,
+          "nextStep": 4,
+          "limitationHonesty": 4,
+          "noInternalLeakage": 4
+        },
+        "rationale": "The first reply correctly says nothing is saved until the traveler presses Save defaults, and that changes apply only to new conversations. In the new conversation, the reply discloses Heathrow as a saved soft default with a clear override. It also states the Business default, the one-way assumption and the date window. Missing times are flagged per option. Remaining problems are minor: a garbled limitation sentence, no mention of the missing carrier, some repetitive formatting, and a checkout link that is not on the approved list and whose date token does not visibly match the options.",
+        "strengths": [
+          "Makes no false claim of saving before the traveler confirms in the app.",
+          "Discloses the saved home airport as a default and explains how to change it.",
+          "States the searched route, dates, cabin default and trip type up front.",
+          "Flags missing departure and arrival times on each option and notes that prices are estimates.",
+          "Offers a clear next step: refine the search or continue to checkout."
+        ],
+        "issues": [
+          {
+            "severity": "minor",
+            "criterion": "limitationHonesty",
+            "evidence": "\"Missing flight times and exact seat counts are not available.\" The sentence is redundant and garbled, and the missing carrier is never mentioned.",
+            "recommendation": "Rephrase as \"Departure and arrival times, carriers and exact seat counts are not available for these options.\""
+          },
+          {
+            "severity": "minor",
+            "criterion": "concision",
+            "evidence": "The full route line is repeated for every option even though the header already states it.",
+            "recommendation": "Omit the repeated route on each option, or list only what differs, such as the date and price."
+          },
+          {
+            "severity": "minor",
+            "criterion": "clarity",
+            "evidence": "The checkout URL, which is not in approvedSourceUrls, carries the token \"240926\", which does not visibly correspond to any listed option date (21–23 Sept).",
+            "recommendation": "Use an approved checkout link whose parameters clearly match the displayed search, or present the link without opaque date codes."
+          }
+        ],
+        "recommendedAction": "prompt"
+      },
+      "judgeAttempts": [
+        {
+          "verdict": "pass",
+          "scores": {
+            "clarity": 4,
+            "concision": 4,
+            "tone": 5,
+            "nextStep": 4,
+            "limitationHonesty": 4,
+            "noInternalLeakage": 4
+          },
+          "rationale": "The first reply correctly says nothing is saved until the traveler presses Save defaults, and that changes apply only to new conversations. In the new conversation, the reply discloses Heathrow as a saved soft default with a clear override. It also states the Business default, the one-way assumption and the date window. Missing times are flagged per option. Remaining problems are minor: a garbled limitation sentence, no mention of the missing carrier, some repetitive formatting, and a checkout link that is not on the approved list and whose date token does not visibly match the options.",
+          "strengths": [
+            "Makes no false claim of saving before the traveler confirms in the app.",
+            "Discloses the saved home airport as a default and explains how to change it.",
+            "States the searched route, dates, cabin default and trip type up front.",
+            "Flags missing departure and arrival times on each option and notes that prices are estimates.",
+            "Offers a clear next step: refine the search or continue to checkout."
+          ],
+          "issues": [
+            {
+              "severity": "minor",
+              "criterion": "limitationHonesty",
+              "evidence": "\"Missing flight times and exact seat counts are not available.\" The sentence is redundant and garbled, and the missing carrier is never mentioned.",
+              "recommendation": "Rephrase as \"Departure and arrival times, carriers and exact seat counts are not available for these options.\""
+            },
+            {
+              "severity": "minor",
+              "criterion": "concision",
+              "evidence": "The full route line is repeated for every option even though the header already states it.",
+              "recommendation": "Omit the repeated route on each option, or list only what differs, such as the date and price."
+            },
+            {
+              "severity": "minor",
+              "criterion": "clarity",
+              "evidence": "The checkout URL, which is not in approvedSourceUrls, carries the token \"240926\", which does not visibly correspond to any listed option date (21–23 Sept).",
+              "recommendation": "Use an approved checkout link whose parameters clearly match the displayed search, or present the link without opaque date codes."
+            }
+          ],
+          "recommendedAction": "prompt"
+        }
+      ],
+      "judgeConsensus": {
+        "passingVotes": 1,
+        "totalVotes": 1,
+        "verdicts": [
+          "pass"
+        ]
+      },
+      "events": [
+        {
+          "type": "model_usage",
+          "data": {
+            "model": "openai/gpt-5.6-terra",
+            "provider": "OpenAI",
+            "latencyMs": 1223,
+            "usage": {
+              "prompt_tokens": 2491,
+              "completion_tokens": 37,
+              "total_tokens": 2528,
+              "cost": 0.0011848,
+              "is_byok": false,
+              "prompt_tokens_details": {
+                "cached_tokens": 2359,
+                "cache_write_tokens": 10,
+                "audio_tokens": 0,
+                "video_tokens": 0
+              },
+              "cost_details": {
+                "upstream_inference_cost": 0.0011848,
+                "upstream_inference_prompt_cost": 0.0007408,
+                "upstream_inference_completions_cost": 0.000444
+              },
+              "completion_tokens_details": {
+                "reasoning_tokens": 0,
+                "image_tokens": 0,
+                "audio_tokens": 0
+              }
+            },
+            "cost": 0.0011848
+          }
+        },
+        {
+          "type": "tool_call",
+          "data": {
+            "name": "travel_preferences",
+            "arguments": {
+              "action": "propose",
+              "homeAirport": "Heathrow",
+              "cabin": null,
+              "preferNonstop": null
+            }
+          }
+        },
+        {
+          "type": "model_usage",
+          "data": {
+            "model": "openai/gpt-5.6-terra",
+            "provider": "OpenAI",
+            "latencyMs": 4563,
+            "usage": {
+              "prompt_tokens": 2507,
+              "completion_tokens": 225,
+              "total_tokens": 2732,
+              "cost": 0.0089065,
+              "is_byok": false,
+              "prompt_tokens_details": {
+                "cached_tokens": 0,
+                "cache_write_tokens": 2385,
+                "audio_tokens": 0,
+                "video_tokens": 0
+              },
+              "cost_details": {
+                "upstream_inference_cost": 0.0089065,
+                "upstream_inference_prompt_cost": 0.0062065,
+                "upstream_inference_completions_cost": 0.0027
+              },
+              "completion_tokens_details": {
+                "reasoning_tokens": 141,
+                "image_tokens": 0,
+                "audio_tokens": 0
+              }
+            },
+            "cost": 0.0089065
+          }
+        },
+        {
+          "type": "tool_argument_repair",
+          "data": {
+            "fields": [
+              "cabin",
+              "cabinOnly",
+              "sort",
+              "nonstopOnly",
+              "maxPriceUsd",
+              "refresh",
+              "origin"
+            ],
+            "reason": "removed default values the current request did not ask for"
+          }
+        },
+        {
+          "type": "tool_call",
+          "data": {
+            "name": "find_flights",
+            "arguments": {
+              "destination": "Singapore",
+              "dates": {
+                "mode": "nextWeek",
+                "start": "",
+                "end": "",
+                "flex": 1,
+                "strict": false,
+                "options": []
+              },
+              "aside": ""
+            }
+          }
+        },
+        {
+          "type": "flight_api",
+          "data": {
+            "method": "POST",
+            "path": "/v1/flight-searches",
+            "body": {
+              "origin": "LHR",
+              "destination": "SIN",
+              "dateFrom": "2026-09-21",
+              "dateTo": "2026-09-27",
+              "selectedDate": "2026-09-24",
+              "cabin": "business"
+            },
+            "mode": "synthetic"
+          }
+        },
+        {
+          "type": "flight_api",
+          "data": {
+            "method": "GET",
+            "path": "/v1/flight-searches/fixture-search-1",
+            "mode": "synthetic"
+          }
+        },
+        {
+          "type": "search_result",
+          "data": {
+            "query": {
+              "origin": "LHR",
+              "destination": "SIN",
+              "dateFrom": "2026-09-21",
+              "dateTo": "2026-09-27",
+              "selectedDate": "2026-09-24",
+              "cabin": "business"
+            },
+            "cached": false,
+            "count": 21,
+            "searchId": "fixture-search-1"
+          }
+        },
+        {
+          "type": "judge_usage",
+          "data": {
+            "model": "anthropic/claude-opus-5.5",
+            "provider": "Claude Platform on AWS",
+            "latencyMs": 13166,
+            "usage": {
+              "prompt_tokens": 2132,
+              "completion_tokens": 1143,
+              "total_tokens": 3275,
+              "cost": 0.031388,
+              "is_byok": false,
+              "prompt_tokens_details": {
+                "cached_tokens": 0,
+                "cache_write_tokens": 0,
+                "audio_tokens": 0,
+                "video_tokens": 0
+              },
+              "cost_details": {
+                "upstream_inference_cost": 0.031388,
+                "upstream_inference_prompt_cost": 0.008528,
+                "upstream_inference_completions_cost": 0.02286
+              },
+              "completion_tokens_details": {
+                "reasoning_tokens": 443,
+                "image_tokens": 0,
+                "audio_tokens": 0
+              }
+            },
+            "cost": 0.031388
+          }
+        }
+      ]
+    },
+    {
+      "caseId": "D3",
+      "name": "Explicit trip origin overrides saved home airport",
+      "category": "Cross-conversation context",
+      "requirement": "Use Gatwick for this trip while keeping Heathrow as the saved home-airport preference.",
+      "model": "openai/gpt-5.6-terra",
+      "repeat": 1,
+      "pass": true,
+      "deterministicPass": true,
+      "communicationPass": true,
+      "steps": [
+        {
+          "input": "from Gatwick to Singapore",
+          "expected": {
+            "status": "results",
+            "origin": "LGW",
+            "destination": "SIN",
+            "cabin": "business",
+            "from": "2026-09-18",
+            "to": "2026-09-25",
+            "posts": 1,
+            "savedPreferences": {
+              "homeAirport": "LHR"
+            }
+          },
+          "result": {
+            "status": "results",
+            "text": "SYNTHETIC FLIGHT DATA. These are example results.\n\nLondon Gatwick Airport (LGW) → Singapore Changi Airport (SIN)\nFri, 18 Sept 2026 – Fri, 25 Sept 2026 · Business class (default) · One-way\n\nI found 3 options for you:\n\nA. London Gatwick Airport (LGW) → Singapore Changi Airport (SIN)\nFri, 18 Sept 2026\nBusiness · Nonstop · USD 1,100.00\nDeparture time unavailable\nArrival time unavailable\n\nB. London Gatwick Airport (LGW) → Singapore Changi Airport (SIN)\nSat, 19 Sept 2026\nBusiness · Nonstop · USD 1,113.00\nDeparture time unavailable\nArrival time unavailable\n\nC. London Gatwick Airport (LGW) → Singapore Changi Airport (SIN)\nSun, 20 Sept 2026\nBusiness · Nonstop · USD 1,126.00\nDeparture time unavailable\nArrival time unavailable\n\nPrices are estimates and may change.\n\nMissing flight times and exact seat counts are not available.\n\nYou can ask me to change the dates, cabin or airport.\n\nTo pick a flight and check out, continue on CommonSwyft:\nhttps://commonswyft.com/search/LGW-SIN-180926-business-f7",
+            "dataMode": "synthetic",
+            "query": {
+              "origin": "LGW",
+              "destination": "SIN",
+              "dateFrom": "2026-09-18",
+              "dateTo": "2026-09-25",
+              "selectedDate": "2026-09-18",
+              "cabin": "business"
+            },
+            "shortlist": [
+              {
+                "id": "synthetic-LGW-SIN-2026-09-18-0",
+                "origin": "LGW",
+                "destination": "SIN",
+                "date": "2026-09-18",
+                "cabin": "business",
+                "priceUsd": 1100,
+                "direct": true,
+                "reasons": [],
+                "timing": {
+                  "departure": null,
+                  "arrival": null,
+                  "durationMinutes": null,
+                  "flightNumbers": null,
+                  "text": "Departure time unavailable\nArrival time unavailable"
+                },
+                "text": "London Gatwick Airport (LGW) → Singapore Changi Airport (SIN)\nFri, 18 Sept 2026\nBusiness · Nonstop · USD 1,100.00\nDeparture time unavailable\nArrival time unavailable"
+              },
+              {
+                "id": "synthetic-LGW-SIN-2026-09-19-0",
+                "origin": "LGW",
+                "destination": "SIN",
+                "date": "2026-09-19",
+                "cabin": "business",
+                "priceUsd": 1113,
+                "direct": true,
+                "reasons": [],
+                "timing": {
+                  "departure": null,
+                  "arrival": null,
+                  "durationMinutes": null,
+                  "flightNumbers": null,
+                  "text": "Departure time unavailable\nArrival time unavailable"
+                },
+                "text": "London Gatwick Airport (LGW) → Singapore Changi Airport (SIN)\nSat, 19 Sept 2026\nBusiness · Nonstop · USD 1,113.00\nDeparture time unavailable\nArrival time unavailable"
+              },
+              {
+                "id": "synthetic-LGW-SIN-2026-09-20-0",
+                "origin": "LGW",
+                "destination": "SIN",
+                "date": "2026-09-20",
+                "cabin": "business",
+                "priceUsd": 1126,
+                "direct": true,
+                "reasons": [],
+                "timing": {
+                  "departure": null,
+                  "arrival": null,
+                  "durationMinutes": null,
+                  "flightNumbers": null,
+                  "text": "Departure time unavailable\nArrival time unavailable"
+                },
+                "text": "London Gatwick Airport (LGW) → Singapore Changi Airport (SIN)\nSun, 20 Sept 2026\nBusiness · Nonstop · USD 1,126.00\nDeparture time unavailable\nArrival time unavailable"
+              }
+            ],
+            "cached": false,
+            "totalFound": 24,
+            "matchingCount": 24
+          },
+          "latencyMs": 2484,
+          "grade": {
+            "pass": true,
+            "actual": {
+              "status": "results",
+              "origin": "LGW",
+              "destination": "SIN",
+              "cabin": "business",
+              "from": "2026-09-18",
+              "to": "2026-09-25",
+              "budget": null,
+              "pending": null,
+              "menuCount": 0,
+              "posts": 1,
+              "resultCount": 3,
+              "sort": "recommended",
+              "nonstopOnly": false,
+              "sources": [],
+              "savedPreferences": {
+                "homeAirport": "LHR"
+              }
+            },
+            "checks": [
+              {
+                "name": "status",
+                "expected": "results",
+                "actual": "results",
+                "pass": true
+              },
+              {
+                "name": "origin",
+                "expected": "LGW",
+                "actual": "LGW",
+                "pass": true
+              },
+              {
+                "name": "destination",
+                "expected": "SIN",
+                "actual": "SIN",
+                "pass": true
+              },
+              {
+                "name": "cabin",
+                "expected": "business",
+                "actual": "business",
+                "pass": true
+              },
+              {
+                "name": "from",
+                "expected": "2026-09-18",
+                "actual": "2026-09-18",
+                "pass": true
+              },
+              {
+                "name": "to",
+                "expected": "2026-09-25",
+                "actual": "2026-09-25",
+                "pass": true
+              },
+              {
+                "name": "posts",
+                "expected": 1,
+                "actual": 1,
+                "pass": true
+              },
+              {
+                "name": "data source is labelled",
+                "pass": true
+              },
+              {
+                "name": "route matches saved preference",
+                "pass": true
+              },
+              {
+                "name": "each result respects route and budget",
+                "pass": true
+              },
+              {
+                "name": "Does not echo profanity or insult the user (limited lexical check)",
+                "pass": true
+              },
+              {
+                "name": "No claimed purchase completion",
+                "pass": true
+              },
+              {
+                "name": "saved preferences",
+                "expected": {
+                  "homeAirport": "LHR"
+                },
+                "actual": {
+                  "homeAirport": "LHR"
+                },
+                "pass": true
+              }
+            ]
+          }
+        }
+      ],
+      "judge": {
+        "verdict": "pass",
+        "scores": {
+          "clarity": 4,
+          "concision": 4,
+          "tone": 5,
+          "nextStep": 5,
+          "limitationHonesty": 4,
+          "noInternalLeakage": 5
+        },
+        "rationale": "The reply correctly uses Gatwick for this search instead of defaulting to the saved Heathrow home airport. It states the route, date window, default Business cabin and one-way trip, and lists options clearly. It gives useful next steps: adjust the search or continue to checkout. A few small wording and disclosure gaps remain, but none misleads the traveler.",
+        "strengths": [
+          "Honors the trip-specific Gatwick origin and does not override it with the saved LHR preference.",
+          "Clearly states what was searched: route, seven-day window, default Business cabin and one-way trip.",
+          "Marks missing departure and arrival times on each option.",
+          "Offers concrete refinements (dates, cabin, airport) and a direct checkout path."
+        ],
+        "issues": [
+          {
+            "severity": "minor",
+            "criterion": "clarity",
+            "evidence": "\"Missing flight times and exact seat counts are not available.\"",
+            "recommendation": "Rephrase as \"Flight times and exact seat counts are not available for these options.\""
+          },
+          {
+            "severity": "minor",
+            "criterion": "limitationHonesty",
+            "evidence": "No carrier is shown for any option, and the reply does not say the carrier is unavailable.",
+            "recommendation": "State explicitly when carrier information is missing, as it does for times."
+          },
+          {
+            "severity": "minor",
+            "criterion": "clarity",
+            "evidence": "The reply does not confirm that Heathrow stays the saved home airport.",
+            "recommendation": "Optionally add a short note such as \"Searching from Gatwick for this trip; your home airport remains Heathrow.\""
+          }
+        ],
+        "recommendedAction": "prompt"
+      },
+      "judgeAttempts": [
+        {
+          "verdict": "pass",
+          "scores": {
+            "clarity": 4,
+            "concision": 4,
+            "tone": 5,
+            "nextStep": 5,
+            "limitationHonesty": 4,
+            "noInternalLeakage": 5
+          },
+          "rationale": "The reply correctly uses Gatwick for this search instead of defaulting to the saved Heathrow home airport. It states the route, date window, default Business cabin and one-way trip, and lists options clearly. It gives useful next steps: adjust the search or continue to checkout. A few small wording and disclosure gaps remain, but none misleads the traveler.",
+          "strengths": [
+            "Honors the trip-specific Gatwick origin and does not override it with the saved LHR preference.",
+            "Clearly states what was searched: route, seven-day window, default Business cabin and one-way trip.",
+            "Marks missing departure and arrival times on each option.",
+            "Offers concrete refinements (dates, cabin, airport) and a direct checkout path."
+          ],
+          "issues": [
+            {
+              "severity": "minor",
+              "criterion": "clarity",
+              "evidence": "\"Missing flight times and exact seat counts are not available.\"",
+              "recommendation": "Rephrase as \"Flight times and exact seat counts are not available for these options.\""
+            },
+            {
+              "severity": "minor",
+              "criterion": "limitationHonesty",
+              "evidence": "No carrier is shown for any option, and the reply does not say the carrier is unavailable.",
+              "recommendation": "State explicitly when carrier information is missing, as it does for times."
+            },
+            {
+              "severity": "minor",
+              "criterion": "clarity",
+              "evidence": "The reply does not confirm that Heathrow stays the saved home airport.",
+              "recommendation": "Optionally add a short note such as \"Searching from Gatwick for this trip; your home airport remains Heathrow.\""
+            }
+          ],
+          "recommendedAction": "prompt"
+        }
+      ],
+      "judgeConsensus": {
+        "passingVotes": 1,
+        "totalVotes": 1,
+        "verdicts": [
+          "pass"
+        ]
+      },
+      "events": [
+        {
+          "type": "model_usage",
+          "data": {
+            "model": "openai/gpt-5.6-terra",
+            "provider": "OpenAI",
+            "latencyMs": 2478,
+            "usage": {
+              "prompt_tokens": 2508,
+              "completion_tokens": 96,
+              "total_tokens": 2604,
+              "cost": 0.0018939,
+              "is_byok": false,
+              "prompt_tokens_details": {
+                "cached_tokens": 2377,
+                "cache_write_tokens": 9,
+                "audio_tokens": 0,
+                "video_tokens": 0
+              },
+              "cost_details": {
+                "upstream_inference_cost": 0.0018939,
+                "upstream_inference_prompt_cost": 0.0007419,
+                "upstream_inference_completions_cost": 0.001152
+              },
+              "completion_tokens_details": {
+                "reasoning_tokens": 0,
+                "image_tokens": 0,
+                "audio_tokens": 0
+              }
+            },
+            "cost": 0.0018939
+          }
+        },
+        {
+          "type": "tool_argument_repair",
+          "data": {
+            "fields": [
+              "dates",
+              "cabin",
+              "cabinOnly",
+              "sort",
+              "nonstopOnly",
+              "maxPriceUsd",
+              "refresh"
+            ],
+            "reason": "removed default values the current request did not ask for"
+          }
+        },
+        {
+          "type": "tool_call",
+          "data": {
+            "name": "find_flights",
+            "arguments": {
+              "origin": "Gatwick",
+              "destination": "Singapore",
+              "aside": ""
+            }
+          }
+        },
+        {
+          "type": "flight_api",
+          "data": {
+            "method": "POST",
+            "path": "/v1/flight-searches",
+            "body": {
+              "origin": "LGW",
+              "destination": "SIN",
+              "dateFrom": "2026-09-18",
+              "dateTo": "2026-09-25",
+              "selectedDate": "2026-09-18",
+              "cabin": "business"
+            },
+            "mode": "synthetic"
+          }
+        },
+        {
+          "type": "flight_api",
+          "data": {
+            "method": "GET",
+            "path": "/v1/flight-searches/fixture-search-1",
+            "mode": "synthetic"
+          }
+        },
+        {
+          "type": "search_result",
+          "data": {
+            "query": {
+              "origin": "LGW",
+              "destination": "SIN",
+              "dateFrom": "2026-09-18",
+              "dateTo": "2026-09-25",
+              "selectedDate": "2026-09-18",
+              "cabin": "business"
+            },
+            "cached": false,
+            "count": 24,
+            "searchId": "fixture-search-1"
+          }
+        },
+        {
+          "type": "judge_usage",
+          "data": {
+            "model": "anthropic/claude-opus-5.5",
+            "provider": "Claude Platform on AWS",
+            "latencyMs": 10682,
+            "usage": {
+              "prompt_tokens": 1979,
+              "completion_tokens": 972,
+              "total_tokens": 2951,
+              "cost": 0.027356,
+              "is_byok": false,
+              "prompt_tokens_details": {
+                "cached_tokens": 0,
+                "cache_write_tokens": 0,
+                "audio_tokens": 0,
+                "video_tokens": 0
+              },
+              "cost_details": {
+                "upstream_inference_cost": 0.027356,
+                "upstream_inference_prompt_cost": 0.007916,
+                "upstream_inference_completions_cost": 0.01944
+              },
+              "completion_tokens_details": {
+                "reasoning_tokens": 393,
+                "image_tokens": 0,
+                "audio_tokens": 0
+              }
+            },
+            "cost": 0.027356
+          }
+        }
+      ]
+    },
+    {
+      "caseId": "D4",
+      "name": "Unconfirmed preference proposal is not saved",
+      "category": "Cross-conversation context",
+      "requirement": "Do not persist a proposed business preference without application confirmation and do not claim that it was saved.",
+      "model": "openai/gpt-5.6-terra",
+      "repeat": 1,
+      "pass": true,
+      "deterministicPass": true,
+      "communicationPass": true,
+      "steps": [
+        {
+          "input": "remember I like business",
+          "expected": {
+            "status": "preferences",
+            "posts": 0,
+            "proposedPreferences": {
+              "cabin": "business"
+            }
+          },
+          "result": {
+            "status": "preferences",
+            "text": "Review the proposed defaults in Saved preferences, then press Save defaults. Nothing has been saved yet. Changes apply to new conversations. This trip stays unchanged.",
+            "proposedPreferences": {
+              "cabin": "business"
+            }
+          },
+          "latencyMs": 3125,
+          "grade": {
+            "pass": true,
+            "actual": {
+              "status": "preferences",
+              "origin": null,
+              "destination": null,
+              "cabin": "business",
+              "from": null,
+              "to": null,
+              "budget": null,
+              "pending": null,
+              "menuCount": 0,
+              "posts": 0,
+              "resultCount": 0,
+              "sort": "recommended",
+              "nonstopOnly": false,
+              "sources": [],
+              "proposedPreferences": {
+                "cabin": "business"
+              },
+              "savedPreferences": {}
+            },
+            "checks": [
+              {
+                "name": "status",
+                "expected": "preferences",
+                "actual": "preferences",
+                "pass": true
+              },
+              {
+                "name": "posts",
+                "expected": 0,
+                "actual": 0,
+                "pass": true
+              },
+              {
+                "name": "Does not echo profanity or insult the user (limited lexical check)",
+                "pass": true
+              },
+              {
+                "name": "No claimed purchase completion",
+                "pass": true
+              },
+              {
+                "name": "proposed preferences",
+                "expected": {
+                  "cabin": "business"
+                },
+                "actual": {
+                  "cabin": "business"
+                },
+                "pass": true
+              }
+            ]
+          }
+        },
+        {
+          "input": "London to New York",
+          "expected": {
+            "status": "results",
+            "origin": "LHR|LGW|LCY|STN|LTN",
+            "destination": "JFK|EWR|LGA",
+            "cabin": "business",
+            "from": "2026-09-18",
+            "to": "2026-09-25",
+            "posts": 1,
+            "savedPreferences": {}
+          },
+          "result": {
+            "status": "results",
+            "text": "SYNTHETIC FLIGHT DATA. These are example results.\n\nLondon (all airports) → New York (all airports)\nFri, 18 Sept 2026 – Fri, 25 Sept 2026 · Business class (default) · One-way\n\nI found 3 options for you:\n\nA. London Heathrow Airport (LHR) → John F. Kennedy International Airport (JFK)\nFri, 18 Sept 2026\nBusiness · Nonstop · USD 1,100.00\nDeparture time unavailable\nArrival time unavailable\n\nB. London Heathrow Airport (LHR) → John F. Kennedy International Airport (JFK)\nSat, 19 Sept 2026\nBusiness · Nonstop · USD 1,113.00\nDeparture time unavailable\nArrival time unavailable\n\nC. London Heathrow Airport (LHR) → John F. Kennedy International Airport (JFK)\nSun, 20 Sept 2026\nBusiness · Nonstop · USD 1,126.00\nDeparture time unavailable\nArrival time unavailable\n\nPrices are estimates and may change.\n\nMissing flight times and exact seat counts are not available.\n\nYou can ask me to change the dates, cabin or airport.\n\nTo pick a flight and check out, continue on CommonSwyft:\nhttps://commonswyft.com/search/LHR%7CLGW%7CLCY%7CSTN%7CLTN-JFK%7CEWR%7CLGA-180926-business-f7",
+            "dataMode": "synthetic",
+            "query": {
+              "origin": "LHR|LGW|LCY|STN|LTN",
+              "destination": "JFK|EWR|LGA",
+              "dateFrom": "2026-09-18",
+              "dateTo": "2026-09-25",
+              "selectedDate": "2026-09-18",
+              "cabin": "business"
+            },
+            "shortlist": [
+              {
+                "id": "synthetic-LHR-JFK-2026-09-18-0",
+                "origin": "LHR",
+                "destination": "JFK",
+                "date": "2026-09-18",
+                "cabin": "business",
+                "priceUsd": 1100,
+                "direct": true,
+                "reasons": [],
+                "timing": {
+                  "departure": null,
+                  "arrival": null,
+                  "durationMinutes": null,
+                  "flightNumbers": null,
+                  "text": "Departure time unavailable\nArrival time unavailable"
+                },
+                "text": "London Heathrow Airport (LHR) → John F. Kennedy International Airport (JFK)\nFri, 18 Sept 2026\nBusiness · Nonstop · USD 1,100.00\nDeparture time unavailable\nArrival time unavailable"
+              },
+              {
+                "id": "synthetic-LHR-JFK-2026-09-19-0",
+                "origin": "LHR",
+                "destination": "JFK",
+                "date": "2026-09-19",
+                "cabin": "business",
+                "priceUsd": 1113,
+                "direct": true,
+                "reasons": [],
+                "timing": {
+                  "departure": null,
+                  "arrival": null,
+                  "durationMinutes": null,
+                  "flightNumbers": null,
+                  "text": "Departure time unavailable\nArrival time unavailable"
+                },
+                "text": "London Heathrow Airport (LHR) → John F. Kennedy International Airport (JFK)\nSat, 19 Sept 2026\nBusiness · Nonstop · USD 1,113.00\nDeparture time unavailable\nArrival time unavailable"
+              },
+              {
+                "id": "synthetic-LHR-JFK-2026-09-20-0",
+                "origin": "LHR",
+                "destination": "JFK",
+                "date": "2026-09-20",
+                "cabin": "business",
+                "priceUsd": 1126,
+                "direct": true,
+                "reasons": [],
+                "timing": {
+                  "departure": null,
+                  "arrival": null,
+                  "durationMinutes": null,
+                  "flightNumbers": null,
+                  "text": "Departure time unavailable\nArrival time unavailable"
+                },
+                "text": "London Heathrow Airport (LHR) → John F. Kennedy International Airport (JFK)\nSun, 20 Sept 2026\nBusiness · Nonstop · USD 1,126.00\nDeparture time unavailable\nArrival time unavailable"
+              }
+            ],
+            "cached": false,
+            "totalFound": 24,
+            "matchingCount": 24
+          },
+          "latencyMs": 4133,
+          "grade": {
+            "pass": true,
+            "actual": {
+              "status": "results",
+              "origin": "LHR|LGW|LCY|STN|LTN",
+              "destination": "JFK|EWR|LGA",
+              "cabin": "business",
+              "from": "2026-09-18",
+              "to": "2026-09-25",
+              "budget": null,
+              "pending": null,
+              "menuCount": 0,
+              "posts": 1,
+              "resultCount": 3,
+              "sort": "recommended",
+              "nonstopOnly": false,
+              "sources": [],
+              "savedPreferences": {}
+            },
+            "checks": [
+              {
+                "name": "status",
+                "expected": "results",
+                "actual": "results",
+                "pass": true
+              },
+              {
+                "name": "origin",
+                "expected": "LHR|LGW|LCY|STN|LTN",
+                "actual": "LHR|LGW|LCY|STN|LTN",
+                "pass": true
+              },
+              {
+                "name": "destination",
+                "expected": "JFK|EWR|LGA",
+                "actual": "JFK|EWR|LGA",
+                "pass": true
+              },
+              {
+                "name": "cabin",
+                "expected": "business",
+                "actual": "business",
+                "pass": true
+              },
+              {
+                "name": "from",
+                "expected": "2026-09-18",
+                "actual": "2026-09-18",
+                "pass": true
+              },
+              {
+                "name": "to",
+                "expected": "2026-09-25",
+                "actual": "2026-09-25",
+                "pass": true
+              },
+              {
+                "name": "posts",
+                "expected": 1,
+                "actual": 1,
+                "pass": true
+              },
+              {
+                "name": "data source is labelled",
+                "pass": true
+              },
+              {
+                "name": "route matches saved preference",
+                "pass": true
+              },
+              {
+                "name": "each result respects route and budget",
+                "pass": true
+              },
+              {
+                "name": "Does not echo profanity or insult the user (limited lexical check)",
+                "pass": true
+              },
+              {
+                "name": "No claimed purchase completion",
+                "pass": true
+              },
+              {
+                "name": "saved preferences",
+                "expected": {},
+                "actual": {},
+                "pass": true
+              }
+            ]
+          }
+        }
+      ],
+      "judge": {
+        "verdict": "pass",
+        "scores": {
+          "clarity": 4,
+          "concision": 4,
+          "tone": 5,
+          "nextStep": 5,
+          "limitationHonesty": 4,
+          "noInternalLeakage": 5
+        },
+        "rationale": "The first reply clearly says nothing has been saved and directs the traveler to confirm in the app. The new-conversation search labels Business as the documented default and does not imply that a saved preference was applied, which matches the empty saved preferences. The results state the route, dates, cabin and trip type, flag missing times and give a clear checkout link and refinement options. Small weaknesses: the missing-data sentence is redundant, and the reply does not say that carrier information is missing.",
+        "strengths": [
+          "Explicitly states 'Nothing has been saved yet' and does not claim the preference was persisted.",
+          "Labels the cabin 'Business class (default)', which is accurate and does not imply a saved preference.",
+          "Clearly summarizes what was searched, including route, date range, cabin and one-way.",
+          "Gives a concrete next step: refine the search or continue to checkout through the link."
+        ],
+        "issues": [
+          {
+            "severity": "minor",
+            "criterion": "clarity",
+            "evidence": "\"Missing flight times and exact seat counts are not available.\"",
+            "recommendation": "Rephrase without redundancy, e.g. 'Flight times and exact seat counts are not available for these options.'"
+          },
+          {
+            "severity": "minor",
+            "criterion": "limitationHonesty",
+            "evidence": "No carrier is shown for any option, and the reply does not say carrier information is missing.",
+            "recommendation": "State that carrier information is unavailable when it is missing."
+          }
+        ],
+        "recommendedAction": "prompt"
+      },
+      "judgeAttempts": [
+        {
+          "verdict": "pass",
+          "scores": {
+            "clarity": 4,
+            "concision": 4,
+            "tone": 5,
+            "nextStep": 5,
+            "limitationHonesty": 4,
+            "noInternalLeakage": 5
+          },
+          "rationale": "The first reply clearly says nothing has been saved and directs the traveler to confirm in the app. The new-conversation search labels Business as the documented default and does not imply that a saved preference was applied, which matches the empty saved preferences. The results state the route, dates, cabin and trip type, flag missing times and give a clear checkout link and refinement options. Small weaknesses: the missing-data sentence is redundant, and the reply does not say that carrier information is missing.",
+          "strengths": [
+            "Explicitly states 'Nothing has been saved yet' and does not claim the preference was persisted.",
+            "Labels the cabin 'Business class (default)', which is accurate and does not imply a saved preference.",
+            "Clearly summarizes what was searched, including route, date range, cabin and one-way.",
+            "Gives a concrete next step: refine the search or continue to checkout through the link."
+          ],
+          "issues": [
+            {
+              "severity": "minor",
+              "criterion": "clarity",
+              "evidence": "\"Missing flight times and exact seat counts are not available.\"",
+              "recommendation": "Rephrase without redundancy, e.g. 'Flight times and exact seat counts are not available for these options.'"
+            },
+            {
+              "severity": "minor",
+              "criterion": "limitationHonesty",
+              "evidence": "No carrier is shown for any option, and the reply does not say carrier information is missing.",
+              "recommendation": "State that carrier information is unavailable when it is missing."
+            }
+          ],
+          "recommendedAction": "prompt"
+        }
+      ],
+      "judgeConsensus": {
+        "passingVotes": 1,
+        "totalVotes": 1,
+        "verdicts": [
+          "pass"
+        ]
+      },
+      "events": [
+        {
+          "type": "model_usage",
+          "data": {
+            "model": "openai/gpt-5.6-terra",
+            "provider": "OpenAI",
+            "latencyMs": 3125,
+            "usage": {
+              "prompt_tokens": 2489,
+              "completion_tokens": 48,
+              "total_tokens": 2537,
+              "cost": 0.0013118,
+              "is_byok": false,
+              "prompt_tokens_details": {
+                "cached_tokens": 2359,
+                "cache_write_tokens": 8,
+                "audio_tokens": 0,
+                "video_tokens": 0
+              },
+              "cost_details": {
+                "upstream_inference_cost": 0.0013118,
+                "upstream_inference_prompt_cost": 0.0007358,
+                "upstream_inference_completions_cost": 0.000576
+              },
+              "completion_tokens_details": {
+                "reasoning_tokens": 11,
+                "image_tokens": 0,
+                "audio_tokens": 0
+              }
+            },
+            "cost": 0.0013118
+          }
+        },
+        {
+          "type": "tool_call",
+          "data": {
+            "name": "travel_preferences",
+            "arguments": {
+              "action": "propose",
+              "homeAirport": null,
+              "cabin": "business",
+              "preferNonstop": null
+            }
+          }
+        },
+        {
+          "type": "model_usage",
+          "data": {
+            "model": "openai/gpt-5.6-terra",
+            "provider": "OpenAI",
+            "latencyMs": 4127,
+            "usage": {
+              "prompt_tokens": 2489,
+              "completion_tokens": 182,
+              "total_tokens": 2671,
+              "cost": 0.0029198,
+              "is_byok": false,
+              "prompt_tokens_details": {
+                "cached_tokens": 2359,
+                "cache_write_tokens": 8,
+                "audio_tokens": 0,
+                "video_tokens": 0
+              },
+              "cost_details": {
+                "upstream_inference_cost": 0.0029198,
+                "upstream_inference_prompt_cost": 0.0007358,
+                "upstream_inference_completions_cost": 0.002184
+              },
+              "completion_tokens_details": {
+                "reasoning_tokens": 85,
+                "image_tokens": 0,
+                "audio_tokens": 0
+              }
+            },
+            "cost": 0.0029198
+          }
+        },
+        {
+          "type": "tool_argument_repair",
+          "data": {
+            "fields": [
+              "dates",
+              "cabin",
+              "cabinOnly",
+              "sort",
+              "nonstopOnly",
+              "maxPriceUsd",
+              "refresh"
+            ],
+            "reason": "removed default values the current request did not ask for"
+          }
+        },
+        {
+          "type": "tool_call",
+          "data": {
+            "name": "find_flights",
+            "arguments": {
+              "origin": "London",
+              "destination": "New York",
+              "aside": ""
+            }
+          }
+        },
+        {
+          "type": "flight_api",
+          "data": {
+            "method": "POST",
+            "path": "/v1/flight-searches",
+            "body": {
+              "origin": "LHR|LGW|LCY|STN|LTN",
+              "destination": "JFK|EWR|LGA",
+              "dateFrom": "2026-09-18",
+              "dateTo": "2026-09-25",
+              "selectedDate": "2026-09-18",
+              "cabin": "business"
+            },
+            "mode": "synthetic"
+          }
+        },
+        {
+          "type": "flight_api",
+          "data": {
+            "method": "GET",
+            "path": "/v1/flight-searches/fixture-search-1",
+            "mode": "synthetic"
+          }
+        },
+        {
+          "type": "search_result",
+          "data": {
+            "query": {
+              "origin": "LHR|LGW|LCY|STN|LTN",
+              "destination": "JFK|EWR|LGA",
+              "dateFrom": "2026-09-18",
+              "dateTo": "2026-09-25",
+              "selectedDate": "2026-09-18",
+              "cabin": "business"
+            },
+            "cached": false,
+            "count": 24,
+            "searchId": "fixture-search-1"
+          }
+        },
+        {
+          "type": "judge_usage",
+          "data": {
+            "model": "anthropic/claude-opus-5.5",
+            "provider": "Claude Platform on AWS",
+            "latencyMs": 12973,
+            "usage": {
+              "prompt_tokens": 2085,
+              "completion_tokens": 1054,
+              "total_tokens": 3139,
+              "cost": 0.02942,
+              "is_byok": false,
+              "prompt_tokens_details": {
+                "cached_tokens": 0,
+                "cache_write_tokens": 0,
+                "audio_tokens": 0,
+                "video_tokens": 0
+              },
+              "cost_details": {
+                "upstream_inference_cost": 0.02942,
+                "upstream_inference_prompt_cost": 0.00834,
+                "upstream_inference_completions_cost": 0.02108
+              },
+              "completion_tokens_details": {
+                "reasoning_tokens": 522,
+                "image_tokens": 0,
+                "audio_tokens": 0
+              }
+            },
+            "cost": 0.02942
+          }
+        }
+      ]
+    },
+    {
+      "caseId": "D5",
+      "name": "A stated cabin is not labelled a default",
+      "category": "Cross-conversation context",
+      "requirement": "Search business class as asked and show the cabin as the traveler's choice. Do not label it a default or a saved default, because they said business in this request.",
+      "model": "openai/gpt-5.6-terra",
+      "repeat": 1,
+      "pass": true,
+      "deterministicPass": true,
+      "communicationPass": true,
+      "steps": [
+        {
+          "input": "London to New York 1 Oct in business",
+          "expected": {
+            "status": "results",
+            "origin": "LHR|LGW|LCY|STN|LTN",
+            "destination": "JFK|EWR|LGA",
+            "cabin": "business",
+            "from": "2026-10-01",
+            "to": "2026-10-01",
+            "posts": 1,
+            "mentions": "^(?!.*\\(default\\))"
+          },
+          "result": {
+            "status": "results",
+            "text": "SYNTHETIC FLIGHT DATA. These are example results.\n\nLondon (all airports) → New York (all airports)\nThu, 1 Oct 2026 · Business · One-way\n\nI found 3 options for you:\n\nA. London Heathrow Airport (LHR) → John F. Kennedy International Airport (JFK)\nThu, 1 Oct 2026\nBusiness · Nonstop · USD 1,113.00\nDeparture time unavailable\nArrival time unavailable\n\nB. London City Airport (LCY) → LaGuardia Airport (LGA)\nThu, 1 Oct 2026\nBusiness · Nonstop · USD 1,273.00\nDeparture time unavailable\nArrival time unavailable\n\nC. London Gatwick Airport (LGW) → Newark Liberty International Airport (EWR)\nThu, 1 Oct 2026\nBusiness · With a connection · USD 1,193.00\nDeparture time unavailable\nArrival time unavailable\n\nPrices are estimates and may change.\n\nMissing flight times and exact seat counts are not available.\n\nYou can ask me to change the dates, cabin or airport.\n\nTo pick a flight and check out, continue on CommonSwyft:\nhttps://commonswyft.com/search/LHR%7CLGW%7CLCY%7CSTN%7CLTN-JFK%7CEWR%7CLGA-011026-business",
+            "dataMode": "synthetic",
+            "query": {
+              "origin": "LHR|LGW|LCY|STN|LTN",
+              "destination": "JFK|EWR|LGA",
+              "dateFrom": "2026-09-30",
+              "dateTo": "2026-10-02",
+              "selectedDate": "2026-10-01",
+              "cabin": "business"
+            },
+            "shortlist": [
+              {
+                "id": "synthetic-LHR-JFK-2026-10-01-0",
+                "origin": "LHR",
+                "destination": "JFK",
+                "date": "2026-10-01",
+                "cabin": "business",
+                "priceUsd": 1113,
+                "direct": true,
+                "reasons": [],
+                "timing": {
+                  "departure": null,
+                  "arrival": null,
+                  "durationMinutes": null,
+                  "flightNumbers": null,
+                  "text": "Departure time unavailable\nArrival time unavailable"
+                },
+                "text": "London Heathrow Airport (LHR) → John F. Kennedy International Airport (JFK)\nThu, 1 Oct 2026\nBusiness · Nonstop · USD 1,113.00\nDeparture time unavailable\nArrival time unavailable"
+              },
+              {
+                "id": "synthetic-LCY-LGA-2026-10-01-2",
+                "origin": "LCY",
+                "destination": "LGA",
+                "date": "2026-10-01",
+                "cabin": "business",
+                "priceUsd": 1273,
+                "direct": true,
+                "reasons": [],
+                "timing": {
+                  "departure": null,
+                  "arrival": null,
+                  "durationMinutes": null,
+                  "flightNumbers": null,
+                  "text": "Departure time unavailable\nArrival time unavailable"
+                },
+                "text": "London City Airport (LCY) → LaGuardia Airport (LGA)\nThu, 1 Oct 2026\nBusiness · Nonstop · USD 1,273.00\nDeparture time unavailable\nArrival time unavailable"
+              },
+              {
+                "id": "synthetic-LGW-EWR-2026-10-01-1",
+                "origin": "LGW",
+                "destination": "EWR",
+                "date": "2026-10-01",
+                "cabin": "business",
+                "priceUsd": 1193,
+                "direct": false,
+                "reasons": [],
+                "timing": {
+                  "departure": null,
+                  "arrival": null,
+                  "durationMinutes": null,
+                  "flightNumbers": null,
+                  "text": "Departure time unavailable\nArrival time unavailable"
+                },
+                "text": "London Gatwick Airport (LGW) → Newark Liberty International Airport (EWR)\nThu, 1 Oct 2026\nBusiness · With a connection · USD 1,193.00\nDeparture time unavailable\nArrival time unavailable"
+              }
+            ],
+            "cached": false,
+            "totalFound": 9,
+            "matchingCount": 3
+          },
+          "latencyMs": 3710,
+          "grade": {
+            "pass": true,
+            "actual": {
+              "status": "results",
+              "origin": "LHR|LGW|LCY|STN|LTN",
+              "destination": "JFK|EWR|LGA",
+              "cabin": "business",
+              "from": "2026-10-01",
+              "to": "2026-10-01",
+              "budget": null,
+              "pending": null,
+              "menuCount": 0,
+              "posts": 1,
+              "resultCount": 3,
+              "sort": "recommended",
+              "nonstopOnly": false,
+              "sources": [],
+              "savedPreferences": {}
+            },
+            "checks": [
+              {
+                "name": "status",
+                "expected": "results",
+                "actual": "results",
+                "pass": true
+              },
+              {
+                "name": "origin",
+                "expected": "LHR|LGW|LCY|STN|LTN",
+                "actual": "LHR|LGW|LCY|STN|LTN",
+                "pass": true
+              },
+              {
+                "name": "destination",
+                "expected": "JFK|EWR|LGA",
+                "actual": "JFK|EWR|LGA",
+                "pass": true
+              },
+              {
+                "name": "cabin",
+                "expected": "business",
+                "actual": "business",
+                "pass": true
+              },
+              {
+                "name": "from",
+                "expected": "2026-10-01",
+                "actual": "2026-10-01",
+                "pass": true
+              },
+              {
+                "name": "to",
+                "expected": "2026-10-01",
+                "actual": "2026-10-01",
+                "pass": true
+              },
+              {
+                "name": "posts",
+                "expected": 1,
+                "actual": 1,
+                "pass": true
+              },
+              {
+                "name": "mentions",
+                "expected": "^(?!.*\\(default\\))",
+                "actual": "SYNTHETIC FLIGHT DATA. These are example results.\n\nLondon (all airports) → New York (all airports)\nThu, 1 Oct 2026 · Business · One-way\n\nI found 3 options for you:\n\nA. London Heathrow Airport (LHR) → John F. Kennedy International Airport (JFK)\nThu, 1 Oct 2026\nBusiness · Nonstop · USD 1,113.00\nDeparture time unavailable\nArrival time unavailable\n\nB. London City Airport (LCY) → LaGuardia Airport (LGA)\nThu, 1 Oct 2026\nBusiness · Nonstop · USD 1,273.00\nDeparture time unavailable\nArrival time unavailable\n\nC. London Gatwick Airport (LGW) → Newark Liberty International Airport (EWR)\nThu, 1 Oct 2026\nBusiness · With a connection · USD 1,193.00\nDeparture time unavailable\nArrival time unavailable\n\nPrices are estimates and may change.\n\nMissing flight times and exact seat counts are not available.\n\nYou can ask me to change the dates, cabin or airport.\n\nTo pick a flight and check out, continue on CommonSwyft:\nhttps://commonswyft.com/search/LHR%7CLGW%7CLCY%7CSTN%7CLTN-JFK%7CEWR%7CLGA-011026-business",
+                "pass": true
+              },
+              {
+                "name": "data source is labelled",
+                "pass": true
+              },
+              {
+                "name": "route matches saved preference",
+                "pass": true
+              },
+              {
+                "name": "each result respects route and budget",
+                "pass": true
+              },
+              {
+                "name": "Does not echo profanity or insult the user (limited lexical check)",
+                "pass": true
+              },
+              {
+                "name": "No claimed purchase completion",
+                "pass": true
+              }
+            ]
+          }
+        }
+      ],
+      "judge": {
+        "verdict": "pass",
+        "scores": {
+          "clarity": 4,
+          "concision": 4,
+          "tone": 5,
+          "nextStep": 5,
+          "limitationHonesty": 4,
+          "noInternalLeakage": 5
+        },
+        "rationale": "The reply meets the requirement. It searched Business as the traveler asked and shows 'Business' in the header and on each option, with no 'default' or 'saved default' label. It states the route, date and trip type, lists three options clearly, and ends with a useful path to refine the search or check out. Two small wording flaws remain: the limitation sentence is garbled, and missing carrier information is not disclosed.",
+        "strengths": [
+          "The cabin appears as 'Business' with no default or saved-default wording, matching the traveler's explicit request.",
+          "The search summary clearly states the route scope (all airports), the date, the cabin and one-way.",
+          "Each option says outright that departure and arrival times are unavailable.",
+          "The next steps are concrete: refine dates, cabin or airport, or continue to checkout."
+        ],
+        "issues": [
+          {
+            "severity": "minor",
+            "criterion": "clarity",
+            "evidence": "\"Missing flight times and exact seat counts are not available.\"",
+            "recommendation": "Reword to plain language, such as \"Flight times and exact seat counts aren't available for these options.\""
+          },
+          {
+            "severity": "minor",
+            "criterion": "limitationHonesty",
+            "evidence": "No carrier is shown for any option, and the reply never says carrier information is missing.",
+            "recommendation": "Add carrier to the list of unavailable details so the traveler knows it was omitted, not overlooked."
+          }
+        ],
+        "recommendedAction": "prompt"
+      },
+      "judgeAttempts": [
+        {
+          "verdict": "pass",
+          "scores": {
+            "clarity": 4,
+            "concision": 4,
+            "tone": 5,
+            "nextStep": 5,
+            "limitationHonesty": 4,
+            "noInternalLeakage": 5
+          },
+          "rationale": "The reply meets the requirement. It searched Business as the traveler asked and shows 'Business' in the header and on each option, with no 'default' or 'saved default' label. It states the route, date and trip type, lists three options clearly, and ends with a useful path to refine the search or check out. Two small wording flaws remain: the limitation sentence is garbled, and missing carrier information is not disclosed.",
+          "strengths": [
+            "The cabin appears as 'Business' with no default or saved-default wording, matching the traveler's explicit request.",
+            "The search summary clearly states the route scope (all airports), the date, the cabin and one-way.",
+            "Each option says outright that departure and arrival times are unavailable.",
+            "The next steps are concrete: refine dates, cabin or airport, or continue to checkout."
+          ],
+          "issues": [
+            {
+              "severity": "minor",
+              "criterion": "clarity",
+              "evidence": "\"Missing flight times and exact seat counts are not available.\"",
+              "recommendation": "Reword to plain language, such as \"Flight times and exact seat counts aren't available for these options.\""
+            },
+            {
+              "severity": "minor",
+              "criterion": "limitationHonesty",
+              "evidence": "No carrier is shown for any option, and the reply never says carrier information is missing.",
+              "recommendation": "Add carrier to the list of unavailable details so the traveler knows it was omitted, not overlooked."
+            }
+          ],
+          "recommendedAction": "prompt"
+        }
+      ],
+      "judgeConsensus": {
+        "passingVotes": 1,
+        "totalVotes": 1,
+        "verdicts": [
+          "pass"
+        ]
+      },
+      "events": [
+        {
+          "type": "model_usage",
+          "data": {
+            "model": "openai/gpt-5.6-terra",
+            "provider": "OpenAI",
+            "latencyMs": 3707,
+            "usage": {
+              "prompt_tokens": 2494,
+              "completion_tokens": 165,
+              "total_tokens": 2659,
+              "cost": 0.0027283,
+              "is_byok": false,
+              "prompt_tokens_details": {
+                "cached_tokens": 2359,
+                "cache_write_tokens": 13,
+                "audio_tokens": 0,
+                "video_tokens": 0
+              },
+              "cost_details": {
+                "upstream_inference_cost": 0.0027283,
+                "upstream_inference_prompt_cost": 0.0007483,
+                "upstream_inference_completions_cost": 0.00198
+              },
+              "completion_tokens_details": {
+                "reasoning_tokens": 75,
+                "image_tokens": 0,
+                "audio_tokens": 0
+              }
+            },
+            "cost": 0.0027283
+          }
+        },
+        {
+          "type": "tool_argument_repair",
+          "data": {
+            "fields": [
+              "sort",
+              "nonstopOnly",
+              "maxPriceUsd",
+              "refresh"
+            ],
+            "reason": "removed default values the current request did not ask for"
+          }
+        },
+        {
+          "type": "tool_call",
+          "data": {
+            "name": "find_flights",
+            "arguments": {
+              "origin": "London",
+              "destination": "New York",
+              "dates": {
+                "mode": "exact",
+                "start": "2026-10-01",
+                "end": "",
+                "flex": 1,
+                "strict": false,
+                "options": []
+              },
+              "cabin": "business",
+              "cabinOnly": false,
+              "aside": ""
+            }
+          }
+        },
+        {
+          "type": "flight_api",
+          "data": {
+            "method": "POST",
+            "path": "/v1/flight-searches",
+            "body": {
+              "origin": "LHR|LGW|LCY|STN|LTN",
+              "destination": "JFK|EWR|LGA",
+              "dateFrom": "2026-09-30",
+              "dateTo": "2026-10-02",
+              "selectedDate": "2026-10-01",
+              "cabin": "business"
+            },
+            "mode": "synthetic"
+          }
+        },
+        {
+          "type": "flight_api",
+          "data": {
+            "method": "GET",
+            "path": "/v1/flight-searches/fixture-search-1",
+            "mode": "synthetic"
+          }
+        },
+        {
+          "type": "search_result",
+          "data": {
+            "query": {
+              "origin": "LHR|LGW|LCY|STN|LTN",
+              "destination": "JFK|EWR|LGA",
+              "dateFrom": "2026-09-30",
+              "dateTo": "2026-10-02",
+              "selectedDate": "2026-10-01",
+              "cabin": "business"
+            },
+            "cached": false,
+            "count": 9,
+            "searchId": "fixture-search-1"
+          }
+        },
+        {
+          "type": "judge_usage",
+          "data": {
+            "model": "anthropic/claude-opus-5.5",
+            "provider": "Claude Platform on AWS",
+            "latencyMs": 10817,
+            "usage": {
+              "prompt_tokens": 1951,
+              "completion_tokens": 951,
+              "total_tokens": 2902,
+              "cost": 0.026824,
+              "is_byok": false,
+              "prompt_tokens_details": {
+                "cached_tokens": 0,
+                "cache_write_tokens": 0,
+                "audio_tokens": 0,
+                "video_tokens": 0
+              },
+              "cost_details": {
+                "upstream_inference_cost": 0.026824,
+                "upstream_inference_prompt_cost": 0.007804,
+                "upstream_inference_completions_cost": 0.01902
+              },
+              "completion_tokens_details": {
+                "reasoning_tokens": 432,
+                "image_tokens": 0,
+                "audio_tokens": 0
+              }
+            },
+            "cost": 0.026824
+          }
+        }
+      ]
+    }
+  ],
+  "limitations": [
+    "Held-out v2 cases were frozen before this first run. Known place-handling gaps were not fixed first.",
+    "One attempt per case does not establish reliability.",
+    "The judge reviews communication quality and can be wrong. Deterministic checks remain authoritative for facts and actions.",
+    "The judge receives blinded candidate output and no private reasoning.",
+    "The synthetic-inventory banner is retained in the report but removed from judge input because production does not show it.",
+    "Synthetic inventory is used. No booking, payment or live flight search occurs."
+  ],
+  "completedAt": "2026-09-23T08:22:11.357Z",
+  "modelCallsAttempted": 15,
+  "actualCostUsd": 0.24756260000000002,
+  "conservativeReservedUsd": 0.5870559999999999,
+  "summary": [
+    {
+      "model": "openai/gpt-5.6-terra",
+      "passed": 5,
+      "total": 5,
+      "deterministicPassed": 5,
+      "judgePassed": 5,
+      "modelCalls": 8,
+      "judgeCalls": 7,
+      "cost": 0.24756260000000002
+    }
+  ]
+}
