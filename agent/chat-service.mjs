@@ -5,6 +5,7 @@ import { Agent,OpenRouterModel } from './model.mjs';
 import { SearchConversation,isoToday,welcomeFor,fullAirport } from './search.mjs';
 import { makeStagingAdapter,readStagingToken } from './staging.mjs';
 import { loadCaptures,makeReplayAdapter } from './replay.mjs';
+import { makeFixtureAdapter } from './fixtures.mjs';
 import { verifyFlightData } from './verify-flight-data.mjs';
 export async function connectionStatus() {
  try {
@@ -34,11 +35,14 @@ export function createChatService({modelFactory=defaultModelFactory,capturesLoad
  async welcome(mode){if(!['staging','staging-public','replay'].includes(mode))throw new Error('Choose live staging or recorded staging.');return {text:welcomeText(mode,await preferenceStore.read())};},
  // "Great deals this week", fetched separately so a slow or failed deals feed
  // never delays or breaks the welcome. Null text means show nothing.
- async welcomeDeals(mode){
+ // preview:true shows labelled sample deals, for reviewing the layout while
+ // the real feed has nothing current. Never used unless the page asks.
+ async welcomeDeals(mode,{preview=false}={}){
   if(mode!=='staging-public'&&mode!=='staging')return {text:null};
-  const trace=()=>{},adapter=stagingFactory({trace,maxSearches:0,authMode:'public'});
+  const trace=()=>{},adapter=preview?makeFixtureAdapter('normal'):stagingFactory({trace,maxSearches:0,authMode:'public'});
   const offer=await new SearchConversation({adapter,today:()=>isoToday(),trace}).welcomeDeals();
   if(!offer)return {text:null};
+  if(preview)offer.text=`SAMPLE DEALS for layout review. These are not real prices.\n\n${offer.text}`;
   pruneOffers();welcomeOffers.set(offer.key,{choices:offer.choices,at:Date.now()});
   return {text:offer.text,key:offer.key};
  },

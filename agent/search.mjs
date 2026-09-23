@@ -3,7 +3,7 @@ import { AIRPORTS, METRO_GROUPS, expandMetro, labelForValue, rankAirportSearch, 
 import { safeCustomerCopy, safeSearchError } from './customer-copy.mjs';
 import { EVERYWHERE, DEALS_SHOWN, WELCOME_DEALS_SHOWN, departureCity, filterDeals, dealChoices, renderDeals, renderWelcomeDeals, NO_ECONOMY_DEALS, noCurrentDeals, unknownOriginNotice } from './discover.mjs';
 
-export const WELCOME = 'Business class. Economy prices.\n\nWhere would you like to fly?\n\nTry “To New York”, “London to Singapore”, or “Dubai to London, economy”.\n\nOr say “take me anywhere” and tell me where you’re flying from. I’ll show the best business class deals from there.\n\nDefaults: one-way · business class · today through the next 7 days.';
+export const WELCOME = 'Business class. Economy prices.\n\nWhere would you like to fly?\n\nTry “London to New York, first class” or “London to Singapore, business”.\n\nOr say “take me anywhere” and tell me where you’re flying from.';
 const cabins = ['business', 'economy', 'premium', 'first', 'any'];
 const sorts = ['recommended', 'cheapest', 'fastest', 'nonstop'];
 const airportByCode = new Map(AIRPORTS.map(a => [a.code, a]));
@@ -615,7 +615,7 @@ function present(state, response, cached, mode = 'synthetic', { aside = '', appl
 }
 
 export function welcomeFor(mode) {
-  if(mode==='replay')return WELCOME.replace('today through the next 7 days','the saved search date through 7 days later');
+  if(mode==='replay')return WELCOME+'\n\nRecorded mode: dates start from the saved search date.';
   if(mode==='staging')return WELCOME;
   return WELCOME+'\n\nDemo mode: synthetic flight data.';
 }

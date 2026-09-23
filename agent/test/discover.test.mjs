@@ -335,3 +335,22 @@ test('the exact arguments the model sent in the failed run now show deals', asyn
   assert.equal(reply.status, 'deals');
   assert.match(reply.text, /deals from London/);
 });
+
+// Welcome copy agreed 2026-09-23: tagline, question, two examples, take me anywhere.
+test('the welcome is the agreed short copy', async () => {
+  const svc = createChatService({ stagingFactory: () => Object.assign(makeFixtureAdapter('normal'), { snapshots: [] }), modelFactory: async () => ({}),
+    preferenceStore: { label: 'test', read: async () => ({}), replace: async () => ({}) } });
+  const { text } = await svc.welcome('staging-public');
+  assert.equal(text, 'Business class. Economy prices.\n\nWhere would you like to fly?\n\nTry “London to New York, first class” or “London to Singapore, business”.\n\nOr say “take me anywhere” and tell me where you’re flying from.');
+});
+
+// Staging's deals were all past-dated on 2026-09-23, so the real follow-up
+// correctly shows nothing. A preview lets the layout be reviewed, labelled.
+test('sample deals appear only when previewed, and say they are samples', async () => {
+  const svc = createChatService({ stagingFactory: () => Object.assign(makeFixtureAdapter('deals-past'), { snapshots: [] }), modelFactory: async () => ({}),
+    preferenceStore: { label: 'test', read: async () => ({}), replace: async () => ({}) } });
+  assert.equal((await svc.welcomeDeals('staging-public')).text, null, 'nothing current, nothing shown');
+  const preview = await svc.welcomeDeals('staging-public', { preview: true });
+  assert.match(preview.text, /^SAMPLE DEALS for layout review\. These are not real prices\./);
+  assert.match(preview.text, /Great deals this week/);
+});
