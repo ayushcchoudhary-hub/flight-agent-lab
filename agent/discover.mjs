@@ -6,7 +6,7 @@ import { readableDate } from './flight-details.mjs';
 
 export const EVERYWHERE = 'Everywhere';
 export const DEALS_SHOWN = 5;
-export const WELCOME_DEALS_SHOWN = 7;
+export const WELCOME_DEALS_SHOWN = 3;
 export const DEAL_FOOTNOTE = 'Deals can change or sell out quickly.';
 const CABIN_NAMES = { business: 'business class', first: 'first class' };
 const regionNames = (() => { try { return new Intl.DisplayNames(['en'], { type: 'region' }); } catch { return null; } })();
