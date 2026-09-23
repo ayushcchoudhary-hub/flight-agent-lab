@@ -120,6 +120,24 @@
       ],
       "note": "Same code, same 47 cases, same judge, run back to back. Terra ran in two parts after a provider timeout.",
       "finding": "Sol sent a garbled destination (“SingaporeAirport (SIN)?”) in D3, so the app asked which city was meant, and in G2 it invented a Europe region, a USD 1,000 budget and a weather filter nobody asked for. Terra asked for economy deals nobody mentioned in G9. All three are the model adding things the traveler did not say."
+    },
+    {
+      "title": "Terra vs Sol vs Sonnet 5 · 47 cases",
+      "date": "23 Sept",
+      "commit": "52d80c5 / c6bf7c0",
+      "runs": [
+        [
+          "live-hardening-judge-2026-09-23T10-08-32.825Z",
+          "live-hardening-judge-2026-09-23T10-17-28.508Z"
+        ],
+        "live-hardening-judge-2026-09-23T09-53-41.562Z",
+        [
+          "live-hardening-judge-2026-09-23T21-29-40.155Z",
+          "live-hardening-judge-2026-09-23T21-43-09.281Z"
+        ]
+      ],
+      "note": "Same 47 cases and judge. Not the same code: Sonnet ran later on c6bf7c0, which adds the guards against made-up values; Terra and Sol ran on 52d80c5 before them. Made-up values are counted from each model's own tool calls, so that column compares fairly. Sonnet's G9–G11 were rerun after the call cap cut them off.",
+      "finding": "Sonnet 5 made up nothing: every tool call carried only what the traveler said. Its two exact failures are judgment calls, not inventions: it read “make it the 3rd” as 3 October instead of asking (C1), and it sent a price-guarantee question to the policy lookup, which had no answer (E8, now fixed in the app). It cost the most per turn because Claude prompts are not cached yet and use about twice the tokens."
     }
   ],
   "supporting": {
@@ -139,6 +157,7 @@
     "live-hardening-judge-2026-09-23T08-20-15.806Z": "Targeted check: D1–D5 after last-origin memory. 5 of 5.",
     "live-hardening-judge-2026-09-23T08-34-00.946Z": "Targeted check: D-series and G7, stopped by a judge rate limit.",
     "live-hardening-judge-2026-09-23T08-35-36.893Z": "Targeted check: D4, D5 and G7, the rest of the stopped run.",
-    "live-hardening-judge-2026-09-23T08-53-10.627Z": "Sol head-to-head that stopped after 3 cases when credit ran out. Rerun in the 47-case head-to-head."
+    "live-hardening-judge-2026-09-23T08-53-10.627Z": "Sol head-to-head that stopped after 3 cases when credit ran out. Rerun in the 47-case head-to-head.",
+    "live-hardening-judge-2026-09-23T21-29-07.529Z": "Sonnet 5 smoke test: A1 and G2 only, before the full run."
   }
 }

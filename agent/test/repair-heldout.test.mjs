@@ -60,11 +60,13 @@ test('held-out: kept fields without wording evidence are traced for review',()=>
 // the same value, but now marks the cabin as stated, so a saved or assumed
 // default would stop being disclosed. It is dropped when the request has no
 // cabin wording. Every other resent field is still passed through untraced.
-test('held-out: a resent copy of the current trip is kept without a review trace',()=>{
+// A resent copy changes nothing, so it is dropped rather than kept: keeping it
+// made the reply announce "Budget is already USD 700" for a request that never
+// mentioned the budget (held-out C1, GPT-6 Sol, 2026-09-23).
+test('held-out: a resent copy of the current trip is dropped without a review trace',()=>{
   const events=[],trip={cabin:'economy',maxPriceUsd:600,sort:'recommended',nonstopOnly:false,cabinOnly:false,dates:{from:'2026-10-01',to:'2026-10-01'}};
   const args={origin:'LHR',cabin:'economy',maxPriceUsd:600,dates:{mode:'exact',start:'2026-10-01'}};
-  const {cabin,...kept}=args;
-  assert.deepEqual(repairExplicitToolArguments('Heathrow only please','find_flights',args,(type,data)=>events.push({type,data}),trip),kept);
+  assert.deepEqual(repairExplicitToolArguments('Heathrow only please','find_flights',args,(type,data)=>events.push({type,data}),trip),{origin:'LHR'});
   assert.deepEqual(events,[]);
   repairExplicitToolArguments('Heathrow only please','find_flights',{origin:'LHR',nonstopOnly:true},(type,data)=>events.push({type,data}),trip);
   assert.deepEqual(events.map(e=>[e.type,e.data.fields]),[['tool_argument_unverified',['nonstopOnly']]]);

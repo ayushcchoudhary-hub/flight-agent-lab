@@ -487,8 +487,12 @@ export class SearchConversation {
     const dateLabel = this.state.dates
       ? this.state.dates.from === this.state.dates.to ? readableDate(this.state.dates.from) : `${readableDate(this.state.dates.from)} – ${readableDate(this.state.dates.to)}`
       : null;
-    const retained = this.state.dates || this.state.cabin !== 'business'
-      ? `I'll keep ${[cabinLabel, dateLabel].filter(Boolean).join(' · ')} unless you change it.`
+    // Name the place already given as well. Held-out A2 and B3: the judge could
+    // not tell that Singapore had been kept, because only cabin and date were.
+    const other = field === 'origin' ? this.state.destination : field === 'destination' ? this.state.origin : null;
+    const place = other ? `the flight ${field === 'origin' ? 'to' : 'from'} ${other.label.replace(/\s*\(all airports\)$/i, '')}` : null;
+    const retained = this.state.dates || this.state.cabin !== 'business' || place
+      ? `I'll keep ${[place, cabinLabel, dateLabel].filter(Boolean).join(' · ')} unless you change it.`
       : null;
     const body = menu
       ? [menu, 'Reply with the number, or type any city or airport.']
@@ -501,7 +505,8 @@ export class SearchConversation {
 // business" and "nothing saved yet", a plain "Business" looked like the unsaved
 // preference had been applied. It was the default all along.
 function cabinLabel(state) {
-  const name = state.cabin === 'any' ? 'Any cabin' : state.cabin.charAt(0).toUpperCase() + state.cabin.slice(1);
+  // Held-out C1: the header said "Premium" while the reply said "premium economy".
+  const name = state.cabin === 'any' ? 'Any cabin' : state.cabin === 'premium' ? 'Premium economy' : state.cabin.charAt(0).toUpperCase() + state.cabin.slice(1);
   if (state.cabinSource === 'preference') return `${name} (saved default)`;
   if (state.cabinSource === 'default') return `${state.cabin === 'business' ? 'Business class' : name} (default)`;
   return name;
@@ -584,8 +589,13 @@ export function blockedByFilter(state, unfiltered, filters = activeFilters(state
 
   const overBudget = without('budget');
   if (overBudget.length) {
-    const inCabin = state.cabin === 'any' ? overBudget : overBudget.filter(r => r.cabin === state.cabin);
-    const rows = inCabin.length ? inCabin : overBudget;
+    // Quote the fare on the dates asked for when there is one. Held-out C1:
+    // "starts at USD 1,100" came from a nearby date, and the list that followed
+    // started at USD 1,113.
+    const onDates = overBudget.filter(r => r.date >= state.dates.from && r.date <= state.dates.to);
+    const pool = onDates.length ? onDates : overBudget;
+    const inCabin = state.cabin === 'any' ? pool : pool.filter(r => r.cabin === state.cabin);
+    const rows = inCabin.length ? inCabin : pool;
     const cheapest = Math.min(...rows.map(displayPriceUsd));
     const label = inCabin.length ? cabinWord : 'The cheapest fare';
     return `${label} ${when} starts at USD ${cheapest.toLocaleString('en-US', { maximumFractionDigits: 0 })}, above your USD ${state.maxPriceUsd} budget. Raise or remove the budget?`;

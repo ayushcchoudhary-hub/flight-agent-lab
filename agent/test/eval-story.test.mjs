@@ -23,6 +23,11 @@ test('a run published without a place in the story is reported', () => {
   assert.match(problems.join('\n'), /2099.*no place in story\.json/);
 });
 
+test('a run may appear in two comparisons', () => {
+  const again = { ...story, headToHead: [...story.headToHead, { ...story.headToHead[0], title: 'again' }] };
+  assert.deepEqual(checkStory(again, hardeningRuns), []);
+});
+
 test('a run listed twice is reported', () => {
   const twice = { ...story, supporting: { ...story.supporting, [story.milestones[0].run]: 'again' } };
   assert.match(checkStory(twice, hardeningRuns).join('\n'), /listed as a milestone and supporting/);
@@ -67,6 +72,15 @@ test('merging a run finished in two parts keeps case order and each case once', 
   assert.equal(merged.report.runId, 'p1+p2');
   assert.equal(merged.report.status, 'complete');
   assert.equal(merged.report.actualCostUsd, 3);
+});
+
+test('a later part replaces an earlier part’s result for the same case', () => {
+  const cases = ['A', 'B'].map(id => ({ id, name: id }));
+  const merged = mergeReports([
+    { report: { runId: 'p1', label: 'Run', results: [row('A', true), row('B', false)], status: 'complete' }, cases },
+    { report: { runId: 'p2', label: 'Run part 2', results: [row('B', true)], status: 'complete' }, cases: cases.slice(1) },
+  ]);
+  assert.deepEqual(merged.report.results.map(r => [r.caseId, r.pass]), [['A', true], ['B', true]]);
 });
 
 test('report keys accept run ids and joined parts, nothing else', () => {

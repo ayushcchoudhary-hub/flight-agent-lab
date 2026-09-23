@@ -1,0 +1,53 @@
+[
+  {
+    "id": "G9",
+    "category": "Discover",
+    "name": "Other wording for the same request",
+    "requirement": "\"Surprise me\" with a stated origin is a request for deals from Tokyo.",
+    "steps": [
+      {
+        "text": "surprise me, I’m flying out of Tokyo",
+        "expected": {
+          "status": "deals",
+          "posts": 0,
+          "pending": "deal",
+          "mentions": "deals from Tokyo"
+        }
+      }
+    ]
+  },
+  {
+    "id": "G10",
+    "category": "Discover",
+    "name": "First class only when asked",
+    "requirement": "Show first class deals from Dubai, and only first class.",
+    "steps": [
+      {
+        "text": "where can I go from Dubai in first class?",
+        "expected": {
+          "status": "deals",
+          "posts": 0,
+          "pending": "deal",
+          "mentions": "first class deals from Dubai"
+        }
+      }
+    ]
+  },
+  {
+    "id": "G11",
+    "category": "Discover",
+    "name": "A region narrows the deals",
+    "requirement": "Show only deals in Asia from London. Name only destinations the deals contain.",
+    "steps": [
+      {
+        "text": "take me anywhere in Asia from London",
+        "expected": {
+          "status": "deals",
+          "posts": 0,
+          "pending": "deal",
+          "mentions": "(?=.*in Asia from London)(?=.*Bangkok)"
+        }
+      }
+    ]
+  }
+]

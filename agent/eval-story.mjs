@@ -6,6 +6,7 @@
 import { existsSync } from 'node:fs';
 import { readFile, readdir } from 'node:fs/promises';
 import { join } from 'node:path';
+import { unsupportedArguments } from './model.mjs';
 
 const RUN = /^live-hardening-judge-[\w.-]+$/;
 // A run interrupted by a provider error and finished with the remaining cases
@@ -16,6 +17,28 @@ export const runKey = entry => partsOf(entry).join('+');
 export const isRunKey = value => typeof value === 'string' && value.length < 400 && value.split('+').every(part => /^live-[\w.-]+$/.test(part));
 const median = xs => { const a = [...xs].sort((x, y) => x - y); return a.length ? (a[Math.floor((a.length - 1) / 2)] + a[Math.ceil((a.length - 1) / 2)]) / 2 : null; };
 const outcome = row => row.pass ? 'pass' : row.deterministicPass ? 'judge' : 'exact';
+
+// Values the model put in a tool call that the traveler never said. A guard
+// that catches one keeps the reply right, so the case can still pass, but the
+// model made it up, and that is worth seeing when choosing a model. Two
+// sources: the guard's own trace, and, for runs recorded before a guard
+// existed, the recorded tool calls checked against everything the traveler
+// typed in that case (a generous check, so it undercounts rather than
+// overcounts). Dates are left out: a follow-up often resends the trip's dates
+// in another form ("next week" as a mode), which the date guard drops but
+// which is not an invention.
+const MADE_UP = /did not mention|recovered a place/;
+export function madeUpValues(row) {
+  const fields = [];
+  for (const e of row.events) if (e.type === 'tool_argument_repair' && MADE_UP.test(e.data?.reason ?? '')) fields.push(...(e.data.fields ?? [e.data.field]).filter(Boolean));
+  const said = row.steps.map(step => step.input ?? '').join('\n');
+  for (const e of row.events) {
+    if (e.type !== 'tool_call') continue;
+    const { invented, places } = unsupportedArguments(said, e.data?.name, e.data?.arguments);
+    fields.push(...invented, ...Object.keys(places));
+  }
+  return fields.filter(field => field !== 'dates');
+}
 
 // The container copies published-eval-results to eval-results. Locally the
 // raw eval-results folder holds unpublished runs too, so read the story from
@@ -44,6 +67,7 @@ export function summarizeRun(run, report, cases) {
     medianCallMs: median(usage.map(u => u.latencyMs).filter(Number.isFinite)),
     candidateCostUsd, judgeCostUsd: cost(judgeUsage), turns,
     costPer1000TurnsUsd: turns ? candidateCostUsd / turns * 1000 : null,
+    madeUp: rows.map(r => ({ id: r.caseId, fields: madeUpValues(r) })).filter(x => x.fields.length),
     outcomes: Object.fromEntries(rows.map(r => [r.caseId, outcome(r)])),
     names: Object.fromEntries(cases.map(c => [c.id, c.name])),
   };
@@ -81,7 +105,9 @@ export function checkStory(story, runsOnDisk) {
   const place = (run, where) => { if (seen.has(run)) problems.push(`${run} is listed as ${seen.get(run)} and ${where}.`); else seen.set(run, where); };
   const milestoneParts = story.milestones.flatMap(m => partsOf(m.run));
   story.milestones.forEach(m => partsOf(m.run).forEach(run => place(run, 'a milestone')));
-  for (const pair of story.headToHead) for (const entry of pair.runs) for (const run of partsOf(entry)) if (!milestoneParts.includes(run)) place(run, 'a head-to-head run');
+  // A run may appear in more than one comparison, but only once per place.
+  const compared = new Set(story.headToHead.flatMap(pair => pair.runs.flatMap(partsOf)).filter(run => !milestoneParts.includes(run)));
+  for (const run of compared) place(run, 'a head-to-head run');
   for (const run of Object.keys(story.supporting)) place(run, 'supporting');
   for (const run of seen.keys()) if (!runsOnDisk.includes(run)) problems.push(`${run} is in the story but not published.`);
   for (const run of runsOnDisk) if (!seen.has(run)) problems.push(`${run} is published but has no place in story.json.`);
@@ -97,7 +123,12 @@ export function mergeReports(parts) {
   for (const part of parts) for (const c of part.cases) if (!seen.has(c.id)) { seen.add(c.id); cases.push(c); }
   const order = new Map(cases.map((c, i) => [c.id, i]));
   const first = parts[0].report;
-  const results = parts.flatMap(part => part.report.results).sort((a, b) => order.get(a.caseId) - order.get(b.caseId));
+  // A later part's result for a case replaces an earlier one: a part reruns
+  // cases the earlier part did not really run (a provider error, or a call
+  // cap that ran out mid-case before the harness stopped on it).
+  const byCase = new Map();
+  for (const part of parts) for (const row of part.report.results) byCase.set(row.caseId, row);
+  const results = [...byCase.values()].sort((a, b) => order.get(a.caseId) - order.get(b.caseId));
   const sum = key => parts.reduce((n, part) => n + (Number(part.report[key]) || 0), 0);
   return {
     report: { ...first, runId: parts.map(part => part.report.runId).join('+'), label: `${first.label} · ${parts.length} parts`, results,

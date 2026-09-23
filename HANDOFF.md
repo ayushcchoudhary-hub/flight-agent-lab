@@ -27,7 +27,7 @@ customer data or raw backend captures.
   session follow-ups and explicit preference proposals.
 - Booking, payment, account servicing, autonomous purchasing, WhatsApp and MCP
   remain outside the implemented scope.
-- The deterministic suite currently contains 255 passing checks.
+- The deterministic suite currently contains 274 passing checks.
 - The first 42-case Terra hardening run passed 30 cases. Every observed issue
   later received a focused passing verification. A later full rerun passed 32
   cases, then stopped at B03 after a safe policy handoff failed the frozen
