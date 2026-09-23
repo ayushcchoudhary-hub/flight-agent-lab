@@ -105,7 +105,9 @@ export function checkStory(story, runsOnDisk) {
   const place = (run, where) => { if (seen.has(run)) problems.push(`${run} is listed as ${seen.get(run)} and ${where}.`); else seen.set(run, where); };
   const milestoneParts = story.milestones.flatMap(m => partsOf(m.run));
   story.milestones.forEach(m => partsOf(m.run).forEach(run => place(run, 'a milestone')));
-  for (const pair of story.headToHead) for (const entry of pair.runs) for (const run of partsOf(entry)) if (!milestoneParts.includes(run)) place(run, 'a head-to-head run');
+  // A run may appear in more than one comparison, but only once per place.
+  const compared = new Set(story.headToHead.flatMap(pair => pair.runs.flatMap(partsOf)).filter(run => !milestoneParts.includes(run)));
+  for (const run of compared) place(run, 'a head-to-head run');
   for (const run of Object.keys(story.supporting)) place(run, 'supporting');
   for (const run of seen.keys()) if (!runsOnDisk.includes(run)) problems.push(`${run} is in the story but not published.`);
   for (const run of runsOnDisk) if (!seen.has(run)) problems.push(`${run} is published but has no place in story.json.`);

@@ -23,6 +23,11 @@ test('a run published without a place in the story is reported', () => {
   assert.match(problems.join('\n'), /2099.*no place in story\.json/);
 });
 
+test('a run may appear in two comparisons', () => {
+  const again = { ...story, headToHead: [...story.headToHead, { ...story.headToHead[0], title: 'again' }] };
+  assert.deepEqual(checkStory(again, hardeningRuns), []);
+});
+
 test('a run listed twice is reported', () => {
   const twice = { ...story, supporting: { ...story.supporting, [story.milestones[0].run]: 'again' } };
   assert.match(checkStory(twice, hardeningRuns).join('\n'), /listed as a milestone and supporting/);
