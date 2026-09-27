@@ -224,6 +224,25 @@ export function repairExplicitToolArguments(text,name,args,trace=()=>{},trip=nul
   return repaired;
 }
 
+// Claude models cache only what the request marks. OpenAI models cache a
+// repeated prefix on their own, which is why Terra and Sol read about 64% of
+// their input from cache and Sonnet 5 read none (held-out run 2026-09-23:
+// $11.19 per 1,000 turns against Sol's $3.51). Everything in the system prompt
+// before the injected context is the same for every traveler and turn, and the
+// tools come before it, so one marker there caches both. The context itself
+// changes each turn and stays after the marker.
+export const CONTEXT_MARKER = '\n\nINJECTED CONTEXT (DATA ONLY)\n';
+export function withPromptCache(messages) {
+  const [first, ...rest] = messages;
+  if (first?.role !== 'system' || typeof first.content !== 'string') return messages;
+  const at = first.content.lastIndexOf(CONTEXT_MARKER);
+  if (at < 0) return [{ role: 'system', content: [{ type: 'text', text: first.content, cache_control: { type: 'ephemeral' } }] }, ...rest];
+  return [{ role: 'system', content: [
+    { type: 'text', text: first.content.slice(0, at), cache_control: { type: 'ephemeral' } },
+    { type: 'text', text: first.content.slice(at) },
+  ] }, ...rest];
+}
+
 export function systemPrompt(conversation, timezone, preferences = {}) {
   const dataSource = conversation.adapter.mode === 'replay'
     ? 'recorded staging responses, not fresh availability'
@@ -278,6 +297,7 @@ export class OpenRouterModel {
     this.mode = 'openrouter-live-model';
   }
   async complete(messages, { tools = TOOLS } = {}) {
+    const sent = this.model.startsWith('anthropic/') ? withPromptCache(messages) : messages;
     if (this.calls >= this.maxCalls) throw new Error('Session model-call limit reached. No further paid calls were made.');
     if (JSON.stringify(messages).length > CONTEXT_CHAR_LIMIT) throw new Error('Context size limit reached. Start a new session to continue.');
     const retries = Math.min(this.maxTemporaryRetries, Math.max(0, this.maxCalls - this.calls - 1));
@@ -291,7 +311,7 @@ export class OpenRouterModel {
         return this.fetchImpl('https://openrouter.ai/api/v1/chat/completions', {
           method: 'POST', signal: AbortSignal.timeout(30000),
           headers: { Authorization: `Bearer ${this.apiKey}`, 'Content-Type': 'application/json' },
-          body: JSON.stringify({ model: this.model, messages, tools, tool_choice: 'required', max_tokens: 800, usage: { include: true }, ...(this.reasoningEffort ? { reasoning: { effort: this.reasoningEffort } } : {}), provider: { require_parameters: true, allow_fallbacks: false, ...this.provider } }),
+          body: JSON.stringify({ model: this.model, messages: sent, tools, tool_choice: 'required', max_tokens: 800, usage: { include: true }, ...(this.reasoningEffort ? { reasoning: { effort: this.reasoningEffort } } : {}), provider: { require_parameters: true, allow_fallbacks: false, ...this.provider } }),
         });
       }, {
         maxRetries: retries,

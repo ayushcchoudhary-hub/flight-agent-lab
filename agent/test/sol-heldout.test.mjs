@@ -177,3 +177,22 @@ test('an eval spending cap stops the run instead of becoming a graded error repl
   const broken = { complete: async () => { throw new Error('provider down'); } };
   assert.equal((await new Agent({ conversation: c, model: broken }).respond('London to Paris')).status, 'error');
 });
+
+// ---- Prompt caching for Claude models (Sonnet 5 default, 2026-09-27).
+
+test('Claude requests mark the fixed part of the system prompt for caching; OpenAI requests are unchanged', async () => {
+  const { OpenRouterModel, systemPrompt, CONTEXT_MARKER } = await import('../model.mjs');
+  const { c } = setup();
+  const prompt = systemPrompt(c, 'Europe/London');
+  assert.ok(prompt.includes(CONTEXT_MARKER), 'the injected context marker must stay in the prompt');
+  const bodies = [];
+  const fetchImpl = async (url, init) => { bodies.push(JSON.parse(init.body)); return Response.json({ choices: [{ message: call('clarify_request', { question: 'Where to?' }) }], usage: {} }); };
+  const messages = [{ role: 'system', content: prompt }, { role: 'user', content: 'hi' }];
+  for (const model of ['anthropic/claude-sonnet-5', 'openai/gpt-6-sol']) await new OpenRouterModel({ apiKey: 'test', model, fetchImpl }).complete(messages);
+  const [claude, openai] = bodies;
+  assert.deepEqual(claude.messages[0].content.map(part => Boolean(part.cache_control)), [true, false]);
+  assert.equal(claude.messages[0].content.map(part => part.text).join(''), prompt, 'the prompt text is unchanged');
+  assert.match(claude.messages[0].content[1].text, /^\n\nINJECTED CONTEXT/, 'the per-turn context stays after the cache marker');
+  assert.equal(openai.messages[0].content, prompt);
+  assert.deepEqual(messages[0].content, prompt, 'the caller’s messages are not modified');
+});

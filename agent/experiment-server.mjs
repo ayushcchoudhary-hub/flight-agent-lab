@@ -10,7 +10,7 @@ import {createChatService} from './chat-service.mjs';
 import {storeFromEnvironment,isVisitorId} from './store.mjs';
 import {randomUUID as newVisitorId} from 'node:crypto';
 import {OpenRouterModel} from './model.mjs';
-import {HOSTED_MODEL_OPTIONS,hostedModelSettings} from './hosted-model-options.mjs';
+import {DEFAULT_MODEL,HOSTED_MODEL_OPTIONS,hostedModelSettings} from './hosted-model-options.mjs';
 import {clientErrorMessage,createCredentialGuard} from './hosted-security.mjs';
 
 const root=fileURLToPath(new URL('.',import.meta.url));
@@ -20,7 +20,7 @@ const publicOrigin=(process.env.PUBLIC_ORIGIN||'').replace(/\/$/,'');
 const username=process.env.EXPERIMENT_USERNAME||'demo';
 const password=process.env.EXPERIMENT_PASSWORD||'';
 const apiKey=process.env.OPENROUTER_API_KEY||'';
-const model=process.env.OPENROUTER_MODEL||'openai/gpt-5.6-terra';
+const model=process.env.OPENROUTER_MODEL||DEFAULT_MODEL;
 const defaultSettings=hostedModelSettings(model);
 if(!password)throw new Error('Set EXPERIMENT_PASSWORD before starting the hosted experiment.');
 if(!apiKey)throw new Error('Set OPENROUTER_API_KEY before starting the hosted experiment.');
