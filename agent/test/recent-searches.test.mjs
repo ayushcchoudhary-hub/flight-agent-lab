@@ -166,7 +166,7 @@ test('forget recentSearches is an explicit action only', () => {
   assert.equal(preferenceAction({ action: 'propose', homeAirport: null, cabin: null }, {}).forgetRecentSearches, undefined);
 });
 
-// ---- Held-out D5-D7 are satisfiable. The intended tool calls, replayed
+// ---- Held-out D5-D9 are satisfiable. The intended tool calls, replayed
 // through the eval harness's own memory between sessions, pass every exact
 // check. A live failure is then the model, not the case or the harness.
 import { SearchConversation } from '../search.mjs';
@@ -180,9 +180,11 @@ const INTENDED = {
   'forget my recent searches': { name: 'travel_preferences', arguments: { action: 'propose', forget: ['recentSearches'] } },
   'forget where I fly from': { name: 'travel_preferences', arguments: { action: 'propose', forget: ['homeAirport'] } },
   'to Singapore next week': { name: 'find_flights', arguments: { destination: 'Singapore', dates: { mode: 'nextWeek' } } },
+  'from Gatwick to Singapore': { name: 'find_flights', arguments: { origin: 'Gatwick', destination: 'Singapore' } },
+  'Dubai to Singapore': { name: 'find_flights', arguments: { origin: 'Dubai', destination: 'Singapore' } },
 };
-for (const caseId of ['D5', 'D6', 'D7']) test(`held-out ${caseId} is satisfiable with the intended calls`, async () => {
-  const item = HARDENING_CASES_V2.find(c => c.id === caseId), memory = {}, saved = {};
+for (const caseId of ['D5', 'D6', 'D7', 'D8', 'D9']) test(`held-out ${caseId} is satisfiable with the intended calls`, async () => {
+  const item = HARDENING_CASES_V2.find(c => c.id === caseId), memory = {}, saved = { ...(item.initialPreferences ?? {}) };
   const scripted = { complete: async m => { const c = INTENDED[m.at(-1).content]; return { tool_calls: [{ id: 'r', type: 'function', function: { name: c.name, arguments: JSON.stringify(c.arguments) } }] }; } };
   const welcomes = [];
   for (const session of item.sessions) {
@@ -200,4 +202,6 @@ for (const caseId of ['D5', 'D6', 'D7']) test(`held-out ${caseId} is satisfiable
   assert.equal(welcomes[0], null, 'a first conversation has no recent searches');
   if (caseId === 'D5') assert.match(welcomes[1], /^Pick up where you left off:\n1\. London/);
   if (caseId === 'D6') assert.equal(welcomes[2], null, 'forgotten searches are not listed');
+  if (caseId === 'D8') assert.match(welcomes[1], /1\. London Gatwick/);
+  if (caseId === 'D9') assert.match(welcomes[1], /1\. London .+ Economy/);
 });
