@@ -46,7 +46,7 @@ customer data or raw backend captures.
   session follow-ups and explicit preference proposals.
 - Booking, payment, account servicing, autonomous purchasing, WhatsApp and MCP
   remain outside the implemented scope.
-- The deterministic suite currently contains 280 passing checks.
+- The deterministic suite currently contains 291 passing checks.
 - The first 42-case Terra hardening run passed 30 cases. Every observed issue
   later received a focused passing verification. A later full rerun passed 32
   cases, then stopped at B03 after a safe policy handoff failed the frozen
@@ -234,6 +234,11 @@ off unless `CONVERSATION_STORE=postgres` and `DATABASE_URL` are set.
   only when storage is on; with storage off the reply says it applies to
   this conversation only. The shared preference object is never written.
   Cabin and nonstop defaults remain proposals (held-out D4).
+- "Forget my home airport" clears the home airport and the last searched
+  origin for that browser, and drops a remembered origin from the current
+  trip (2026-09-27). Before, the last origin survived and the next
+  conversation reopened on it. Stored transcripts are not rewritten. They
+  keep the 90-day expiry.
 - A storage failure is traced and never reaches the traveler.
 - `agent/tools/store-smoke.mjs` checks all of this against a real database.
 
@@ -243,6 +248,22 @@ Before switching it on:
 2. Held-out case D1 was updated on 2026-09-23 to the memory rule: the last
    origin carries over as a disclosed default, economy does not. The eval
    harness applies the same memory between sessions.
+
+## Policy snapshot freshness (2026-09-27)
+
+Policy answers come from `agent/policy-snapshot.json`, a reviewed copy of the
+privacy and terms pages, not from the live page. `pnpm run policy:check`
+reads the live pages and reports passages that changed. The site is a
+single-page app, so it reads the wording from the site's script bundle.
+It exits 0 when current, 1 when changed and 2 when the site could not be
+read. `.github/workflows/policy-check.yml` runs it every Monday.
+
+When it reports a change, review the wording, run `pnpm run policy:sync`,
+then `pnpm test`. Unchanged passages keep their ids. A new or edited passage
+gets a new id. A fixed answer in `policy.mjs` whose quote left the site
+stops answering and the question goes to retrieval. On 2026-09-27 the
+snapshot from 2026-09-19 matched all 12 paragraphs on staging and
+production.
 
 ## Recommended next decision
 
