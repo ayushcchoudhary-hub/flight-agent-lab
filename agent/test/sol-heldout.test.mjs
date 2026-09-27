@@ -108,6 +108,7 @@ test('C1: premium economy is named in full in the results header', async () => {
   const { c } = setup();
   const r = await say(c, 'London to New York 3 Oct premium economy', 'find_flights', { origin: 'London', destination: 'New York', dates: { mode: 'exact', start: '2026-10-03' }, cabin: 'premium' });
   assert.match(r.text, /· Premium economy · One-way/);
+  assert.doesNotMatch(r.text, /^Premium ·/m, 'result lines use the same cabin name as the header');
 });
 
 // ---- Menus say which part of the trip is kept.

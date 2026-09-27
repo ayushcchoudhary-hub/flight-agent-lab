@@ -269,8 +269,8 @@ function validateDiscoverArgs(args) {
 const SYNTHETIC_BANNER = 'SYNTHETIC FLIGHT DATA. These are example results.';
 
 export class SearchConversation {
-  constructor({ adapter, today = () => isoToday(), trace = () => {} }) {
-    this.adapter = adapter; this.today = today; this.trace = trace; this.state = newState();
+  constructor({ adapter, today = () => isoToday(), trace = () => {}, now = () => Date.now() }) {
+    this.adapter = adapter; this.today = today; this.trace = trace; this.now = now; this.state = newState();
   }
   // hasResults marks a search that actually returned, so a caller can tell a
   // completed trip apart from one whose search failed.
@@ -466,7 +466,7 @@ export class SearchConversation {
       next.lastQuery = key;
       this.trace('search_result', { query, cached: Boolean(cached), count: response.totalFound, searchId: response.searchId });
       const applied = previous.lastQuery ? describeApplied(previous, next, patch) : [];
-      return present(next, response, Boolean(cached), this.adapter.mode, { aside, applied });
+      return present(next, response, Boolean(cached), this.adapter.mode, { aside, applied, now: this.now() });
     } catch (error) {
       const internal = error instanceof Error ? error.message : String(error);
       this.trace('error', { text: internal });
@@ -606,7 +606,25 @@ export function blockedByFilter(state, unfiltered, filters = activeFilters(state
   return 'Nothing in these results matches all of those filters together. Which one should I relax?';
 }
 
-function present(state, response, cached, mode = 'synthetic', { aside = '', applied = [] } = {}) {
+// The product attaches a cash price for the exact same flights, from Google
+// Flights, to each award result (retailComparison in the API contract). Show
+// it as "usually USD X", the wording the deals already use, only when it is
+// priced, still valid and above the price we show. A pending, unavailable or
+// expired comparison is left out rather than guessed.
+export const CASH_FOOTNOTE = '“Usually” is the cash price for the same flights on Google Flights.';
+// One name per cabin on every line of a reply. Held-out C1: the header said
+// "Premium economy" while each result line said "Premium".
+export const cabinLine = cabin => cabin === 'premium' ? 'Premium economy' : String(cabin).charAt(0).toUpperCase() + String(cabin).slice(1);
+export function usualCashUsd(record, now = Date.now()) {
+  const c = record?.retailComparison;
+  if (!c || c.status !== 'priced' || c.currency !== 'USD' || typeof c.amountUsd !== 'number' || !Number.isFinite(c.amountUsd)) return null;
+  if (c.validUntil && !(Date.parse(c.validUntil) > now)) return null;
+  const price = displayPriceUsd(record);
+  return Number.isFinite(price) && c.amountUsd > price ? c.amountUsd : null;
+}
+const usd0 = value => `USD ${Math.round(value).toLocaleString('en-US')}`;
+
+function present(state, response, cached, mode = 'synthetic', { aside = '', applied = [], now = Date.now() } = {}) {
   const staging = mode === 'staging' || mode === 'replay';
   const replay = mode === 'replay';
   const d = state.dates;
@@ -624,9 +642,9 @@ function present(state, response, cached, mode = 'synthetic', { aside = '', appl
   }
   const shortlist = [...matching, ...alternatives].slice(0, 3).map(({ record: r, reasons }) => ({
     id: r.availabilityId, origin: r.origin, destination: r.destination, date: r.date,
-    cabin: r.cabin, priceUsd: displayPriceUsd(r), direct: r.direct, reasons,
+    cabin: r.cabin, priceUsd: displayPriceUsd(r), usualUsd: usualCashUsd(r, now), direct: r.direct, reasons,
     timing: flightDetails(r),
-    text: `${fullAirport(r.origin)} → ${fullAirport(r.destination)}\n${readableDate(r.date)}\n${r.cabin.charAt(0).toUpperCase()+r.cabin.slice(1)} · ${r.direct ? 'Nonstop' : 'With a connection'} · USD ${displayPriceUsd(r).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})}\n${flightDetails(r).text}${reasons.length ? `\nAlternative: ${reasons.join(', ')}` : ''}`,
+    text: `${fullAirport(r.origin)} → ${fullAirport(r.destination)}\n${readableDate(r.date)}\n${cabinLine(r.cabin)} · ${r.direct ? 'Nonstop' : 'With a connection'} · USD ${displayPriceUsd(r).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})}${usualCashUsd(r, now) ? ` · usually ${usd0(usualCashUsd(r, now))}` : ''}\n${flightDetails(r).text}${reasons.length ? `\nAlternative: ${reasons.join(', ')}` : ''}`,
   }));
   const dateSummary=d.from===d.to?readableDate(d.from):`${readableDate(d.from)} – ${readableDate(d.to)}`;
   const text = [
@@ -640,6 +658,7 @@ function present(state, response, cached, mode = 'synthetic', { aside = '', appl
     shortlist.length?`I found ${shortlist.length===1?'one option':`${shortlist.length} options`} for you${alternatives.length&&!matching.length?' on nearby dates or with different flight details':''}:`:(blockedByFilter(state,unfiltered,filters)??'No flights match those preferences in these results. Would you like to try different dates?'),
     ...shortlist.map((r,i)=>`${String.fromCharCode(65+i)}. ${r.text}`),
     shortlist.length?'Prices are estimates and may change.':null,
+    shortlist.some(r=>r.usualUsd)?CASH_FOOTNOTE:null,
     !staging?'Missing flight times and exact seat counts are not available.':null,
     shortlist.length?'You can ask me to change the dates, cabin or airport.':null,
     productSearchUrl(state)?`To pick a flight and check out, continue on CommonSwyft:\n${productSearchUrl(state)}`:null,
