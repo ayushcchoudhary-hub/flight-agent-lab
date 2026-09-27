@@ -1,0 +1,1399 @@
+{
+  "runId": "live-hardening-judge-2026-09-27T09-44-38.053Z",
+  "evaluationKind": "llm-judge-hardening",
+  "suite": "v2",
+  "label": "Prompt caching check · claude-sonnet-5 · 3 cases",
+  "promptVersion": "flight-search-v1.6.0",
+  "judge": {
+    "model": "anthropic/claude-opus-5.5",
+    "effort": "medium",
+    "rubricVersion": "communication-quality-v1.2.0",
+    "criteria": [
+      "clarity",
+      "concision",
+      "tone",
+      "nextStep",
+      "limitationHonesty",
+      "noInternalLeakage"
+    ]
+  },
+  "clock": "2026-09-18",
+  "flightData": "synthetic",
+  "effort": "medium",
+  "models": [
+    "anthropic/claude-sonnet-5"
+  ],
+  "repeats": 1,
+  "cases": [
+    {
+      "id": "A1",
+      "category": "Places",
+      "name": "Country destination becomes an airport menu",
+      "requirement": "Offer a numbered menu of Japan’s main airports, keep London and next week, and ask one concise question.",
+      "steps": [
+        {
+          "text": "London to Japan next week",
+          "expected": {
+            "status": "clarify",
+            "posts": 0,
+            "origin": "LHR|LGW|LCY|STN|LTN",
+            "destination": null,
+            "pending": "destination",
+            "from": "2026-09-21",
+            "to": "2026-09-27",
+            "mentions": "(?=.*Tokyo)(?=.*Osaka)"
+          }
+        }
+      ]
+    },
+    {
+      "id": "B5",
+      "category": "Missing information",
+      "name": "Three-turn completion preserves supplied details",
+      "requirement": "Keep each supplied detail, avoid repeated questions, and search London to New York on 4 October after the third turn.",
+      "steps": [
+        {
+          "text": "to New York",
+          "expected": {
+            "status": "clarify",
+            "posts": 0,
+            "destination": "JFK|EWR|LGA",
+            "pending": "origin"
+          }
+        },
+        {
+          "text": "London",
+          "expected": {
+            "status": "results",
+            "origin": "LHR|LGW|LCY|STN|LTN",
+            "destination": "JFK|EWR|LGA",
+            "cabin": "business",
+            "from": "2026-09-18",
+            "to": "2026-09-25",
+            "posts": 1
+          }
+        },
+        {
+          "text": "actually 4 Oct",
+          "expected": {
+            "status": "results",
+            "origin": "LHR|LGW|LCY|STN|LTN",
+            "destination": "JFK|EWR|LGA",
+            "cabin": "business",
+            "from": "2026-10-04",
+            "to": "2026-10-04",
+            "posts": 2
+          }
+        }
+      ]
+    },
+    {
+      "id": "G2",
+      "category": "Discover",
+      "name": "A named city shows its deals",
+      "requirement": "Show the best business class deals from London with the date they were checked and a note that prices can change. Name only destinations the deals contain.",
+      "steps": [
+        {
+          "text": "I’m in London, take me anywhere",
+          "expected": {
+            "status": "deals",
+            "posts": 0,
+            "pending": "deal",
+            "mentions": "(?=.*deals from London)(?=.*checked)"
+          }
+        }
+      ]
+    }
+  ],
+  "status": "complete",
+  "maxCostUsd": 0.4,
+  "maxCalls": 15,
+  "results": [
+    {
+      "caseId": "A1",
+      "name": "Country destination becomes an airport menu",
+      "category": "Places",
+      "requirement": "Offer a numbered menu of Japan’s main airports, keep London and next week, and ask one concise question.",
+      "model": "anthropic/claude-sonnet-5",
+      "repeat": 1,
+      "pass": true,
+      "deterministicPass": true,
+      "communicationPass": true,
+      "steps": [
+        {
+          "input": "London to Japan next week",
+          "expected": {
+            "status": "clarify",
+            "posts": 0,
+            "origin": "LHR|LGW|LCY|STN|LTN",
+            "destination": null,
+            "pending": "destination",
+            "from": "2026-09-21",
+            "to": "2026-09-27",
+            "mentions": "(?=.*Tokyo)(?=.*Osaka)"
+          },
+          "result": {
+            "status": "clarify",
+            "text": "Which destination did you mean?\n\n1. Osaka (all airports)\n2. Tokyo (all airports)\n3. Aomori Airport (AOJ)\n4. Fukuoka Airport (FUK)\n5. Hakodate Airport (HKD)\n\nReply with the number, or type any city or airport.\n\nI'll keep the flight from London · Business class · Mon, 21 Sept 2026 – Sun, 27 Sept 2026 unless you change it."
+          },
+          "latencyMs": 2628,
+          "grade": {
+            "pass": true,
+            "actual": {
+              "status": "clarify",
+              "origin": "LHR|LGW|LCY|STN|LTN",
+              "destination": null,
+              "cabin": "business",
+              "from": "2026-09-21",
+              "to": "2026-09-27",
+              "budget": null,
+              "pending": "destination",
+              "menuCount": 5,
+              "posts": 0,
+              "resultCount": 0,
+              "sort": "recommended",
+              "nonstopOnly": false,
+              "sources": [],
+              "savedPreferences": {}
+            },
+            "checks": [
+              {
+                "name": "status",
+                "expected": "clarify",
+                "actual": "clarify",
+                "pass": true
+              },
+              {
+                "name": "posts",
+                "expected": 0,
+                "actual": 0,
+                "pass": true
+              },
+              {
+                "name": "origin",
+                "expected": "LHR|LGW|LCY|STN|LTN",
+                "actual": "LHR|LGW|LCY|STN|LTN",
+                "pass": true
+              },
+              {
+                "name": "destination",
+                "expected": null,
+                "actual": null,
+                "pass": true
+              },
+              {
+                "name": "pending",
+                "expected": "destination",
+                "actual": "destination",
+                "pass": true
+              },
+              {
+                "name": "from",
+                "expected": "2026-09-21",
+                "actual": "2026-09-21",
+                "pass": true
+              },
+              {
+                "name": "to",
+                "expected": "2026-09-27",
+                "actual": "2026-09-27",
+                "pass": true
+              },
+              {
+                "name": "mentions",
+                "expected": "(?=.*Tokyo)(?=.*Osaka)",
+                "actual": "Which destination did you mean?\n\n1. Osaka (all airports)\n2. Tokyo (all airports)\n3. Aomori Airport (AOJ)\n4. Fukuoka Airport (FUK)\n5. Hakodate Airport (HKD)\n\nReply with the number, or type any city or airport.\n\nI'll keep the flight from London · Business class · Mon, 21 Sept 2026 – Sun, 27 Sept 2026 unless you change it.",
+                "pass": true
+              },
+              {
+                "name": "menu excludes opposite city",
+                "pass": true
+              },
+              {
+                "name": "Does not echo profanity or insult the user (limited lexical check)",
+                "pass": true
+              },
+              {
+                "name": "No claimed purchase completion",
+                "pass": true
+              }
+            ]
+          }
+        }
+      ],
+      "judge": {
+        "verdict": "pass",
+        "scores": {
+          "clarity": 5,
+          "concision": 5,
+          "tone": 5,
+          "nextStep": 5,
+          "limitationHonesty": 5,
+          "noInternalLeakage": 5
+        },
+        "rationale": "The reply asks one concise clarifying question and gives a numbered airport menu. It also offers a free-text fallback. London, the documented default Business cabin and a concrete next-week date range are all carried forward and can be changed. The tone is neutral and nothing internal is exposed.",
+        "strengths": [
+          "The single clarifying question is followed by a clear numbered menu.",
+          "London and next week are kept, with explicit dates.",
+          "The documented Business default is disclosed, and the traveler is told it can be changed.",
+          "The reply accepts a number or any typed city or airport, which keeps the next step easy."
+        ],
+        "issues": [
+          {
+            "severity": "minor",
+            "criterion": "clarity",
+            "evidence": "The menu mixes city-level groupings ('Osaka (all airports)', 'Tokyo (all airports)') with single airports. The single airports appear in alphabetical order rather than by prominence.",
+            "recommendation": "Consider ordering the single-airport options consistently, for example by prominence. Low priority."
+          }
+        ],
+        "recommendedAction": "none"
+      },
+      "judgeAttempts": [
+        {
+          "verdict": "pass",
+          "scores": {
+            "clarity": 5,
+            "concision": 5,
+            "tone": 5,
+            "nextStep": 5,
+            "limitationHonesty": 5,
+            "noInternalLeakage": 5
+          },
+          "rationale": "The reply asks one concise clarifying question and gives a numbered airport menu. It also offers a free-text fallback. London, the documented default Business cabin and a concrete next-week date range are all carried forward and can be changed. The tone is neutral and nothing internal is exposed.",
+          "strengths": [
+            "The single clarifying question is followed by a clear numbered menu.",
+            "London and next week are kept, with explicit dates.",
+            "The documented Business default is disclosed, and the traveler is told it can be changed.",
+            "The reply accepts a number or any typed city or airport, which keeps the next step easy."
+          ],
+          "issues": [
+            {
+              "severity": "minor",
+              "criterion": "clarity",
+              "evidence": "The menu mixes city-level groupings ('Osaka (all airports)', 'Tokyo (all airports)') with single airports. The single airports appear in alphabetical order rather than by prominence.",
+              "recommendation": "Consider ordering the single-airport options consistently, for example by prominence. Low priority."
+            }
+          ],
+          "recommendedAction": "none"
+        }
+      ],
+      "judgeConsensus": {
+        "passingVotes": 1,
+        "totalVotes": 1,
+        "verdicts": [
+          "pass"
+        ]
+      },
+      "events": [
+        {
+          "type": "model_usage",
+          "data": {
+            "model": "anthropic/claude-sonnet-5",
+            "provider": "Claude Platform on AWS",
+            "latencyMs": 2603,
+            "usage": {
+              "prompt_tokens": 5159,
+              "completion_tokens": 97,
+              "total_tokens": 5256,
+              "cost": 0.0136735,
+              "is_byok": false,
+              "prompt_tokens_details": {
+                "cached_tokens": 0,
+                "cache_write_tokens": 4771,
+                "audio_tokens": 0,
+                "video_tokens": 0
+              },
+              "cost_details": {
+                "upstream_inference_cost": 0.0136735,
+                "upstream_inference_prompt_cost": 0.0127035,
+                "upstream_inference_completions_cost": 0.00097
+              },
+              "completion_tokens_details": {
+                "reasoning_tokens": 0,
+                "image_tokens": 0,
+                "audio_tokens": 0
+              }
+            },
+            "cost": 0.0136735
+          }
+        },
+        {
+          "type": "tool_call",
+          "data": {
+            "name": "find_flights",
+            "arguments": {
+              "origin": "London",
+              "destination": "Japan",
+              "dates": {
+                "mode": "nextWeek"
+              }
+            }
+          }
+        },
+        {
+          "type": "judge_usage",
+          "data": {
+            "model": "anthropic/claude-opus-5.5",
+            "provider": "Claude Platform on AWS",
+            "latencyMs": 10667,
+            "usage": {
+              "prompt_tokens": 1624,
+              "completion_tokens": 691,
+              "total_tokens": 2315,
+              "cost": 0.020316,
+              "is_byok": false,
+              "prompt_tokens_details": {
+                "cached_tokens": 0,
+                "cache_write_tokens": 0,
+                "audio_tokens": 0,
+                "video_tokens": 0
+              },
+              "cost_details": {
+                "upstream_inference_cost": 0.020316,
+                "upstream_inference_prompt_cost": 0.006496,
+                "upstream_inference_completions_cost": 0.01382
+              },
+              "completion_tokens_details": {
+                "reasoning_tokens": 294,
+                "image_tokens": 0,
+                "audio_tokens": 0
+              }
+            },
+            "cost": 0.020316
+          }
+        }
+      ]
+    },
+    {
+      "caseId": "B5",
+      "name": "Three-turn completion preserves supplied details",
+      "category": "Missing information",
+      "requirement": "Keep each supplied detail, avoid repeated questions, and search London to New York on 4 October after the third turn.",
+      "model": "anthropic/claude-sonnet-5",
+      "repeat": 1,
+      "pass": true,
+      "deterministicPass": true,
+      "communicationPass": true,
+      "steps": [
+        {
+          "input": "to New York",
+          "expected": {
+            "status": "clarify",
+            "posts": 0,
+            "destination": "JFK|EWR|LGA",
+            "pending": "origin"
+          },
+          "result": {
+            "status": "clarify",
+            "text": "Sounds good. Where are you flying from?\n\nTry London, San Francisco Bay Area, Singapore Changi Airport (SIN), Dubai, or type any city or airport.\n\nI'll keep the flight to New York · Business class unless you change it."
+          },
+          "latencyMs": 2211,
+          "grade": {
+            "pass": true,
+            "actual": {
+              "status": "clarify",
+              "origin": null,
+              "destination": "JFK|EWR|LGA",
+              "cabin": "business",
+              "from": null,
+              "to": null,
+              "budget": null,
+              "pending": "origin",
+              "menuCount": 4,
+              "posts": 0,
+              "resultCount": 0,
+              "sort": "recommended",
+              "nonstopOnly": false,
+              "sources": [],
+              "savedPreferences": {}
+            },
+            "checks": [
+              {
+                "name": "status",
+                "expected": "clarify",
+                "actual": "clarify",
+                "pass": true
+              },
+              {
+                "name": "posts",
+                "expected": 0,
+                "actual": 0,
+                "pass": true
+              },
+              {
+                "name": "destination",
+                "expected": "JFK|EWR|LGA",
+                "actual": "JFK|EWR|LGA",
+                "pass": true
+              },
+              {
+                "name": "pending",
+                "expected": "origin",
+                "actual": "origin",
+                "pass": true
+              },
+              {
+                "name": "menu excludes opposite city",
+                "pass": true
+              },
+              {
+                "name": "Does not echo profanity or insult the user (limited lexical check)",
+                "pass": true
+              },
+              {
+                "name": "No claimed purchase completion",
+                "pass": true
+              }
+            ]
+          }
+        },
+        {
+          "input": "London",
+          "expected": {
+            "status": "results",
+            "origin": "LHR|LGW|LCY|STN|LTN",
+            "destination": "JFK|EWR|LGA",
+            "cabin": "business",
+            "from": "2026-09-18",
+            "to": "2026-09-25",
+            "posts": 1
+          },
+          "result": {
+            "status": "results",
+            "text": "SYNTHETIC FLIGHT DATA. These are example results.\n\nLondon (all airports) → New York (all airports)\nFri, 18 Sept 2026 – Fri, 25 Sept 2026 · Business class (default) · One-way\n\nI found 3 options for you:\n\nA. London Heathrow Airport (LHR) → John F. Kennedy International Airport (JFK)\nFri, 18 Sept 2026\nBusiness · Nonstop · USD 1,100.00\nDeparture time unavailable\nArrival time unavailable\n\nB. London Heathrow Airport (LHR) → John F. Kennedy International Airport (JFK)\nSat, 19 Sept 2026\nBusiness · Nonstop · USD 1,113.00\nDeparture time unavailable\nArrival time unavailable\n\nC. London Heathrow Airport (LHR) → John F. Kennedy International Airport (JFK)\nSun, 20 Sept 2026\nBusiness · Nonstop · USD 1,126.00\nDeparture time unavailable\nArrival time unavailable\n\nPrices are estimates and may change.\n\nMissing flight times and exact seat counts are not available.\n\nYou can ask me to change the dates, cabin or airport.\n\nTo pick a flight and check out, continue on CommonSwyft:\nhttps://commonswyft.com/search/LHR%7CLGW%7CLCY%7CSTN%7CLTN-JFK%7CEWR%7CLGA-180926-business-f7",
+            "dataMode": "synthetic",
+            "query": {
+              "origin": "LHR|LGW|LCY|STN|LTN",
+              "destination": "JFK|EWR|LGA",
+              "dateFrom": "2026-09-18",
+              "dateTo": "2026-09-25",
+              "selectedDate": "2026-09-18",
+              "cabin": "business"
+            },
+            "shortlist": [
+              {
+                "id": "synthetic-LHR-JFK-2026-09-18-0",
+                "origin": "LHR",
+                "destination": "JFK",
+                "date": "2026-09-18",
+                "cabin": "business",
+                "priceUsd": 1100,
+                "direct": true,
+                "reasons": [],
+                "timing": {
+                  "departure": null,
+                  "arrival": null,
+                  "durationMinutes": null,
+                  "flightNumbers": null,
+                  "text": "Departure time unavailable\nArrival time unavailable"
+                },
+                "text": "London Heathrow Airport (LHR) → John F. Kennedy International Airport (JFK)\nFri, 18 Sept 2026\nBusiness · Nonstop · USD 1,100.00\nDeparture time unavailable\nArrival time unavailable"
+              },
+              {
+                "id": "synthetic-LHR-JFK-2026-09-19-0",
+                "origin": "LHR",
+                "destination": "JFK",
+                "date": "2026-09-19",
+                "cabin": "business",
+                "priceUsd": 1113,
+                "direct": true,
+                "reasons": [],
+                "timing": {
+                  "departure": null,
+                  "arrival": null,
+                  "durationMinutes": null,
+                  "flightNumbers": null,
+                  "text": "Departure time unavailable\nArrival time unavailable"
+                },
+                "text": "London Heathrow Airport (LHR) → John F. Kennedy International Airport (JFK)\nSat, 19 Sept 2026\nBusiness · Nonstop · USD 1,113.00\nDeparture time unavailable\nArrival time unavailable"
+              },
+              {
+                "id": "synthetic-LHR-JFK-2026-09-20-0",
+                "origin": "LHR",
+                "destination": "JFK",
+                "date": "2026-09-20",
+                "cabin": "business",
+                "priceUsd": 1126,
+                "direct": true,
+                "reasons": [],
+                "timing": {
+                  "departure": null,
+                  "arrival": null,
+                  "durationMinutes": null,
+                  "flightNumbers": null,
+                  "text": "Departure time unavailable\nArrival time unavailable"
+                },
+                "text": "London Heathrow Airport (LHR) → John F. Kennedy International Airport (JFK)\nSun, 20 Sept 2026\nBusiness · Nonstop · USD 1,126.00\nDeparture time unavailable\nArrival time unavailable"
+              }
+            ],
+            "cached": false,
+            "totalFound": 24,
+            "matchingCount": 24
+          },
+          "latencyMs": 2083,
+          "grade": {
+            "pass": true,
+            "actual": {
+              "status": "results",
+              "origin": "LHR|LGW|LCY|STN|LTN",
+              "destination": "JFK|EWR|LGA",
+              "cabin": "business",
+              "from": "2026-09-18",
+              "to": "2026-09-25",
+              "budget": null,
+              "pending": null,
+              "menuCount": 0,
+              "posts": 1,
+              "resultCount": 3,
+              "sort": "recommended",
+              "nonstopOnly": false,
+              "sources": [],
+              "savedPreferences": {}
+            },
+            "checks": [
+              {
+                "name": "status",
+                "expected": "results",
+                "actual": "results",
+                "pass": true
+              },
+              {
+                "name": "origin",
+                "expected": "LHR|LGW|LCY|STN|LTN",
+                "actual": "LHR|LGW|LCY|STN|LTN",
+                "pass": true
+              },
+              {
+                "name": "destination",
+                "expected": "JFK|EWR|LGA",
+                "actual": "JFK|EWR|LGA",
+                "pass": true
+              },
+              {
+                "name": "cabin",
+                "expected": "business",
+                "actual": "business",
+                "pass": true
+              },
+              {
+                "name": "from",
+                "expected": "2026-09-18",
+                "actual": "2026-09-18",
+                "pass": true
+              },
+              {
+                "name": "to",
+                "expected": "2026-09-25",
+                "actual": "2026-09-25",
+                "pass": true
+              },
+              {
+                "name": "posts",
+                "expected": 1,
+                "actual": 1,
+                "pass": true
+              },
+              {
+                "name": "data source is labelled",
+                "pass": true
+              },
+              {
+                "name": "route matches saved preference",
+                "pass": true
+              },
+              {
+                "name": "each result respects route and budget",
+                "pass": true
+              },
+              {
+                "name": "Does not echo profanity or insult the user (limited lexical check)",
+                "pass": true
+              },
+              {
+                "name": "No claimed purchase completion",
+                "pass": true
+              }
+            ]
+          }
+        },
+        {
+          "input": "actually 4 Oct",
+          "expected": {
+            "status": "results",
+            "origin": "LHR|LGW|LCY|STN|LTN",
+            "destination": "JFK|EWR|LGA",
+            "cabin": "business",
+            "from": "2026-10-04",
+            "to": "2026-10-04",
+            "posts": 2
+          },
+          "result": {
+            "status": "results",
+            "text": "SYNTHETIC FLIGHT DATA. These are example results.\n\nLondon (all airports) → New York (all airports)\nSun, 4 Oct 2026 · Business class (default) · One-way\n\nI found 3 options for you:\n\nA. London Heathrow Airport (LHR) → John F. Kennedy International Airport (JFK)\nSun, 4 Oct 2026\nBusiness · Nonstop · USD 1,113.00\nDeparture time unavailable\nArrival time unavailable\n\nB. London City Airport (LCY) → LaGuardia Airport (LGA)\nSun, 4 Oct 2026\nBusiness · Nonstop · USD 1,273.00\nDeparture time unavailable\nArrival time unavailable\n\nC. London Gatwick Airport (LGW) → Newark Liberty International Airport (EWR)\nSun, 4 Oct 2026\nBusiness · With a connection · USD 1,193.00\nDeparture time unavailable\nArrival time unavailable\n\nPrices are estimates and may change.\n\nMissing flight times and exact seat counts are not available.\n\nYou can ask me to change the dates, cabin or airport.\n\nTo pick a flight and check out, continue on CommonSwyft:\nhttps://commonswyft.com/search/LHR%7CLGW%7CLCY%7CSTN%7CLTN-JFK%7CEWR%7CLGA-041026-business",
+            "dataMode": "synthetic",
+            "query": {
+              "origin": "LHR|LGW|LCY|STN|LTN",
+              "destination": "JFK|EWR|LGA",
+              "dateFrom": "2026-10-03",
+              "dateTo": "2026-10-05",
+              "selectedDate": "2026-10-04",
+              "cabin": "business"
+            },
+            "shortlist": [
+              {
+                "id": "synthetic-LHR-JFK-2026-10-04-0",
+                "origin": "LHR",
+                "destination": "JFK",
+                "date": "2026-10-04",
+                "cabin": "business",
+                "priceUsd": 1113,
+                "direct": true,
+                "reasons": [],
+                "timing": {
+                  "departure": null,
+                  "arrival": null,
+                  "durationMinutes": null,
+                  "flightNumbers": null,
+                  "text": "Departure time unavailable\nArrival time unavailable"
+                },
+                "text": "London Heathrow Airport (LHR) → John F. Kennedy International Airport (JFK)\nSun, 4 Oct 2026\nBusiness · Nonstop · USD 1,113.00\nDeparture time unavailable\nArrival time unavailable"
+              },
+              {
+                "id": "synthetic-LCY-LGA-2026-10-04-2",
+                "origin": "LCY",
+                "destination": "LGA",
+                "date": "2026-10-04",
+                "cabin": "business",
+                "priceUsd": 1273,
+                "direct": true,
+                "reasons": [],
+                "timing": {
+                  "departure": null,
+                  "arrival": null,
+                  "durationMinutes": null,
+                  "flightNumbers": null,
+                  "text": "Departure time unavailable\nArrival time unavailable"
+                },
+                "text": "London City Airport (LCY) → LaGuardia Airport (LGA)\nSun, 4 Oct 2026\nBusiness · Nonstop · USD 1,273.00\nDeparture time unavailable\nArrival time unavailable"
+              },
+              {
+                "id": "synthetic-LGW-EWR-2026-10-04-1",
+                "origin": "LGW",
+                "destination": "EWR",
+                "date": "2026-10-04",
+                "cabin": "business",
+                "priceUsd": 1193,
+                "direct": false,
+                "reasons": [],
+                "timing": {
+                  "departure": null,
+                  "arrival": null,
+                  "durationMinutes": null,
+                  "flightNumbers": null,
+                  "text": "Departure time unavailable\nArrival time unavailable"
+                },
+                "text": "London Gatwick Airport (LGW) → Newark Liberty International Airport (EWR)\nSun, 4 Oct 2026\nBusiness · With a connection · USD 1,193.00\nDeparture time unavailable\nArrival time unavailable"
+              }
+            ],
+            "cached": false,
+            "totalFound": 9,
+            "matchingCount": 3
+          },
+          "latencyMs": 2115,
+          "grade": {
+            "pass": true,
+            "actual": {
+              "status": "results",
+              "origin": "LHR|LGW|LCY|STN|LTN",
+              "destination": "JFK|EWR|LGA",
+              "cabin": "business",
+              "from": "2026-10-04",
+              "to": "2026-10-04",
+              "budget": null,
+              "pending": null,
+              "menuCount": 0,
+              "posts": 2,
+              "resultCount": 3,
+              "sort": "recommended",
+              "nonstopOnly": false,
+              "sources": [],
+              "savedPreferences": {}
+            },
+            "checks": [
+              {
+                "name": "status",
+                "expected": "results",
+                "actual": "results",
+                "pass": true
+              },
+              {
+                "name": "origin",
+                "expected": "LHR|LGW|LCY|STN|LTN",
+                "actual": "LHR|LGW|LCY|STN|LTN",
+                "pass": true
+              },
+              {
+                "name": "destination",
+                "expected": "JFK|EWR|LGA",
+                "actual": "JFK|EWR|LGA",
+                "pass": true
+              },
+              {
+                "name": "cabin",
+                "expected": "business",
+                "actual": "business",
+                "pass": true
+              },
+              {
+                "name": "from",
+                "expected": "2026-10-04",
+                "actual": "2026-10-04",
+                "pass": true
+              },
+              {
+                "name": "to",
+                "expected": "2026-10-04",
+                "actual": "2026-10-04",
+                "pass": true
+              },
+              {
+                "name": "posts",
+                "expected": 2,
+                "actual": 2,
+                "pass": true
+              },
+              {
+                "name": "data source is labelled",
+                "pass": true
+              },
+              {
+                "name": "route matches saved preference",
+                "pass": true
+              },
+              {
+                "name": "each result respects route and budget",
+                "pass": true
+              },
+              {
+                "name": "Does not echo profanity or insult the user (limited lexical check)",
+                "pass": true
+              },
+              {
+                "name": "No claimed purchase completion",
+                "pass": true
+              }
+            ]
+          }
+        }
+      ],
+      "judge": {
+        "verdict": "pass",
+        "scores": {
+          "clarity": 4,
+          "concision": 4,
+          "tone": 5,
+          "nextStep": 5,
+          "limitationHonesty": 4,
+          "noInternalLeakage": 5
+        },
+        "rationale": "The assistant kept New York from turn 1 and did not ask for it again. It asked only for the origin. After London was given, it searched the documented default window and labelled it clearly. On 'actually 4 Oct' it kept London → New York and Business (default) and searched Sun, 4 Oct 2026, as required. Each reply states what was searched, discloses missing times and estimated prices, and offers a clear next step. The only weaknesses are an awkward limitation sentence and repetitive per-option 'unavailable' lines.",
+        "strengths": [
+          "Context is preserved across all three turns without repeated questions.",
+          "The search header states the route, date, cabin (marked as default) and trip type.",
+          "The default date window is shown explicitly in turn 2 rather than hidden.",
+          "Missing departure and arrival times are disclosed for every option, and prices are flagged as estimates.",
+          "Next steps are clear: change dates, cabin or airport, or continue to checkout."
+        ],
+        "issues": [
+          {
+            "severity": "minor",
+            "criterion": "clarity",
+            "evidence": "\"Missing flight times and exact seat counts are not available.\"",
+            "recommendation": "Rephrase plainly, for example: \"Flight times and exact seat counts aren't available for these options.\""
+          },
+          {
+            "severity": "minor",
+            "criterion": "concision",
+            "evidence": "\"Departure time unavailable\" and \"Arrival time unavailable\" are repeated under every option, and a summary limitation line follows.",
+            "recommendation": "Collapse this into a single line per option (\"Times unavailable\") or rely on the summary note."
+          }
+        ],
+        "recommendedAction": "prompt"
+      },
+      "judgeAttempts": [
+        {
+          "verdict": "pass",
+          "scores": {
+            "clarity": 4,
+            "concision": 4,
+            "tone": 5,
+            "nextStep": 5,
+            "limitationHonesty": 4,
+            "noInternalLeakage": 5
+          },
+          "rationale": "The assistant kept New York from turn 1 and did not ask for it again. It asked only for the origin. After London was given, it searched the documented default window and labelled it clearly. On 'actually 4 Oct' it kept London → New York and Business (default) and searched Sun, 4 Oct 2026, as required. Each reply states what was searched, discloses missing times and estimated prices, and offers a clear next step. The only weaknesses are an awkward limitation sentence and repetitive per-option 'unavailable' lines.",
+          "strengths": [
+            "Context is preserved across all three turns without repeated questions.",
+            "The search header states the route, date, cabin (marked as default) and trip type.",
+            "The default date window is shown explicitly in turn 2 rather than hidden.",
+            "Missing departure and arrival times are disclosed for every option, and prices are flagged as estimates.",
+            "Next steps are clear: change dates, cabin or airport, or continue to checkout."
+          ],
+          "issues": [
+            {
+              "severity": "minor",
+              "criterion": "clarity",
+              "evidence": "\"Missing flight times and exact seat counts are not available.\"",
+              "recommendation": "Rephrase plainly, for example: \"Flight times and exact seat counts aren't available for these options.\""
+            },
+            {
+              "severity": "minor",
+              "criterion": "concision",
+              "evidence": "\"Departure time unavailable\" and \"Arrival time unavailable\" are repeated under every option, and a summary limitation line follows.",
+              "recommendation": "Collapse this into a single line per option (\"Times unavailable\") or rely on the summary note."
+            }
+          ],
+          "recommendedAction": "prompt"
+        }
+      ],
+      "judgeConsensus": {
+        "passingVotes": 1,
+        "totalVotes": 1,
+        "verdicts": [
+          "pass"
+        ]
+      },
+      "events": [
+        {
+          "type": "model_usage",
+          "data": {
+            "model": "anthropic/claude-sonnet-5",
+            "provider": "Claude Platform on AWS",
+            "latencyMs": 2204,
+            "usage": {
+              "prompt_tokens": 5155,
+              "completion_tokens": 40,
+              "total_tokens": 5195,
+              "cost": 0.0021222,
+              "is_byok": false,
+              "prompt_tokens_details": {
+                "cached_tokens": 4771,
+                "cache_write_tokens": 0,
+                "audio_tokens": 0,
+                "video_tokens": 0
+              },
+              "cost_details": {
+                "upstream_inference_cost": 0.0021222,
+                "upstream_inference_prompt_cost": 0.0017222,
+                "upstream_inference_completions_cost": 0.0004
+              },
+              "completion_tokens_details": {
+                "reasoning_tokens": 0,
+                "image_tokens": 0,
+                "audio_tokens": 0
+              }
+            },
+            "cost": 0.0021222
+          }
+        },
+        {
+          "type": "tool_call",
+          "data": {
+            "name": "find_flights",
+            "arguments": {
+              "destination": "New York"
+            }
+          }
+        },
+        {
+          "type": "model_usage",
+          "data": {
+            "model": "anthropic/claude-sonnet-5",
+            "provider": "Claude Platform on AWS",
+            "latencyMs": 2064,
+            "usage": {
+              "prompt_tokens": 5472,
+              "completion_tokens": 39,
+              "total_tokens": 5511,
+              "cost": 0.0027462,
+              "is_byok": false,
+              "prompt_tokens_details": {
+                "cached_tokens": 4771,
+                "cache_write_tokens": 0,
+                "audio_tokens": 0,
+                "video_tokens": 0
+              },
+              "cost_details": {
+                "upstream_inference_cost": 0.0027462,
+                "upstream_inference_prompt_cost": 0.0023562,
+                "upstream_inference_completions_cost": 0.00039
+              },
+              "completion_tokens_details": {
+                "reasoning_tokens": 0,
+                "image_tokens": 0,
+                "audio_tokens": 0
+              }
+            },
+            "cost": 0.0027462
+          }
+        },
+        {
+          "type": "tool_call",
+          "data": {
+            "name": "find_flights",
+            "arguments": {
+              "origin": "London"
+            }
+          }
+        },
+        {
+          "type": "flight_api",
+          "data": {
+            "method": "POST",
+            "path": "/v1/flight-searches",
+            "body": {
+              "origin": "LHR|LGW|LCY|STN|LTN",
+              "destination": "JFK|EWR|LGA",
+              "dateFrom": "2026-09-18",
+              "dateTo": "2026-09-25",
+              "selectedDate": "2026-09-18",
+              "cabin": "business"
+            },
+            "mode": "synthetic"
+          }
+        },
+        {
+          "type": "flight_api",
+          "data": {
+            "method": "GET",
+            "path": "/v1/flight-searches/fixture-search-1",
+            "mode": "synthetic"
+          }
+        },
+        {
+          "type": "search_result",
+          "data": {
+            "query": {
+              "origin": "LHR|LGW|LCY|STN|LTN",
+              "destination": "JFK|EWR|LGA",
+              "dateFrom": "2026-09-18",
+              "dateTo": "2026-09-25",
+              "selectedDate": "2026-09-18",
+              "cabin": "business"
+            },
+            "cached": false,
+            "count": 24,
+            "searchId": "fixture-search-1"
+          }
+        },
+        {
+          "type": "model_usage",
+          "data": {
+            "model": "anthropic/claude-sonnet-5",
+            "provider": "Claude Platform on AWS",
+            "latencyMs": 2110,
+            "usage": {
+              "prompt_tokens": 6348,
+              "completion_tokens": 58,
+              "total_tokens": 6406,
+              "cost": 0.0046882,
+              "is_byok": false,
+              "prompt_tokens_details": {
+                "cached_tokens": 4771,
+                "cache_write_tokens": 0,
+                "audio_tokens": 0,
+                "video_tokens": 0
+              },
+              "cost_details": {
+                "upstream_inference_cost": 0.0046882,
+                "upstream_inference_prompt_cost": 0.0041082,
+                "upstream_inference_completions_cost": 0.00058
+              },
+              "completion_tokens_details": {
+                "reasoning_tokens": 0,
+                "image_tokens": 0,
+                "audio_tokens": 0
+              }
+            },
+            "cost": 0.0046882
+          }
+        },
+        {
+          "type": "tool_call",
+          "data": {
+            "name": "find_flights",
+            "arguments": {
+              "dates": {
+                "mode": "exact",
+                "start": "2026-10-04"
+              }
+            }
+          }
+        },
+        {
+          "type": "flight_api",
+          "data": {
+            "method": "POST",
+            "path": "/v1/flight-searches",
+            "body": {
+              "origin": "LHR|LGW|LCY|STN|LTN",
+              "destination": "JFK|EWR|LGA",
+              "dateFrom": "2026-10-03",
+              "dateTo": "2026-10-05",
+              "selectedDate": "2026-10-04",
+              "cabin": "business"
+            },
+            "mode": "synthetic"
+          }
+        },
+        {
+          "type": "flight_api",
+          "data": {
+            "method": "GET",
+            "path": "/v1/flight-searches/fixture-search-2",
+            "mode": "synthetic"
+          }
+        },
+        {
+          "type": "search_result",
+          "data": {
+            "query": {
+              "origin": "LHR|LGW|LCY|STN|LTN",
+              "destination": "JFK|EWR|LGA",
+              "dateFrom": "2026-10-03",
+              "dateTo": "2026-10-05",
+              "selectedDate": "2026-10-04",
+              "cabin": "business"
+            },
+            "cached": false,
+            "count": 9,
+            "searchId": "fixture-search-2"
+          }
+        },
+        {
+          "type": "judge_usage",
+          "data": {
+            "model": "anthropic/claude-opus-5.5",
+            "provider": "Claude Platform on AWS",
+            "latencyMs": 11298,
+            "usage": {
+              "prompt_tokens": 2574,
+              "completion_tokens": 959,
+              "total_tokens": 3533,
+              "cost": 0.029476,
+              "is_byok": false,
+              "prompt_tokens_details": {
+                "cached_tokens": 0,
+                "cache_write_tokens": 0,
+                "audio_tokens": 0,
+                "video_tokens": 0
+              },
+              "cost_details": {
+                "upstream_inference_cost": 0.029476,
+                "upstream_inference_prompt_cost": 0.010296,
+                "upstream_inference_completions_cost": 0.01918
+              },
+              "completion_tokens_details": {
+                "reasoning_tokens": 373,
+                "image_tokens": 0,
+                "audio_tokens": 0
+              }
+            },
+            "cost": 0.029476
+          }
+        }
+      ]
+    },
+    {
+      "caseId": "G2",
+      "name": "A named city shows its deals",
+      "category": "Discover",
+      "requirement": "Show the best business class deals from London with the date they were checked and a note that prices can change. Name only destinations the deals contain.",
+      "model": "anthropic/claude-sonnet-5",
+      "repeat": 1,
+      "pass": true,
+      "deterministicPass": true,
+      "communicationPass": true,
+      "steps": [
+        {
+          "input": "I’m in London, take me anywhere",
+          "expected": {
+            "status": "deals",
+            "posts": 0,
+            "pending": "deal",
+            "mentions": "(?=.*deals from London)(?=.*checked)"
+          },
+          "result": {
+            "status": "deals",
+            "text": "SYNTHETIC FLIGHT DATA. These are example results.\n\nBest business class deals from London · checked 18 Sept.\n\n1. Charlotte, United States · Sat, 19 Sept 2026 · 1 stop via New York (JFK)\n   USD 1,290 · usually USD 10,805\n2. Bangkok, Thailand · Sun, 20 Sept 2026 · Nonstop\n   USD 1,480 · usually USD 6,200\n3. Cape Town, South Africa · Mon, 21 Sept 2026 · 1 stop via Doha (DOH)\n   USD 1,620 · usually USD 5,900\n4. Lisbon, Portugal · Tue, 22 Sept 2026 · Nonstop\n   USD 690 · usually USD 2,100\n5. Sydney, Australia · Wed, 23 Sept 2026 · 1 stop via Singapore (SIN)\n   USD 2,410 · usually USD 9,800\n\nDeals can change or sell out quickly.\n\nReply with a number to search that flight, or name a place.",
+            "deals": [
+              {
+                "origin": "LHR",
+                "destination": "CLT",
+                "city": "Charlotte",
+                "date": "2026-09-19",
+                "cabin": "business",
+                "priceUsd": 1290
+              },
+              {
+                "origin": "LHR",
+                "destination": "BKK",
+                "city": "Bangkok",
+                "date": "2026-09-20",
+                "cabin": "business",
+                "priceUsd": 1480
+              },
+              {
+                "origin": "LHR",
+                "destination": "CPT",
+                "city": "Cape Town",
+                "date": "2026-09-21",
+                "cabin": "business",
+                "priceUsd": 1620
+              },
+              {
+                "origin": "LHR",
+                "destination": "LIS",
+                "city": "Lisbon",
+                "date": "2026-09-22",
+                "cabin": "business",
+                "priceUsd": 690
+              },
+              {
+                "origin": "LHR",
+                "destination": "SYD",
+                "city": "Sydney",
+                "date": "2026-09-23",
+                "cabin": "business",
+                "priceUsd": 2410
+              }
+            ],
+            "checkedAt": "2026-09-18",
+            "stale": false
+          },
+          "latencyMs": 1826,
+          "grade": {
+            "pass": true,
+            "actual": {
+              "status": "deals",
+              "origin": null,
+              "destination": null,
+              "cabin": "business",
+              "from": null,
+              "to": null,
+              "budget": null,
+              "pending": "deal",
+              "menuCount": 5,
+              "posts": 0,
+              "resultCount": 0,
+              "sort": "recommended",
+              "nonstopOnly": false,
+              "sources": [],
+              "savedPreferences": {}
+            },
+            "checks": [
+              {
+                "name": "status",
+                "expected": "deals",
+                "actual": "deals",
+                "pass": true
+              },
+              {
+                "name": "posts",
+                "expected": 0,
+                "actual": 0,
+                "pass": true
+              },
+              {
+                "name": "pending",
+                "expected": "deal",
+                "actual": "deal",
+                "pass": true
+              },
+              {
+                "name": "mentions",
+                "expected": "(?=.*deals from London)(?=.*checked)",
+                "actual": "SYNTHETIC FLIGHT DATA. These are example results.\n\nBest business class deals from London · checked 18 Sept.\n\n1. Charlotte, United States · Sat, 19 Sept 2026 · 1 stop via New York (JFK)\n   USD 1,290 · usually USD 10,805\n2. Bangkok, Thailand · Sun, 20 Sept 2026 · Nonstop\n   USD 1,480 · usually USD 6,200\n3. Cape Town, South Africa · Mon, 21 Sept 2026 · 1 stop via Doha (DOH)\n   USD 1,620 · usually USD 5,900\n4. Lisbon, Portugal · Tue, 22 Sept 2026 · Nonstop\n   USD 690 · usually USD 2,100\n5. Sydney, Australia · Wed, 23 Sept 2026 · 1 stop via Singapore (SIN)\n   USD 2,410 · usually USD 9,800\n\nDeals can change or sell out quickly.\n\nReply with a number to search that flight, or name a place.",
+                "pass": true
+              },
+              {
+                "name": "menu excludes opposite city",
+                "pass": true
+              },
+              {
+                "name": "Does not echo profanity or insult the user (limited lexical check)",
+                "pass": true
+              },
+              {
+                "name": "No claimed purchase completion",
+                "pass": true
+              }
+            ]
+          }
+        }
+      ],
+      "judge": {
+        "verdict": "pass",
+        "scores": {
+          "clarity": 5,
+          "concision": 5,
+          "tone": 5,
+          "nextStep": 5,
+          "limitationHonesty": 4,
+          "noInternalLeakage": 5
+        },
+        "rationale": "The reply meets the requirement. It labels the results as business class deals from London, gives the check date, and warns that deals can change or sell out. It names only the destinations in the listed deals. The layout is scannable and ends with a clear next step. The one small gap is that the check date omits the year, although the flight dates make it inferable.",
+        "strengths": [
+          "Clearly states the cabin, origin and check date in the header.",
+          "The note that prices can change is present and plainly worded.",
+          "Each deal shows the destination, date, stops, price and usual price in a consistent format.",
+          "The next step is simple: reply with a number or name a place."
+        ],
+        "issues": [
+          {
+            "severity": "minor",
+            "criterion": "clarity",
+            "evidence": "\"checked 18 Sept\" omits the year, while the flight dates include 2026.",
+            "recommendation": "Include the year in the checked date for consistency, e.g. \"checked 18 Sept 2026\"."
+          }
+        ],
+        "recommendedAction": "none"
+      },
+      "judgeAttempts": [
+        {
+          "verdict": "pass",
+          "scores": {
+            "clarity": 5,
+            "concision": 5,
+            "tone": 5,
+            "nextStep": 5,
+            "limitationHonesty": 4,
+            "noInternalLeakage": 5
+          },
+          "rationale": "The reply meets the requirement. It labels the results as business class deals from London, gives the check date, and warns that deals can change or sell out. It names only the destinations in the listed deals. The layout is scannable and ends with a clear next step. The one small gap is that the check date omits the year, although the flight dates make it inferable.",
+          "strengths": [
+            "Clearly states the cabin, origin and check date in the header.",
+            "The note that prices can change is present and plainly worded.",
+            "Each deal shows the destination, date, stops, price and usual price in a consistent format.",
+            "The next step is simple: reply with a number or name a place."
+          ],
+          "issues": [
+            {
+              "severity": "minor",
+              "criterion": "clarity",
+              "evidence": "\"checked 18 Sept\" omits the year, while the flight dates include 2026.",
+              "recommendation": "Include the year in the checked date for consistency, e.g. \"checked 18 Sept 2026\"."
+            }
+          ],
+          "recommendedAction": "none"
+        }
+      ],
+      "judgeConsensus": {
+        "passingVotes": 1,
+        "totalVotes": 1,
+        "verdicts": [
+          "pass"
+        ]
+      },
+      "events": [
+        {
+          "type": "model_usage",
+          "data": {
+            "model": "anthropic/claude-sonnet-5",
+            "provider": "Claude Platform on AWS",
+            "latencyMs": 1817,
+            "usage": {
+              "prompt_tokens": 5164,
+              "completion_tokens": 40,
+              "total_tokens": 5204,
+              "cost": 0.0021402,
+              "is_byok": false,
+              "prompt_tokens_details": {
+                "cached_tokens": 4771,
+                "cache_write_tokens": 0,
+                "audio_tokens": 0,
+                "video_tokens": 0
+              },
+              "cost_details": {
+                "upstream_inference_cost": 0.0021402,
+                "upstream_inference_prompt_cost": 0.0017402,
+                "upstream_inference_completions_cost": 0.0004
+              },
+              "completion_tokens_details": {
+                "reasoning_tokens": 0,
+                "image_tokens": 0,
+                "audio_tokens": 0
+              }
+            },
+            "cost": 0.0021402
+          }
+        },
+        {
+          "type": "tool_call",
+          "data": {
+            "name": "discover_flights",
+            "arguments": {
+              "origin": "London"
+            }
+          }
+        },
+        {
+          "type": "judge_usage",
+          "data": {
+            "model": "anthropic/claude-opus-5.5",
+            "provider": "Claude Platform on AWS",
+            "latencyMs": 7847,
+            "usage": {
+              "prompt_tokens": 1819,
+              "completion_tokens": 551,
+              "total_tokens": 2370,
+              "cost": 0.018296,
+              "is_byok": false,
+              "prompt_tokens_details": {
+                "cached_tokens": 0,
+                "cache_write_tokens": 0,
+                "audio_tokens": 0,
+                "video_tokens": 0
+              },
+              "cost_details": {
+                "upstream_inference_cost": 0.018296,
+                "upstream_inference_prompt_cost": 0.007276,
+                "upstream_inference_completions_cost": 0.01102
+              },
+              "completion_tokens_details": {
+                "reasoning_tokens": 179,
+                "image_tokens": 0,
+                "audio_tokens": 0
+              }
+            },
+            "cost": 0.018296
+          }
+        }
+      ]
+    }
+  ],
+  "limitations": [
+    "Held-out v2 cases were frozen before this first run. Known place-handling gaps were not fixed first.",
+    "One attempt per case does not establish reliability.",
+    "The judge reviews communication quality and can be wrong. Deterministic checks remain authoritative for facts and actions.",
+    "The judge receives blinded candidate output and no private reasoning.",
+    "The synthetic-inventory banner is retained in the report but removed from judge input because production does not show it.",
+    "Synthetic inventory is used. No booking, payment or live flight search occurs."
+  ],
+  "completedAt": "2026-09-27T09:45:18.737Z",
+  "modelCallsAttempted": 8,
+  "actualCostUsd": 0.0934583,
+  "conservativeReservedUsd": 0.214676,
+  "summary": [
+    {
+      "model": "anthropic/claude-sonnet-5",
+      "passed": 3,
+      "total": 3,
+      "deterministicPassed": 3,
+      "judgePassed": 3,
+      "modelCalls": 5,
+      "judgeCalls": 3,
+      "cost": 0.0934583
+    }
+  ]
+}

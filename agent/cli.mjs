@@ -22,7 +22,7 @@ const session = fileTrace(base + 'traces', randomUUID());
 const trace = session.emit;
 let model;
 try {
-  const settings=hostedModelSettings(process.env.AGENT_MODEL||'openai/gpt-5.6-terra',process.env.AGENT_REASONING);
+  const settings=hostedModelSettings(process.env.AGENT_MODEL||undefined,process.env.AGENT_REASONING);
   model = demo ? new ScriptedDemoModel() : new OpenRouterModel({ apiKey: process.env.OPENROUTER_API_KEY, model: settings.model, reasoningEffort: settings.effort, trace });
 } catch (error) { console.error(error.message); process.exit(1); }
 const staging = !demo && process.argv.includes('--staging');

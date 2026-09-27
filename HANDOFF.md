@@ -19,15 +19,26 @@ customer data or raw backend captures.
 
 - The live experiment is invite protected at
   <https://commonswyft-agent-experiment-868895912650.europe-west2.run.app>.
-- Terra medium is the default model. DeepSeek V4.1 Flash low and GLM 5.3 high
-  remain optional research controls in the live chat.
+- Claude Sonnet 5 medium is the default model from 2026-09-27 (code; the live
+  service keeps its current model until it is redeployed with
+  `OPENROUTER_MODEL` updated). Terra medium, DeepSeek V4.1 Flash low and GLM
+  5.3 high remain optional controls in the live chat.
+- Claude requests mark the fixed part of the system prompt, and the tools
+  before it, for prompt caching. OpenAI models cache on their own. A 3-case
+  check on 2026-09-27 read 4,771 prompt tokens from cache on every call after
+  the first, cutting the cost of a warm call from about $0.011 to $0.002-0.005.
+- The judge stays Claude Opus 5.5 at medium effort. It is the same model
+  family as Sonnet 5, so it may favour Sonnet's wording. Exact checks and the
+  made-up value count do not depend on the judge; read those first when
+  comparing a Claude model with another family. Validating the judge against
+  human labels is the open item.
 - All model traffic uses the OpenRouter adapter.
 - The current prompt contract is `flight-search-v1.6.0`.
 - The supported product scope is one-way flight search, policy retrieval,
   session follow-ups and explicit preference proposals.
 - Booking, payment, account servicing, autonomous purchasing, WhatsApp and MCP
   remain outside the implemented scope.
-- The deterministic suite currently contains 274 passing checks.
+- The deterministic suite currently contains 276 passing checks.
 - The first 42-case Terra hardening run passed 30 cases. Every observed issue
   later received a focused passing verification. A later full rerun passed 32
   cases, then stopped at B03 after a safe policy handoff failed the frozen
@@ -65,7 +76,9 @@ customer data or raw backend captures.
   3.1 s) and its model cost per 1,000 traveler turns lower ($3.51 against
   $4.13). All three exact failures were the model adding something the
   traveler did not say. Terra ran in two parts after a provider timeout at
-  case 16. The default model has not been changed.
+  case 16. Sonnet 5 later ran the same 47 cases on the guard code (c6bf7c0): 42 passed,
+  45 exact, no made-up values (Sol 9, Terra 1). Its lead over Terra and Sol is
+  in judge-graded cases; on exact checks the three are within one case.
 
 The Evals page opens on a milestone chart: one bar per complete run of the
 held-out set, with what changed, why, and which cases were fixed, newly
