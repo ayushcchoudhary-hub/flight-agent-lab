@@ -13,7 +13,7 @@ const { DATABASE_OWNER_URL: url, APP_ROLE: role, APP_PASSWORD: password } = proc
 if (!url || !role || !password) { console.error('Set DATABASE_OWNER_URL, APP_ROLE and APP_PASSWORD for this command only.'); process.exit(1); }
 if (!/^[a-z_][a-z0-9_]{2,30}$/.test(role)) throw new Error('Role name must be lower-case letters, digits and underscores.');
 if (!/^[A-Za-z0-9]{32,64}$/.test(password)) throw new Error('Password must be 32 to 64 letters and digits.');
-const tables = ['visitors', 'visitor_memory', 'conversations', 'messages'];
+const tables = ['visitors', 'visitor_memory', 'conversations', 'messages', 'recent_searches'];
 const client = new pg.Client({ connectionString: url.replace('sslmode=require', 'sslmode=verify-full') });
 await client.connect();
 try {

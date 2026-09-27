@@ -51,6 +51,11 @@ Each is recorded here with its date and the held-out cases that pin it.
 
 - 22 September 2026: “take me anywhere” moved into scope. Held-out cases
   G1–G11. Prompt contract `flight-search-v1.6.0`.
+- 27 September 2026: recent searches, when conversation storage is on. The
+  welcome lists a browser's recent trips by number and the traveler can
+  forget them. They never pre-fill a new trip (held-out D1 unchanged). No
+  held-out case covers the welcome list yet; `test/recent-searches.test.mjs`
+  pins it. Prompt contract `flight-search-v1.7.0`.
 
 ## Baseline rule
 

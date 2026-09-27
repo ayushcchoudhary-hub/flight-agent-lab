@@ -6,7 +6,8 @@
 //   conversations can be read back, and there is no route that lists them.
 // - Memory holds origins only: a home airport the traveler stated, and the
 //   last origin they searched from.
-//   Dates, cabins and budgets are one-off details and are never stored.
+//   Dates, cabins and budgets are not part of that memory. They are kept
+//   only as recent searches (below), shown back and used only when chosen.
 // - Conversations expire after retentionDays and purgeExpired() removes them.
 // - A storage failure never reaches the traveler. Callers catch and trace.
 import pg from 'pg';
@@ -31,6 +32,20 @@ export function turnRecords({ text, result, toolCalls = [], latencyMs = null }) 
 
 function checkVisitor(visitorId) { if (!isVisitorId(visitorId)) throw new Error('Invalid visitor id.'); }
 function checkOrigin(code) { if (typeof code !== 'string' || !ORIGIN.test(code)) throw new Error('Invalid origin code.'); }
+
+// A recent search: one trip the traveler actually ran, as the chat service
+// builds it from the trip state after results. Validated before any SQL.
+export const RECENT_SEARCHES_KEPT = 5;
+const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
+const CABINS = ['economy', 'premium', 'business', 'first', 'any'];
+function checkSearch(search) {
+  const s = search ?? {};
+  const price = value => value === null || (typeof value === 'number' && Number.isFinite(value) && value >= 0);
+  if (!ORIGIN.test(s.origin ?? '') || !ORIGIN.test(s.destination ?? '') || !ISO_DATE.test(s.dateFrom ?? '') || !ISO_DATE.test(s.dateTo ?? '') || s.dateTo < s.dateFrom
+    || !(s.cabin === null || CABINS.includes(s.cabin)) || typeof s.nonstopOnly !== 'boolean'
+    || !price(s.maxPriceUsd) || s.maxPriceUsd === 0 || !price(s.lowestPriceUsd)) throw new Error('Invalid recent search.');
+  return { origin: s.origin, destination: s.destination, dateFrom: s.dateFrom, dateTo: s.dateTo, cabin: s.cabin, nonstopOnly: s.nonstopOnly, maxPriceUsd: s.maxPriceUsd, lowestPriceUsd: s.lowestPriceUsd };
+}
 
 export function createPostgresStore({ url, retentionDays = 90, poolSize = 3 }) {
   if (!url) throw new Error('Conversation storage needs DATABASE_URL.');
@@ -85,6 +100,38 @@ export function createPostgresStore({ url, retentionDays = 90, poolSize = 3 }) {
       checkVisitor(visitorId);
       await pool.query('UPDATE visitor_memory SET home_origin = NULL, last_origin = NULL, updated_at = now() WHERE visitor_id = $1', [visitorId]);
     },
+    // One row per route, newest wins; only the newest few are kept.
+    async rememberSearch(visitorId, search) {
+      checkVisitor(visitorId); const s = checkSearch(search);
+      const client = await pool.connect();
+      try {
+        await client.query('BEGIN');
+        await client.query(
+          `INSERT INTO recent_searches (visitor_id, origin, destination, date_from, date_to, cabin, nonstop_only, max_price_usd, lowest_price_usd, retain_until)
+           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, now() + make_interval(days => $10))
+           ON CONFLICT (visitor_id, origin, destination) DO UPDATE SET date_from = EXCLUDED.date_from, date_to = EXCLUDED.date_to, cabin = EXCLUDED.cabin,
+             nonstop_only = EXCLUDED.nonstop_only, max_price_usd = EXCLUDED.max_price_usd, lowest_price_usd = EXCLUDED.lowest_price_usd, searched_at = now(), retain_until = EXCLUDED.retain_until`,
+          [visitorId, s.origin, s.destination, s.dateFrom, s.dateTo, s.cabin, s.nonstopOnly, s.maxPriceUsd, s.lowestPriceUsd, retentionDays]);
+        await client.query('DELETE FROM recent_searches WHERE visitor_id = $1 AND (origin, destination) NOT IN (SELECT origin, destination FROM recent_searches WHERE visitor_id = $1 ORDER BY searched_at DESC LIMIT $2)', [visitorId, RECENT_SEARCHES_KEPT]);
+        await client.query('COMMIT');
+      } catch (error) { await client.query('ROLLBACK').catch(() => {}); throw error; }
+      finally { client.release(); }
+    },
+    // Dates come back as text: a date column read as a JavaScript Date
+    // would shift with the server's time zone.
+    async recentSearches(visitorId, limit = 3) {
+      checkVisitor(visitorId);
+      const rows = (await pool.query(
+        `SELECT origin, destination, to_char(date_from, 'YYYY-MM-DD') AS date_from, to_char(date_to, 'YYYY-MM-DD') AS date_to, cabin, nonstop_only, max_price_usd, lowest_price_usd, searched_at
+         FROM recent_searches WHERE visitor_id = $1 AND retain_until > now() ORDER BY searched_at DESC LIMIT $2`,
+        [visitorId, Math.min(Math.max(1, limit), RECENT_SEARCHES_KEPT)])).rows;
+      return rows.map(r => ({ origin: r.origin, destination: r.destination, dateFrom: r.date_from, dateTo: r.date_to, cabin: r.cabin, nonstopOnly: r.nonstop_only,
+        maxPriceUsd: r.max_price_usd === null ? null : Number(r.max_price_usd), lowestPriceUsd: r.lowest_price_usd === null ? null : Number(r.lowest_price_usd), searchedAt: r.searched_at }));
+    },
+    async forgetRecentSearches(visitorId) {
+      checkVisitor(visitorId);
+      await pool.query('DELETE FROM recent_searches WHERE visitor_id = $1', [visitorId]);
+    },
     // A visitor's own conversations, newest first. The visitor filter is the
     // access rule: nothing here can return another visitor's rows.
     async conversationsFor(visitorId, limit = 20) {
@@ -105,9 +152,9 @@ export function createPostgresStore({ url, retentionDays = 90, poolSize = 3 }) {
 // Same interface, in memory. For tests, and to exercise the chat service's
 // storage path without a database.
 export function createMemoryStore({ retentionDays = 90, now = () => Date.now() } = {}) {
-  const visitors = new Set(), memory = new Map(), homes = new Map(), conversations = new Map();
+  const visitors = new Set(), memory = new Map(), homes = new Map(), conversations = new Map(), searches = new Map();
   return {
-    kind: 'memory', conversations,
+    kind: 'memory', conversations, searches,
     async touchVisitor(visitorId) { checkVisitor(visitorId); visitors.add(visitorId); },
     async startConversation({ visitorId, model, promptVersion }) {
       checkVisitor(visitorId);
@@ -123,12 +170,27 @@ export function createMemoryStore({ retentionDays = 90, now = () => Date.now() }
     async rememberHome(visitorId, code) { checkVisitor(visitorId); if (code !== null) checkOrigin(code); if (code === null) homes.delete(visitorId); else homes.set(visitorId, code); },
     async rememberLastOrigin(visitorId, code) { checkVisitor(visitorId); checkOrigin(code); memory.set(visitorId, code); },
     async forgetOrigins(visitorId) { checkVisitor(visitorId); homes.delete(visitorId); memory.delete(visitorId); },
+    async rememberSearch(visitorId, search) {
+      checkVisitor(visitorId); const s = checkSearch(search);
+      const kept = (searches.get(visitorId) ?? []).filter(x => x.origin !== s.origin || x.destination !== s.destination);
+      searches.set(visitorId, [{ ...s, searchedAt: now(), retainUntil: now() + retentionDays * 86400000 }, ...kept].slice(0, RECENT_SEARCHES_KEPT));
+    },
+    async recentSearches(visitorId, limit = 3) {
+      checkVisitor(visitorId);
+      return (searches.get(visitorId) ?? []).filter(x => x.retainUntil > now()).slice(0, Math.min(Math.max(1, limit), RECENT_SEARCHES_KEPT)).map(({ retainUntil, ...x }) => x);
+    },
+    async forgetRecentSearches(visitorId) { checkVisitor(visitorId); searches.delete(visitorId); },
     async conversationsFor(visitorId, limit = 20) {
       checkVisitor(visitorId);
       return [...conversations.values()].filter(c => c.visitorId === visitorId).sort((a, b) => b.startedAt - a.startedAt).slice(0, limit)
         .map(c => ({ id: c.id, startedAt: c.startedAt, messages: c.messages.map(({ role, text, status }) => ({ role, text, status })) }));
     },
-    async purgeExpired() { let n = 0; for (const [id, c] of conversations) if (c.retainUntil < now()) { conversations.delete(id); n++; } return n; },
+    async purgeExpired() {
+      let n = 0;
+      for (const [id, c] of conversations) if (c.retainUntil < now()) { conversations.delete(id); n++; }
+      for (const [id, list] of searches) { const kept = list.filter(x => x.retainUntil >= now()); n += list.length - kept.length; searches.set(id, kept); }
+      return n;
+    },
     async close() {},
   };
 }

@@ -30,20 +30,21 @@ export function applyPreferences(conversation,p) {
  if(p.cabin){conversation.state.cabin=p.cabin==='premium_economy'?'premium':p.cabin;conversation.state.cabinSource='preference';}
  if(p.preferNonstop)conversation.state.sort='nonstop';
 }
-export const preferencesTool={type:'function',function:{name:'travel_preferences',description:'Show saved defaults, save a home airport, or propose other defaults, only when the traveler explicitly asks to remember, save, change or forget one, or states their home airport or home city ("my home airport is Heathrow", "I live in London, save that"). A home airport is saved as soon as it is stated. A cabin or nonstop default is only a proposal the traveler confirms in the dashboard. A place mentioned only for this trip ("I am in Tokyo this week") is not a home airport. Current-trip changes use find_flights.',parameters:{type:'object',additionalProperties:false,required:['action'],properties:{action:{type:'string',enum:['show','propose']},homeAirport:{type:['string','null'],description:'The home airport or city the traveler stated, e.g. Heathrow, LHR or London. Omit or null when they did not state one.'},cabin:{type:['string','null'],enum:['economy','premium_economy','business','first',null]},preferNonstop:{type:['boolean','null']},forget:{type:'array',items:{type:'string',enum:['homeAirport','cabin','preferNonstop']},description:'Only when the traveler explicitly asks to forget or clear a saved default. Never implied by an omitted or null field.'}}}}};
+export const preferencesTool={type:'function',function:{name:'travel_preferences',description:'Show saved defaults, save a home airport, or propose other defaults, only when the traveler explicitly asks to remember, save, change or forget one, or states their home airport or home city ("my home airport is Heathrow", "I live in London, save that"). A home airport is saved as soon as it is stated. A cabin or nonstop default is only a proposal the traveler confirms in the dashboard. A place mentioned only for this trip ("I am in Tokyo this week") is not a home airport. Current-trip changes use find_flights.',parameters:{type:'object',additionalProperties:false,required:['action'],properties:{action:{type:'string',enum:['show','propose']},homeAirport:{type:['string','null'],description:'The home airport or city the traveler stated, e.g. Heathrow, LHR or London. Omit or null when they did not state one.'},cabin:{type:['string','null'],enum:['economy','premium_economy','business','first',null]},preferNonstop:{type:['boolean','null']},forget:{type:'array',items:{type:'string',enum:['homeAirport','cabin','preferNonstop','recentSearches']},description:'Only when the traveler explicitly asks to forget or clear a saved default, or their recent searches ("forget my recent searches"). Never implied by an omitted or null field.'}}}}};
 // Product decision 2026-09-23: saying your home airport saves it, with no
 // separate confirmation. Cabin and nonstop defaults stay proposals the
 // traveler confirms (held-out D4). Where the saved home airport is stored is
 // the chat service's job; this only decides and words it.
 export function preferenceAction(args,saved) {
  if(!args||typeof args!=='object'||Array.isArray(args)||!['show','propose'].includes(args.action)||Object.keys(args).some(k=>!['action','homeAirport','cabin','preferNonstop','forget'].includes(k)))throw Error('Invalid preference action.');
- if('forget' in args&&(!Array.isArray(args.forget)||args.forget.some(f=>!['homeAirport','cabin','preferNonstop'].includes(f))))throw Error('Invalid preference action.');
+ if('forget' in args&&(!Array.isArray(args.forget)||args.forget.some(f=>!['homeAirport','cabin','preferNonstop','recentSearches'].includes(f))))throw Error('Invalid preference action.');
  // Models send every field, null or empty for what the traveler never said.
  // Only an explicit forget removes anything: a null once wiped a saved home
  // airport when the traveler only asked to remember business (held-out D4).
  const forget=new Set(args.forget??[]);
  if(args.action==='show')return {status:'preferences',text:`Saved preferences\nHome airport: ${saved.homeAirport?labelForValue(saved.homeAirport):'Not set'}\nCabin: ${saved.cabin??'Business class'}\nNonstop: ${saved.preferNonstop?'Preferred':'No preference'}`,preferences:saved};
  const lines=[],out={status:'preferences'};
+ if(forget.has('recentSearches')){out.forgetRecentSearches=true;lines.push('Cleared your recent searches.');}
  if(forget.has('homeAirport')){out.savedPreferences={homeAirport:null};lines.push('Removed your saved home airport.');}
  else if(typeof args.homeAirport==='string'&&args.homeAirport.trim()){
   {

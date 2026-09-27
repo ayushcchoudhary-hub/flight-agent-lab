@@ -41,12 +41,14 @@ customer data or raw backend captures.
   comparing a Claude model with another family. Validating the judge against
   human labels is the open item.
 - All model traffic uses the OpenRouter adapter.
-- The current prompt contract is `flight-search-v1.6.0`.
+- The current prompt contract is `flight-search-v1.7.0` (2026-09-27: the
+  preference tool can forget recent searches). Recorded runs before that
+  date used `flight-search-v1.6.0`.
 - The supported product scope is one-way flight search, policy retrieval,
   session follow-ups and explicit preference proposals.
 - Booking, payment, account servicing, autonomous purchasing, WhatsApp and MCP
   remain outside the implemented scope.
-- The deterministic suite currently contains 291 passing checks.
+- The deterministic suite currently contains 305 passing checks.
 - The first 42-case Terra hardening run passed 30 cases. Every observed issue
   later received a focused passing verification. A later full rerun passed 32
   cases, then stopped at B03 after a safe policy handoff failed the frozen
@@ -227,8 +229,25 @@ off unless `CONVERSATION_STORE=postgres` and `DATABASE_URL` are set.
   passport numbers). Conversations expire after 90 days and are purged hourly.
 - A visitor is a random browser cookie, set only when storage is on. A
   browser can read back only its own conversations; no route lists them.
-- Memory holds origins only: a home airport the traveler stated, then the
-  last origin they searched from. Cabin, dates and budget stay one-off.
+- Memory used as a default holds origins only: a home airport the traveler
+  stated, then the last origin they searched from. Cabin, dates and budget
+  never become defaults for a new trip.
+- Recent searches (decision 2026-09-27, reversing "dates, cabin and budget
+  are never stored"): every search that returned is kept per browser as a
+  trip record: route, dates, a stated cabin, nonstop, budget and the lowest
+  matching price seen. One row per route, the newest five, same 90-day
+  expiry (`db/migrations/002_recent_searches.sql`). The welcome lists the
+  latest three by number and the page skips the deals for that visitor.
+  Choosing one runs it again live. A trip whose dates passed runs over the
+  next 7 days and says so. Nothing from a recent search pre-fills a new trip,
+  so held-out D1 still holds. The list is not in the model's context: "the
+  Tokyo one again" is not understood yet, only its number or the route.
+  "Forget my recent searches" deletes them and closes an open list.
+- The stored lowest price is there for a later alert ("cheaper than when you
+  looked"). That needs sign-in first: outreach needs a contactable,
+  consenting account, not a browser cookie. With sign-in, key memory and
+  recent searches by account and move a browser's rows to the account on
+  first sign-in.
 - Stating a home airport saves it, with no separate Save step (decision
   2026-09-23; held-out D2). On the hosted site it is kept per browser, and
   only when storage is on; with storage off the reply says it applies to
@@ -244,8 +263,12 @@ off unless `CONVERSATION_STORE=postgres` and `DATABASE_URL` are set.
 
 Before switching it on:
 
-1. Add a privacy-page sentence on conversation storage and its retention.
-2. Held-out case D1 was updated on 2026-09-23 to the memory rule: the last
+1. Add a privacy-page sentence on conversation storage, recent searches
+   and their retention.
+2. Apply `002_recent_searches.sql` with `tools/migrate.mjs`, then run
+   `tools/create-app-role.mjs` again so the application login can use the
+   new table, then `tools/store-smoke.mjs`.
+3. Held-out case D1 was updated on 2026-09-23 to the memory rule: the last
    origin carries over as a disclosed default, economy does not. The eval
    harness applies the same memory between sessions.
 

@@ -147,7 +147,9 @@ const server=http.createServer(async(req,res)=>{
   if(req.method!=='POST')return send(res,405,{error:'Method unavailable.'});
   if(req.headers.origin!==originFor(req)||req.headers['content-type']!=='application/json')return send(res,403,{error:'Send requests from the experiment page.'});
   const input=await readJson(req,res);if(!input)return;
-  if(url.pathname==='/api/chat/welcome')return send(res,200,await chat.welcome('staging-public'));
+  // The welcome reads the browser's existing id and never sets one: a first
+  // visit has nothing to recall.
+  if(url.pathname==='/api/chat/welcome')return send(res,200,await chat.welcome('staging-public',conversationStore?readCookie(req,visitorCookie)||null:null));
   if(url.pathname==='/api/chat/deals')return send(res,200,await chat.welcomeDeals('staging-public'));
   if(url.pathname==='/api/chat/start'){const settings=hostedModelSettings(input.model??defaultSettings.model);const visitor=visitorFor(req);return send(res,200,await chat.start('staging-public',settings.model,settings.effort,typeof input.welcomeKey==='string'?input.welcomeKey.slice(0,300):null,visitor.id),'application/json',visitor.headers);}
   if(url.pathname==='/api/chat/turn')return send(res,200,await chat.turn(input.id,input.text));
