@@ -1,0 +1,371 @@
+[
+  {
+    "id": "D1",
+    "category": "Cross-conversation context",
+    "name": "Only the last origin carries over, disclosed",
+    "requirement": "A new conversation reuses London from the last search as a disclosed default and says so. It must not reuse economy or any other one-off detail from that search.",
+    "sessions": [
+      {
+        "steps": [
+          {
+            "text": "London to New York economy",
+            "expected": {
+              "status": "results",
+              "origin": "LHR|LGW|LCY|STN|LTN",
+              "destination": "JFK|EWR|LGA",
+              "cabin": "economy",
+              "from": "2026-09-18",
+              "to": "2026-09-25",
+              "posts": 1
+            }
+          }
+        ]
+      },
+      {
+        "steps": [
+          {
+            "text": "to Singapore next week",
+            "expected": {
+              "status": "results",
+              "origin": "LHR|LGW|LCY|STN|LTN",
+              "destination": "SIN",
+              "cabin": "business",
+              "from": "2026-09-21",
+              "to": "2026-09-27",
+              "posts": 1,
+              "mentions": "last search"
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "D2",
+    "category": "Cross-conversation context",
+    "name": "A stated home airport is saved and becomes a disclosed default",
+    "requirement": "Saying Heathrow is the home airport saves it and the reply says so. A new conversation then uses it as a disclosed default.",
+    "sessions": [
+      {
+        "steps": [
+          {
+            "text": "save Heathrow as my home airport",
+            "expected": {
+              "status": "preferences",
+              "posts": 0,
+              "savedPreferences": {
+                "homeAirport": "LHR"
+              },
+              "mentions": "Saved London Heathrow"
+            }
+          }
+        ]
+      },
+      {
+        "steps": [
+          {
+            "text": "to Singapore next week",
+            "expected": {
+              "status": "results",
+              "origin": "LHR",
+              "destination": "SIN",
+              "from": "2026-09-21",
+              "to": "2026-09-27",
+              "posts": 1,
+              "mentions": "Heathrow|LHR|home airport|saved"
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "D4",
+    "category": "Cross-conversation context",
+    "name": "Unconfirmed preference proposal is not saved",
+    "requirement": "Do not persist a proposed business preference without application confirmation and do not claim that it was saved.",
+    "sessions": [
+      {
+        "steps": [
+          {
+            "text": "remember I like business",
+            "expected": {
+              "status": "preferences",
+              "posts": 0,
+              "proposedPreferences": {
+                "cabin": "business"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "steps": [
+          {
+            "text": "London to New York",
+            "expected": {
+              "status": "results",
+              "origin": "LHR|LGW|LCY|STN|LTN",
+              "destination": "JFK|EWR|LGA",
+              "cabin": "business",
+              "from": "2026-09-18",
+              "to": "2026-09-25",
+              "posts": 1,
+              "savedPreferences": {}
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "D5",
+    "category": "Cross-conversation context",
+    "name": "A recent search is listed in the next welcome and runs again by number",
+    "requirement": "After a London to New York economy search, the next conversation lists it in the welcome. Replying 1 runs that search again live, with economy kept because the traveler chose it.",
+    "sessions": [
+      {
+        "steps": [
+          {
+            "text": "London to New York economy",
+            "expected": {
+              "status": "results",
+              "origin": "LHR|LGW|LCY|STN|LTN",
+              "destination": "JFK|EWR|LGA",
+              "cabin": "economy",
+              "from": "2026-09-18",
+              "to": "2026-09-25",
+              "posts": 1
+            }
+          }
+        ]
+      },
+      {
+        "steps": [
+          {
+            "text": "1",
+            "expected": {
+              "status": "results",
+              "origin": "LHR|LGW|LCY|STN|LTN",
+              "destination": "JFK|EWR|LGA",
+              "cabin": "economy",
+              "from": "2026-09-18",
+              "to": "2026-09-25",
+              "posts": 1
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "D6",
+    "category": "Cross-conversation context",
+    "name": "Forgetting recent searches removes them and nothing else",
+    "requirement": "Asked to forget recent searches, clear them and say so without searching. The next conversation has no list, so 1 is not a menu choice, and the remembered origin is untouched.",
+    "sessions": [
+      {
+        "steps": [
+          {
+            "text": "London to New York economy",
+            "expected": {
+              "status": "results",
+              "origin": "LHR|LGW|LCY|STN|LTN",
+              "destination": "JFK|EWR|LGA",
+              "cabin": "economy",
+              "from": "2026-09-18",
+              "to": "2026-09-25",
+              "posts": 1
+            }
+          }
+        ]
+      },
+      {
+        "steps": [
+          {
+            "text": "forget my recent searches",
+            "expected": {
+              "status": "preferences",
+              "posts": 0,
+              "mentions": "Cleared your recent searches"
+            }
+          }
+        ]
+      },
+      {
+        "steps": [
+          {
+            "text": "1",
+            "expected": {
+              "status": "clarify",
+              "posts": 0,
+              "pending": null,
+              "origin": "LHR|LGW|LCY|STN|LTN"
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "D7",
+    "category": "Cross-conversation context",
+    "name": "Forgetting where I fly from clears the remembered origin",
+    "requirement": "Asked to forget where they fly from, drop the origin remembered from the last search now and in the next conversation. A later request without an origin asks where from and never says it is using the last search.",
+    "sessions": [
+      {
+        "steps": [
+          {
+            "text": "London to New York economy",
+            "expected": {
+              "status": "results",
+              "origin": "LHR|LGW|LCY|STN|LTN",
+              "destination": "JFK|EWR|LGA",
+              "cabin": "economy",
+              "from": "2026-09-18",
+              "to": "2026-09-25",
+              "posts": 1
+            }
+          }
+        ]
+      },
+      {
+        "steps": [
+          {
+            "text": "forget where I fly from",
+            "expected": {
+              "status": "preferences",
+              "posts": 0,
+              "origin": null
+            }
+          }
+        ]
+      },
+      {
+        "steps": [
+          {
+            "text": "to Singapore next week",
+            "expected": {
+              "posts": 0,
+              "origin": null,
+              "destination": "SIN",
+              "pending": "origin",
+              "mentions": "^(?!.*last search)"
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "D8",
+    "category": "Cross-conversation context",
+    "name": "A recent search keeps the origin the traveler used, not the home airport",
+    "requirement": "With Heathrow saved as home, a search from Gatwick to Singapore is listed next time. Choosing it searches from Gatwick again. Heathrow stays the saved home airport.",
+    "initialPreferences": {
+      "homeAirport": "LHR"
+    },
+    "sessions": [
+      {
+        "steps": [
+          {
+            "text": "from Gatwick to Singapore",
+            "expected": {
+              "status": "results",
+              "origin": "LGW",
+              "destination": "SIN",
+              "cabin": "business",
+              "from": "2026-09-18",
+              "to": "2026-09-25",
+              "posts": 1,
+              "savedPreferences": {
+                "homeAirport": "LHR"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "steps": [
+          {
+            "text": "1",
+            "expected": {
+              "status": "results",
+              "origin": "LGW",
+              "destination": "SIN",
+              "cabin": "business",
+              "from": "2026-09-18",
+              "to": "2026-09-25",
+              "posts": 1,
+              "savedPreferences": {
+                "homeAirport": "LHR"
+              }
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "D9",
+    "category": "Cross-conversation context",
+    "name": "A new request ignores the recent-search list",
+    "requirement": "With last time's London to New York economy search listed, asking for Dubai to Singapore searches that route in the default cabin. Nothing from the listed search carries over and the list closes.",
+    "sessions": [
+      {
+        "steps": [
+          {
+            "text": "London to New York economy",
+            "expected": {
+              "status": "results",
+              "origin": "LHR|LGW|LCY|STN|LTN",
+              "destination": "JFK|EWR|LGA",
+              "cabin": "economy",
+              "from": "2026-09-18",
+              "to": "2026-09-25",
+              "posts": 1
+            }
+          }
+        ]
+      },
+      {
+        "steps": [
+          {
+            "text": "Dubai to Singapore",
+            "expected": {
+              "status": "results",
+              "origin": "DXB|AUH",
+              "destination": "SIN",
+              "cabin": "business",
+              "from": "2026-09-18",
+              "to": "2026-09-25",
+              "posts": 1,
+              "pending": null
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "D5",
+    "category": "Cross-conversation context",
+    "name": "A stated cabin is not labelled a default",
+    "requirement": "Search business class as asked and show the cabin as the traveler's choice. Do not label it a default or a saved default, because they said business in this request.",
+    "steps": [
+      {
+        "text": "London to New York 1 Oct in business",
+        "expected": {
+          "status": "results",
+          "origin": "LHR|LGW|LCY|STN|LTN",
+          "destination": "JFK|EWR|LGA",
+          "cabin": "business",
+          "from": "2026-10-01",
+          "to": "2026-10-01",
+          "posts": 1,
+          "mentions": "^(?!.*\\(default\\))"
+        }
+      }
+    ]
+  }
+]

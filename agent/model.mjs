@@ -10,7 +10,7 @@ const clarificationTool = { type: 'function', function: {
   parameters: { type: 'object', additionalProperties: false, required: ['question'], properties: { question: { type: 'string', maxLength: 400 } } },
 } };
 export const TOOLS = [findTool, discoverTool, clarificationTool, policyTool, preferencesTool];
-export const PROMPT_VERSION = 'flight-search-v1.6.0';
+export const PROMPT_VERSION = 'flight-search-v1.7.0';
 
 const supportEmail='support@commonswyft.com';
 // History carried three copies of every reply: result.text inside the tool
@@ -387,7 +387,8 @@ export class Agent {
           result = preferenceAction(args,this.preferences);
           const home = result.savedPreferences?.homeAirport;
           if (home) { this.preferences = { ...this.preferences, homeAirport: home }; this.conversation.useHome(home); }
-          else if (home === null) { const { homeAirport, ...rest } = this.preferences; this.preferences = rest; }
+          else if (home === null) { const { homeAirport, ...rest } = this.preferences; this.preferences = rest; this.conversation.forgetDefaultOrigin(); }
+          if (result.forgetRecentSearches) this.conversation.clearRecentOffer();
         }
         else if (call.function.name === 'lookup_policy') {
           try { result = await answerPolicy({model:this.model,query:args,question:text,history:this.turns.flat().filter(m=>m.role==='user'||m.role==='assistant').map(m=>({role:m.role,content:m.content})),trace:this.trace}); }

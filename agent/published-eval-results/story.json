@@ -159,6 +159,8 @@
     "live-hardening-judge-2026-09-23T08-35-36.893Z": "Targeted check: D4, D5 and G7, the rest of the stopped run.",
     "live-hardening-judge-2026-09-23T08-53-10.627Z": "Sol head-to-head that stopped after 3 cases when credit ran out. Rerun in the 47-case head-to-head.",
     "live-hardening-judge-2026-09-23T21-29-07.529Z": "Sonnet 5 smoke test: A1 and G2 only, before the full run.",
-    "live-hardening-judge-2026-09-27T09-44-38.053Z": "Prompt caching check for Claude models: 3 cases on Sonnet 5. After the first call, every call read 4,771 prompt tokens from cache."
+    "live-hardening-judge-2026-09-27T09-44-38.053Z": "Prompt caching check for Claude models: 3 cases on Sonnet 5. After the first call, every call read 4,771 prompt tokens from cache.",
+    "live-hardening-judge-2026-09-27T12-04-50.856Z": "Memory check on Sonnet 5: D1, D2, D4 and the new recent-search cases under provisional ids D5 to D9, now D6 to D10; the existing D5 ran too. 7 of 9 passed, 25 calls, $0.35. Both failures were the application: the model sent the right forget list with action show, and show dropped it. Fixed after this run.",
+    "live-hardening-judge-2026-09-27T12-09-37.385Z": "Verification of the forget fix on Sonnet 5: D7 (forget recent searches) passes, 3 calls, $0.03. The model again sent action show with the forget list, which is now acted on. D8 was not rerun to stay within the 30-call cap; a test replays its recorded calls."
   }
 }

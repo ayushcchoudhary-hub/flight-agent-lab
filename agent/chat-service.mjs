@@ -2,7 +2,7 @@ import {localPreferenceStore,applyPreferences} from './preferences.mjs';
 import { HOSTED_MODEL_OPTIONS,hostedModelSettings } from './hosted-model-options.mjs';
 import { randomUUID } from 'node:crypto';
 import { Agent,OpenRouterModel,PROMPT_VERSION } from './model.mjs';
-import { SearchConversation,isoToday,welcomeFor,fullAirport } from './search.mjs';
+import { SearchConversation,isoToday,welcomeFor,fullAirport,renderRecentSearches,recentSearchFrom } from './search.mjs';
 import { isVisitorId,turnRecords } from './store.mjs';
 import { makeStagingAdapter,readStagingToken } from './staging.mjs';
 import { loadCaptures,makeReplayAdapter } from './replay.mjs';
@@ -39,7 +39,19 @@ export function createChatService({modelFactory=defaultModelFactory,capturesLoad
  async status(){const captures=await capturesLoader(),defaults=settingsFor(defaultModel,defaultEffort);return {preferences:await preferenceStore.read(),preferenceProfile:preferenceStore.label,live:await status(),publicSearch:{available:true,verifiedAt:'2026-09-19',accountLinked:false},models:modelOptions,model:defaults.model,label:defaults.label,effort:defaults.effort,remainingTurns:Math.max(0,maxTotalTurns-turns),replay:{available:captures.length>0,clock:captures.at(-1)?.clock,examples:[...new Set(captures.map(c=>c.input))].filter(x=>typeof x==='string'&&/ to /i.test(x))}};},
  async savePreferences(p){if(active)throw Error('Wait for the current reply before saving defaults.');const saved=await preferenceStore.replace(p);for(const s of sessions.values())s.agent.preferences=saved;return {preferences:saved,profile:preferenceStore.label};},
  // The welcome, before any chat exists, so the page can show it at once.
- async welcome(mode){if(!['staging','staging-public','replay'].includes(mode))throw new Error('Choose live staging or recorded staging.');return {text:welcomeText(mode,await preferenceStore.read())};},
+ // A returning browser with storage on also sees its recent searches,
+ // numbered. The list is held under a short-lived key bound to that browser,
+ // so "1" in the chat that starts next means what the traveler saw.
+ async welcome(mode,visitorId=null){
+  if(!['staging','staging-public','replay'].includes(mode))throw new Error('Choose live staging or recorded staging.');
+  const text=welcomeText(mode,await preferenceStore.read());
+  if(!conversationStore||!isVisitorId(visitorId))return {text};
+  let recent=[];
+  try{recent=await conversationStore.recentSearches(visitorId,3);}catch{return {text};}
+  if(!recent.length)return {text};
+  pruneOffers();const key=randomUUID();welcomeOffers.set(key,{field:'recent',choices:recent,visitorId,at:Date.now()});
+  return {text:`${text}\n\n${renderRecentSearches(recent,isoToday())}`,recentKey:key};
+ },
  // "Great deals this week", fetched separately so a slow or failed deals feed
  // never delays or breaks the welcome. Null text means show nothing.
  async welcomeDeals(mode){
@@ -62,7 +74,10 @@ export function createChatService({modelFactory=defaultModelFactory,capturesLoad
   const adapter=mode==='replay'?makeReplayAdapter({captures,trace}):stagingFactory({trace,maxSearches:12,authMode:mode==='staging-public'?'public':'session'});
   const conversation=new SearchConversation({adapter,today:()=>clock,trace});
   const preferences=await preferenceStore.read();applyPreferences(conversation,preferences);
-  pruneOffers();const offer=typeof welcomeKey==='string'?welcomeOffers.get(welcomeKey):null;if(offer)conversation.offerDeals(offer.choices);
+  pruneOffers();let offer=typeof welcomeKey==='string'?welcomeOffers.get(welcomeKey):null;
+  // Recent searches belong to one browser. Another browser's key offers nothing.
+  if(offer?.field==='recent'){if(offer.visitorId===visitorId)conversation.offerRecent(offer.choices);else offer=null;}
+  else if(offer)conversation.offerDeals(offer.choices);
   // Memory: with no saved home airport, the last origin this browser searched
   // from becomes a disclosed default. Only the origin is remembered.
   let store=null,rememberedOrigin=false;
@@ -77,7 +92,7 @@ export function createChatService({modelFactory=defaultModelFactory,capturesLoad
   }
   const agent=new Agent({conversation,preferences,model:await modelFactory(trace,settings),trace});
   const id=randomUUID();sessions.set(id,{agent,adapter,conversation,events,mode,settings,updated:Date.now(),busy:false,turns:0,store:store?{...store,api:conversationStore}:null,trace});
-  return {id,mode,clock,...settings,text:welcomeText(mode,preferences)+(rememberedOrigin?`\n\nUsing ${conversation.publicState().origin.label} from your last search. Say where you’re flying from to change it.`:''),dealsOffered:Boolean(offer),remembered:rememberedOrigin};
+  return {id,mode,clock,...settings,text:welcomeText(mode,preferences)+(rememberedOrigin?`\n\nUsing ${conversation.publicState().origin.label} from your last search. Say where you’re flying from to change it.`:''),dealsOffered:Boolean(offer)&&offer.field!=='recent',recentOffered:offer?.field==='recent',remembered:rememberedOrigin};
  },
  async turn(id,text){
   prune();const s=sessions.get(id);if(!s)throw new Error('This chat expired. Start a new chat.');
@@ -99,8 +114,10 @@ export function createChatService({modelFactory=defaultModelFactory,capturesLoad
    // A home airport stated in this turn is kept where this deployment keeps it.
    if(result.savedPreferences&&'homeAirport' in result.savedPreferences){
     const home=result.savedPreferences.homeAirport;
-    if(homeAirportScope==='store'){const current=await preferenceStore.read();const next={...current};if(home===null)delete next.homeAirport;else next.homeAirport=home;await preferenceStore.replace(next);}
-    else if(s.store)queue(s,'home',()=>s.store.api.rememberHome(s.store.visitorId,home));
+    // Forgetting clears the last searched origin too. Otherwise the next
+    // conversation offers "from your last search", often the same airport.
+    if(homeAirportScope==='store'){const current=await preferenceStore.read();const next={...current};if(home===null)delete next.homeAirport;else next.homeAirport=home;await preferenceStore.replace(next);if(home===null&&s.store)queue(s,'forget',()=>s.store.api.forgetOrigins(s.store.visitorId));}
+    else if(s.store)queue(s,'home',()=>home===null?s.store.api.forgetOrigins(s.store.visitorId):s.store.api.rememberHome(s.store.visitorId,home));
     else if(home)result.text=result.text.replace(/^Saved (.+?) as your home airport\. I’ll use it when you don’t say where you’re flying from\./,'I’ll use $1 as your home airport in this conversation. It isn’t kept between conversations yet.');
    }
    if(s.store){
@@ -110,6 +127,10 @@ export function createChatService({modelFactory=defaultModelFactory,capturesLoad
     const state=s.conversation.publicState();
     // Remember an origin the traveler chose, never a default we filled in.
     if(result.status==='results'&&state.origin?.code&&!state.originFromPreference)queue(s,'memory',()=>s.store.api.rememberLastOrigin(s.store.visitorId,state.origin.code));
+    // Every search that returned becomes a recent search.
+    const recent=recentSearchFrom(result,state);
+    if(recent)queue(s,'recent',()=>s.store.api.rememberSearch(s.store.visitorId,recent));
+    if(result.forgetRecentSearches){for(const [k,v] of welcomeOffers)if(v.visitorId===s.store.visitorId)welcomeOffers.delete(k);queue(s,'forget_recent',()=>s.store.api.forgetRecentSearches(s.store.visitorId));}
    }
    return {result,settings:s.settings,state:s.conversation.publicState(),events,grounding,latencyMs,timing:{modelLatencyMs,flightSearchLatencyMs,otherLatencyMs,totalLatencyMs:latencyMs},remainingTurns:maxTotalTurns-turns};
   }finally{s.busy=false;active=false;s.updated=Date.now();}

@@ -41,12 +41,14 @@ customer data or raw backend captures.
   comparing a Claude model with another family. Validating the judge against
   human labels is the open item.
 - All model traffic uses the OpenRouter adapter.
-- The current prompt contract is `flight-search-v1.6.0`.
+- The current prompt contract is `flight-search-v1.7.0` (2026-09-27: the
+  preference tool can forget recent searches). Recorded runs before that
+  date used `flight-search-v1.6.0`.
 - The supported product scope is one-way flight search, policy retrieval,
   session follow-ups and explicit preference proposals.
 - Booking, payment, account servicing, autonomous purchasing, WhatsApp and MCP
   remain outside the implemented scope.
-- The deterministic suite currently contains 280 passing checks.
+- The deterministic suite currently contains 311 passing checks.
 - The first 42-case Terra hardening run passed 30 cases. Every observed issue
   later received a focused passing verification. A later full rerun passed 32
   cases, then stopped at B03 after a safe policy handoff failed the frozen
@@ -227,22 +229,76 @@ off unless `CONVERSATION_STORE=postgres` and `DATABASE_URL` are set.
   passport numbers). Conversations expire after 90 days and are purged hourly.
 - A visitor is a random browser cookie, set only when storage is on. A
   browser can read back only its own conversations; no route lists them.
-- Memory holds origins only: a home airport the traveler stated, then the
-  last origin they searched from. Cabin, dates and budget stay one-off.
+- Memory used as a default holds origins only: a home airport the traveler
+  stated, then the last origin they searched from. Cabin, dates and budget
+  never become defaults for a new trip.
+- Recent searches (decision 2026-09-27, reversing "dates, cabin and budget
+  are never stored"): every search that returned is kept per browser as a
+  trip record: route, dates, a stated cabin, nonstop, budget and the lowest
+  matching price seen. One row per route, the newest five, same 90-day
+  expiry (`db/migrations/002_recent_searches.sql`). The welcome lists the
+  latest three by number and the page skips the deals for that visitor.
+  Choosing one runs it again live. A trip whose dates passed runs over the
+  next 7 days and says so. Nothing from a recent search pre-fills a new trip,
+  so held-out D1 still holds. The list is not in the model's context: "the
+  Tokyo one again" is not understood yet, only its number or the route.
+  "Forget my recent searches" deletes them and closes an open list.
+  Held-out D6 to D10 pin this: pick up by number, forget recent searches
+  and keep the origin, forget where I fly from, a recent search keeps the
+  origin used rather than the home airport, and a new request ignores the
+  list. The first Sonnet 5 run on 2026-09-27 (provisional ids D5 to D9)
+  passed 7 of 9. Both failures were the application: the model sent the
+  right forget list with action "show", and show returned before acting on
+  it. An explicit forget now wins over the action, and D7 then passed live.
+  A browser check against Neon confirmed the welcome list, "1" and forget
+  end to end. See [MEMORY.md](MEMORY.md)
+  for the reasoning and the plan for what comes next.
+- The stored lowest price is there for a later alert ("cheaper than when you
+  looked"). That needs sign-in first: outreach needs a contactable,
+  consenting account, not a browser cookie. With sign-in, key memory and
+  recent searches by account and move a browser's rows to the account on
+  first sign-in.
 - Stating a home airport saves it, with no separate Save step (decision
   2026-09-23; held-out D2). On the hosted site it is kept per browser, and
   only when storage is on; with storage off the reply says it applies to
   this conversation only. The shared preference object is never written.
   Cabin and nonstop defaults remain proposals (held-out D4).
+- "Forget my home airport" clears the home airport and the last searched
+  origin for that browser, and drops a remembered origin from the current
+  trip (2026-09-27). Before, the last origin survived and the next
+  conversation reopened on it. Stored transcripts are not rewritten. They
+  keep the 90-day expiry.
 - A storage failure is traced and never reaches the traveler.
 - `agent/tools/store-smoke.mjs` checks all of this against a real database.
 
 Before switching it on:
 
-1. Add a privacy-page sentence on conversation storage and its retention.
-2. Held-out case D1 was updated on 2026-09-23 to the memory rule: the last
+1. Add a privacy-page sentence on conversation storage, recent searches
+   and their retention.
+2. Done 2026-09-27 on the Neon development database (project
+   `flight-agent-lab`): `002_recent_searches.sql` applied, `agent_runtime`
+   granted row access to `recent_searches`, and `tools/store-smoke.mjs`
+   passed all 16 checks. The database held no rows before. For a new
+   database, run `tools/create-app-role.mjs` after the migrations instead.
+3. Held-out case D1 was updated on 2026-09-23 to the memory rule: the last
    origin carries over as a disclosed default, economy does not. The eval
    harness applies the same memory between sessions.
+
+## Policy snapshot freshness (2026-09-27)
+
+Policy answers come from `agent/policy-snapshot.json`, a reviewed copy of the
+privacy and terms pages, not from the live page. `pnpm run policy:check`
+reads the live pages and reports passages that changed. The site is a
+single-page app, so it reads the wording from the site's script bundle.
+It exits 0 when current, 1 when changed and 2 when the site could not be
+read. `.github/workflows/policy-check.yml` runs it every Monday.
+
+When it reports a change, review the wording, run `pnpm run policy:sync`,
+then `pnpm test`. Unchanged passages keep their ids. A new or edited passage
+gets a new id. A fixed answer in `policy.mjs` whose quote left the site
+stops answering and the question goes to retrieval. On 2026-09-27 the
+snapshot from 2026-09-19 matched all 12 paragraphs on staging and
+production.
 
 ## Recommended next decision
 

@@ -72,6 +72,8 @@ export function gradeStep(expected, result, conversation, adapter) {
     checks.push({name:'route matches saved preference',pass:result.query?.origin===actual.origin&&result.query?.destination===actual.destination});
     checks.push({name:'each result respects route and budget',pass:(result.shortlist??[]).every(r=>actual.origin.split('|').includes(r.origin)&&actual.destination.split('|').includes(r.destination)&&(actual.budget===null||r.priceUsd<=actual.budget))});
   }
-  if(s.pending) checks.push({name:'menu excludes opposite city',pass:s.pending.choices.every(c=>!(s.pending.field==='origin'?s.destination:s.origin)?.code.split('|').some(code=>c.code.split('|').includes(code)))});
+  // Only a place menu can offer the city already chosen for the other end.
+  // A recent-search menu lists whole routes, so the check does not apply.
+  if(s.pending&&['origin','destination'].includes(s.pending.field)) checks.push({name:'menu excludes opposite city',pass:s.pending.choices.every(c=>!(s.pending.field==='origin'?s.destination:s.origin)?.code.split('|').some(code=>c.code.split('|').includes(code)))});
   return {pass:checks.every(c=>c.pass),actual,checks};
 }

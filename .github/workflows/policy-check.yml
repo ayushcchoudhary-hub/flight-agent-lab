@@ -1,0 +1,29 @@
+name: policy-check
+
+# The agent answers policy questions from agent/policy-snapshot.json. This
+# fails when the live privacy or terms page no longer matches it, so a changed
+# policy is reviewed and committed rather than silently going stale. A failure
+# to read the site also fails, because "unknown" is not "current".
+on:
+  schedule:
+    - cron: '0 7 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: agent
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      - name: Compare the snapshot with the live pages
+        run: node policy-sync.mjs

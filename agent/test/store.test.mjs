@@ -261,3 +261,54 @@ test('held-out D4 with model-style nulls keeps the saved home airport', async ()
   assert.ok(!/Removed/.test(reply.text));
   assert.equal((await store.memory(id)).homeOrigin, 'LHR');
 });
+
+// "Forget where I fly from" has to cover the last searched origin too. Before
+// this, forgetting cleared home_origin only and the next conversation opened
+// with "Using London Heathrow from your last search".
+const FORGET = 'forget where I fly from';
+const forgetModel = { complete: async messages => {
+  const text = messages.at(-1).content;
+  const call = text === FORGET ? { name: 'travel_preferences', arguments: { action: 'propose', forget: ['homeAirport'] } } : { name: 'find_flights', arguments: HOME_CALLS[text] };
+  return { tool_calls: [{ id: 't', type: 'function', function: { name: call.name, arguments: JSON.stringify(call.arguments) } }] };
+} };
+const forgetting = store => createChatService({ conversationStore: store, homeAirportScope: 'visitor',
+  stagingFactory: () => Object.assign(makeFixtureAdapter('normal'), { snapshots: [] }), modelFactory: async () => forgetModel,
+  preferenceStore: { label: 'shared', read: async () => ({}), replace: async () => { throw new Error('the shared preference object must never be written'); } } });
+
+test('forgetting clears the home airport and the last origin, for this browser only', async () => {
+  const store = createMemoryStore(), id = visitor(), other = visitor();
+  for (const v of [id, other]) { await store.touchVisitor(v); await store.rememberHome(v, 'LHR'); await store.rememberLastOrigin(v, 'HND|NRT'); }
+  const svc = forgetting(store);
+  const chat = await svc.start('staging-public', undefined, undefined, null, id);
+  const reply = (await svc.turn(chat.id, FORGET)).result;
+  assert.match(reply.text, /^Removed your saved home airport\./);
+  const now = await svc.turn(chat.id, 'to Singapore next week');
+  assert.equal(now.state.origin, null, 'the remembered origin no longer applies in this conversation');
+  assert.ok(!/saved home airport|last search/.test(now.result.text));
+  await svc.settle();
+  assert.deepEqual(await store.memory(id), { homeOrigin: null, lastOrigin: null });
+  assert.deepEqual(await store.memory(other), { homeOrigin: 'LHR', lastOrigin: 'HND|NRT' }, 'another browser keeps its memory');
+  const next = forgetting(store);
+  const opened = await next.start('staging-public', undefined, undefined, null, id);
+  assert.ok(!opened.remembered && !/last search|Home airport/.test(opened.text));
+  assert.equal((await next.turn(opened.id, 'to Singapore next week')).state.origin, null);
+});
+
+test('after forgetting, an origin the traveler states is remembered again', async () => {
+  const store = createMemoryStore(), id = visitor();
+  await store.touchVisitor(id); await store.rememberLastOrigin(id, 'HND|NRT');
+  const svc = forgetting(store);
+  const chat = await svc.start('staging-public', undefined, undefined, null, id);
+  await svc.turn(chat.id, FORGET);
+  const stated = await svc.turn(chat.id, 'London to New York economy');
+  assert.equal(stated.state.origin.code, 'LHR|LGW|LCY|STN|LTN', 'an origin the traveler states is used');
+  await svc.settle();
+  assert.equal((await store.memory(id)).lastOrigin, 'LHR|LGW|LCY|STN|LTN');
+});
+
+test('the eval harness forgets the last origin the same way', () => {
+  const memory = { lastOrigin: 'HND|NRT' };
+  const conversation = new SearchConversation({ adapter: makeFixtureAdapter('normal'), today: () => HARDENING_V2_CLOCK });
+  rememberFromStep(memory, { status: 'preferences', savedPreferences: { homeAirport: null } }, conversation);
+  assert.equal(memory.lastOrigin, undefined);
+});

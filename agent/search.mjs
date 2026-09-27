@@ -282,6 +282,7 @@ export class SearchConversation {
     const chosen = pending.choices[number - 1];
     if (pending.field === 'dates') return this.find({ dates: { mode: 'exact', start: chosen.code } });
     if (pending.field === 'deal') return this.chooseDeal(chosen.deal);
+    if (pending.field === 'recent') return this.chooseRecent(chosen.search);
     return this.find({ [pending.field]: chosen.code });
   }
   // A chosen deal becomes a normal live search. The snapshot price never
@@ -299,6 +300,24 @@ export class SearchConversation {
     const stillThere = (result.shortlist ?? []).some(row => row.date === deal.date && row.destination === deal.airport);
     return stillThere ? result : { ...result, text: `That exact deal isn’t showing now. Here’s what’s available on that route.\n\n${result.text}` };
   }
+
+  // A recent search runs again as a normal live search with what the
+  // traveler set last time. The old lowest price never travels with it.
+  async chooseRecent(search) {
+    const today = this.today();
+    const patch = { origin: search.origin, destination: search.destination };
+    if (search.cabin) patch.cabin = search.cabin;
+    if (search.nonstopOnly) patch.nonstopOnly = true;
+    if (search.maxPriceUsd) patch.maxPriceUsd = search.maxPriceUsd;
+    const passed = search.dateTo < today, start = search.dateFrom < today ? today : search.dateFrom;
+    patch.dates = passed ? { mode: 'rolling' } : start === search.dateTo ? { mode: 'exact', start } : { mode: 'range', start, end: search.dateTo };
+    const result = await this.find(patch);
+    return passed && result.status === 'results' ? { ...result, text: `Those dates have passed. Here’s the same trip over the next 7 days.\n\n${result.text}` } : result;
+  }
+  // Offer recent searches by number, when no other menu is open.
+  offerRecent(searches) { if (!this.state.pending && Array.isArray(searches) && searches.length) this.state.pending = { field: 'recent', choices: searches.map(search => ({ code: `${search.origin}-${search.destination}`, label: recentLabel(search, this.today()), search })) }; }
+  // After "forget my recent searches" the open menu must not still work.
+  clearRecentOffer() { if (this.state.pending?.field === 'recent') this.state.pending = null; }
 
   async discover(args = {}) {
     try {
@@ -375,6 +394,13 @@ export class SearchConversation {
     const place = typeof code === 'string' ? resolveLocation(code).find(choice => choice.code === code) : null;
     if (!place || this.state.origin) return false;
     this.state.origin = place; this.state.originFromPreference = true; this.state.originDefault = 'last';
+    return true;
+  }
+  // After "forget my home airport", an origin that came from memory would
+  // still be disclosed as saved. Drop it; an origin the traveler stated stays.
+  forgetDefaultOrigin() {
+    if (!this.state.originFromPreference) return false;
+    this.state.origin = null; this.state.originFromPreference = false; this.state.originDefault = null;
     return true;
   }
   // Make the welcome's deals answerable by number in the conversation that
@@ -520,6 +546,29 @@ function cabinLabel(state) {
 // codes, flex 1, 3 or 7. Cabin tokens already match.
 export const PRODUCT_WEB_BASE = process.env.PRODUCT_WEB_BASE || 'https://commonswyft.com';
 const ddmmyy = iso => `${iso.slice(8, 10)}${iso.slice(5, 7)}${iso.slice(2, 4)}`;
+// One line per recent search for the welcome: route, dates and what the
+// traveler set. A cabin that was only the default is left out.
+const RECENT_CABIN = { economy: 'Economy', premium: 'Premium economy', business: 'Business class', first: 'First class', any: 'Any cabin' };
+export function recentLabel(search, today) {
+  const dates = search.dateTo < today ? 'dates passed' : search.dateFrom === search.dateTo ? readableDate(search.dateFrom) : `${readableDate(search.dateFrom)} – ${readableDate(search.dateTo)}`;
+  return [`${labelForValue(search.origin)} → ${labelForValue(search.destination)}`, dates, RECENT_CABIN[search.cabin],
+    search.nonstopOnly ? 'Nonstop only' : null, search.maxPriceUsd ? `Up to USD ${Math.round(search.maxPriceUsd).toLocaleString('en-US')}` : null].filter(Boolean).join(' · ');
+}
+// The recent search a completed search leaves behind, or null. One builder
+// for the chat service and the eval harness, so the two cannot drift. A
+// cabin that was only the default is not recorded as a choice. The lowest
+// price is from rows that matched the request, for a later price-drop check.
+export function recentSearchFrom(result, state) {
+  if (result?.status !== 'results' || !state?.origin?.code || !state?.destination?.code || !state?.dates) return null;
+  const matched = (result.shortlist ?? []).filter(row => !row.reasons?.length).map(row => row.priceUsd).filter(Number.isFinite);
+  return { origin: state.origin.code, destination: state.destination.code, dateFrom: state.dates.from, dateTo: state.dates.to,
+    cabin: state.cabinSource === 'default' ? null : state.cabin, nonstopOnly: Boolean(state.nonstopOnly), maxPriceUsd: state.maxPriceUsd ?? null,
+    lowestPriceUsd: matched.length ? Math.min(...matched) : null };
+}
+export function renderRecentSearches(searches, today) {
+  return ['Pick up where you left off:', ...searches.map((search, i) => `${i + 1}. ${recentLabel(search, today)}`), 'Reply with a number, or ask for something new.'].join('\n');
+}
+
 const dayCount = (from, to) => Math.round((Date.parse(`${to}T00:00:00Z`) - Date.parse(`${from}T00:00:00Z`)) / 86400000);
 export function productSearchPath(state) {
   const { origin, destination, dates, cabin } = state;
