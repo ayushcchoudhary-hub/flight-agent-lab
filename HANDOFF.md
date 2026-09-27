@@ -165,9 +165,10 @@ handoff file. A successor can deploy without ever viewing the values if the
 runtime service account already has secret access.
 
 Protected CommonSwyft account features require a separately approved staging
-authentication and API agreement. Access to the private product repository is
-not part of this project handoff and should not be granted merely to continue
-the agent lab.
+authentication and API agreement. Read access to the product repositories
+helps with context (the API contract lives in `flyai-app`,
+`packages/api-contract/openapi.yaml`) but is not required to continue the
+agent lab. Nothing from them is copied here.
 
 ## Context that is not transferred automatically
 
