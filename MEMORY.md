@@ -54,21 +54,19 @@ intended tool calls and with the calls Sonnet 5 actually made.
 
 ## Next, in order
 
-### 1. Verify with the live model and a browser (now)
+### 1. Verify with the live model and a browser (done 2026-09-27)
 
-Why: the unit tests assume the model makes the right call. Whether Sonnet 5
-turns "forget my recent searches" into the new option, and does not also
-forget the origin, is unknown.
-
-- Run held-out D1, D2, D4 and D6 to D10 on Sonnet 5. Cap: 30 calls, $1. D1,
-  D2 and D4 guard against regressions, because the harness now shows the
-  welcome list in their later sessions.
-- Run the experiment server locally against Neon. Search once, reload, choose
-  "1". Then "forget my recent searches", reload, and check the list is gone.
-- Record the run in `published-eval-results/story.json` as a supporting run.
-
-Done when: all nine cases pass their exact checks, or each failure is
-explained and kept as evidence.
+- Held-out D1, D2, D4 and the new cases on Sonnet 5: 7 of 9 passed, 25
+  calls, $0.35. Both failures were the application: the model sent the
+  right forget list with action "show", and show dropped it. Fixed so an
+  explicit forget always wins. D7 then passed live (3 calls, $0.03). D8 was
+  not rerun to stay within the 30-call cap; a test replays its recorded
+  calls through the fixed code.
+- Browser, local server against Neon: first visit shows deals. After one
+  search and a reload the welcome lists it. "1" ran it again live with no
+  model call. "Forget my recent searches" cleared the database rows, and the
+  next reload showed deals again. Test rows were deleted afterwards.
+- Both runs are published and listed in the evaluation story.
 
 ### 2. Switch memory on for the experiment (small)
 

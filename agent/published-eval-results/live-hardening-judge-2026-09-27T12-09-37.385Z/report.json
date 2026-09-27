@@ -1,0 +1,658 @@
+{
+  "runId": "live-hardening-judge-2026-09-27T12-09-37.385Z",
+  "evaluationKind": "llm-judge-hardening",
+  "suite": "v2",
+  "label": "Sonnet 5 · forget fix verification",
+  "promptVersion": "flight-search-v1.7.0",
+  "judge": {
+    "model": "anthropic/claude-opus-5.5",
+    "effort": "medium",
+    "rubricVersion": "communication-quality-v1.2.0",
+    "criteria": [
+      "clarity",
+      "concision",
+      "tone",
+      "nextStep",
+      "limitationHonesty",
+      "noInternalLeakage"
+    ]
+  },
+  "clock": "2026-09-18",
+  "flightData": "synthetic",
+  "effort": "medium",
+  "models": [
+    "anthropic/claude-sonnet-5"
+  ],
+  "repeats": 1,
+  "cases": [
+    {
+      "id": "D7",
+      "category": "Cross-conversation context",
+      "name": "Forgetting recent searches removes them and nothing else",
+      "requirement": "Asked to forget recent searches, clear them and say so without searching. The next conversation has no list, so 1 is not a menu choice, and the remembered origin is untouched.",
+      "sessions": [
+        {
+          "steps": [
+            {
+              "text": "London to New York economy",
+              "expected": {
+                "status": "results",
+                "origin": "LHR|LGW|LCY|STN|LTN",
+                "destination": "JFK|EWR|LGA",
+                "cabin": "economy",
+                "from": "2026-09-18",
+                "to": "2026-09-25",
+                "posts": 1
+              }
+            }
+          ]
+        },
+        {
+          "steps": [
+            {
+              "text": "forget my recent searches",
+              "expected": {
+                "status": "preferences",
+                "posts": 0,
+                "mentions": "Cleared your recent searches"
+              }
+            }
+          ]
+        },
+        {
+          "steps": [
+            {
+              "text": "1",
+              "expected": {
+                "status": "clarify",
+                "posts": 0,
+                "pending": null,
+                "origin": "LHR|LGW|LCY|STN|LTN"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "status": "complete",
+  "maxCostUsd": 0.3,
+  "maxCalls": 5,
+  "results": [
+    {
+      "caseId": "D7",
+      "name": "Forgetting recent searches removes them and nothing else",
+      "category": "Cross-conversation context",
+      "requirement": "Asked to forget recent searches, clear them and say so without searching. The next conversation has no list, so 1 is not a menu choice, and the remembered origin is untouched.",
+      "model": "anthropic/claude-sonnet-5",
+      "repeat": 1,
+      "pass": true,
+      "deterministicPass": true,
+      "communicationPass": true,
+      "steps": [
+        {
+          "input": "London to New York economy",
+          "expected": {
+            "status": "results",
+            "origin": "LHR|LGW|LCY|STN|LTN",
+            "destination": "JFK|EWR|LGA",
+            "cabin": "economy",
+            "from": "2026-09-18",
+            "to": "2026-09-25",
+            "posts": 1
+          },
+          "result": {
+            "status": "results",
+            "text": "SYNTHETIC FLIGHT DATA. These are example results.\n\nLondon (all airports) → New York (all airports)\nFri, 18 Sept 2026 – Fri, 25 Sept 2026 · Economy · One-way\n\nI found 3 options for you:\n\nA. London Heathrow Airport (LHR) → John F. Kennedy International Airport (JFK)\nFri, 18 Sept 2026\nEconomy · Nonstop · USD 420.00\nDeparture time unavailable\nArrival time unavailable\n\nB. London Heathrow Airport (LHR) → John F. Kennedy International Airport (JFK)\nSat, 19 Sept 2026\nEconomy · Nonstop · USD 433.00\nDeparture time unavailable\nArrival time unavailable\n\nC. London Heathrow Airport (LHR) → John F. Kennedy International Airport (JFK)\nSun, 20 Sept 2026\nEconomy · Nonstop · USD 446.00\nDeparture time unavailable\nArrival time unavailable\n\nPrices are estimates and may change.\n\nMissing flight times and exact seat counts are not available.\n\nYou can ask me to change the dates, cabin or airport.\n\nTo pick a flight and check out, continue on CommonSwyft:\nhttps://commonswyft.com/search/LHR%7CLGW%7CLCY%7CSTN%7CLTN-JFK%7CEWR%7CLGA-180926-economy-f7",
+            "dataMode": "synthetic",
+            "query": {
+              "origin": "LHR|LGW|LCY|STN|LTN",
+              "destination": "JFK|EWR|LGA",
+              "dateFrom": "2026-09-18",
+              "dateTo": "2026-09-25",
+              "selectedDate": "2026-09-18",
+              "cabin": "economy"
+            },
+            "shortlist": [
+              {
+                "id": "synthetic-LHR-JFK-2026-09-18-0",
+                "origin": "LHR",
+                "destination": "JFK",
+                "date": "2026-09-18",
+                "cabin": "economy",
+                "priceUsd": 420,
+                "usualUsd": null,
+                "direct": true,
+                "reasons": [],
+                "timing": {
+                  "departure": null,
+                  "arrival": null,
+                  "durationMinutes": null,
+                  "flightNumbers": null,
+                  "text": "Departure time unavailable\nArrival time unavailable"
+                },
+                "text": "London Heathrow Airport (LHR) → John F. Kennedy International Airport (JFK)\nFri, 18 Sept 2026\nEconomy · Nonstop · USD 420.00\nDeparture time unavailable\nArrival time unavailable"
+              },
+              {
+                "id": "synthetic-LHR-JFK-2026-09-19-0",
+                "origin": "LHR",
+                "destination": "JFK",
+                "date": "2026-09-19",
+                "cabin": "economy",
+                "priceUsd": 433,
+                "usualUsd": null,
+                "direct": true,
+                "reasons": [],
+                "timing": {
+                  "departure": null,
+                  "arrival": null,
+                  "durationMinutes": null,
+                  "flightNumbers": null,
+                  "text": "Departure time unavailable\nArrival time unavailable"
+                },
+                "text": "London Heathrow Airport (LHR) → John F. Kennedy International Airport (JFK)\nSat, 19 Sept 2026\nEconomy · Nonstop · USD 433.00\nDeparture time unavailable\nArrival time unavailable"
+              },
+              {
+                "id": "synthetic-LHR-JFK-2026-09-20-0",
+                "origin": "LHR",
+                "destination": "JFK",
+                "date": "2026-09-20",
+                "cabin": "economy",
+                "priceUsd": 446,
+                "usualUsd": null,
+                "direct": true,
+                "reasons": [],
+                "timing": {
+                  "departure": null,
+                  "arrival": null,
+                  "durationMinutes": null,
+                  "flightNumbers": null,
+                  "text": "Departure time unavailable\nArrival time unavailable"
+                },
+                "text": "London Heathrow Airport (LHR) → John F. Kennedy International Airport (JFK)\nSun, 20 Sept 2026\nEconomy · Nonstop · USD 446.00\nDeparture time unavailable\nArrival time unavailable"
+              }
+            ],
+            "cached": false,
+            "totalFound": 24,
+            "matchingCount": 24
+          },
+          "latencyMs": 4266,
+          "grade": {
+            "pass": true,
+            "actual": {
+              "status": "results",
+              "origin": "LHR|LGW|LCY|STN|LTN",
+              "destination": "JFK|EWR|LGA",
+              "cabin": "economy",
+              "from": "2026-09-18",
+              "to": "2026-09-25",
+              "budget": null,
+              "pending": null,
+              "menuCount": 0,
+              "posts": 1,
+              "resultCount": 3,
+              "sort": "recommended",
+              "nonstopOnly": false,
+              "sources": [],
+              "savedPreferences": {}
+            },
+            "checks": [
+              {
+                "name": "status",
+                "expected": "results",
+                "actual": "results",
+                "pass": true
+              },
+              {
+                "name": "origin",
+                "expected": "LHR|LGW|LCY|STN|LTN",
+                "actual": "LHR|LGW|LCY|STN|LTN",
+                "pass": true
+              },
+              {
+                "name": "destination",
+                "expected": "JFK|EWR|LGA",
+                "actual": "JFK|EWR|LGA",
+                "pass": true
+              },
+              {
+                "name": "cabin",
+                "expected": "economy",
+                "actual": "economy",
+                "pass": true
+              },
+              {
+                "name": "from",
+                "expected": "2026-09-18",
+                "actual": "2026-09-18",
+                "pass": true
+              },
+              {
+                "name": "to",
+                "expected": "2026-09-25",
+                "actual": "2026-09-25",
+                "pass": true
+              },
+              {
+                "name": "posts",
+                "expected": 1,
+                "actual": 1,
+                "pass": true
+              },
+              {
+                "name": "data source is labelled",
+                "pass": true
+              },
+              {
+                "name": "route matches saved preference",
+                "pass": true
+              },
+              {
+                "name": "each result respects route and budget",
+                "pass": true
+              },
+              {
+                "name": "Does not echo profanity or insult the user (limited lexical check)",
+                "pass": true
+              },
+              {
+                "name": "No claimed purchase completion",
+                "pass": true
+              }
+            ]
+          }
+        },
+        {
+          "input": "forget my recent searches",
+          "expected": {
+            "status": "preferences",
+            "posts": 0,
+            "mentions": "Cleared your recent searches"
+          },
+          "result": {
+            "status": "preferences",
+            "forgetRecentSearches": true,
+            "text": "Cleared your recent searches."
+          },
+          "latencyMs": 2224,
+          "grade": {
+            "pass": true,
+            "actual": {
+              "status": "preferences",
+              "origin": "LHR|LGW|LCY|STN|LTN",
+              "destination": null,
+              "cabin": "business",
+              "from": null,
+              "to": null,
+              "budget": null,
+              "pending": null,
+              "menuCount": 0,
+              "posts": 0,
+              "resultCount": 0,
+              "sort": "recommended",
+              "nonstopOnly": false,
+              "sources": [],
+              "savedPreferences": {}
+            },
+            "checks": [
+              {
+                "name": "status",
+                "expected": "preferences",
+                "actual": "preferences",
+                "pass": true
+              },
+              {
+                "name": "posts",
+                "expected": 0,
+                "actual": 0,
+                "pass": true
+              },
+              {
+                "name": "mentions",
+                "expected": "Cleared your recent searches",
+                "actual": "Cleared your recent searches.",
+                "pass": true
+              },
+              {
+                "name": "Does not echo profanity or insult the user (limited lexical check)",
+                "pass": true
+              },
+              {
+                "name": "No claimed purchase completion",
+                "pass": true
+              }
+            ]
+          }
+        },
+        {
+          "input": "1",
+          "expected": {
+            "status": "clarify",
+            "posts": 0,
+            "pending": null,
+            "origin": "LHR|LGW|LCY|STN|LTN"
+          },
+          "result": {
+            "status": "clarify",
+            "text": "There is no active numbered menu. Please type the city, airport or preference you want to change."
+          },
+          "latencyMs": 0,
+          "grade": {
+            "pass": true,
+            "actual": {
+              "status": "clarify",
+              "origin": "LHR|LGW|LCY|STN|LTN",
+              "destination": null,
+              "cabin": "business",
+              "from": null,
+              "to": null,
+              "budget": null,
+              "pending": null,
+              "menuCount": 0,
+              "posts": 0,
+              "resultCount": 0,
+              "sort": "recommended",
+              "nonstopOnly": false,
+              "sources": [],
+              "savedPreferences": {}
+            },
+            "checks": [
+              {
+                "name": "status",
+                "expected": "clarify",
+                "actual": "clarify",
+                "pass": true
+              },
+              {
+                "name": "posts",
+                "expected": 0,
+                "actual": 0,
+                "pass": true
+              },
+              {
+                "name": "pending",
+                "expected": null,
+                "actual": null,
+                "pass": true
+              },
+              {
+                "name": "origin",
+                "expected": "LHR|LGW|LCY|STN|LTN",
+                "actual": "LHR|LGW|LCY|STN|LTN",
+                "pass": true
+              },
+              {
+                "name": "Does not echo profanity or insult the user (limited lexical check)",
+                "pass": true
+              },
+              {
+                "name": "No claimed purchase completion",
+                "pass": true
+              }
+            ]
+          }
+        }
+      ],
+      "judge": {
+        "verdict": "pass",
+        "scores": {
+          "clarity": 4,
+          "concision": 5,
+          "tone": 4,
+          "nextStep": 4,
+          "limitationHonesty": 5,
+          "noInternalLeakage": 5
+        },
+        "rationale": "The assistant confirms the clear briefly and without running a search. In the new conversation it correctly treats '1' as no menu choice, since the list is gone, and asks for new input. It does not falsely claim the remembered origin was cleared. There are only small wording issues.",
+        "strengths": [
+          "The 'Cleared your recent searches.' reply is direct, truthful and does not trigger a search.",
+          "The reply to '1' honestly says there is no numbered menu and does not act on the stale list.",
+          "The reply makes no claim about the remembered origin, which is left untouched.",
+          "The earlier results turn clearly states the route, dates, cabin and trip type, and discloses missing times."
+        ],
+        "issues": [
+          {
+            "severity": "minor",
+            "criterion": "nextStep",
+            "evidence": "\"Please type the city, airport or preference you want to change.\"",
+            "recommendation": "In a fresh conversation, invite a new search directly (for example, \"Tell me where you'd like to fly\"). The wording 'change' implies an existing search."
+          },
+          {
+            "severity": "minor",
+            "criterion": "clarity",
+            "evidence": "\"Missing flight times and exact seat counts are not available.\"",
+            "recommendation": "Rephrase for clarity, for example: \"Flight times and exact seat counts aren't available for these options.\""
+          }
+        ],
+        "recommendedAction": "prompt"
+      },
+      "judgeAttempts": [
+        {
+          "verdict": "pass",
+          "scores": {
+            "clarity": 4,
+            "concision": 5,
+            "tone": 4,
+            "nextStep": 4,
+            "limitationHonesty": 5,
+            "noInternalLeakage": 5
+          },
+          "rationale": "The assistant confirms the clear briefly and without running a search. In the new conversation it correctly treats '1' as no menu choice, since the list is gone, and asks for new input. It does not falsely claim the remembered origin was cleared. There are only small wording issues.",
+          "strengths": [
+            "The 'Cleared your recent searches.' reply is direct, truthful and does not trigger a search.",
+            "The reply to '1' honestly says there is no numbered menu and does not act on the stale list.",
+            "The reply makes no claim about the remembered origin, which is left untouched.",
+            "The earlier results turn clearly states the route, dates, cabin and trip type, and discloses missing times."
+          ],
+          "issues": [
+            {
+              "severity": "minor",
+              "criterion": "nextStep",
+              "evidence": "\"Please type the city, airport or preference you want to change.\"",
+              "recommendation": "In a fresh conversation, invite a new search directly (for example, \"Tell me where you'd like to fly\"). The wording 'change' implies an existing search."
+            },
+            {
+              "severity": "minor",
+              "criterion": "clarity",
+              "evidence": "\"Missing flight times and exact seat counts are not available.\"",
+              "recommendation": "Rephrase for clarity, for example: \"Flight times and exact seat counts aren't available for these options.\""
+            }
+          ],
+          "recommendedAction": "prompt"
+        }
+      ],
+      "judgeConsensus": {
+        "passingVotes": 1,
+        "totalVotes": 1,
+        "verdicts": [
+          "pass"
+        ]
+      },
+      "events": [
+        {
+          "type": "model_usage",
+          "data": {
+            "model": "anthropic/claude-sonnet-5",
+            "provider": "Claude Platform on AWS",
+            "latencyMs": 4236,
+            "usage": {
+              "prompt_tokens": 5184,
+              "completion_tokens": 86,
+              "total_tokens": 5270,
+              "cost": 0.0025934,
+              "is_byok": false,
+              "prompt_tokens_details": {
+                "cached_tokens": 4797,
+                "cache_write_tokens": 0,
+                "audio_tokens": 0,
+                "video_tokens": 0
+              },
+              "cost_details": {
+                "upstream_inference_cost": 0.0025934,
+                "upstream_inference_prompt_cost": 0.0017334,
+                "upstream_inference_completions_cost": 0.00086
+              },
+              "completion_tokens_details": {
+                "reasoning_tokens": 0,
+                "image_tokens": 0,
+                "audio_tokens": 0
+              }
+            },
+            "cost": 0.0025934
+          }
+        },
+        {
+          "type": "tool_call",
+          "data": {
+            "name": "find_flights",
+            "arguments": {
+              "origin": "London",
+              "destination": "New York",
+              "cabin": "economy"
+            }
+          }
+        },
+        {
+          "type": "flight_api",
+          "data": {
+            "method": "POST",
+            "path": "/v1/flight-searches",
+            "body": {
+              "origin": "LHR|LGW|LCY|STN|LTN",
+              "destination": "JFK|EWR|LGA",
+              "dateFrom": "2026-09-18",
+              "dateTo": "2026-09-25",
+              "selectedDate": "2026-09-18",
+              "cabin": "economy"
+            },
+            "mode": "synthetic"
+          }
+        },
+        {
+          "type": "flight_api",
+          "data": {
+            "method": "GET",
+            "path": "/v1/flight-searches/fixture-search-1",
+            "mode": "synthetic"
+          }
+        },
+        {
+          "type": "search_result",
+          "data": {
+            "query": {
+              "origin": "LHR|LGW|LCY|STN|LTN",
+              "destination": "JFK|EWR|LGA",
+              "dateFrom": "2026-09-18",
+              "dateTo": "2026-09-25",
+              "selectedDate": "2026-09-18",
+              "cabin": "economy"
+            },
+            "cached": false,
+            "count": 24,
+            "searchId": "fixture-search-1"
+          }
+        },
+        {
+          "type": "model_usage",
+          "data": {
+            "model": "anthropic/claude-sonnet-5",
+            "provider": "Claude Platform on AWS",
+            "latencyMs": 2222,
+            "usage": {
+              "prompt_tokens": 5432,
+              "completion_tokens": 69,
+              "total_tokens": 5501,
+              "cost": 0.0029194,
+              "is_byok": false,
+              "prompt_tokens_details": {
+                "cached_tokens": 4797,
+                "cache_write_tokens": 0,
+                "audio_tokens": 0,
+                "video_tokens": 0
+              },
+              "cost_details": {
+                "upstream_inference_cost": 0.0029194,
+                "upstream_inference_prompt_cost": 0.0022294,
+                "upstream_inference_completions_cost": 0.00069
+              },
+              "completion_tokens_details": {
+                "reasoning_tokens": 0,
+                "image_tokens": 0,
+                "audio_tokens": 0
+              }
+            },
+            "cost": 0.0029194
+          }
+        },
+        {
+          "type": "tool_call",
+          "data": {
+            "name": "travel_preferences",
+            "arguments": {
+              "action": "show",
+              "forget": [
+                "recentSearches"
+              ]
+            }
+          }
+        },
+        {
+          "type": "judge_usage",
+          "data": {
+            "model": "anthropic/claude-opus-5.5",
+            "provider": "Claude Platform on AWS",
+            "latencyMs": 11995,
+            "usage": {
+              "prompt_tokens": 2311,
+              "completion_tokens": 905,
+              "total_tokens": 3216,
+              "cost": 0.027344,
+              "is_byok": false,
+              "prompt_tokens_details": {
+                "cached_tokens": 0,
+                "cache_write_tokens": 0,
+                "audio_tokens": 0,
+                "video_tokens": 0
+              },
+              "cost_details": {
+                "upstream_inference_cost": 0.027344,
+                "upstream_inference_prompt_cost": 0.009244,
+                "upstream_inference_completions_cost": 0.0181
+              },
+              "completion_tokens_details": {
+                "reasoning_tokens": 412,
+                "image_tokens": 0,
+                "audio_tokens": 0
+              }
+            },
+            "cost": 0.027344
+          }
+        }
+      ]
+    }
+  ],
+  "limitations": [
+    "Held-out v2 cases were frozen before this first run. Known place-handling gaps were not fixed first.",
+    "One attempt per case does not establish reliability.",
+    "The judge reviews communication quality and can be wrong. Deterministic checks remain authoritative for facts and actions.",
+    "The judge receives blinded candidate output and no private reasoning.",
+    "The synthetic-inventory banner is retained in the report but removed from judge input because production does not show it.",
+    "Synthetic inventory is used. No booking, payment or live flight search occurs."
+  ],
+  "completedAt": "2026-09-27T12:09:55.898Z",
+  "modelCallsAttempted": 3,
+  "actualCostUsd": 0.0328568,
+  "conservativeReservedUsd": 0.080934,
+  "summary": [
+    {
+      "model": "anthropic/claude-sonnet-5",
+      "passed": 1,
+      "total": 1,
+      "deterministicPassed": 1,
+      "judgePassed": 1,
+      "modelCalls": 2,
+      "judgeCalls": 1,
+      "cost": 0.0328568
+    }
+  ]
+}

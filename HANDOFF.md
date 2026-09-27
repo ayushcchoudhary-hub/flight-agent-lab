@@ -249,7 +249,9 @@ off unless `CONVERSATION_STORE=postgres` and `DATABASE_URL` are set.
   list. The first Sonnet 5 run on 2026-09-27 (provisional ids D5 to D9)
   passed 7 of 9. Both failures were the application: the model sent the
   right forget list with action "show", and show returned before acting on
-  it. An explicit forget now wins over the action. See [MEMORY.md](MEMORY.md)
+  it. An explicit forget now wins over the action, and D7 then passed live.
+  A browser check against Neon confirmed the welcome list, "1" and forget
+  end to end. See [MEMORY.md](MEMORY.md)
   for the reasoning and the plan for what comes next.
 - The stored lowest price is there for a later alert ("cheaper than when you
   looked"). That needs sign-in first: outreach needs a contactable,

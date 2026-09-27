@@ -1,0 +1,51 @@
+[
+  {
+    "id": "D7",
+    "category": "Cross-conversation context",
+    "name": "Forgetting recent searches removes them and nothing else",
+    "requirement": "Asked to forget recent searches, clear them and say so without searching. The next conversation has no list, so 1 is not a menu choice, and the remembered origin is untouched.",
+    "sessions": [
+      {
+        "steps": [
+          {
+            "text": "London to New York economy",
+            "expected": {
+              "status": "results",
+              "origin": "LHR|LGW|LCY|STN|LTN",
+              "destination": "JFK|EWR|LGA",
+              "cabin": "economy",
+              "from": "2026-09-18",
+              "to": "2026-09-25",
+              "posts": 1
+            }
+          }
+        ]
+      },
+      {
+        "steps": [
+          {
+            "text": "forget my recent searches",
+            "expected": {
+              "status": "preferences",
+              "posts": 0,
+              "mentions": "Cleared your recent searches"
+            }
+          }
+        ]
+      },
+      {
+        "steps": [
+          {
+            "text": "1",
+            "expected": {
+              "status": "clarify",
+              "posts": 0,
+              "pending": null,
+              "origin": "LHR|LGW|LCY|STN|LTN"
+            }
+          }
+        ]
+      }
+    ]
+  }
+]
