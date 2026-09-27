@@ -7,7 +7,7 @@ import {makeFixtureAdapter} from './fixtures.mjs';
 import {gradeStep} from './edge-cases.mjs';
 import {HARDENING_CASES,HARDENING_CLOCK} from './hardening-cases.mjs';
 import {HARDENING_CASES_V2,HARDENING_V2_CLOCK} from './hardening-cases-v2.mjs';
-import {gradeV2Step,rememberFromStep,applyMemory} from './hardening-v2.mjs';
+import {gradeV2Step,rememberFromStep,applyMemory,offerRecentFromMemory} from './hardening-v2.mjs';
 import {JUDGE_RUBRIC_VERSION,OpenRouterJudge,evaluateJudgeConsensus} from './judge.mjs';
 import {applyPreferences} from './preferences.mjs';
 
@@ -58,6 +58,8 @@ try{
    const adapter=makeFixtureAdapter(item.scenario??'normal',trace),conversation=new SearchConversation({adapter,today:()=>clock,trace});
    applyPreferences(conversation,savedPreferences);
    if(applyMemory(memory,conversation,savedPreferences))notes.push(`The app remembers the last origin this browser searched from and offers it as a disclosed default: ${memory.lastOrigin}.`);
+   const welcome=offerRecentFromMemory(memory,conversation);
+   if(welcome)notes.push(`The welcome for this conversation listed the traveler's recent searches, numbered:\n${welcome}`);
    const candidate=new OpenRouterModel({apiKey:process.env.OPENROUTER_API_KEY,model:candidateModel,reasoningEffort:candidateEffort,maxCalls:session.steps.length*3,trace,beforeRequest,provider:{data_collection:'deny'}});
    const agent=new Agent({conversation,model:candidate,preferences:savedPreferences,trace});
    for(const step of session.steps){const started=performance.now();const result=await agent.respond(step.text);rememberFromStep(memory,result,conversation);if(step.saveProposed&&result.proposedPreferences)savedPreferences={...result.proposedPreferences};if(result.savedPreferences&&'homeAirport' in result.savedPreferences){savedPreferences={...savedPreferences};if(result.savedPreferences.homeAirport===null)delete savedPreferences.homeAirport;else savedPreferences.homeAirport=result.savedPreferences.homeAirport;}const grade=suite==='v2'?gradeV2Step(step.expected,result,conversation,adapter,savedPreferences):gradeStep(step.expected,result,conversation,adapter);steps.push({input:step.text,expected:step.expected,result,latencyMs:Math.round(performance.now()-started),grade});}

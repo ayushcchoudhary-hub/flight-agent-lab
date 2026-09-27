@@ -48,7 +48,7 @@ customer data or raw backend captures.
   session follow-ups and explicit preference proposals.
 - Booking, payment, account servicing, autonomous purchasing, WhatsApp and MCP
   remain outside the implemented scope.
-- The deterministic suite currently contains 305 passing checks.
+- The deterministic suite currently contains 308 passing checks.
 - The first 42-case Terra hardening run passed 30 cases. Every observed issue
   later received a focused passing verification. A later full rerun passed 32
   cases, then stopped at B03 after a safe policy handoff failed the frozen
@@ -243,6 +243,9 @@ off unless `CONVERSATION_STORE=postgres` and `DATABASE_URL` are set.
   so held-out D1 still holds. The list is not in the model's context: "the
   Tokyo one again" is not understood yet, only its number or the route.
   "Forget my recent searches" deletes them and closes an open list.
+  Held-out D5 (pick up by number), D6 (forget recent searches, keep the
+  origin) and D7 (forget where I fly from) pin this. They have not had a
+  live run yet; a test replays their intended calls through the harness.
 - The stored lowest price is there for a later alert ("cheaper than when you
   looked"). That needs sign-in first: outreach needs a contactable,
   consenting account, not a browser cookie. With sign-in, key memory and

@@ -554,6 +554,17 @@ export function recentLabel(search, today) {
   return [`${labelForValue(search.origin)} → ${labelForValue(search.destination)}`, dates, RECENT_CABIN[search.cabin],
     search.nonstopOnly ? 'Nonstop only' : null, search.maxPriceUsd ? `Up to USD ${Math.round(search.maxPriceUsd).toLocaleString('en-US')}` : null].filter(Boolean).join(' · ');
 }
+// The recent search a completed search leaves behind, or null. One builder
+// for the chat service and the eval harness, so the two cannot drift. A
+// cabin that was only the default is not recorded as a choice. The lowest
+// price is from rows that matched the request, for a later price-drop check.
+export function recentSearchFrom(result, state) {
+  if (result?.status !== 'results' || !state?.origin?.code || !state?.destination?.code || !state?.dates) return null;
+  const matched = (result.shortlist ?? []).filter(row => !row.reasons?.length).map(row => row.priceUsd).filter(Number.isFinite);
+  return { origin: state.origin.code, destination: state.destination.code, dateFrom: state.dates.from, dateTo: state.dates.to,
+    cabin: state.cabinSource === 'default' ? null : state.cabin, nonstopOnly: Boolean(state.nonstopOnly), maxPriceUsd: state.maxPriceUsd ?? null,
+    lowestPriceUsd: matched.length ? Math.min(...matched) : null };
+}
 export function renderRecentSearches(searches, today) {
   return ['Pick up where you left off:', ...searches.map((search, i) => `${i + 1}. ${recentLabel(search, today)}`), 'Reply with a number, or ask for something new.'].join('\n');
 }

@@ -2,7 +2,7 @@ import {localPreferenceStore,applyPreferences} from './preferences.mjs';
 import { HOSTED_MODEL_OPTIONS,hostedModelSettings } from './hosted-model-options.mjs';
 import { randomUUID } from 'node:crypto';
 import { Agent,OpenRouterModel,PROMPT_VERSION } from './model.mjs';
-import { SearchConversation,isoToday,welcomeFor,fullAirport,renderRecentSearches } from './search.mjs';
+import { SearchConversation,isoToday,welcomeFor,fullAirport,renderRecentSearches,recentSearchFrom } from './search.mjs';
 import { isVisitorId,turnRecords } from './store.mjs';
 import { makeStagingAdapter,readStagingToken } from './staging.mjs';
 import { loadCaptures,makeReplayAdapter } from './replay.mjs';
@@ -127,14 +127,9 @@ export function createChatService({modelFactory=defaultModelFactory,capturesLoad
     const state=s.conversation.publicState();
     // Remember an origin the traveler chose, never a default we filled in.
     if(result.status==='results'&&state.origin?.code&&!state.originFromPreference)queue(s,'memory',()=>s.store.api.rememberLastOrigin(s.store.visitorId,state.origin.code));
-    // Every search that returned becomes a recent search. A cabin that was
-    // only the default is not recorded as a choice. The lowest price is from
-    // rows that matched the request, for a later price-drop comparison.
-    if(result.status==='results'&&state.origin?.code&&state.destination?.code&&state.dates){
-     const matched=(result.shortlist??[]).filter(r=>!r.reasons?.length).map(r=>r.priceUsd).filter(Number.isFinite);
-     queue(s,'recent',()=>s.store.api.rememberSearch(s.store.visitorId,{origin:state.origin.code,destination:state.destination.code,dateFrom:state.dates.from,dateTo:state.dates.to,
-      cabin:state.cabinSource==='default'?null:state.cabin,nonstopOnly:Boolean(state.nonstopOnly),maxPriceUsd:state.maxPriceUsd??null,lowestPriceUsd:matched.length?Math.min(...matched):null}));
-    }
+    // Every search that returned becomes a recent search.
+    const recent=recentSearchFrom(result,state);
+    if(recent)queue(s,'recent',()=>s.store.api.rememberSearch(s.store.visitorId,recent));
     if(result.forgetRecentSearches){for(const [k,v] of welcomeOffers)if(v.visitorId===s.store.visitorId)welcomeOffers.delete(k);queue(s,'forget_recent',()=>s.store.api.forgetRecentSearches(s.store.visitorId));}
    }
    return {result,settings:s.settings,state:s.conversation.publicState(),events,grounding,latencyMs,timing:{modelLatencyMs,flightSearchLatencyMs,otherLatencyMs,totalLatencyMs:latencyMs},remainingTurns:maxTotalTurns-turns};

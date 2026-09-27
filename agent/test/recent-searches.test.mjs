@@ -165,3 +165,39 @@ test('forget recentSearches is an explicit action only', () => {
   assert.equal(r.savedPreferences, undefined, 'the home airport is untouched');
   assert.equal(preferenceAction({ action: 'propose', homeAirport: null, cabin: null }, {}).forgetRecentSearches, undefined);
 });
+
+// ---- Held-out D5-D7 are satisfiable. The intended tool calls, replayed
+// through the eval harness's own memory between sessions, pass every exact
+// check. A live failure is then the model, not the case or the harness.
+import { SearchConversation } from '../search.mjs';
+import { Agent } from '../model.mjs';
+import { applyPreferences } from '../preferences.mjs';
+import { HARDENING_CASES_V2, HARDENING_V2_CLOCK } from '../hardening-cases-v2.mjs';
+import { gradeV2Step, rememberFromStep, applyMemory, offerRecentFromMemory } from '../hardening-v2.mjs';
+
+const INTENDED = {
+  'London to New York economy': { name: 'find_flights', arguments: { origin: 'London', destination: 'New York', cabin: 'economy' } },
+  'forget my recent searches': { name: 'travel_preferences', arguments: { action: 'propose', forget: ['recentSearches'] } },
+  'forget where I fly from': { name: 'travel_preferences', arguments: { action: 'propose', forget: ['homeAirport'] } },
+  'to Singapore next week': { name: 'find_flights', arguments: { destination: 'Singapore', dates: { mode: 'nextWeek' } } },
+};
+for (const caseId of ['D5', 'D6', 'D7']) test(`held-out ${caseId} is satisfiable with the intended calls`, async () => {
+  const item = HARDENING_CASES_V2.find(c => c.id === caseId), memory = {}, saved = {};
+  const scripted = { complete: async m => { const c = INTENDED[m.at(-1).content]; return { tool_calls: [{ id: 'r', type: 'function', function: { name: c.name, arguments: JSON.stringify(c.arguments) } }] }; } };
+  const welcomes = [];
+  for (const session of item.sessions) {
+    const adapter = makeFixtureAdapter('normal'), conversation = new SearchConversation({ adapter, today: () => HARDENING_V2_CLOCK });
+    applyPreferences(conversation, saved); applyMemory(memory, conversation, saved);
+    welcomes.push(offerRecentFromMemory(memory, conversation));
+    const agent = new Agent({ conversation, preferences: saved, model: scripted });
+    for (const step of session.steps) {
+      const result = await agent.respond(step.text);
+      rememberFromStep(memory, result, conversation);
+      const grade = gradeV2Step(step.expected, result, conversation, adapter, saved);
+      assert.ok(grade.pass, `${caseId} "${step.text}": ${JSON.stringify(grade.checks.filter(c => !c.pass))}`);
+    }
+  }
+  assert.equal(welcomes[0], null, 'a first conversation has no recent searches');
+  if (caseId === 'D5') assert.match(welcomes[1], /^Pick up where you left off:\n1\. London/);
+  if (caseId === 'D6') assert.equal(welcomes[2], null, 'forgotten searches are not listed');
+});

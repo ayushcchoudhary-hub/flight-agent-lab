@@ -1,4 +1,6 @@
 import {gradeStep} from './edge-cases.mjs';
+import {recentSearchFrom,renderRecentSearches} from './search.mjs';
+import {RECENT_SEARCHES_KEPT} from './store.mjs';
 
 const baseKeys=new Set(['status','statuses','origin','destination','cabin','from','to','budget','pending','menuCount','posts','resultCount','minResults','mentions']);
 const same=(actual,expected)=>Object.entries(expected).every(([key,value])=>actual?.[key]===value);
@@ -26,11 +28,23 @@ export function gradeV2Step(expected,result,conversation,adapter,savedPreference
 
 // Cross-conversation memory as the product applies it when storage is on:
 // the last origin the traveler chose carries into the next conversation as a
-// disclosed default, unless a saved home airport exists. Nothing else carries.
+// disclosed default, unless a saved home airport exists. Recent searches are
+// listed by number in the next welcome and used only when chosen.
 export function rememberFromStep(memory,result,conversation){
  const state=conversation.publicState();
  if(result?.savedPreferences?.homeAirport===null)delete memory.lastOrigin;
+ if(result?.forgetRecentSearches)memory.recent=[];
  if(result?.status==='results'&&state.origin?.code&&!state.originFromPreference)memory.lastOrigin=state.origin.code;
+ const search=recentSearchFrom(result,state);
+ if(search)memory.recent=[search,...(memory.recent??[]).filter(r=>r.origin!==search.origin||r.destination!==search.destination)].slice(0,RECENT_SEARCHES_KEPT);
+}
+// The welcome's recent-search list for a new session, offered by number as
+// the chat service does. Returns the list as the traveler saw it, or null.
+export function offerRecentFromMemory(memory,conversation){
+ const recent=(memory.recent??[]).slice(0,3);
+ if(!recent.length)return null;
+ conversation.offerRecent(recent);
+ return renderRecentSearches(recent,conversation.today());
 }
 export function applyMemory(memory,conversation,savedPreferences={}){
  return !savedPreferences.homeAirport&&memory.lastOrigin?conversation.rememberOrigin(memory.lastOrigin):false;
