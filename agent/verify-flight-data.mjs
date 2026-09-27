@@ -1,6 +1,6 @@
 import { displayPriceUsd } from './shared.mjs';
 import { flightDetails,readableDate } from './flight-details.mjs';
-import { fullAirport } from './search.mjs';
+import { fullAirport, cabinLine } from './search.mjs';
 
 // Independently compare each displayed offer with the captured API snapshot.
 export function verifyFlightData(result, snapshot, requestedQuery) {
@@ -19,8 +19,12 @@ export function verifyFlightData(result, snapshot, requestedQuery) {
     if (record) {
       const timing=flightDetails(record);
       check(`${offer.id}: times, arrival date, duration and flight number agree with API`, JSON.stringify(offer.timing)===JSON.stringify(timing)&&offer.text.includes(timing.text));
-      const expected = `${fullAirport(record.origin)} → ${fullAirport(record.destination)}\n${readableDate(record.date)}\n${record.cabin.charAt(0).toUpperCase()+record.cabin.slice(1)} · ${record.direct ? 'Nonstop' : 'With a connection'} · USD ${displayPriceUsd(record).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})}`;
+      const expected = `${fullAirport(record.origin)} → ${fullAirport(record.destination)}\n${readableDate(record.date)}\n${cabinLine(record.cabin)} · ${record.direct ? 'Nonstop' : 'With a connection'} · USD ${displayPriceUsd(record).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})}`;
       check(`${offer.id}: displayed message faithfully includes the record`, offer.text.startsWith(expected) && result.text.includes(offer.text));
+      // A cash comparison is shown only when the API priced one, and with its amount.
+      const usual = offer.text.match(/ · usually USD ([\d,]+)\n/)?.[1]?.replaceAll(',', '');
+      const priced = record.retailComparison?.status === 'priced' ? record.retailComparison.amountUsd : null;
+      check(`${offer.id}: cash comparison agrees with API`, usual ? priced !== null && Number(usual) === Math.round(priced) && offer.usualUsd === priced : offer.usualUsd == null);
     }
   }
   check('Offer count is a shortlist of at most three', (result.shortlist || []).length <= 3);

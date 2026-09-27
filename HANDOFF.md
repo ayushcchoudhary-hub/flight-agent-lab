@@ -23,6 +23,14 @@ customer data or raw backend captures.
   service keeps its current model until it is redeployed with
   `OPENROUTER_MODEL` updated). Terra medium, DeepSeek V4.1 Flash low and GLM
   5.3 high remain optional controls in the live chat.
+- Live since 2026-09-27: revision `00034-deh` (main at 8b0fe65) serves 100%
+  of traffic with Sonnet 5, prompt caching, take me anywhere and the guards
+  against made-up values. Conversation storage stays off. Roll back with
+  `gcloud run services update-traffic commonswyft-agent-experiment --region
+  europe-west2 --to-revisions commonswyft-agent-experiment-00026-run=100`.
+- Each result shows the product's cash comparison as "usually USD X" when the
+  API priced one for the same flights (Google Flights), with one footnote
+  naming the source. Pending, unavailable and expired comparisons are left out.
 - Claude requests mark the fixed part of the system prompt, and the tools
   before it, for prompt caching. OpenAI models cache on their own. A 3-case
   check on 2026-09-27 read 4,771 prompt tokens from cache on every call after
@@ -38,7 +46,7 @@ customer data or raw backend captures.
   session follow-ups and explicit preference proposals.
 - Booking, payment, account servicing, autonomous purchasing, WhatsApp and MCP
   remain outside the implemented scope.
-- The deterministic suite currently contains 276 passing checks.
+- The deterministic suite currently contains 280 passing checks.
 - The first 42-case Terra hardening run passed 30 cases. Every observed issue
   later received a focused passing verification. A later full rerun passed 32
   cases, then stopped at B03 after a safe policy handoff failed the frozen
