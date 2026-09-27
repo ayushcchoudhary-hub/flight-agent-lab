@@ -48,7 +48,7 @@ customer data or raw backend captures.
   session follow-ups and explicit preference proposals.
 - Booking, payment, account servicing, autonomous purchasing, WhatsApp and MCP
   remain outside the implemented scope.
-- The deterministic suite currently contains 310 passing checks.
+- The deterministic suite currently contains 311 passing checks.
 - The first 42-case Terra hardening run passed 30 cases. Every observed issue
   later received a focused passing verification. A later full rerun passed 32
   cases, then stopped at B03 after a safe policy handoff failed the frozen
@@ -243,12 +243,14 @@ off unless `CONVERSATION_STORE=postgres` and `DATABASE_URL` are set.
   so held-out D1 still holds. The list is not in the model's context: "the
   Tokyo one again" is not understood yet, only its number or the route.
   "Forget my recent searches" deletes them and closes an open list.
-  Held-out D5 to D9 pin this: pick up by number, forget recent searches
+  Held-out D6 to D10 pin this: pick up by number, forget recent searches
   and keep the origin, forget where I fly from, a recent search keeps the
   origin used rather than the home airport, and a new request ignores the
-  list. They have not had a live run yet. A test replays their intended
-  calls through the harness. See [MEMORY.md](MEMORY.md) for the reasoning
-  and the plan for what comes next.
+  list. The first Sonnet 5 run on 2026-09-27 (provisional ids D5 to D9)
+  passed 7 of 9. Both failures were the application: the model sent the
+  right forget list with action "show", and show returned before acting on
+  it. An explicit forget now wins over the action. See [MEMORY.md](MEMORY.md)
+  for the reasoning and the plan for what comes next.
 - The stored lowest price is there for a later alert ("cheaper than when you
   looked"). That needs sign-in first: outreach needs a contactable,
   consenting account, not a browser cookie. With sign-in, key memory and

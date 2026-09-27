@@ -42,7 +42,11 @@ export function preferenceAction(args,saved) {
  // Only an explicit forget removes anything: a null once wiped a saved home
  // airport when the traveler only asked to remember business (held-out D4).
  const forget=new Set(args.forget??[]);
- if(args.action==='show')return {status:'preferences',text:`Saved preferences\nHome airport: ${saved.homeAirport?labelForValue(saved.homeAirport):'Not set'}\nCabin: ${saved.cabin??'Business class'}\nNonstop: ${saved.preferNonstop?'Preferred':'No preference'}`,preferences:saved};
+ // An explicit forget is acted on whatever the action says. Sonnet 5 sent
+ // {action:'show',forget:['recentSearches']} for "forget my recent searches"
+ // and show returned early, so the forget was silently dropped (memory
+ // check 2026-09-27, held-out D7 and D8).
+ if(args.action==='show'&&!forget.size)return {status:'preferences',text:`Saved preferences\nHome airport: ${saved.homeAirport?labelForValue(saved.homeAirport):'Not set'}\nCabin: ${saved.cabin??'Business class'}\nNonstop: ${saved.preferNonstop?'Preferred':'No preference'}`,preferences:saved};
  const lines=[],out={status:'preferences'};
  if(forget.has('recentSearches')){out.forgetRecentSearches=true;lines.push('Cleared your recent searches.');}
  if(forget.has('homeAirport')){out.savedPreferences={homeAirport:null};lines.push('Removed your saved home airport.');}

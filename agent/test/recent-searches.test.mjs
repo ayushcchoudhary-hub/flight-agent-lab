@@ -166,7 +166,7 @@ test('forget recentSearches is an explicit action only', () => {
   assert.equal(preferenceAction({ action: 'propose', homeAirport: null, cabin: null }, {}).forgetRecentSearches, undefined);
 });
 
-// ---- Held-out D5-D9 are satisfiable. The intended tool calls, replayed
+// ---- Held-out D6-D10 are satisfiable. The intended tool calls, replayed
 // through the eval harness's own memory between sessions, pass every exact
 // check. A live failure is then the model, not the case or the harness.
 import { SearchConversation } from '../search.mjs';
@@ -183,7 +183,7 @@ const INTENDED = {
   'from Gatwick to Singapore': { name: 'find_flights', arguments: { origin: 'Gatwick', destination: 'Singapore' } },
   'Dubai to Singapore': { name: 'find_flights', arguments: { origin: 'Dubai', destination: 'Singapore' } },
 };
-for (const caseId of ['D5', 'D6', 'D7', 'D8', 'D9']) test(`held-out ${caseId} is satisfiable with the intended calls`, async () => {
+for (const caseId of ['D6', 'D7', 'D8', 'D9', 'D10']) test(`held-out ${caseId} is satisfiable with the intended calls`, async () => {
   const item = HARDENING_CASES_V2.find(c => c.id === caseId), memory = {}, saved = { ...(item.initialPreferences ?? {}) };
   const scripted = { complete: async m => { const c = INTENDED[m.at(-1).content]; return { tool_calls: [{ id: 'r', type: 'function', function: { name: c.name, arguments: JSON.stringify(c.arguments) } }] }; } };
   const welcomes = [];
@@ -200,8 +200,34 @@ for (const caseId of ['D5', 'D6', 'D7', 'D8', 'D9']) test(`held-out ${caseId} is
     }
   }
   assert.equal(welcomes[0], null, 'a first conversation has no recent searches');
-  if (caseId === 'D5') assert.match(welcomes[1], /^Pick up where you left off:\n1\. London/);
-  if (caseId === 'D6') assert.equal(welcomes[2], null, 'forgotten searches are not listed');
-  if (caseId === 'D8') assert.match(welcomes[1], /1\. London Gatwick/);
-  if (caseId === 'D9') assert.match(welcomes[1], /1\. London .+ Economy/);
+  if (caseId === 'D6') assert.match(welcomes[1], /^Pick up where you left off:\n1\. London/);
+  if (caseId === 'D7') assert.equal(welcomes[2], null, 'forgotten searches are not listed');
+  if (caseId === 'D9') assert.match(welcomes[1], /1\. London Gatwick/);
+  if (caseId === 'D10') assert.match(welcomes[1], /1\. London .+ Economy/);
+});
+
+// The calls Sonnet 5 actually made in the memory check on 2026-09-27: the
+// right forget list with action 'show'. Replayed through the harness, the
+// cases now pass, and case ids are unique.
+test('a forget sent with action show is still acted on (recorded Sonnet 5 calls)', async () => {
+  const recorded = { ...INTENDED,
+    'forget my recent searches': { name: 'travel_preferences', arguments: { action: 'show', forget: ['recentSearches'] } },
+    'forget where I fly from': { name: 'travel_preferences', arguments: { action: 'show', forget: ['homeAirport'] } } };
+  for (const caseId of ['D7', 'D8']) {
+    const item = HARDENING_CASES_V2.find(c => c.id === caseId), memory = {}, saved = {};
+    const scripted = { complete: async m => { const c = recorded[m.at(-1).content]; return { tool_calls: [{ id: 'r', type: 'function', function: { name: c.name, arguments: JSON.stringify(c.arguments) } }] }; } };
+    for (const session of item.sessions) {
+      const adapter = makeFixtureAdapter('normal'), conversation = new SearchConversation({ adapter, today: () => HARDENING_V2_CLOCK });
+      applyMemory(memory, conversation, saved); offerRecentFromMemory(memory, conversation);
+      const agent = new Agent({ conversation, preferences: saved, model: scripted });
+      for (const step of session.steps) {
+        const result = await agent.respond(step.text);
+        rememberFromStep(memory, result, conversation);
+        const grade = gradeV2Step(step.expected, result, conversation, adapter, saved);
+        assert.ok(grade.pass, `${caseId} "${step.text}": ${JSON.stringify(grade.checks.filter(c => !c.pass))}`);
+      }
+    }
+  }
+  const ids = HARDENING_CASES_V2.map(c => c.id);
+  assert.equal(new Set(ids).size, ids.length, 'every held-out case id is unique');
 });

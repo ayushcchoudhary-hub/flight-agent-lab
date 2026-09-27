@@ -49,8 +49,8 @@ check deletes its own test visitors.
 
 Evidence: 16 checks against the Neon database (`tools/store-smoke.mjs`),
 unit tests in `test/recent-searches.test.mjs` and `test/policy-sync.test.mjs`,
-and held-out cases D5 to D9 replayed through the eval harness with the
-intended tool calls. No live model run yet.
+and held-out cases D6 to D10 replayed through the eval harness with the
+intended tool calls and with the calls Sonnet 5 actually made.
 
 ## Next, in order
 
@@ -60,7 +60,7 @@ Why: the unit tests assume the model makes the right call. Whether Sonnet 5
 turns "forget my recent searches" into the new option, and does not also
 forget the origin, is unknown.
 
-- Run held-out D1, D2, D4 and D5 to D9 on Sonnet 5. Cap: 30 calls, $1. D1,
+- Run held-out D1, D2, D4 and D6 to D10 on Sonnet 5. Cap: 30 calls, $1. D1,
   D2 and D4 guard against regressions, because the harness now shows the
   welcome list in their later sessions.
 - Run the experiment server locally against Neon. Search once, reload, choose
@@ -94,7 +94,7 @@ today. The traveler must use the number.
 - New held-out cases: refer to a recent trip by place name, change one field
   of it, and a request that must not borrow from it.
 
-Risk: the model fills a new trip from an old one. D1 and D9 catch that.
+Risk: the model fills a new trip from an old one. D1 and D10 catch that.
 
 ### 4. Account-keyed memory (after sign-in)
 
