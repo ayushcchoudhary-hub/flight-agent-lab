@@ -1,0 +1,40 @@
+[
+  {
+    "id": "A1",
+    "category": "Places",
+    "name": "Country destination becomes an airport menu",
+    "requirement": "Offer a numbered menu of Japan’s main airports, keep London and next week, and ask one concise question.",
+    "steps": [
+      {
+        "text": "London to Japan next week",
+        "expected": {
+          "status": "clarify",
+          "posts": 0,
+          "origin": "LHR|LGW|LCY|STN|LTN",
+          "destination": null,
+          "pending": "destination",
+          "from": "2026-09-21",
+          "to": "2026-09-27",
+          "mentions": "(?=.*Tokyo)(?=.*Osaka)"
+        }
+      }
+    ]
+  },
+  {
+    "id": "G2",
+    "category": "Discover",
+    "name": "A named city shows its deals",
+    "requirement": "Show the best business class deals from London with the date they were checked and a note that prices can change. Name only destinations the deals contain.",
+    "steps": [
+      {
+        "text": "I’m in London, take me anywhere",
+        "expected": {
+          "status": "deals",
+          "posts": 0,
+          "pending": "deal",
+          "mentions": "(?=.*deals from London)(?=.*checked)"
+        }
+      }
+    ]
+  }
+]

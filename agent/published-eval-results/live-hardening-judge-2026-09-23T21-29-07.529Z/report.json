@@ -1,0 +1,632 @@
+{
+  "runId": "live-hardening-judge-2026-09-23T21-29-07.529Z",
+  "evaluationKind": "llm-judge-hardening",
+  "suite": "v2",
+  "label": "Sonnet 5 smoke · 2 cases · c6bf7c0",
+  "promptVersion": "flight-search-v1.6.0",
+  "judge": {
+    "model": "anthropic/claude-opus-5.5",
+    "effort": "medium",
+    "rubricVersion": "communication-quality-v1.2.0",
+    "criteria": [
+      "clarity",
+      "concision",
+      "tone",
+      "nextStep",
+      "limitationHonesty",
+      "noInternalLeakage"
+    ]
+  },
+  "clock": "2026-09-18",
+  "flightData": "synthetic",
+  "effort": "medium",
+  "models": [
+    "anthropic/claude-sonnet-5"
+  ],
+  "repeats": 1,
+  "cases": [
+    {
+      "id": "A1",
+      "category": "Places",
+      "name": "Country destination becomes an airport menu",
+      "requirement": "Offer a numbered menu of Japan’s main airports, keep London and next week, and ask one concise question.",
+      "steps": [
+        {
+          "text": "London to Japan next week",
+          "expected": {
+            "status": "clarify",
+            "posts": 0,
+            "origin": "LHR|LGW|LCY|STN|LTN",
+            "destination": null,
+            "pending": "destination",
+            "from": "2026-09-21",
+            "to": "2026-09-27",
+            "mentions": "(?=.*Tokyo)(?=.*Osaka)"
+          }
+        }
+      ]
+    },
+    {
+      "id": "G2",
+      "category": "Discover",
+      "name": "A named city shows its deals",
+      "requirement": "Show the best business class deals from London with the date they were checked and a note that prices can change. Name only destinations the deals contain.",
+      "steps": [
+        {
+          "text": "I’m in London, take me anywhere",
+          "expected": {
+            "status": "deals",
+            "posts": 0,
+            "pending": "deal",
+            "mentions": "(?=.*deals from London)(?=.*checked)"
+          }
+        }
+      ]
+    }
+  ],
+  "status": "complete",
+  "maxCostUsd": 0.6,
+  "maxCalls": 12,
+  "results": [
+    {
+      "caseId": "A1",
+      "name": "Country destination becomes an airport menu",
+      "category": "Places",
+      "requirement": "Offer a numbered menu of Japan’s main airports, keep London and next week, and ask one concise question.",
+      "model": "anthropic/claude-sonnet-5",
+      "repeat": 1,
+      "pass": true,
+      "deterministicPass": true,
+      "communicationPass": true,
+      "steps": [
+        {
+          "input": "London to Japan next week",
+          "expected": {
+            "status": "clarify",
+            "posts": 0,
+            "origin": "LHR|LGW|LCY|STN|LTN",
+            "destination": null,
+            "pending": "destination",
+            "from": "2026-09-21",
+            "to": "2026-09-27",
+            "mentions": "(?=.*Tokyo)(?=.*Osaka)"
+          },
+          "result": {
+            "status": "clarify",
+            "text": "Which destination did you mean?\n\n1. Osaka (all airports)\n2. Tokyo (all airports)\n3. Aomori Airport (AOJ)\n4. Fukuoka Airport (FUK)\n5. Hakodate Airport (HKD)\n\nReply with the number, or type any city or airport.\n\nI'll keep the flight from London · Business class · Mon, 21 Sept 2026 – Sun, 27 Sept 2026 unless you change it."
+          },
+          "latencyMs": 2866,
+          "grade": {
+            "pass": true,
+            "actual": {
+              "status": "clarify",
+              "origin": "LHR|LGW|LCY|STN|LTN",
+              "destination": null,
+              "cabin": "business",
+              "from": "2026-09-21",
+              "to": "2026-09-27",
+              "budget": null,
+              "pending": "destination",
+              "menuCount": 5,
+              "posts": 0,
+              "resultCount": 0,
+              "sort": "recommended",
+              "nonstopOnly": false,
+              "sources": [],
+              "savedPreferences": {}
+            },
+            "checks": [
+              {
+                "name": "status",
+                "expected": "clarify",
+                "actual": "clarify",
+                "pass": true
+              },
+              {
+                "name": "posts",
+                "expected": 0,
+                "actual": 0,
+                "pass": true
+              },
+              {
+                "name": "origin",
+                "expected": "LHR|LGW|LCY|STN|LTN",
+                "actual": "LHR|LGW|LCY|STN|LTN",
+                "pass": true
+              },
+              {
+                "name": "destination",
+                "expected": null,
+                "actual": null,
+                "pass": true
+              },
+              {
+                "name": "pending",
+                "expected": "destination",
+                "actual": "destination",
+                "pass": true
+              },
+              {
+                "name": "from",
+                "expected": "2026-09-21",
+                "actual": "2026-09-21",
+                "pass": true
+              },
+              {
+                "name": "to",
+                "expected": "2026-09-27",
+                "actual": "2026-09-27",
+                "pass": true
+              },
+              {
+                "name": "mentions",
+                "expected": "(?=.*Tokyo)(?=.*Osaka)",
+                "actual": "Which destination did you mean?\n\n1. Osaka (all airports)\n2. Tokyo (all airports)\n3. Aomori Airport (AOJ)\n4. Fukuoka Airport (FUK)\n5. Hakodate Airport (HKD)\n\nReply with the number, or type any city or airport.\n\nI'll keep the flight from London · Business class · Mon, 21 Sept 2026 – Sun, 27 Sept 2026 unless you change it.",
+                "pass": true
+              },
+              {
+                "name": "menu excludes opposite city",
+                "pass": true
+              },
+              {
+                "name": "Does not echo profanity or insult the user (limited lexical check)",
+                "pass": true
+              },
+              {
+                "name": "No claimed purchase completion",
+                "pass": true
+              }
+            ]
+          }
+        }
+      ],
+      "judge": {
+        "verdict": "pass",
+        "scores": {
+          "clarity": 5,
+          "concision": 5,
+          "tone": 5,
+          "nextStep": 5,
+          "limitationHonesty": 4,
+          "noInternalLeakage": 5
+        },
+        "rationale": "The reply asks one clear destination question and offers a numbered menu of Japanese destinations with an escape hatch for free text. It keeps London and the next-week date range, shown as explicit dates. It also states the default Business cabin so the traveler knows what will be searched. It is concise, friendly and free of internal detail.",
+        "strengths": [
+          "Asks a single, concise clarifying question.",
+          "Uses a numbered menu with city-level grouping for multi-airport cities (Osaka, Tokyo).",
+          "Keeps London and resolves next week into explicit dates.",
+          "Transparently discloses the default Business cabin and invites changes.",
+          "Offers free-text entry for destinations not listed."
+        ],
+        "issues": [
+          {
+            "severity": "minor",
+            "criterion": "clarity",
+            "evidence": "Menu mixes city groupings (Osaka, Tokyo) with smaller single airports (Aomori, Hakodate), which may read as a partial list rather than the 'main airports'.",
+            "recommendation": "Consider briefly signalling that the list is a selection, for example 'Popular options', so the traveler knows other cities are available beyond the free-text line."
+          }
+        ],
+        "recommendedAction": "none"
+      },
+      "judgeAttempts": [
+        {
+          "verdict": "pass",
+          "scores": {
+            "clarity": 5,
+            "concision": 5,
+            "tone": 5,
+            "nextStep": 5,
+            "limitationHonesty": 4,
+            "noInternalLeakage": 5
+          },
+          "rationale": "The reply asks one clear destination question and offers a numbered menu of Japanese destinations with an escape hatch for free text. It keeps London and the next-week date range, shown as explicit dates. It also states the default Business cabin so the traveler knows what will be searched. It is concise, friendly and free of internal detail.",
+          "strengths": [
+            "Asks a single, concise clarifying question.",
+            "Uses a numbered menu with city-level grouping for multi-airport cities (Osaka, Tokyo).",
+            "Keeps London and resolves next week into explicit dates.",
+            "Transparently discloses the default Business cabin and invites changes.",
+            "Offers free-text entry for destinations not listed."
+          ],
+          "issues": [
+            {
+              "severity": "minor",
+              "criterion": "clarity",
+              "evidence": "Menu mixes city groupings (Osaka, Tokyo) with smaller single airports (Aomori, Hakodate), which may read as a partial list rather than the 'main airports'.",
+              "recommendation": "Consider briefly signalling that the list is a selection, for example 'Popular options', so the traveler knows other cities are available beyond the free-text line."
+            }
+          ],
+          "recommendedAction": "none"
+        }
+      ],
+      "judgeConsensus": {
+        "passingVotes": 1,
+        "totalVotes": 1,
+        "verdicts": [
+          "pass"
+        ]
+      },
+      "events": [
+        {
+          "type": "model_usage",
+          "data": {
+            "model": "anthropic/claude-sonnet-5",
+            "provider": "Claude Platform on AWS",
+            "latencyMs": 2807,
+            "usage": {
+              "prompt_tokens": 5159,
+              "completion_tokens": 97,
+              "total_tokens": 5256,
+              "cost": 0.011288,
+              "is_byok": false,
+              "prompt_tokens_details": {
+                "cached_tokens": 0,
+                "cache_write_tokens": 0,
+                "audio_tokens": 0,
+                "video_tokens": 0
+              },
+              "cost_details": {
+                "upstream_inference_cost": 0.011288,
+                "upstream_inference_prompt_cost": 0.010318,
+                "upstream_inference_completions_cost": 0.00097
+              },
+              "completion_tokens_details": {
+                "reasoning_tokens": 0,
+                "image_tokens": 0,
+                "audio_tokens": 0
+              }
+            },
+            "cost": 0.011288
+          }
+        },
+        {
+          "type": "tool_call",
+          "data": {
+            "name": "find_flights",
+            "arguments": {
+              "origin": "London",
+              "destination": "Japan",
+              "dates": {
+                "mode": "nextWeek"
+              }
+            }
+          }
+        },
+        {
+          "type": "judge_usage",
+          "data": {
+            "model": "anthropic/claude-opus-5.5",
+            "provider": "Claude Platform on AWS",
+            "latencyMs": 10334,
+            "usage": {
+              "prompt_tokens": 1624,
+              "completion_tokens": 820,
+              "total_tokens": 2444,
+              "cost": 0.022896,
+              "is_byok": false,
+              "prompt_tokens_details": {
+                "cached_tokens": 0,
+                "cache_write_tokens": 0,
+                "audio_tokens": 0,
+                "video_tokens": 0
+              },
+              "cost_details": {
+                "upstream_inference_cost": 0.022896,
+                "upstream_inference_prompt_cost": 0.006496,
+                "upstream_inference_completions_cost": 0.0164
+              },
+              "completion_tokens_details": {
+                "reasoning_tokens": 377,
+                "image_tokens": 0,
+                "audio_tokens": 0
+              }
+            },
+            "cost": 0.022896
+          }
+        }
+      ]
+    },
+    {
+      "caseId": "G2",
+      "name": "A named city shows its deals",
+      "category": "Discover",
+      "requirement": "Show the best business class deals from London with the date they were checked and a note that prices can change. Name only destinations the deals contain.",
+      "model": "anthropic/claude-sonnet-5",
+      "repeat": 1,
+      "pass": true,
+      "deterministicPass": true,
+      "communicationPass": true,
+      "steps": [
+        {
+          "input": "I’m in London, take me anywhere",
+          "expected": {
+            "status": "deals",
+            "posts": 0,
+            "pending": "deal",
+            "mentions": "(?=.*deals from London)(?=.*checked)"
+          },
+          "result": {
+            "status": "deals",
+            "text": "SYNTHETIC FLIGHT DATA. These are example results.\n\nBest business class deals from London · checked 18 Sept.\n\n1. Charlotte, United States · Sat, 19 Sept 2026 · 1 stop via New York (JFK)\n   USD 1,290 · usually USD 10,805\n2. Bangkok, Thailand · Sun, 20 Sept 2026 · Nonstop\n   USD 1,480 · usually USD 6,200\n3. Cape Town, South Africa · Mon, 21 Sept 2026 · 1 stop via Doha (DOH)\n   USD 1,620 · usually USD 5,900\n4. Lisbon, Portugal · Tue, 22 Sept 2026 · Nonstop\n   USD 690 · usually USD 2,100\n5. Sydney, Australia · Wed, 23 Sept 2026 · 1 stop via Singapore (SIN)\n   USD 2,410 · usually USD 9,800\n\nDeals can change or sell out quickly.\n\nReply with a number to search that flight, or name a place.",
+            "deals": [
+              {
+                "origin": "LHR",
+                "destination": "CLT",
+                "city": "Charlotte",
+                "date": "2026-09-19",
+                "cabin": "business",
+                "priceUsd": 1290
+              },
+              {
+                "origin": "LHR",
+                "destination": "BKK",
+                "city": "Bangkok",
+                "date": "2026-09-20",
+                "cabin": "business",
+                "priceUsd": 1480
+              },
+              {
+                "origin": "LHR",
+                "destination": "CPT",
+                "city": "Cape Town",
+                "date": "2026-09-21",
+                "cabin": "business",
+                "priceUsd": 1620
+              },
+              {
+                "origin": "LHR",
+                "destination": "LIS",
+                "city": "Lisbon",
+                "date": "2026-09-22",
+                "cabin": "business",
+                "priceUsd": 690
+              },
+              {
+                "origin": "LHR",
+                "destination": "SYD",
+                "city": "Sydney",
+                "date": "2026-09-23",
+                "cabin": "business",
+                "priceUsd": 2410
+              }
+            ],
+            "checkedAt": "2026-09-18",
+            "stale": false
+          },
+          "latencyMs": 1835,
+          "grade": {
+            "pass": true,
+            "actual": {
+              "status": "deals",
+              "origin": null,
+              "destination": null,
+              "cabin": "business",
+              "from": null,
+              "to": null,
+              "budget": null,
+              "pending": "deal",
+              "menuCount": 5,
+              "posts": 0,
+              "resultCount": 0,
+              "sort": "recommended",
+              "nonstopOnly": false,
+              "sources": [],
+              "savedPreferences": {}
+            },
+            "checks": [
+              {
+                "name": "status",
+                "expected": "deals",
+                "actual": "deals",
+                "pass": true
+              },
+              {
+                "name": "posts",
+                "expected": 0,
+                "actual": 0,
+                "pass": true
+              },
+              {
+                "name": "pending",
+                "expected": "deal",
+                "actual": "deal",
+                "pass": true
+              },
+              {
+                "name": "mentions",
+                "expected": "(?=.*deals from London)(?=.*checked)",
+                "actual": "SYNTHETIC FLIGHT DATA. These are example results.\n\nBest business class deals from London · checked 18 Sept.\n\n1. Charlotte, United States · Sat, 19 Sept 2026 · 1 stop via New York (JFK)\n   USD 1,290 · usually USD 10,805\n2. Bangkok, Thailand · Sun, 20 Sept 2026 · Nonstop\n   USD 1,480 · usually USD 6,200\n3. Cape Town, South Africa · Mon, 21 Sept 2026 · 1 stop via Doha (DOH)\n   USD 1,620 · usually USD 5,900\n4. Lisbon, Portugal · Tue, 22 Sept 2026 · Nonstop\n   USD 690 · usually USD 2,100\n5. Sydney, Australia · Wed, 23 Sept 2026 · 1 stop via Singapore (SIN)\n   USD 2,410 · usually USD 9,800\n\nDeals can change or sell out quickly.\n\nReply with a number to search that flight, or name a place.",
+                "pass": true
+              },
+              {
+                "name": "menu excludes opposite city",
+                "pass": true
+              },
+              {
+                "name": "Does not echo profanity or insult the user (limited lexical check)",
+                "pass": true
+              },
+              {
+                "name": "No claimed purchase completion",
+                "pass": true
+              }
+            ]
+          }
+        }
+      ],
+      "judge": {
+        "verdict": "pass",
+        "scores": {
+          "clarity": 5,
+          "concision": 5,
+          "tone": 5,
+          "nextStep": 5,
+          "limitationHonesty": 4,
+          "noInternalLeakage": 5
+        },
+        "rationale": "The reply clearly presents business class deals from London, states when they were checked, and warns that deals can change or sell out. Each deal shows the destination, date, stops, price and usual price. It closes with a concrete next step. The only destinations named are the deal destinations and their listed connection points. There is no internal leakage, and the wording is tight.",
+        "strengths": [
+          "The header states the cabin, origin and check date.",
+          "The list is consistent and scannable, with the date, routing and price-versus-usual comparison for each deal.",
+          "It includes an explicit note that deals can change or sell out.",
+          "It gives an actionable next step: reply with a number or name a place."
+        ],
+        "issues": [
+          {
+            "severity": "minor",
+            "criterion": "clarity",
+            "evidence": "'checked 18 Sept' omits the year, while every deal date includes 2026.",
+            "recommendation": "Include the year in the checked date so it matches the deal dates, e.g. '18 Sept 2026'."
+          },
+          {
+            "severity": "minor",
+            "criterion": "limitationHonesty",
+            "evidence": "'Deals can change or sell out quickly.'",
+            "recommendation": "State explicitly that prices can change, e.g. 'Prices can change or sell out quickly', to match the requirement's wording."
+          }
+        ],
+        "recommendedAction": "none"
+      },
+      "judgeAttempts": [
+        {
+          "verdict": "pass",
+          "scores": {
+            "clarity": 5,
+            "concision": 5,
+            "tone": 5,
+            "nextStep": 5,
+            "limitationHonesty": 4,
+            "noInternalLeakage": 5
+          },
+          "rationale": "The reply clearly presents business class deals from London, states when they were checked, and warns that deals can change or sell out. Each deal shows the destination, date, stops, price and usual price. It closes with a concrete next step. The only destinations named are the deal destinations and their listed connection points. There is no internal leakage, and the wording is tight.",
+          "strengths": [
+            "The header states the cabin, origin and check date.",
+            "The list is consistent and scannable, with the date, routing and price-versus-usual comparison for each deal.",
+            "It includes an explicit note that deals can change or sell out.",
+            "It gives an actionable next step: reply with a number or name a place."
+          ],
+          "issues": [
+            {
+              "severity": "minor",
+              "criterion": "clarity",
+              "evidence": "'checked 18 Sept' omits the year, while every deal date includes 2026.",
+              "recommendation": "Include the year in the checked date so it matches the deal dates, e.g. '18 Sept 2026'."
+            },
+            {
+              "severity": "minor",
+              "criterion": "limitationHonesty",
+              "evidence": "'Deals can change or sell out quickly.'",
+              "recommendation": "State explicitly that prices can change, e.g. 'Prices can change or sell out quickly', to match the requirement's wording."
+            }
+          ],
+          "recommendedAction": "none"
+        }
+      ],
+      "judgeConsensus": {
+        "passingVotes": 1,
+        "totalVotes": 1,
+        "verdicts": [
+          "pass"
+        ]
+      },
+      "events": [
+        {
+          "type": "model_usage",
+          "data": {
+            "model": "anthropic/claude-sonnet-5",
+            "provider": "Claude Platform on AWS",
+            "latencyMs": 1818,
+            "usage": {
+              "prompt_tokens": 5164,
+              "completion_tokens": 40,
+              "total_tokens": 5204,
+              "cost": 0.010728,
+              "is_byok": false,
+              "prompt_tokens_details": {
+                "cached_tokens": 0,
+                "cache_write_tokens": 0,
+                "audio_tokens": 0,
+                "video_tokens": 0
+              },
+              "cost_details": {
+                "upstream_inference_cost": 0.010728,
+                "upstream_inference_prompt_cost": 0.010328,
+                "upstream_inference_completions_cost": 0.0004
+              },
+              "completion_tokens_details": {
+                "reasoning_tokens": 0,
+                "image_tokens": 0,
+                "audio_tokens": 0
+              }
+            },
+            "cost": 0.010728
+          }
+        },
+        {
+          "type": "tool_call",
+          "data": {
+            "name": "discover_flights",
+            "arguments": {
+              "origin": "London"
+            }
+          }
+        },
+        {
+          "type": "judge_usage",
+          "data": {
+            "model": "anthropic/claude-opus-5.5",
+            "provider": "Claude Platform on AWS",
+            "latencyMs": 8627,
+            "usage": {
+              "prompt_tokens": 1819,
+              "completion_tokens": 689,
+              "total_tokens": 2508,
+              "cost": 0.021056,
+              "is_byok": false,
+              "prompt_tokens_details": {
+                "cached_tokens": 0,
+                "cache_write_tokens": 0,
+                "audio_tokens": 0,
+                "video_tokens": 0
+              },
+              "cost_details": {
+                "upstream_inference_cost": 0.021056,
+                "upstream_inference_prompt_cost": 0.007276,
+                "upstream_inference_completions_cost": 0.01378
+              },
+              "completion_tokens_details": {
+                "reasoning_tokens": 218,
+                "image_tokens": 0,
+                "audio_tokens": 0
+              }
+            },
+            "cost": 0.021056
+          }
+        }
+      ]
+    }
+  ],
+  "limitations": [
+    "Held-out v2 cases were frozen before this first run. Known place-handling gaps were not fixed first.",
+    "One attempt per case does not establish reliability.",
+    "The judge reviews communication quality and can be wrong. Deterministic checks remain authoritative for facts and actions.",
+    "The judge receives blinded candidate output and no private reasoning.",
+    "The synthetic-inventory banner is retained in the report but removed from judge input because production does not show it.",
+    "Synthetic inventory is used. No booking, payment or live flight search occurs."
+  ],
+  "completedAt": "2026-09-23T21:29:31.200Z",
+  "modelCallsAttempted": 4,
+  "actualCostUsd": 0.065968,
+  "conservativeReservedUsd": 0.102232,
+  "summary": [
+    {
+      "model": "anthropic/claude-sonnet-5",
+      "passed": 2,
+      "total": 2,
+      "deterministicPassed": 2,
+      "judgePassed": 2,
+      "modelCalls": 2,
+      "judgeCalls": 2,
+      "cost": 0.065968
+    }
+  ]
+}

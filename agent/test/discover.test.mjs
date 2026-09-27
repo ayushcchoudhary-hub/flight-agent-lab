@@ -152,7 +152,8 @@ test('a deals reply shows price and typical price, the check date and the footno
   const { c } = setup();
   const text = (await c.discover({ origin: 'London' })).text;
   assert.match(text, /USD 1,290 · usually USD 10,805/);
-  assert.match(text, /checked 18 Sept\. Prices can change\./);
+  assert.match(text, /checked 18 Sept\./);
+  assert.equal(text.match(/can change/g).length, 1, 'one price caveat');
   assert.match(text, /Deals can change or sell out quickly\./);
   assert.ok(!/%|seat|miles|Alaska|Aeroplan|programme/i.test(text));
 });

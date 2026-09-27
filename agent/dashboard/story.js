@@ -1,8 +1,9 @@
 // The reading order for the evals pages. Data comes from /api/story, which
 // computes every number from the saved reports. This file only draws it.
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-const MODEL_NAMES = { 'openai/gpt-5.6-terra': 'Terra', 'openai/gpt-6-sol': 'Sol', 'anthropic/claude-sonnet-4.6': 'Sonnet 4.6', 'anthropic/claude-opus-5': 'Opus 5', 'anthropic/claude-opus-5.5': 'Opus 5.5' };
+const MODEL_NAMES = { 'openai/gpt-5.6-terra': 'Terra', 'openai/gpt-6-sol': 'Sol', 'anthropic/claude-sonnet-4.6': 'Sonnet 4.6', 'anthropic/claude-opus-5': 'Opus 5', 'anthropic/claude-opus-5.5': 'Opus 5.5', 'anthropic/claude-sonnet-5': 'Sonnet 5' };
 export const modelName = m => MODEL_NAMES[m] ?? String(m ?? '').split('/').pop();
+const FIELD_NAMES = { region: 'region', maxPriceUsd: 'budget', aside: 'stray note', cabin: 'cabin', origin: 'garbled origin', destination: 'garbled destination' };
 const OUTCOME = { pass: 'Passed', judge: 'Judge flagged wording', exact: 'Failed an exact check', missing: 'Not run' };
 const chip = (item, run, kind = '') => `<button class="case-chip ${kind}" data-run="${esc(run)}" data-case="${esc(item.id)}" title="${esc(item.name)}">${esc(item.id)}</button>`;
 
@@ -103,9 +104,11 @@ export function renderHeadToHead(el, story, index = story.headToHead.length - 1)
     const pair = pairs[i], runs = pair.runs;
     const best = key => Math.max(...runs.map(r => r[key]));
     const cheapest = Math.min(...runs.map(r => r.costPer1000TurnsUsd)), fastest = Math.min(...runs.map(r => r.medianCallMs));
+    const madeUpCount = r => r.madeUp.reduce((n, x) => n + x.fields.length, 0), fewestMadeUp = Math.min(...runs.map(madeUpCount));
     const card = r => `<article class="h2h-card"><h3>${esc(modelName(r.model))} <span class="quiet">${esc(r.effort ?? '')}</span></h3>
       <div class="h2h-metric"><small>Cases passed</small><b class="${r.passed === best('passed') ? 'lead' : ''}">${r.passed}<span class="quiet">/${r.cases}</span></b><span class="h2h-bar"><span class="pass" style="width:${r.passed / r.cases * 100}%"></span><span class="judge" style="width:${r.judgeOnly / r.cases * 100}%"></span><span class="exact" style="width:${r.exactFailed / r.cases * 100}%"></span></span></div>
       <div class="h2h-metric"><small>Exact checks passed</small><b class="${r.exact === best('exact') ? 'lead' : ''}">${r.exact}<span class="quiet">/${r.cases}</span></b></div>
+      <div class="h2h-metric"><small>Made-up values <span class="quiet">(caught by the app)</span></small><b class="${madeUpCount(r) === fewestMadeUp ? 'lead' : ''}">${madeUpCount(r) ? `${madeUpCount(r)}<span class="quiet"> in ${r.madeUp.length} case${r.madeUp.length === 1 ? '' : 's'}</span>` : 'None'}</b>${r.madeUp.length ? `<span class="h2h-madeup">${r.madeUp.map(x => `<a href="/evals?run=${encodeURIComponent(r.run)}&case=${encodeURIComponent(x.id)}" title="${esc(x.fields.join(', '))}">${esc(x.id)}: ${esc([...new Set(x.fields)].map(f => FIELD_NAMES[f] ?? f).join(', '))}</a>`).join('')}</span>` : ''}</div>
       <div class="h2h-metric"><small>Median model call</small><b class="${r.medianCallMs === fastest ? 'lead' : ''}">${secs(r.medianCallMs)}</b></div>
       <div class="h2h-metric"><small>Model cost per 1,000 traveler turns</small><b class="${r.costPer1000TurnsUsd === cheapest ? 'lead' : ''}">${money(r.costPer1000TurnsUsd)}</b></div>
       <a class="mini" href="/evals?run=${encodeURIComponent(r.run)}">Open every conversation →</a></article>`;
@@ -116,7 +119,7 @@ export function renderHeadToHead(el, story, index = story.headToHead.length - 1)
       ${pair.decision ? `<p class="h2h-decision"><b>Decision:</b> ${esc(pair.decision)}</p>` : ''}
       <h3 class="h2h-sub">Where they differ <span class="quiet">${pair.disagreements.length} of ${runs[0].cases} cases</span></h3>
       ${pair.disagreements.length ? `<div class="table-scroll"><table class="h2h-table"><thead><tr><th>Case</th>${runs.map(r => `<th>${esc(modelName(r.model))}</th>`).join('')}</tr></thead><tbody>${pair.disagreements.map(d => `<tr><td><b>${esc(d.id)}</b> ${esc(d.name)}</td>${runs.map(r => `<td><a class="outcome ${d.outcomes[r.run]}" href="/evals?run=${encodeURIComponent(r.run)}&case=${encodeURIComponent(d.id)}">${esc(OUTCOME[d.outcomes[r.run]])}</a></td>`).join('')}</tr>`).join('')}</tbody></table></div>` : '<p class="quiet">Both models got the same outcome on every case.</p>'}
-      <p class="quiet mini">One attempt per case, so a difference of one or two cases can be chance. Cost counts the candidate model only; the judge is the same for both.</p>`;
+      <p class="quiet mini">One attempt per case, so a difference of one or two cases can be chance. Cost counts the candidate model only; the judge is the same for both. Made-up values are things the model put in a search that the traveler never said, such as a region, a budget or a mangled city name. The app catches these and drops or repairs them, so a case can still pass, but they show how much the model invents. Resent dates are not counted.</p>`;
     el.querySelectorAll('[data-pair]').forEach(b => b.onclick = () => draw(Number(b.dataset.pair)));
   };
   draw(index);

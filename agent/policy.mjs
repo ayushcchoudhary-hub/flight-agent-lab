@@ -14,10 +14,21 @@ export const policyAnswerTool = { type: 'function', function: {
   } },
 } };
 export const supportReply = 'Please contact CommonSwyft support at support@commonswyft.com. They can help confirm the details.';
-const supportReplyFor=question=>/\b(?:terms?|legal)\b/i.test(question)
+// Every results reply already says prices are estimates that may change, so a
+// question about a price guarantee has an answer without policy evidence.
+// Held-out E8 (Claude Sonnet 5) sent it to the policy tool and got a bare
+// support redirect.
+const PRICE_GUARANTEE=/\b(?:price|fare|cost|rate)s?\b.{0,40}\b(?:guarantee\w*|locked?|fixed|held|hold|change|go up|stay)\b|\bguarantee\w*\b.{0,40}\b(?:price|fare|cost|rate)s?\b/i;
+const supportReplyFor=question=>PRICE_GUARANTEE.test(question)
+  ? 'No, prices shown here are estimates and aren’t guaranteed. They can change until you complete checkout on CommonSwyft.'
+  : /\b(?:terms?|legal)\b/i.test(question)
   ? 'For the legal terms that apply to a purchase, please contact CommonSwyft support at support@commonswyft.com.'
   : /\b(?:refund|refundable|fare rules?|ticket)\b/i.test(question)
-    ? 'Refund eligibility depends on the fare rules for the specific ticket. Please contact CommonSwyft support at support@commonswyft.com with the booking reference.'
+    // A traveler asking before booking has no booking reference to give.
+    // Held-out C2: "what is your refund policy?" was asked for one mid-search.
+    ? /\b(?:my|booked|booking|existing)\b/i.test(question)
+      ? 'Refund eligibility depends on the fare rules for the specific ticket. Please contact CommonSwyft support at support@commonswyft.com with the booking reference.'
+      : 'Refunds depend on the fare rules of the ticket you choose, and I don’t have CommonSwyft’s refund policy here. Please ask support at support@commonswyft.com before you book.'
     : /\b(?:privacy|personal data|data request|delete|deletion|analytics|share)\b/i.test(question)
       ? 'For help with a privacy or personal-data request, please contact CommonSwyft support at support@commonswyft.com.'
       : supportReply;

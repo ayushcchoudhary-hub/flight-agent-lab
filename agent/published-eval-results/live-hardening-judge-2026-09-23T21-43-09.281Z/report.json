@@ -1,0 +1,888 @@
+{
+  "runId": "live-hardening-judge-2026-09-23T21-43-09.281Z",
+  "evaluationKind": "llm-judge-hardening",
+  "suite": "v2",
+  "label": "Head-to-head · claude-sonnet-5 · opus-5.5 judge · c6bf7c0 (part 2: G9–G11 after the call cap ran out)",
+  "promptVersion": "flight-search-v1.6.0",
+  "judge": {
+    "model": "anthropic/claude-opus-5.5",
+    "effort": "medium",
+    "rubricVersion": "communication-quality-v1.2.0",
+    "criteria": [
+      "clarity",
+      "concision",
+      "tone",
+      "nextStep",
+      "limitationHonesty",
+      "noInternalLeakage"
+    ]
+  },
+  "clock": "2026-09-18",
+  "flightData": "synthetic",
+  "effort": "medium",
+  "models": [
+    "anthropic/claude-sonnet-5"
+  ],
+  "repeats": 1,
+  "cases": [
+    {
+      "id": "G9",
+      "category": "Discover",
+      "name": "Other wording for the same request",
+      "requirement": "\"Surprise me\" with a stated origin is a request for deals from Tokyo.",
+      "steps": [
+        {
+          "text": "surprise me, I’m flying out of Tokyo",
+          "expected": {
+            "status": "deals",
+            "posts": 0,
+            "pending": "deal",
+            "mentions": "deals from Tokyo"
+          }
+        }
+      ]
+    },
+    {
+      "id": "G10",
+      "category": "Discover",
+      "name": "First class only when asked",
+      "requirement": "Show first class deals from Dubai, and only first class.",
+      "steps": [
+        {
+          "text": "where can I go from Dubai in first class?",
+          "expected": {
+            "status": "deals",
+            "posts": 0,
+            "pending": "deal",
+            "mentions": "first class deals from Dubai"
+          }
+        }
+      ]
+    },
+    {
+      "id": "G11",
+      "category": "Discover",
+      "name": "A region narrows the deals",
+      "requirement": "Show only deals in Asia from London. Name only destinations the deals contain.",
+      "steps": [
+        {
+          "text": "take me anywhere in Asia from London",
+          "expected": {
+            "status": "deals",
+            "posts": 0,
+            "pending": "deal",
+            "mentions": "(?=.*in Asia from London)(?=.*Bangkok)"
+          }
+        }
+      ]
+    }
+  ],
+  "status": "complete",
+  "maxCostUsd": 0.6,
+  "maxCalls": 20,
+  "results": [
+    {
+      "caseId": "G9",
+      "name": "Other wording for the same request",
+      "category": "Discover",
+      "requirement": "\"Surprise me\" with a stated origin is a request for deals from Tokyo.",
+      "model": "anthropic/claude-sonnet-5",
+      "repeat": 1,
+      "pass": true,
+      "deterministicPass": true,
+      "communicationPass": true,
+      "steps": [
+        {
+          "input": "surprise me, I’m flying out of Tokyo",
+          "expected": {
+            "status": "deals",
+            "posts": 0,
+            "pending": "deal",
+            "mentions": "deals from Tokyo"
+          },
+          "result": {
+            "status": "deals",
+            "text": "SYNTHETIC FLIGHT DATA. These are example results.\n\nBest business class deals from Tokyo · checked 18 Sept.\n\n1. Charlotte, United States · Sat, 19 Sept 2026 · 1 stop via New York (JFK)\n   USD 1,290 · usually USD 10,805\n2. Bangkok, Thailand · Sun, 20 Sept 2026 · Nonstop\n   USD 1,480 · usually USD 6,200\n3. Cape Town, South Africa · Mon, 21 Sept 2026 · 1 stop via Doha (DOH)\n   USD 1,620 · usually USD 5,900\n4. Lisbon, Portugal · Tue, 22 Sept 2026 · Nonstop\n   USD 690 · usually USD 2,100\n5. Sydney, Australia · Wed, 23 Sept 2026 · 1 stop via Singapore (SIN)\n   USD 2,410 · usually USD 9,800\n\nDeals can change or sell out quickly.\n\nReply with a number to search that flight, or name a place.",
+            "deals": [
+              {
+                "origin": "HND",
+                "destination": "CLT",
+                "city": "Charlotte",
+                "date": "2026-09-19",
+                "cabin": "business",
+                "priceUsd": 1290
+              },
+              {
+                "origin": "HND",
+                "destination": "BKK",
+                "city": "Bangkok",
+                "date": "2026-09-20",
+                "cabin": "business",
+                "priceUsd": 1480
+              },
+              {
+                "origin": "HND",
+                "destination": "CPT",
+                "city": "Cape Town",
+                "date": "2026-09-21",
+                "cabin": "business",
+                "priceUsd": 1620
+              },
+              {
+                "origin": "HND",
+                "destination": "LIS",
+                "city": "Lisbon",
+                "date": "2026-09-22",
+                "cabin": "business",
+                "priceUsd": 690
+              },
+              {
+                "origin": "HND",
+                "destination": "SYD",
+                "city": "Sydney",
+                "date": "2026-09-23",
+                "cabin": "business",
+                "priceUsd": 2410
+              }
+            ],
+            "checkedAt": "2026-09-18",
+            "stale": false
+          },
+          "latencyMs": 2199,
+          "grade": {
+            "pass": true,
+            "actual": {
+              "status": "deals",
+              "origin": null,
+              "destination": null,
+              "cabin": "business",
+              "from": null,
+              "to": null,
+              "budget": null,
+              "pending": "deal",
+              "menuCount": 5,
+              "posts": 0,
+              "resultCount": 0,
+              "sort": "recommended",
+              "nonstopOnly": false,
+              "sources": [],
+              "savedPreferences": {}
+            },
+            "checks": [
+              {
+                "name": "status",
+                "expected": "deals",
+                "actual": "deals",
+                "pass": true
+              },
+              {
+                "name": "posts",
+                "expected": 0,
+                "actual": 0,
+                "pass": true
+              },
+              {
+                "name": "pending",
+                "expected": "deal",
+                "actual": "deal",
+                "pass": true
+              },
+              {
+                "name": "mentions",
+                "expected": "deals from Tokyo",
+                "actual": "SYNTHETIC FLIGHT DATA. These are example results.\n\nBest business class deals from Tokyo · checked 18 Sept.\n\n1. Charlotte, United States · Sat, 19 Sept 2026 · 1 stop via New York (JFK)\n   USD 1,290 · usually USD 10,805\n2. Bangkok, Thailand · Sun, 20 Sept 2026 · Nonstop\n   USD 1,480 · usually USD 6,200\n3. Cape Town, South Africa · Mon, 21 Sept 2026 · 1 stop via Doha (DOH)\n   USD 1,620 · usually USD 5,900\n4. Lisbon, Portugal · Tue, 22 Sept 2026 · Nonstop\n   USD 690 · usually USD 2,100\n5. Sydney, Australia · Wed, 23 Sept 2026 · 1 stop via Singapore (SIN)\n   USD 2,410 · usually USD 9,800\n\nDeals can change or sell out quickly.\n\nReply with a number to search that flight, or name a place.",
+                "pass": true
+              },
+              {
+                "name": "menu excludes opposite city",
+                "pass": true
+              },
+              {
+                "name": "Does not echo profanity or insult the user (limited lexical check)",
+                "pass": true
+              },
+              {
+                "name": "No claimed purchase completion",
+                "pass": true
+              }
+            ]
+          }
+        }
+      ],
+      "judge": {
+        "verdict": "pass",
+        "scores": {
+          "clarity": 5,
+          "concision": 5,
+          "tone": 5,
+          "nextStep": 5,
+          "limitationHonesty": 4,
+          "noInternalLeakage": 5
+        },
+        "rationale": "The reply correctly treats 'surprise me' with an origin as a request for deals from Tokyo. It states the cabin and check date, lists five dated options with stops and prices, notes that deals can change, and gives a clear way to continue. The only gaps are small: it does not say that times and carriers are absent, and it does not explain how 'best' was ranked.",
+        "strengths": [
+          "Keeps the Tokyo origin and presents the results as deals from Tokyo.",
+          "States that the search used business class, the documented default.",
+          "Shows each option's date, stops, deal price and usual price in a scannable list.",
+          "Gives a clear next step: reply with a number or name a place.",
+          "Notes briefly that deals can change or sell out."
+        ],
+        "issues": [
+          {
+            "severity": "minor",
+            "criterion": "limitationHonesty",
+            "evidence": "Options list no departure times or carriers, and the reply does not say these details are unavailable.",
+            "recommendation": "Add a short note that times and carriers will appear once the traveler opens a specific option."
+          },
+          {
+            "severity": "minor",
+            "criterion": "clarity",
+            "evidence": "The heading says 'Best business class deals', but the list is not in price order (Lisbon at USD 690 is fourth), and the ranking basis is not stated.",
+            "recommendation": "State the ranking basis, such as largest savings, or sort by price."
+          }
+        ],
+        "recommendedAction": "none"
+      },
+      "judgeAttempts": [
+        {
+          "verdict": "pass",
+          "scores": {
+            "clarity": 5,
+            "concision": 5,
+            "tone": 5,
+            "nextStep": 5,
+            "limitationHonesty": 4,
+            "noInternalLeakage": 5
+          },
+          "rationale": "The reply correctly treats 'surprise me' with an origin as a request for deals from Tokyo. It states the cabin and check date, lists five dated options with stops and prices, notes that deals can change, and gives a clear way to continue. The only gaps are small: it does not say that times and carriers are absent, and it does not explain how 'best' was ranked.",
+          "strengths": [
+            "Keeps the Tokyo origin and presents the results as deals from Tokyo.",
+            "States that the search used business class, the documented default.",
+            "Shows each option's date, stops, deal price and usual price in a scannable list.",
+            "Gives a clear next step: reply with a number or name a place.",
+            "Notes briefly that deals can change or sell out."
+          ],
+          "issues": [
+            {
+              "severity": "minor",
+              "criterion": "limitationHonesty",
+              "evidence": "Options list no departure times or carriers, and the reply does not say these details are unavailable.",
+              "recommendation": "Add a short note that times and carriers will appear once the traveler opens a specific option."
+            },
+            {
+              "severity": "minor",
+              "criterion": "clarity",
+              "evidence": "The heading says 'Best business class deals', but the list is not in price order (Lisbon at USD 690 is fourth), and the ranking basis is not stated.",
+              "recommendation": "State the ranking basis, such as largest savings, or sort by price."
+            }
+          ],
+          "recommendedAction": "none"
+        }
+      ],
+      "judgeConsensus": {
+        "passingVotes": 1,
+        "totalVotes": 1,
+        "verdicts": [
+          "pass"
+        ]
+      },
+      "events": [
+        {
+          "type": "model_usage",
+          "data": {
+            "model": "anthropic/claude-sonnet-5",
+            "provider": "Claude Platform on AWS",
+            "latencyMs": 2182,
+            "usage": {
+              "prompt_tokens": 5169,
+              "completion_tokens": 44,
+              "total_tokens": 5213,
+              "cost": 0.010778,
+              "is_byok": false,
+              "prompt_tokens_details": {
+                "cached_tokens": 0,
+                "cache_write_tokens": 0,
+                "audio_tokens": 0,
+                "video_tokens": 0
+              },
+              "cost_details": {
+                "upstream_inference_cost": 0.010778,
+                "upstream_inference_prompt_cost": 0.010338,
+                "upstream_inference_completions_cost": 0.00044
+              },
+              "completion_tokens_details": {
+                "reasoning_tokens": 0,
+                "image_tokens": 0,
+                "audio_tokens": 0
+              }
+            },
+            "cost": 0.010778
+          }
+        },
+        {
+          "type": "tool_call",
+          "data": {
+            "name": "discover_flights",
+            "arguments": {
+              "origin": "Tokyo"
+            }
+          }
+        },
+        {
+          "type": "judge_usage",
+          "data": {
+            "model": "anthropic/claude-opus-5.5",
+            "provider": "Claude Platform on AWS",
+            "latencyMs": 9651,
+            "usage": {
+              "prompt_tokens": 1818,
+              "completion_tokens": 774,
+              "total_tokens": 2592,
+              "cost": 0.022752,
+              "is_byok": false,
+              "prompt_tokens_details": {
+                "cached_tokens": 0,
+                "cache_write_tokens": 0,
+                "audio_tokens": 0,
+                "video_tokens": 0
+              },
+              "cost_details": {
+                "upstream_inference_cost": 0.022752,
+                "upstream_inference_prompt_cost": 0.007272,
+                "upstream_inference_completions_cost": 0.01548
+              },
+              "completion_tokens_details": {
+                "reasoning_tokens": 271,
+                "image_tokens": 0,
+                "audio_tokens": 0
+              }
+            },
+            "cost": 0.022752
+          }
+        }
+      ]
+    },
+    {
+      "caseId": "G10",
+      "name": "First class only when asked",
+      "category": "Discover",
+      "requirement": "Show first class deals from Dubai, and only first class.",
+      "model": "anthropic/claude-sonnet-5",
+      "repeat": 1,
+      "pass": true,
+      "deterministicPass": true,
+      "communicationPass": true,
+      "steps": [
+        {
+          "input": "where can I go from Dubai in first class?",
+          "expected": {
+            "status": "deals",
+            "posts": 0,
+            "pending": "deal",
+            "mentions": "first class deals from Dubai"
+          },
+          "result": {
+            "status": "deals",
+            "text": "SYNTHETIC FLIGHT DATA. These are example results.\n\nBest first class deals from Dubai · checked 18 Sept.\n\n1. Seoul, South Korea · Thu, 24 Sept 2026 · Nonstop\n   USD 1,350 · usually USD 5,400\n\nDeals can change or sell out quickly.\n\nReply with a number to search that flight, or name a place.",
+            "deals": [
+              {
+                "origin": "DXB",
+                "destination": "ICN",
+                "city": "Seoul",
+                "date": "2026-09-24",
+                "cabin": "first",
+                "priceUsd": 1350
+              }
+            ],
+            "checkedAt": "2026-09-18",
+            "stale": false
+          },
+          "latencyMs": 2425,
+          "grade": {
+            "pass": true,
+            "actual": {
+              "status": "deals",
+              "origin": null,
+              "destination": null,
+              "cabin": "business",
+              "from": null,
+              "to": null,
+              "budget": null,
+              "pending": "deal",
+              "menuCount": 1,
+              "posts": 0,
+              "resultCount": 0,
+              "sort": "recommended",
+              "nonstopOnly": false,
+              "sources": [],
+              "savedPreferences": {}
+            },
+            "checks": [
+              {
+                "name": "status",
+                "expected": "deals",
+                "actual": "deals",
+                "pass": true
+              },
+              {
+                "name": "posts",
+                "expected": 0,
+                "actual": 0,
+                "pass": true
+              },
+              {
+                "name": "pending",
+                "expected": "deal",
+                "actual": "deal",
+                "pass": true
+              },
+              {
+                "name": "mentions",
+                "expected": "first class deals from Dubai",
+                "actual": "SYNTHETIC FLIGHT DATA. These are example results.\n\nBest first class deals from Dubai · checked 18 Sept.\n\n1. Seoul, South Korea · Thu, 24 Sept 2026 · Nonstop\n   USD 1,350 · usually USD 5,400\n\nDeals can change or sell out quickly.\n\nReply with a number to search that flight, or name a place.",
+                "pass": true
+              },
+              {
+                "name": "menu excludes opposite city",
+                "pass": true
+              },
+              {
+                "name": "Does not echo profanity or insult the user (limited lexical check)",
+                "pass": true
+              },
+              {
+                "name": "No claimed purchase completion",
+                "pass": true
+              }
+            ]
+          }
+        }
+      ],
+      "judge": {
+        "verdict": "pass",
+        "scores": {
+          "clarity": 4,
+          "concision": 5,
+          "tone": 5,
+          "nextStep": 5,
+          "limitationHonesty": 4,
+          "noInternalLeakage": 5
+        },
+        "rationale": "The reply stays on the requested scope: first class from Dubai, with only a first class result shown. It states the search context and check date, gives a clear price comparison and adds a brief volatility caveat. It ends with a concrete next step. There are small gaps. The carrier and times are omitted without saying they are unavailable. The check date also lacks a year, while the flight date includes one.",
+        "strengths": [
+          "Keeps strictly to first class from Dubai, as requested.",
+          "States what was checked and when.",
+          "The price comparison is compact and easy to scan.",
+          "Gives an actionable next step: reply with a number or name a place.",
+          "No internal or implementation details are exposed."
+        ],
+        "issues": [
+          {
+            "severity": "minor",
+            "criterion": "limitationHonesty",
+            "evidence": "The deal lists no carrier or departure time, and the reply does not say these details are unavailable.",
+            "recommendation": "Briefly note when the carrier or times are not available, e.g. 'carrier and times not shown yet'."
+          },
+          {
+            "severity": "minor",
+            "criterion": "clarity",
+            "evidence": "'checked 18 Sept' has no year, while the flight shows 'Thu, 24 Sept 2026'.",
+            "recommendation": "Show the check date in the same format as the flight date so the timeline is unambiguous."
+          }
+        ],
+        "recommendedAction": "none"
+      },
+      "judgeAttempts": [
+        {
+          "verdict": "pass",
+          "scores": {
+            "clarity": 4,
+            "concision": 5,
+            "tone": 5,
+            "nextStep": 5,
+            "limitationHonesty": 4,
+            "noInternalLeakage": 5
+          },
+          "rationale": "The reply stays on the requested scope: first class from Dubai, with only a first class result shown. It states the search context and check date, gives a clear price comparison and adds a brief volatility caveat. It ends with a concrete next step. There are small gaps. The carrier and times are omitted without saying they are unavailable. The check date also lacks a year, while the flight date includes one.",
+          "strengths": [
+            "Keeps strictly to first class from Dubai, as requested.",
+            "States what was checked and when.",
+            "The price comparison is compact and easy to scan.",
+            "Gives an actionable next step: reply with a number or name a place.",
+            "No internal or implementation details are exposed."
+          ],
+          "issues": [
+            {
+              "severity": "minor",
+              "criterion": "limitationHonesty",
+              "evidence": "The deal lists no carrier or departure time, and the reply does not say these details are unavailable.",
+              "recommendation": "Briefly note when the carrier or times are not available, e.g. 'carrier and times not shown yet'."
+            },
+            {
+              "severity": "minor",
+              "criterion": "clarity",
+              "evidence": "'checked 18 Sept' has no year, while the flight shows 'Thu, 24 Sept 2026'.",
+              "recommendation": "Show the check date in the same format as the flight date so the timeline is unambiguous."
+            }
+          ],
+          "recommendedAction": "none"
+        }
+      ],
+      "judgeConsensus": {
+        "passingVotes": 1,
+        "totalVotes": 1,
+        "verdicts": [
+          "pass"
+        ]
+      },
+      "events": [
+        {
+          "type": "model_usage",
+          "data": {
+            "model": "anthropic/claude-sonnet-5",
+            "provider": "Claude Platform on AWS",
+            "latencyMs": 2422,
+            "usage": {
+              "prompt_tokens": 5165,
+              "completion_tokens": 66,
+              "total_tokens": 5231,
+              "cost": 0.01099,
+              "is_byok": false,
+              "prompt_tokens_details": {
+                "cached_tokens": 0,
+                "cache_write_tokens": 0,
+                "audio_tokens": 0,
+                "video_tokens": 0
+              },
+              "cost_details": {
+                "upstream_inference_cost": 0.01099,
+                "upstream_inference_prompt_cost": 0.01033,
+                "upstream_inference_completions_cost": 0.00066
+              },
+              "completion_tokens_details": {
+                "reasoning_tokens": 0,
+                "image_tokens": 0,
+                "audio_tokens": 0
+              }
+            },
+            "cost": 0.01099
+          }
+        },
+        {
+          "type": "tool_call",
+          "data": {
+            "name": "discover_flights",
+            "arguments": {
+              "origin": "Dubai",
+              "cabin": "first"
+            }
+          }
+        },
+        {
+          "type": "judge_usage",
+          "data": {
+            "model": "anthropic/claude-opus-5.5",
+            "provider": "Claude Platform on AWS",
+            "latencyMs": 8584,
+            "usage": {
+              "prompt_tokens": 1564,
+              "completion_tokens": 714,
+              "total_tokens": 2278,
+              "cost": 0.020536,
+              "is_byok": false,
+              "prompt_tokens_details": {
+                "cached_tokens": 0,
+                "cache_write_tokens": 0,
+                "audio_tokens": 0,
+                "video_tokens": 0
+              },
+              "cost_details": {
+                "upstream_inference_cost": 0.020536,
+                "upstream_inference_prompt_cost": 0.006256,
+                "upstream_inference_completions_cost": 0.01428
+              },
+              "completion_tokens_details": {
+                "reasoning_tokens": 228,
+                "image_tokens": 0,
+                "audio_tokens": 0
+              }
+            },
+            "cost": 0.020536
+          }
+        }
+      ]
+    },
+    {
+      "caseId": "G11",
+      "name": "A region narrows the deals",
+      "category": "Discover",
+      "requirement": "Show only deals in Asia from London. Name only destinations the deals contain.",
+      "model": "anthropic/claude-sonnet-5",
+      "repeat": 1,
+      "pass": true,
+      "deterministicPass": true,
+      "communicationPass": true,
+      "steps": [
+        {
+          "input": "take me anywhere in Asia from London",
+          "expected": {
+            "status": "deals",
+            "posts": 0,
+            "pending": "deal",
+            "mentions": "(?=.*in Asia from London)(?=.*Bangkok)"
+          },
+          "result": {
+            "status": "deals",
+            "text": "SYNTHETIC FLIGHT DATA. These are example results.\n\nBest business class deals in Asia from London · checked 18 Sept.\n\n1. Bangkok, Thailand · Sun, 20 Sept 2026 · Nonstop\n   USD 1,480 · usually USD 6,200\n\nDeals can change or sell out quickly.\n\nReply with a number to search that flight, or name a place.",
+            "deals": [
+              {
+                "origin": "LHR",
+                "destination": "BKK",
+                "city": "Bangkok",
+                "date": "2026-09-20",
+                "cabin": "business",
+                "priceUsd": 1480
+              }
+            ],
+            "checkedAt": "2026-09-18",
+            "stale": false
+          },
+          "latencyMs": 2287,
+          "grade": {
+            "pass": true,
+            "actual": {
+              "status": "deals",
+              "origin": null,
+              "destination": null,
+              "cabin": "business",
+              "from": null,
+              "to": null,
+              "budget": null,
+              "pending": "deal",
+              "menuCount": 1,
+              "posts": 0,
+              "resultCount": 0,
+              "sort": "recommended",
+              "nonstopOnly": false,
+              "sources": [],
+              "savedPreferences": {}
+            },
+            "checks": [
+              {
+                "name": "status",
+                "expected": "deals",
+                "actual": "deals",
+                "pass": true
+              },
+              {
+                "name": "posts",
+                "expected": 0,
+                "actual": 0,
+                "pass": true
+              },
+              {
+                "name": "pending",
+                "expected": "deal",
+                "actual": "deal",
+                "pass": true
+              },
+              {
+                "name": "mentions",
+                "expected": "(?=.*in Asia from London)(?=.*Bangkok)",
+                "actual": "SYNTHETIC FLIGHT DATA. These are example results.\n\nBest business class deals in Asia from London · checked 18 Sept.\n\n1. Bangkok, Thailand · Sun, 20 Sept 2026 · Nonstop\n   USD 1,480 · usually USD 6,200\n\nDeals can change or sell out quickly.\n\nReply with a number to search that flight, or name a place.",
+                "pass": true
+              },
+              {
+                "name": "menu excludes opposite city",
+                "pass": true
+              },
+              {
+                "name": "Does not echo profanity or insult the user (limited lexical check)",
+                "pass": true
+              },
+              {
+                "name": "No claimed purchase completion",
+                "pass": true
+              }
+            ]
+          }
+        }
+      ],
+      "judge": {
+        "verdict": "pass",
+        "scores": {
+          "clarity": 5,
+          "concision": 5,
+          "tone": 5,
+          "nextStep": 5,
+          "limitationHonesty": 4,
+          "noInternalLeakage": 5
+        },
+        "rationale": "The reply states the search scope (business class deals in Asia from London) and when it was checked. It lists one deal, Bangkok, and names no other destinations, which meets the requirement. It notes that deals can change and offers a clear next step. The only gap is that it lists no carrier or times and does not say these are unavailable.",
+        "strengths": [
+          "Names only Bangkok, the single destination the deals contain, and stays within Asia from London.",
+          "States the searched cabin and the check date, so the scope is clear.",
+          "Brief and scannable, with a clear price comparison against the usual fare.",
+          "Gives an actionable next step: reply with a number or name a place."
+        ],
+        "issues": [
+          {
+            "severity": "minor",
+            "criterion": "limitationHonesty",
+            "evidence": "The deal shows date, stops and price but no carrier or times, and the reply does not say these details are unavailable.",
+            "recommendation": "When carrier or times are missing, add a short note such as 'carrier and times not yet available'."
+          },
+          {
+            "severity": "minor",
+            "criterion": "clarity",
+            "evidence": "The plural heading 'Best business class deals' sits above a single result.",
+            "recommendation": "Adjust the wording when only one deal is found, for example 'Best business class deal found'."
+          }
+        ],
+        "recommendedAction": "none"
+      },
+      "judgeAttempts": [
+        {
+          "verdict": "pass",
+          "scores": {
+            "clarity": 5,
+            "concision": 5,
+            "tone": 5,
+            "nextStep": 5,
+            "limitationHonesty": 4,
+            "noInternalLeakage": 5
+          },
+          "rationale": "The reply states the search scope (business class deals in Asia from London) and when it was checked. It lists one deal, Bangkok, and names no other destinations, which meets the requirement. It notes that deals can change and offers a clear next step. The only gap is that it lists no carrier or times and does not say these are unavailable.",
+          "strengths": [
+            "Names only Bangkok, the single destination the deals contain, and stays within Asia from London.",
+            "States the searched cabin and the check date, so the scope is clear.",
+            "Brief and scannable, with a clear price comparison against the usual fare.",
+            "Gives an actionable next step: reply with a number or name a place."
+          ],
+          "issues": [
+            {
+              "severity": "minor",
+              "criterion": "limitationHonesty",
+              "evidence": "The deal shows date, stops and price but no carrier or times, and the reply does not say these details are unavailable.",
+              "recommendation": "When carrier or times are missing, add a short note such as 'carrier and times not yet available'."
+            },
+            {
+              "severity": "minor",
+              "criterion": "clarity",
+              "evidence": "The plural heading 'Best business class deals' sits above a single result.",
+              "recommendation": "Adjust the wording when only one deal is found, for example 'Best business class deal found'."
+            }
+          ],
+          "recommendedAction": "none"
+        }
+      ],
+      "judgeConsensus": {
+        "passingVotes": 1,
+        "totalVotes": 1,
+        "verdicts": [
+          "pass"
+        ]
+      },
+      "events": [
+        {
+          "type": "model_usage",
+          "data": {
+            "model": "anthropic/claude-sonnet-5",
+            "provider": "Claude Platform on AWS",
+            "latencyMs": 2275,
+            "usage": {
+              "prompt_tokens": 5164,
+              "completion_tokens": 63,
+              "total_tokens": 5227,
+              "cost": 0.010958,
+              "is_byok": false,
+              "prompt_tokens_details": {
+                "cached_tokens": 0,
+                "cache_write_tokens": 0,
+                "audio_tokens": 0,
+                "video_tokens": 0
+              },
+              "cost_details": {
+                "upstream_inference_cost": 0.010958,
+                "upstream_inference_prompt_cost": 0.010328,
+                "upstream_inference_completions_cost": 0.00063
+              },
+              "completion_tokens_details": {
+                "reasoning_tokens": 0,
+                "image_tokens": 0,
+                "audio_tokens": 0
+              }
+            },
+            "cost": 0.010958
+          }
+        },
+        {
+          "type": "tool_call",
+          "data": {
+            "name": "discover_flights",
+            "arguments": {
+              "origin": "London",
+              "region": "Asia"
+            }
+          }
+        },
+        {
+          "type": "judge_usage",
+          "data": {
+            "model": "anthropic/claude-opus-5.5",
+            "provider": "Claude Platform on AWS",
+            "latencyMs": 9093,
+            "usage": {
+              "prompt_tokens": 1572,
+              "completion_tokens": 681,
+              "total_tokens": 2253,
+              "cost": 0.019908,
+              "is_byok": false,
+              "prompt_tokens_details": {
+                "cached_tokens": 0,
+                "cache_write_tokens": 0,
+                "audio_tokens": 0,
+                "video_tokens": 0
+              },
+              "cost_details": {
+                "upstream_inference_cost": 0.019908,
+                "upstream_inference_prompt_cost": 0.006288,
+                "upstream_inference_completions_cost": 0.01362
+              },
+              "completion_tokens_details": {
+                "reasoning_tokens": 212,
+                "image_tokens": 0,
+                "audio_tokens": 0
+              }
+            },
+            "cost": 0.019908
+          }
+        }
+      ]
+    }
+  ],
+  "limitations": [
+    "Held-out v2 cases were frozen before this first run. Known place-handling gaps were not fixed first.",
+    "One attempt per case does not establish reliability.",
+    "The judge reviews communication quality and can be wrong. Deterministic checks remain authoritative for facts and actions.",
+    "The judge receives blinded candidate output and no private reasoning.",
+    "The synthetic-inventory banner is retained in the report but removed from judge input because production does not show it.",
+    "Synthetic inventory is used. No booking, payment or live flight search occurs."
+  ],
+  "completedAt": "2026-09-23T21:43:43.529Z",
+  "modelCallsAttempted": 6,
+  "actualCostUsd": 0.095922,
+  "conservativeReservedUsd": 0.151484,
+  "summary": [
+    {
+      "model": "anthropic/claude-sonnet-5",
+      "passed": 3,
+      "total": 3,
+      "deterministicPassed": 3,
+      "judgePassed": 3,
+      "modelCalls": 3,
+      "judgeCalls": 3,
+      "cost": 0.095922
+    }
+  ]
+}

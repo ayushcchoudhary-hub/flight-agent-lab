@@ -3,6 +3,7 @@
 // reply. The model only decides that the traveler wants ideas; it never names
 // a destination, and every city shown here comes from the feed itself.
 import { readableDate } from './flight-details.mjs';
+import { AIRPORTS, METRO_GROUPS } from './shared.mjs';
 
 export const EVERYWHERE = 'Everywhere';
 export const DEALS_SHOWN = 5;
@@ -60,6 +61,26 @@ export function departureCity(place, { airportByCode, metroGroups }) {
   return airport ? airport.city.split(/[(,]/)[0].trim() : null;
 }
 
+// What counts as a region to narrow deals by: a world region, a country or a
+// city. Held-out G6 and G8 (GPT-6 Sol) sent "warm" and "anywhere" as regions,
+// and the reply said it had no deals "in warm". The place resolver is fuzzy
+// ("warm" finds Haugesund), so it cannot decide this; a fixed vocabulary can.
+const squash = value => String(value ?? '').toLowerCase().normalize('NFD').replace(/[^a-z]/g, '');
+const WORLD_REGIONS = ['Africa', 'Asia', 'Europe', 'North America', 'South America', 'Central America', 'Latin America', 'Americas', 'Oceania', 'Australasia', 'Pacific', 'Middle East', 'Caribbean', 'Scandinavia', 'Nordics', 'Mediterranean', 'Balkans', 'Indian Ocean', 'Gulf',
+  ...['Northern', 'Southern', 'Eastern', 'Western', 'Central'].flatMap(side => [`${side} Europe`, `${side} Africa`]),
+  ...['South-East', 'Southeast', 'East', 'South', 'Central', 'West'].map(side => `${side} Asia`)];
+let placeNames = null;
+function knownPlaces() {
+  if (placeNames) return placeNames;
+  placeNames = new Set(WORLD_REGIONS.map(squash));
+  for (const a of 'ABCDEFGHIJKLMNOPQRSTUVWXYZ') for (const b of 'ABCDEFGHIJKLMNOPQRSTUVWXYZ') { const name = countryName(a + b); if (name && name !== a + b) placeNames.add(squash(name)); }
+  for (const airport of AIRPORTS) { placeNames.add(squash(airport.city.split(/[(,]/)[0])); placeNames.add(squash(airport.country)); }
+  for (const group of METRO_GROUPS) placeNames.add(squash(group.city));
+  placeNames.delete('');
+  return placeNames;
+}
+export const namesRegion = region => knownPlaces().has(squash(String(region).replace(/^the\s+/i, '')));
+
 const matchesRegion = (deal, region) => {
   if (!region) return true;
   const want = region.toLowerCase().trim();
@@ -91,7 +112,9 @@ export function renderDeals({ feed, deals, cabin = 'business', originCity = null
   const cabinName = CABIN_NAMES[cabin];
   const where = originCity ? `from ${originCity}` : 'across our departure cities';
   const inRegion = region ? ` in ${clean(region, 40)}` : '';
-  const heading = `Best ${cabinName} deals${inRegion} ${where} · checked ${shortDate(feed.generatedAt)}. Prices can change.`;
+  // One price caveat per reply: the footnote. Held-out G6-G8 judges flagged
+  // "Prices can change" and "Deals can change or sell out quickly" together.
+  const heading = `Best ${cabinName} deals${inRegion} ${where} · checked ${shortDate(feed.generatedAt)}.`;
   return [
     notice, disclosure, heading,
     deals.map((deal, i) => dealLines(deal, i, { showOrigin: !originCity })).join('\n'),
