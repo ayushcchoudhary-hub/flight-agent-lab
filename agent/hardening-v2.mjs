@@ -29,6 +29,7 @@ export function gradeV2Step(expected,result,conversation,adapter,savedPreference
 // disclosed default, unless a saved home airport exists. Nothing else carries.
 export function rememberFromStep(memory,result,conversation){
  const state=conversation.publicState();
+ if(result?.savedPreferences?.homeAirport===null)delete memory.lastOrigin;
  if(result?.status==='results'&&state.origin?.code&&!state.originFromPreference)memory.lastOrigin=state.origin.code;
 }
 export function applyMemory(memory,conversation,savedPreferences={}){

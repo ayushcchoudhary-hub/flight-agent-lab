@@ -25,6 +25,8 @@ try {
   await store.rememberLastOrigin(a, 'LHR|LGW|LCY|STN|LTN');
   assert.equal((await store.memory(a)).lastOrigin, 'LHR|LGW|LCY|STN|LTN'); console.log('✓ last origin remembered');
   assert.equal((await store.memory(b)).lastOrigin, null); console.log('✓ other visitor has no memory');
+  await store.rememberHome(a, 'LHR'); await store.forgetOrigins(a);
+  assert.deepEqual(await store.memory(a), { homeOrigin: null, lastOrigin: null }); console.log('✓ forgetting clears home and last origin');
   await assert.rejects(store.rememberLastOrigin(a, "LHR'; DROP TABLE messages; --"), /Invalid origin code/); console.log('✓ malformed origin rejected before SQL');
   await assert.rejects(store.conversationsFor("x' OR '1'='1"), /Invalid visitor id/); console.log('✓ malformed visitor id rejected before SQL');
   await cleanup.query("UPDATE conversations SET retain_until = now() - interval '1 day' WHERE id = $1", [cb]);

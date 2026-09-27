@@ -99,8 +99,10 @@ export function createChatService({modelFactory=defaultModelFactory,capturesLoad
    // A home airport stated in this turn is kept where this deployment keeps it.
    if(result.savedPreferences&&'homeAirport' in result.savedPreferences){
     const home=result.savedPreferences.homeAirport;
-    if(homeAirportScope==='store'){const current=await preferenceStore.read();const next={...current};if(home===null)delete next.homeAirport;else next.homeAirport=home;await preferenceStore.replace(next);}
-    else if(s.store)queue(s,'home',()=>s.store.api.rememberHome(s.store.visitorId,home));
+    // Forgetting clears the last searched origin too. Otherwise the next
+    // conversation offers "from your last search", often the same airport.
+    if(homeAirportScope==='store'){const current=await preferenceStore.read();const next={...current};if(home===null)delete next.homeAirport;else next.homeAirport=home;await preferenceStore.replace(next);if(home===null&&s.store)queue(s,'forget',()=>s.store.api.forgetOrigins(s.store.visitorId));}
+    else if(s.store)queue(s,'home',()=>home===null?s.store.api.forgetOrigins(s.store.visitorId):s.store.api.rememberHome(s.store.visitorId,home));
     else if(home)result.text=result.text.replace(/^Saved (.+?) as your home airport\. I’ll use it when you don’t say where you’re flying from\./,'I’ll use $1 as your home airport in this conversation. It isn’t kept between conversations yet.');
    }
    if(s.store){

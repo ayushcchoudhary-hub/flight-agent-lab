@@ -78,6 +78,13 @@ export function createPostgresStore({ url, retentionDays = 90, poolSize = 3 }) {
       checkVisitor(visitorId); checkOrigin(code);
       await pool.query('INSERT INTO visitor_memory (visitor_id, last_origin) VALUES ($1, $2) ON CONFLICT (visitor_id) DO UPDATE SET last_origin = EXCLUDED.last_origin, updated_at = now()', [visitorId, code]);
     },
+    // "Forget where I fly from": both origins go, so the next conversation
+    // does not fall back to the last search. Stored transcripts are separate
+    // and still expire on their own schedule.
+    async forgetOrigins(visitorId) {
+      checkVisitor(visitorId);
+      await pool.query('UPDATE visitor_memory SET home_origin = NULL, last_origin = NULL, updated_at = now() WHERE visitor_id = $1', [visitorId]);
+    },
     // A visitor's own conversations, newest first. The visitor filter is the
     // access rule: nothing here can return another visitor's rows.
     async conversationsFor(visitorId, limit = 20) {
@@ -115,6 +122,7 @@ export function createMemoryStore({ retentionDays = 90, now = () => Date.now() }
     async memory(visitorId) { checkVisitor(visitorId); return { homeOrigin: homes.get(visitorId) ?? null, lastOrigin: memory.get(visitorId) ?? null }; },
     async rememberHome(visitorId, code) { checkVisitor(visitorId); if (code !== null) checkOrigin(code); if (code === null) homes.delete(visitorId); else homes.set(visitorId, code); },
     async rememberLastOrigin(visitorId, code) { checkVisitor(visitorId); checkOrigin(code); memory.set(visitorId, code); },
+    async forgetOrigins(visitorId) { checkVisitor(visitorId); homes.delete(visitorId); memory.delete(visitorId); },
     async conversationsFor(visitorId, limit = 20) {
       checkVisitor(visitorId);
       return [...conversations.values()].filter(c => c.visitorId === visitorId).sort((a, b) => b.startedAt - a.startedAt).slice(0, limit)

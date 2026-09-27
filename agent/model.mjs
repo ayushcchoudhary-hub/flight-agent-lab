@@ -387,7 +387,7 @@ export class Agent {
           result = preferenceAction(args,this.preferences);
           const home = result.savedPreferences?.homeAirport;
           if (home) { this.preferences = { ...this.preferences, homeAirport: home }; this.conversation.useHome(home); }
-          else if (home === null) { const { homeAirport, ...rest } = this.preferences; this.preferences = rest; }
+          else if (home === null) { const { homeAirport, ...rest } = this.preferences; this.preferences = rest; this.conversation.forgetDefaultOrigin(); }
         }
         else if (call.function.name === 'lookup_policy') {
           try { result = await answerPolicy({model:this.model,query:args,question:text,history:this.turns.flat().filter(m=>m.role==='user'||m.role==='assistant').map(m=>({role:m.role,content:m.content})),trace:this.trace}); }

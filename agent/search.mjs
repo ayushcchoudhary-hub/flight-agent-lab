@@ -377,6 +377,13 @@ export class SearchConversation {
     this.state.origin = place; this.state.originFromPreference = true; this.state.originDefault = 'last';
     return true;
   }
+  // After "forget my home airport", an origin that came from memory would
+  // still be disclosed as saved. Drop it; an origin the traveler stated stays.
+  forgetDefaultOrigin() {
+    if (!this.state.originFromPreference) return false;
+    this.state.origin = null; this.state.originFromPreference = false; this.state.originDefault = null;
+    return true;
+  }
   // Make the welcome's deals answerable by number in the conversation that
   // follows, when no other menu is open.
   offerDeals(choices) { if (!this.state.pending && Array.isArray(choices) && choices.length) this.state.pending = { field: 'deal', choices }; }
