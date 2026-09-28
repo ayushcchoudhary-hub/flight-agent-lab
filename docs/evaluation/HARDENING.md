@@ -1,5 +1,9 @@
 # Terra hardening with an independent LLM judge
 
+This record covers 20 September 2026: the 42-case development hardening set
+and the first held-out v2 baseline. Later held-out runs, the judge moving to
+Opus 5.5 and the model head-to-head are in the [evaluation timeline](README.md).
+
 This phase asked a different question from model comparison: does the selected
 Terra baseline handle a broader set of traveler language and boundaries well
 enough to remain the default?
@@ -26,7 +30,7 @@ The judge returns a short structured audit rather than chain of thought.
 
 | Run | Prompt | Cases | Overall | Exact | Judge | Cost |
 |---|---|---:|---:|---:|---:|---:|
-| Frozen baseline | v1.4.0 | 42 | 30/42 | 39/42 | 30/42 | $0.3761 |
+| Frozen baseline | v1.3.0 | 42 | 30/42 | 39/42 | 30/42 | $0.3761 |
 | Targeted correction | v1.4.0 | 12 | 7/12 | 10/12 | 7/12 | $0.1087 |
 | Policy correction | v1.4.1 | 5 | 2/5 | 4/5 | 2/5 | $0.0683 |
 | Final policy verification | v1.4.1 | 3 | 3/3 | 3/3 | 3/3 | $0.0308 |

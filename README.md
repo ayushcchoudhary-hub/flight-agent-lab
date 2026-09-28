@@ -1,51 +1,53 @@
 # Flight Agent Lab
 
-A bounded conversational layer over an existing flight-search API. The project
-turns natural-language requests into validated search actions, preserves trip
-state across follow-ups, grounds policy answers in approved material and renders
-concise flight results. It never books or takes payment.
+[![test](https://github.com/ayushcchoudhary-hub/flight-agent-lab/actions/workflows/test.yml/badge.svg)](https://github.com/ayushcchoudhary-hub/flight-agent-lab/actions/workflows/test.yml)
 
-The live demonstration is deployed as a password-gated Cloud Run service.
-The repository is intentionally limited to the independent agent layer. It does
-not contain or require the underlying product codebase.
+A bounded conversational layer over an existing flight-search API. It turns
+natural-language requests into validated search actions, keeps trip details
+across follow-ups, answers policy questions from reviewed material and renders
+concise flight results. It never books or takes payment. Checkout happens on
+the product's own website.
+
+The live demo is a password-protected Cloud Run service. This repository holds
+only the independent agent layer. It does not contain or need the underlying
+product's code.
 
 ![The agent handling a partial request: it asks one question, then runs a validated search](docs/images/agent-chat.png)
 
-A partial request, one clarifying question, then a validated search. The panel on
-the right is the trip state the application owns. The model proposes one action;
-application code holds origin, destination, cabin and dates, and times each stage.
+A partial request, one clarifying question, then a validated search. The panel
+on the right is the trip state the application owns. The model proposes one
+action. Application code holds origin, destination, cabin and dates, and times
+each stage.
 
 ## Project context and authorship
 
-I help with CommonSwyft as a side project. The existing product offers web-based
-flight search, and I wanted to explore another way for travelers to access that
-capability: a conversational agent that could eventually work through web chat,
-WhatsApp or another messaging surface. I used the existing search API boundary
-and extended the agent-facing layer around it rather than rebuilding or
-publishing the underlying product.
+I help with CommonSwyft, a flight-search product, as a side project. The
+product offers web-based flight search. I wanted to explore another way for
+travelers to reach it: a conversational agent that could work through web
+chat, WhatsApp or another messaging channel. I built on the existing search
+API and wrote the agent layer around it, rather than rebuilding or publishing
+the product.
 
 This is a product-led project. I am not a software engineer. I framed the
-problem, read *Building AI Agents: From Design Patterns to Production*, and used
-Codex to design, implement, test and document the prototype. A later independent
-code review, and the held-out repair tests that came from it, used Claude.
+problem, read *Building AI Agents: From Design Patterns to Production*, and
+directed AI coding agents to design, implement, test and document the
+prototype: Codex for the first version, then Claude Code for the evaluation,
+hardening and memory work. Commit trailers record which agent co-authored each
+change.
 
 My part was the product decisions: what the agent should do, what stays out of
 scope, which failures matter, how the conversation should feel, what evidence
 supports a model choice, and where the security and human approval boundaries
-belong. I reviewed behavior through the live demo and the evaluation dashboard,
-challenged incorrect outputs and iterated on the architecture with Codex.
+belong. I reviewed behavior through the live demo and the evaluation pages,
+challenged wrong outputs and made the calls on each change.
 
-The work was a focused two-day sprint in September 2026. The commit history is
-the record of what was tried, what failed and what changed. Failed evaluation
-runs are preserved rather than rewritten. The code is published for reading and
-assessment rather than reuse; see [LICENSE](LICENSE).
+The work began over a few days in September 2026 and continues as a side
+project. The commit history records what was tried, what failed and what
+changed. Failed evaluation runs stay published rather than being rewritten.
+The code is published to be read and assessed, not reused. See
+[LICENSE](LICENSE).
 
-The [learning guide](docs/LEARNING-GUIDE.md) is a plain-language walkthrough of every
-major component and tradeoff. The [project handoff](HANDOFF.md) records the
-current state, access boundaries and next decision for another person or coding
-agent.
-
-## What the system does
+## What it does
 
 ```mermaid
 flowchart LR
@@ -60,105 +62,96 @@ flowchart LR
 ```
 
 - Interprets complete and partial one-way flight requests
-- Applies explicit defaults and asks only for information that is required
-- Preserves origin, destination, date, cabin, budget and constraints on follow-up
-- Retrieves cited privacy and terms passages for general policy questions
-- Proposes explicit travel-preference updates without silently saving them
-- Validates every tool action and every backend response
-- Records prompt version, model, effort, latency and tokens in evaluation reports
-
-## Current product contract
-
-Supported behavior is frozen in [FROZEN-SCOPE.md](agent/FROZEN-SCOPE.md). The
-current prompt is `flight-search-v1.4.1`, described in
-[PROMPT-ARCHITECTURE.md](docs/PROMPT-ARCHITECTURE.md).
-
-The assistant is a calm, concise and knowledgeable flight-search concierge. It
-asks only necessary questions, preserves supplied details, states limitations
-plainly and always offers the next useful step. Customer copy uses short direct
-sentences and avoids em dashes and semicolons.
+- Applies stated defaults and asks only for what is required
+- Keeps origin, destination, dates, cabin, budget and filters across follow-ups
+- "Take me anywhere": shows deals from the product's public deals feed, then
+  turns a chosen deal into a normal live search
+- Links every set of results to the same search on the product site, where the
+  traveler selects and checks out
+- Answers privacy and terms questions from a reviewed snapshot with cited
+  passages. A weekly check reports when the live pages change
+- Remembers a stated home airport and recent searches per browser, and forgets
+  them on request. This is built but switched off on the live demo until the
+  privacy page covers it. See [docs/MEMORY.md](docs/MEMORY.md)
+- Validates every tool action and every backend response before display
+- Records prompt version, model, effort, latency and tokens for every
+  evaluation run
 
 ## Architecture
 
-The model is an intent interpreter, not the application. It proposes exactly
-one action from a four-tool allowlist:
+The model interprets intent. It is not the application. On each turn it
+proposes exactly one action from a five-tool allowlist:
 
 | Tool | Purpose |
 |---|---|
 | `find_flights` | Search or refine a trip |
-| `lookup_policy` | Retrieve evidence for a policy answer |
-| `travel_preferences` | Show or propose explicit saved defaults |
-| `clarify_request` | Ask one question or explain a boundary |
+| `discover_flights` | Show deals when the traveler has no destination ("take me anywhere") |
+| `lookup_policy` | Retrieve evidence for a privacy or terms answer |
+| `travel_preferences` | Show, propose or forget saved defaults and recent searches |
+| `clarify_request` | Ask one question or explain a limitation |
 
 Application code owns credentials, state, API calls, response validation,
-formatting and call limits. See [ARCHITECTURE-DECISIONS.md](docs/ARCHITECTURE-DECISIONS.md).
+formatting and call limits. The model cannot choose a URL, see a credential,
+book a flight or create a payment. See
+[docs/ARCHITECTURE-DECISIONS.md](docs/ARCHITECTURE-DECISIONS.md) and
+[docs/PROMPT-ARCHITECTURE.md](docs/PROMPT-ARCHITECTURE.md).
 
-The default model is Terra (OpenAI `gpt-5.6-terra`) at medium reasoning effort.
-All current model calls use one OpenRouter adapter, including Terra. This keeps
-the deployed chat, local live runs and new model evaluations on the same
-observable serving path. The earlier Codex SDK reports remain published as
-historical evidence and are labelled as a different path. The executable Codex
-SDK dependency has been removed.
+The default model is Claude Sonnet 5 at medium reasoning effort, since 27
+September 2026. Terra medium, DeepSeek V4.1 Flash low and GLM 5.3 high remain
+selectable in the live demo for comparison. All model calls go through one
+OpenRouter adapter. The current prompt contract is `flight-search-v1.7.0`.
+Supported behavior is defined in [agent/FROZEN-SCOPE.md](agent/FROZEN-SCOPE.md).
 
-## Evidence
+## Evaluation
 
-- **106 of 106 deterministic checks pass** across routing, state, policy
-  retrieval, preferences, output grounding, security and adapter behavior.
-  Run them with `pnpm test`; no API key is needed.
-- **Model comparison.** A bounded OpenRouter screen compared Terra medium with
-  open-weight models: DeepSeek V4.1 Flash, Mistral Small, Qwen 3.6 and GLM 5.3.
-  Three-repeat validation then ran the finalists across the 15-case contract.
-  DeepSeek low passed 45 of 45 twice and cost less. Terra medium stayed the
-  default because it passed one held-out date case that DeepSeek missed. That
-  is a product decision on a single new case, not a statistical result. See
-  [evaluation/MODEL-COMPARISON.md](docs/evaluation/MODEL-COMPARISON.md).
-- **Held-out hardening with an independent judge.** 42 new conversations,
-  exact checks plus a Claude Sonnet judge for customer experience. The frozen
-  first run passed 30 of 42. The 12 failures were fixed mostly with harness
-  rules rather than prompt changes, then verified case by case. A later full
-  rerun passed 32 and stopped at B03 on a frozen expectation mismatch. There
-  is no 42-of-42 claim. See [evaluation/HARDENING.md](docs/evaluation/HARDENING.md).
-- **Second held-out set.** 30 harder cases across place resolution, long
-  follow-ups, cross-conversation preferences and payment boundaries. Terra
-  passed 17 of 30 on the first run. The report separates product gaps from
-  three overly strict test expectations and two judge-context problems. This
-  is a baseline for the next changes, not a release score.
-- **What is published.** Sanitized per-case reports with visible replies,
-  grading, timing, token usage and judge audits. Raw captures, credentials and
-  source hashes stay local, so a published run cannot be tied to an exact
-  commit. See [EVALUATION.md](docs/EVALUATION.md) for what a pass does and does not
-  prove.
+- **311 deterministic tests** cover routing, state, policy retrieval, memory,
+  output grounding, security and adapter behavior. They run in CI on every
+  push and need no API key.
+- **A held-out set written before the agent saw it**, graded two ways: exact
+  checks decide facts and actions, and an independent LLM judge grades only
+  the visible reply. The judge never sees which model it is grading.
 
-![The evaluation page showing 17 of 30 cases passed, with a failing case open for inspection](docs/images/evaluation-detail.png)
+How the held-out results moved, one full run per row:
 
-The held-out v2 baseline: 30 cases checked, 17 passed, 13 failed, each failure
-open for inspection. Exact checks decide facts and actions. The independent judge
-grades only the visible reply and never sees the model identity.
+| Date | What changed | Cases | Passed | Exact checks |
+|---|---|---:|---:|---:|
+| 20 Sep | Baseline, frozen before the first run | 30 | 17 | 19 |
+| 20 Sep | Places, currency, payment and date fixes | 30 | 24 | 26 |
+| 21 Sep | Ask rather than search on a guess | 30 | 25 | 29 |
+| 21 Sep | Judge effort raised after inconsistent grading | 30 | 27 | 30 |
+| 22 Sep | Checkout link, six reply fixes, stricter judge | 36 | 31 | 35 |
+| 22 Sep | "Take me anywhere" added with 11 new cases | 47 | 28 | 35 |
+| 23 Sep | Empty-value fix and origin memory | 47 | 37 | 44 |
+| 23 Sep | Invented cabins dropped | 47 | 38 | 46 |
 
-The [`evaluation/`](docs/evaluation/) folder documents the test matrix, comparison
-protocol, published evidence and limits of the conclusions.
-The [product roadmap](docs/PRODUCT-ROADMAP.md) explains why checkout handoff comes
-before autonomous payment and how WhatsApp can reuse the same harness.
+On the same 47 cases, Terra and GPT-6 Sol each passed 38. Claude Sonnet 5
+passed 42 and was the only model that invented no values in its tool calls
+(Sol 9, Terra 1), so it became the default. On exact checks the three are
+within one case, and the judge is a Claude model too, so Sonnet's lead should
+be read with that in mind.
 
-![The model comparison page: DeepSeek is cheapest and fastest among full-pass configurations, and the page states why Terra stayed the default](docs/images/model-comparison.png)
+![The Model comparison page: Terra, Sol and Sonnet 5 on the same 47 cases, with made-up values listed per model](docs/images/model-comparison.png)
 
-The model decision in one screen. DeepSeek passed every repeated attempt, was
-effectively tied with Terra on median latency and cost materially less. Terra
-stayed the default on a single held-out date failure. The deployed dashboard
-retains the earlier screening failures, the repeated runs and a labelled
-cross-path view of historical evidence for four OpenAI models: GPT-6 Astra and
-GPT-5.6 Sol, Terra and Luna. The static chart is in
-[`evaluation/openrouter-tradeoff.svg`](docs/evaluation/openrouter-tradeoff.svg).
+The case count and the judge change along the way, so rows are not strictly
+comparable. Each is one attempt per case: regression evidence, not a
+production reliability rate. The full timeline, including the earlier
+development-set runs, the model screens and every limit, is in
+[docs/evaluation/](docs/evaluation/).
+
+![The Evals page: one bar per full held-out run, with what changed and which cases were fixed or newly failing](docs/images/evaluation-timeline.png)
+
+The Evals page opens on the same timeline. Selecting a run shows what changed,
+why, and which cases it fixed, newly flagged or newly broke. Every number is
+computed from the published reports, never typed by hand.
 
 ## Security boundary
 
 The project owns a narrow adapter contract and synthetic fixtures. It does not
-import from the private product repository. Secrets, account data, raw backend
-captures, internal documentation and source snapshots are excluded from Git.
-See [SECURITY-BOUNDARY.md](docs/SECURITY-BOUNDARY.md) and the
-[publication checklist](docs/PUBLICATION-CHECKLIST.md). The layered conduct,
-grounding, error and cost controls are documented in
-[GUARDRAILS.md](docs/GUARDRAILS.md).
+import from the product's private repository. Secrets, account data, raw
+backend captures, internal documentation and source snapshots stay out of Git.
+See [docs/SECURITY-BOUNDARY.md](docs/SECURITY-BOUNDARY.md),
+[docs/GUARDRAILS.md](docs/GUARDRAILS.md) and the
+[publication checklist](docs/PUBLICATION-CHECKLIST.md).
 
 ## Run locally
 
@@ -171,20 +164,29 @@ pnpm test
 pnpm run dashboard
 ```
 
-The deterministic suite and the recorded dashboard run on synthetic fixtures
-and need no API key, so anyone can reproduce the 106 checks. Live flight search
-requires credentials that are not in this repository, and live model runs read
-`OPENROUTER_API_KEY` from an ignored `.env` file or the process environment.
-The hosted adapter reads the same key from the deployment secret manager.
-Credentials must never be added to this repository.
+The tests and the recorded dashboard use synthetic fixtures and published
+reports, so anyone can reproduce them without a key. Live flight search needs
+credentials that are not in this repository. Live model runs read
+`OPENROUTER_API_KEY` from an ignored `.env` file or the environment.
 
 ## Why the design stays small
 
-The flow is dynamic enough to benefit from language interpretation and tool
+The flow is dynamic enough to benefit from language understanding and tool
 selection, but bounded enough that an autonomous planning loop would add risk
 without adding value. Multi-agent coordination, chain-of-thought capture,
-open-ended retries and MCP are absent by design. Safe reads receive bounded
-retries, temporary model HTTP failures receive one budgeted retry, and
-operations with uncertain side effects are not retried. See
-[RESILIENCE.md](docs/RESILIENCE.md). New capabilities require a clear user need, a
-tool contract and regression cases before they enter scope.
+open-ended retries and MCP are absent by design. Safe reads get bounded
+retries, a temporary model HTTP failure gets one budgeted retry, and
+operations with uncertain side effects are never retried. See
+[docs/RESILIENCE.md](docs/RESILIENCE.md). A new capability needs a clear user
+need, a tool contract and regression cases before it enters scope.
+
+## Documents
+
+| Document | Read it for |
+|---|---|
+| [HANDOFF.md](HANDOFF.md) | Current state, working rules and the next decision |
+| [docs/LEARNING-GUIDE.md](docs/LEARNING-GUIDE.md) | A plain-language walkthrough of every component and tradeoff |
+| [docs/evaluation/](docs/evaluation/) | The evaluation timeline, methods and limits |
+| [docs/MEMORY.md](docs/MEMORY.md) | What the agent remembers, and the plan for memory and retrieval |
+| [docs/PRODUCT-ROADMAP.md](docs/PRODUCT-ROADMAP.md) | Why checkout handoff comes before payment, and how WhatsApp fits |
+| [agent/FROZEN-SCOPE.md](agent/FROZEN-SCOPE.md) | The behavior contract and every scope change since |

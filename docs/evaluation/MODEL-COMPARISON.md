@@ -1,5 +1,11 @@
 # Model comparison protocol
 
+This records how the first default was chosen on development cases, 19 to 20
+September 2026. On 27 September the default moved to Claude Sonnet 5 after a
+head-to-head on the 47 held-out cases. See the
+[evaluation timeline](README.md). The protocol below still describes how the
+development screens were run.
+
 ## Question
 
 Which model and reasoning setting meets the behavior contract with the best

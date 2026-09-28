@@ -105,7 +105,7 @@ Read these files in order when more detail is needed:
 2. [agent/FROZEN-SCOPE.md](agent/FROZEN-SCOPE.md) for the behavior contract
 3. [PROMPT-ARCHITECTURE.md](docs/PROMPT-ARCHITECTURE.md) for prompt and context rules
 4. [ARCHITECTURE-DECISIONS.md](docs/ARCHITECTURE-DECISIONS.md) for design choices
-5. [EVALUATION.md](docs/EVALUATION.md) for claims and evidence limits
+5. [docs/evaluation/](docs/evaluation/) for the evaluation timeline, claims and evidence limits
 6. [SECURITY-BOUNDARY.md](docs/SECURITY-BOUNDARY.md) before publishing or integrating
 7. [PRODUCT-ROADMAP.md](docs/PRODUCT-ROADMAP.md) before expanding product scope
 
