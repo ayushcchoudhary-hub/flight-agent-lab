@@ -1,7 +1,7 @@
 // The reading order for the evals pages. Data comes from /api/story, which
 // computes every number from the saved reports. This file only draws it.
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-const MODEL_NAMES = { 'openai/gpt-5.6-terra': 'Terra', 'openai/gpt-6-sol': 'Sol', 'anthropic/claude-sonnet-4.6': 'Sonnet 4.6', 'anthropic/claude-opus-5': 'Opus 5', 'anthropic/claude-opus-5.5': 'Opus 5.5', 'anthropic/claude-sonnet-5': 'Sonnet 5' };
+const MODEL_NAMES = { 'openai/gpt-5.6-terra': 'Terra', 'openai/gpt-6-sol': 'Sol', 'anthropic/claude-sonnet-4.6': 'Sonnet 4.6', 'anthropic/claude-opus-5': 'Opus 5', 'anthropic/claude-opus-5.5': 'Opus 5.5', 'anthropic/claude-sonnet-5': 'Sonnet 5', 'anthropic/claude-sonnet-5.5': 'Sonnet 5.5' };
 export const modelName = m => MODEL_NAMES[m] ?? String(m ?? '').split('/').pop();
 const FIELD_NAMES = { region: 'region', maxPriceUsd: 'budget', aside: 'stray note', cabin: 'cabin', origin: 'garbled origin', destination: 'garbled destination' };
 const OUTCOME = { pass: 'Passed', judge: 'Judge flagged wording', exact: 'Failed an exact check', missing: 'Not run' };
@@ -131,4 +131,71 @@ export function renderHeadToHead(el, story, index = story.headToHead.length - 1)
     el.querySelectorAll('[data-pair]').forEach(b => b.onclick = () => draw(Number(b.dataset.pair)));
   };
   draw(index);
+}
+
+// ---- Trend over time: one point per complete run of the held-out set.
+// Three hues are all the palette keeps apart when every pair can sit side by
+// side (checked in light and dark), so color marks the model family and the
+// marker marks the model within it: an older Claude model is a hollow ring.
+const FAMILY = m => m?.startsWith('anthropic/') ? 'claude' : m === 'openai/gpt-5.6-terra' ? 'terra' : m === 'openai/gpt-6-sol' ? 'sol' : 'other';
+const HOLLOW = new Set(['anthropic/claude-sonnet-5']);
+const pct = n => Number.isFinite(n) ? `${Math.round(n * 100)}%` : '—';
+const TREND_PANELS = [
+  { key: r => r.passed / r.cases, title: 'Cases passed', fmt: pct, max: 1, better: 'higher' },
+  { key: r => r.exact / r.cases, title: 'Exact checks passed', fmt: pct, max: 1, better: 'higher' },
+  { key: r => r.medianTurnMs, title: 'Median time per traveler turn', fmt: secs, better: 'lower' },
+  { key: r => r.costPer1000TurnsUsd, title: 'Model cost per 1,000 traveler turns', fmt: money, better: 'lower' },
+  { key: r => r.cacheReadShare, title: 'Prompt read from cache', fmt: pct, max: 1, better: 'higher' },
+];
+// The axis top rounds up to 1, 2, 4, 5 or 8 times a power of ten, so the
+// half-way gridline is a round number too.
+const niceCeil = v => { if (!(v > 0)) return 1; const p = 10 ** Math.floor(Math.log10(v)); return [1, 2, 4, 5, 8, 10].find(s => s * p >= v) * p; };
+const day = iso => new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', timeZone: 'UTC' });
+
+function trendPanel(panel, runs, p) {
+  const W = 340, H = 150, L = 44, R = 12, T = 12, B = 26;
+  const values = runs.map(panel.key);
+  const top = panel.max ?? niceCeil(Math.max(...values.filter(Number.isFinite)) * 1.1);
+  const x = i => L + (runs.length === 1 ? (W - L - R) / 2 : i * (W - L - R) / (runs.length - 1));
+  const y = v => T + (1 - v / top) * (H - T - B);
+  const grid = [0, 0.5, 1].map(f => `<line class="trend-rule" x1="${L}" x2="${W - R}" y1="${y(top * f)}" y2="${y(top * f)}"/><text class="trend-axis" x="${L - 6}" y="${y(top * f) + 4}" text-anchor="end">${esc(panel.fmt(top * f))}</text>`).join('');
+  // A date under the first run of each day only, so labels never collide.
+  const ticks = runs.map((r, i) => i === 0 || day(r.date) !== day(runs[i - 1].date) ? `<text class="trend-axis" x="${x(i)}" y="${H - 8}" text-anchor="middle">${esc(day(r.date))}</text>` : '').join('');
+  const lines = [...new Set(runs.map(r => FAMILY(r.model)))].map(f => {
+    const pts = runs.map((r, i) => i).filter(i => FAMILY(runs[i].model) === f && Number.isFinite(values[i])).map(i => `${x(i)},${y(values[i])}`);
+    return pts.length > 1 ? `<polyline class="trend-line ${f}" points="${pts.join(' ')}"/>` : '';
+  }).join('');
+  const dots = runs.map((r, i) => Number.isFinite(values[i]) ? `<g class="trend-point" tabindex="0" data-panel="${p}" data-index="${i}" role="img" aria-label="${esc(`${day(r.date)}, ${modelName(r.model)}: ${panel.fmt(values[i])}`)}"><circle class="trend-hit" cx="${x(i)}" cy="${y(values[i])}" r="12"/><circle class="trend-dot ${FAMILY(r.model)}${HOLLOW.has(r.model) ? ' hollow' : ''}" cx="${x(i)}" cy="${y(values[i])}" r="5"/></g>` : '').join('');
+  const last = runs.length - 1, first = values.findIndex(Number.isFinite);
+  const since = first >= 0 && first < last ? ` · ${panel.fmt(values[first])} on ${day(runs[first].date)}` : '';
+  return `<figure class="trend-panel"><figcaption><span>${esc(panel.title)}</span><b>${esc(panel.fmt(values[last]))}</b><small class="quiet">latest, ${esc(modelName(runs[last].model))}${esc(since)} · ${panel.better} is better</small></figcaption>
+    <svg viewBox="0 0 ${W} ${H}" role="group" aria-label="${esc(panel.title)} for each run">${grid}${ticks}${lines}${dots}</svg></figure>`;
+}
+
+// Draw the trend panels, a legend and a table of the same numbers.
+export function renderTrend(el, story) {
+  const runs = story.trend ?? [];
+  if (runs.length < 2) { el.hidden = true; return; }
+  el.hidden = false;
+  const legend = [...new Set(runs.map(r => r.model))].map(m => `<span><i class="trend-key ${FAMILY(m)}${HOLLOW.has(m) ? ' hollow' : ''}"></i>${esc(modelName(m))}</span>`).join('');
+  const cell = n => Number.isFinite(n) ? `$${n.toFixed(4)}` : '—';
+  const rows = runs.map(r => `<tr><td>${esc(day(r.date))}</td><td>${esc(modelName(r.model))} ${esc(r.effort ?? '')}</td><td>${r.passed}/${r.cases}</td><td>${r.exact}/${r.cases}</td><td>${secs(r.medianTurnMs)}</td><td>${secs(r.medianCallMs)}</td><td>${money(r.costPer1000TurnsUsd)}</td><td>${cell(r.costPerPassedCaseUsd)}</td><td>${pct(r.cacheReadShare)}</td><td>${r.madeUpValues}</td><td>${esc(r.promptVersion ?? '')}</td></tr>`).join('');
+  el.innerHTML = `<div class="section-head"><div><h2>Trend over time</h2><p class="quiet">Every complete run of the held-out set, in the order it ran. The set grew from 30 to 52 cases, so passes are a share. Lines join runs of the same model family.</p></div><div class="story-legend">${legend}</div></div>
+    <div class="trend-panels">${TREND_PANELS.map((panel, p) => trendPanel(panel, runs, p)).join('')}</div>
+    <div class="trend-tip" role="status" hidden></div>
+    <details class="method"><summary>Show as a table</summary><div class="table-scroll"><table><thead><tr><th>Date</th><th>Model</th><th>Passed</th><th>Exact</th><th>Median turn</th><th>Median model call</th><th>Cost per 1,000 turns</th><th>Cost per passed case</th><th>From cache</th><th>Made-up values</th><th>Prompt</th></tr></thead><tbody>${rows}</tbody></table></div></details>
+    <p class="quiet mini">Time per turn runs from the traveler's message to the reply. Flights are simulated, so it is mostly model time. Cost counts the candidate model only, not the judge. Claude requests are marked for prompt caching from 27 Sept, so Claude runs before then read nothing from cache and cost more per turn. The judge changed twice, so exact checks are the steadier trend. One attempt per case, so a point or two either way can be chance.</p>`;
+  const tip = el.querySelector('.trend-tip');
+  const show = g => {
+    const r = runs[Number(g.dataset.index)], panel = TREND_PANELS[Number(g.dataset.panel)];
+    const v = document.createElement('b'); v.textContent = panel.fmt(panel.key(r));
+    const who = document.createElement('span'); who.textContent = `${modelName(r.model)} · ${day(r.date)} · ${r.passed}/${r.cases} passed`;
+    const what = document.createElement('small'); what.textContent = r.title ?? r.label ?? '';
+    tip.replaceChildren(v, who, what);
+    tip.hidden = false;
+    const dot = g.querySelector('.trend-dot').getBoundingClientRect(), box = el.getBoundingClientRect();
+    tip.style.left = `${Math.max(8, Math.min(dot.left - box.left + 14, box.width - tip.offsetWidth - 8))}px`;
+    tip.style.top = `${dot.top - box.top - tip.offsetHeight - 6}px`;
+  };
+  el.querySelectorAll('.trend-point').forEach(g => { g.onpointerenter = g.onfocus = () => show(g); g.onpointerleave = g.onblur = () => { tip.hidden = true; }; });
 }

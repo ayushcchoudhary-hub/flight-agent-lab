@@ -1,4 +1,4 @@
-import {modelName,pickerGroups,renderStory} from './story.js';
+import {modelName,pickerGroups,renderStory,renderTrend} from './story.js';
 const $=s=>document.querySelector(s);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const pretty=s=>JSON.stringify(s,null,2);
@@ -75,7 +75,7 @@ async function refresh(){
  if(busy)return;busy=true;
  try{
   const list=await(await fetch('/api/runs')).json();
-  if(!story){story=await(await fetch('/api/story')).json().catch(()=>null)??{milestones:[],headToHead:[],supporting:{}};renderStory($('#story'),story,{onOpen:openRun});}
+  if(!story){story=await(await fetch('/api/story')).json().catch(()=>null)??{milestones:[],headToHead:[],supporting:{}};renderStory($('#story'),story,{onOpen:openRun});renderTrend($('#trend'),story);}
   if(!list.runs?.length&&!story.milestones.length){$('#connection').textContent='No evaluation reports yet.';return;}
   const groups=pickerGroups(story,list.runs??[]),values=groups.flatMap(([,items])=>items.map(x=>x.value));
   if(!activeRun||!values.includes(activeRun))activeRun=story.milestones.at(-1)?.run??values[0];

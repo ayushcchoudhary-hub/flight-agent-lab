@@ -99,3 +99,27 @@ test('milestone numbers come from the reports, not from the story file', async (
   assert.deepEqual(next.delta.fixed.map(x => x.id), ['A1', 'A2', 'A3', 'A6', 'E3', 'E5', 'E6']);
   for (const m of story.milestones) for (const key of ['passed', 'exact', 'cases']) assert.equal(key in m, false, `story.json must not type ${key}`);
 });
+
+test('the trend lists each complete run once, oldest first, and leaves supporting runs out', async () => {
+  const { trend } = await loadStory(root);
+  const complete = new Set([...story.milestones.map(m => m.run), ...story.headToHead.flatMap(p => p.runs)].map(r => [r].flat().join('+')));
+  assert.deepEqual(new Set(trend.map(r => r.run)), complete);
+  assert.deepEqual(trend.map(r => r.date), [...trend.map(r => r.date)].sort());
+  for (const id of Object.keys(story.supporting)) assert.ok(!trend.some(r => r.run.split('+').includes(id)), id);
+  const sonnet = trend.find(r => r.run.startsWith('live-hardening-judge-2026-09-23T21-29-40.155Z'));
+  assert.equal(sonnet.cacheReadShare, 0, 'Sonnet 5 ran before Claude prompt caching');
+  assert.ok(sonnet.medianTurnMs > 0 && sonnet.costPerPassedCaseUsd > 0);
+});
+
+test('turn time, cost per passed case and cache share come from the recorded calls', () => {
+  const call = (cost, prompt, cached, latencyMs) => ({ type: 'model_usage', data: { latencyMs, usage: { cost, prompt_tokens: prompt, prompt_tokens_details: { cached_tokens: cached } } } });
+  const rows = [
+    { caseId: 'A', pass: true, deterministicPass: true, steps: [{ latencyMs: 1000 }, { latencyMs: 3000 }], events: [call(0.01, 5000, 0, 900), call(0.004, 5000, 4000, 800)] },
+    { caseId: 'B', pass: false, deterministicPass: true, steps: [{ latencyMs: 2000 }], events: [call(0.006, 5000, 4000, 700)] },
+  ];
+  const s = summarizeRun('live-hardening-judge-2026-09-28T19-30-01.173Z', { results: rows, models: ['m'] }, [{ id: 'A' }, { id: 'B' }]);
+  assert.equal(s.date, '2026-09-28T19:30:01Z');
+  assert.equal(s.medianTurnMs, 2000);
+  assert.equal(s.costPerPassedCaseUsd.toFixed(3), '0.020');
+  assert.equal(s.cacheReadShare.toFixed(3), (8000 / 15000).toFixed(3));
+});
