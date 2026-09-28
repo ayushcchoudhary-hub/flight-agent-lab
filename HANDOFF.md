@@ -66,7 +66,7 @@ The Evals page opens on a milestone chart: one bar per complete run of the
 held-out set, with what changed, why, and which cases were fixed, newly
 flagged or newly failing. The prose lives in
 `agent/published-eval-results/story.json`; every number is computed from the
-reports by `agent/eval-story.mjs`. A test fails when a published hardening run
+reports by `agent/src/eval-story.mjs`. A test fails when a published hardening run
 has no place in the story, so each new run must be added as a milestone, a
 head-to-head run or a supporting run with a one-line reason. The Model
 comparison page opens on the latest head-to-head pair from the same file.
@@ -79,7 +79,7 @@ model cost per 1,000 turns and the share of prompt read from cache.
 Released 2026-09-28 at Sonnet 5's price. It rejects a forced tool call
 (OpenRouter finds no endpoint for `tool_choice: required`), as do Opus 5.5
 and Fable 5.1, so the adapter sends those `auto` (`NO_FORCED_TOOL_CHOICE` in
-`agent/model.mjs`). The prompt still asks for one tool and a reply without
+`agent/src/model.mjs`). The prompt still asks for one tool and a reply without
 one becomes the safe error.
 
 Both models ran the same 52 held-out cases on the same code (f8a8ba9) with
@@ -144,6 +144,7 @@ internal implementation details and unsupported claims.
 - Use bounded call and spending limits for paid evaluation runs.
 - Do not run large repeated suites unless the result will change a decision.
 - Keep Git commits small enough to explain what changed and why.
+- Run `pnpm run format` before committing. CI does not enforce it yet.
 - Do not commit secrets, local state, traces, raw captures or private product
   material. Run the publication review before sharing access.
 
@@ -287,7 +288,7 @@ Already done:
 
 ## Policy snapshot freshness (2026-09-27)
 
-Policy answers come from `agent/policy-snapshot.json`, a reviewed copy of the
+Policy answers come from `agent/src/policy-snapshot.json`, a reviewed copy of the
 privacy and terms pages, not from the live page. `pnpm run policy:check`
 reads the live pages and reports passages that changed. The site is a
 single-page app, so it reads the wording from the site's script bundle.
@@ -296,7 +297,7 @@ read. `.github/workflows/policy-check.yml` runs it every Monday.
 
 When it reports a change, review the wording, run `pnpm run policy:sync`,
 then `pnpm test`. Unchanged passages keep their ids. A new or edited passage
-gets a new id. A fixed answer in `policy.mjs` whose quote left the site
+gets a new id. A fixed answer in `src/policy.mjs` whose quote left the site
 stops answering and the question goes to retrieval. On 2026-09-27 the
 snapshot from 2026-09-19 matched all 12 paragraphs on staging and
 production.

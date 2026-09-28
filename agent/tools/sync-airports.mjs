@@ -12,6 +12,7 @@
 // product repository.
 import { readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { agentPath } from '../paths.mjs';
 
 const source = process.argv[2];
 if (!source) {
@@ -23,7 +24,9 @@ if (!source) {
 // (e.g. city: "St. John's"), so accept either delimiter. Missing one silently
 // drops real airports, CDG among them.
 const field = (block, name) => {
-  const match = block.match(new RegExp(`${name}: (?:'((?:[^'\\\\]|\\\\.)*)'|"((?:[^"\\\\]|\\\\.)*)")`));
+  const match = block.match(
+    new RegExp(`${name}: (?:'((?:[^'\\\\]|\\\\.)*)'|"((?:[^"\\\\]|\\\\.)*)")`),
+  );
   const raw = match?.[1] ?? match?.[2];
   return raw === undefined ? null : raw.replace(/\\(['"])/g, '$1').replace(/\\\\/g, '\\');
 };
@@ -41,7 +44,8 @@ function parseAirports(text) {
     // OurAirports marks superseded records with a "[Duplicate]" name prefix.
     // They reach customer-facing copy verbatim, so drop them.
     if (name?.startsWith('[Duplicate]')) continue;
-    if (code && city && country && type) rows.push([code, city, name ?? city, country, countryCode ?? '', type]);
+    if (code && city && country && type)
+      rows.push([code, city, name ?? city, country, countryCode ?? '', type]);
   }
   return rows;
 }
@@ -60,11 +64,15 @@ function parseMetroGroups(text) {
 
 const airports = parseAirports(readFileSync(join(source, 'airports.generated.ts'), 'utf8'));
 const groups = parseMetroGroups(readFileSync(join(source, 'metroGroups.ts'), 'utf8'));
-if (airports.length < 1000) throw new Error(`Only parsed ${airports.length} airports. Refusing to write a truncated table.`);
-if (groups.length < 15) throw new Error(`Only parsed ${groups.length} metro groups. Refusing to write a truncated table.`);
+if (airports.length < 1000)
+  throw new Error(`Only parsed ${airports.length} airports. Refusing to write a truncated table.`);
+if (groups.length < 15)
+  throw new Error(
+    `Only parsed ${groups.length} metro groups. Refusing to write a truncated table.`,
+  );
 
-const quote = value => `'${String(value).replace(/\\/g, '\\\\').replace(/'/g, "\\'")}'`;
-const row = values => `[${values.map(quote).join(',')}]`;
+const quote = (value) => `'${String(value).replace(/\\/g, '\\\\').replace(/'/g, "\\'")}'`;
+const row = (values) => `[${values.map(quote).join(',')}]`;
 
 const out = `// GENERATED FILE. Do not edit by hand.
 // Regenerate with: node tools/sync-airports.mjs <product airport data directory>
@@ -84,5 +92,5 @@ ${groups.map(row).join(',\n')},
 ];
 `;
 
-writeFileSync(new URL('../airports.generated.mjs', import.meta.url), out);
+writeFileSync(agentPath('src', 'airports.generated.mjs'), out);
 console.log(`Wrote ${airports.length} airports and ${groups.length} metro groups.`);

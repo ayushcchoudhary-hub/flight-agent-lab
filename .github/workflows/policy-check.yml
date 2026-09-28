@@ -26,4 +26,4 @@ jobs:
           node-version: 24
 
       - name: Compare the snapshot with the live pages
-        run: node policy-sync.mjs
+        run: node tools/policy-sync.mjs
