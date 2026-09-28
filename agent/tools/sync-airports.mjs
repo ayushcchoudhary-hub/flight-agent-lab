@@ -3,10 +3,10 @@
 // The product's own table is generated from OurAirports open data (public
 // domain). Only that factual reference data and the curated metro groups are
 // copied here. No product logic, credentials or customer material crosses the
-// boundary. See SECURITY-BOUNDARY.md.
+// boundary. See docs/SECURITY-BOUNDARY.md.
 //
 // Usage:
-//   node tools/sync-airports.mjs <path-to-flyai-app>/packages/core/src
+//   node tools/sync-airports.mjs <product airport data directory>
 //
 // The generated file is committed, so a clean checkout and CI never need the
 // product repository.
@@ -15,7 +15,7 @@ import { join } from 'node:path';
 
 const source = process.argv[2];
 if (!source) {
-  console.error('Usage: node tools/sync-airports.mjs <flyai-app>/packages/core/src');
+  console.error('Usage: node tools/sync-airports.mjs <product airport data directory>');
   process.exit(1);
 }
 
@@ -67,7 +67,7 @@ const quote = value => `'${String(value).replace(/\\/g, '\\\\').replace(/'/g, "\
 const row = values => `[${values.map(quote).join(',')}]`;
 
 const out = `// GENERATED FILE. Do not edit by hand.
-// Regenerate with: node tools/sync-airports.mjs <flyai-app>/packages/core/src
+// Regenerate with: node tools/sync-airports.mjs <product airport data directory>
 //
 // Airport rows originate from OurAirports open data (public domain) by way of
 // the product's generated table. Metro groups are the product's curated list.

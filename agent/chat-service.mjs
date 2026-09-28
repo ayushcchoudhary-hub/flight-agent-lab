@@ -1,5 +1,5 @@
 import {localPreferenceStore,applyPreferences} from './preferences.mjs';
-import { HOSTED_MODEL_OPTIONS,hostedModelSettings } from './hosted-model-options.mjs';
+import { DEFAULT_MODEL,HOSTED_MODEL_OPTIONS,hostedModelSettings } from './hosted-model-options.mjs';
 import { randomUUID } from 'node:crypto';
 import { Agent,OpenRouterModel,PROMPT_VERSION } from './model.mjs';
 import { SearchConversation,isoToday,welcomeFor,fullAirport,renderRecentSearches,recentSearchFrom } from './search.mjs';
@@ -15,7 +15,7 @@ export async function connectionStatus() {
  } catch {return {connected:false,reason:'disconnected',expiresAt:null};}
 }
 const defaultModelFactory=(trace,settings)=>new OpenRouterModel({apiKey:process.env.OPENROUTER_API_KEY,model:settings.model,reasoningEffort:settings.effort,maxCalls:15,trace});
-export function createChatService({modelFactory=defaultModelFactory,capturesLoader=loadCaptures,status=connectionStatus,stagingFactory=makeStagingAdapter,preferenceStore=localPreferenceStore(),modelOptions=HOSTED_MODEL_OPTIONS,settingsFor=hostedModelSettings,defaultModel='openai/gpt-5.6-terra',defaultEffort='medium',maxTotalTurns=40,maxSessions=8,maxSessionTurns=15,idleMs=3600000,conversationStore=null,homeAirportScope='store'}={}) {
+export function createChatService({modelFactory=defaultModelFactory,capturesLoader=loadCaptures,status=connectionStatus,stagingFactory=makeStagingAdapter,preferenceStore=localPreferenceStore(),modelOptions=HOSTED_MODEL_OPTIONS,settingsFor=hostedModelSettings,defaultModel=DEFAULT_MODEL,defaultEffort='medium',maxTotalTurns=40,maxSessions=8,maxSessionTurns=15,idleMs=3600000,conversationStore=null,homeAirportScope='store'}={}) {
  // Where a stated home airport is kept: 'store' writes the preference store
  // (the local dashboard, one user); 'visitor' writes the per-browser store and
  // never the shared preference object (the hosted site, many visitors).

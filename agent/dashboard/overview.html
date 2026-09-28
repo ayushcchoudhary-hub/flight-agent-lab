@@ -32,8 +32,8 @@
           <h1>From flight website to conversational agent.</h1>
           <p class="intro">
             A search-only agent that turns natural-language requests into
-            validated CommonSwyft searches, remembers explicit preferences, and
-            answers policy questions from repository reference text.
+            validated CommonSwyft searches, keeps trip details across
+            follow-ups, and answers policy questions from reviewed reference text.
           </p>
           <div class="hero-actions">
             <a class="primary-link" href="/chat">Try the agent</a
@@ -45,8 +45,8 @@
           <div>
             <b>Current build</b>
             <p>
-              Deployed on Cloud Run · Terra medium through OpenRouter · live
-              public staging search · invite-protected web chat
+              Deployed on Cloud Run · Claude Sonnet 5 medium through OpenRouter ·
+              live public staging search · invite-protected web chat
             </p>
           </div>
         </aside>
@@ -137,6 +137,38 @@
               frozen baseline.
             </p>
           </article>
+          <article class="done">
+            <span>9</span>
+            <h3>Test on held-out cases</h3>
+            <p>
+              Froze 30 new cases before the agent saw them. Terra went from 17
+              to 27 passing as each gap was fixed, with failures kept on record.
+            </p>
+          </article>
+          <article class="done">
+            <span>10</span>
+            <h3>Take me anywhere and checkout</h3>
+            <p>
+              Added deals from the product's public feed and a link from every
+              result to the same search on CommonSwyft for checkout.
+            </p>
+          </article>
+          <article class="done">
+            <span>11</span>
+            <h3>Choose a new default</h3>
+            <p>
+              On the same 47 cases Sonnet 5 passed 42 and made up no values.
+              Terra and Sol passed 38. Sonnet 5 became the default.
+            </p>
+          </article>
+          <article class="done">
+            <span>12</span>
+            <h3>Add memory, keep it off</h3>
+            <p>
+              A stated home airport, the last origin and recent searches, each
+              with a way to forget. Built and tested, off on this demo.
+            </p>
+          </article>
         </div>
       </section>
 
@@ -206,8 +238,9 @@
           <article>
             <h3>Memory ownership</h3>
             <p>
-              CommonSwyft should own account preferences. The harness loads them
-              as context; the model does not independently remember customers.
+              The application stores memory, never the model. Today it is kept
+              per browser and switched off here. With sign-in it would belong
+              to the CommonSwyft account.
             </p>
           </article>
         </div>
@@ -217,10 +250,10 @@
         <div class="module-kicker">03 · MODEL CHOICE</div>
         <div class="module-head">
           <div>
-            <h2>Terra is the default. DeepSeek and GLM remain research controls.</h2>
+            <h2>Sonnet 5 is the default. Terra, DeepSeek and GLM remain controls.</h2>
             <p>
-              Correctness was the gate. Speed and estimated API-equivalent cost
-              were tie-breakers. A new candidate must also prove consistency.
+              Correctness on held-out cases was the gate. Values the model made
+              up in its tool calls decided it. Speed and cost came after.
             </p>
           </div>
           <a href="/compare">Open full comparison →</a>
@@ -228,24 +261,24 @@
         <div class="decision-grid">
           <article class="selected">
             <span class="badge">Default</span>
+            <h3>Sonnet 5 · medium</h3>
+            <strong>42 / 47</strong><small>held-out cases passed</small>
+            <p>45 of 47 exact checks and no made-up values in any tool call. The most expensive per turn before prompt caching.</p>
+          </article>
+          <article>
+            <span class="badge">Control</span>
             <h3>Terra · medium</h3>
-            <strong>1.80 s</strong><small>repeated median scenario time</small>
-            <p>43/45 passed in the final same-path run. Two failures were unreadable provider responses, not incorrect actions.</p>
+            <strong>38 / 47</strong><small>held-out cases passed</small>
+            <p>46 of 47 exact checks and one made-up value. The first default, chosen on development cases.</p>
           </article>
           <article>
-            <span class="badge">Research control</span>
-            <h3>DeepSeek V4.1 Flash · low</h3>
-            <strong>45 / 45</strong><small>three complete repeats passed</small>
-            <p>Median 1.84 seconds and about $0.000108 per scenario in the final run. It also passed 45/45 in the prior full run.</p>
-          </article>
-          <article>
-            <h3>GLM 5.3 · high</h3>
-            <strong>43 / 45</strong><small>three-repeat validation</small>
-            <p>Both misses were repeated provider 429 responses. Median latency was 2.13 seconds. It remains available for direct testing.</p>
+            <h3>Sol · medium</h3>
+            <strong>38 / 47</strong><small>held-out cases passed</small>
+            <p>45 of 47 exact checks and nine made-up values across five cases, such as an invented region or budget.</p>
           </article>
         </div>
         <p class="evidence-note">
-          DeepSeek passed the repeated development suite, but a focused new case confirmed that it changed “3 October” to the default September window while Terra passed. Terra remains the default and the phrasing is now a regression case. Historical Codex and current OpenRouter latency use different serving paths, so that cross-path view remains directional.
+          On exact checks the three are within one case. Sonnet's lead is in judge-graded replies, and the judge is also a Claude model, so read the exact checks first. The earlier choice of Terra over DeepSeek on development cases is kept on the comparison page.
         </p>
       </section>
 
@@ -263,39 +296,39 @@
         </div>
         <div class="baseline-grid">
           <article>
-            <strong>42 cases</strong>
-            <h3>Held-out Terra hardening</h3>
+            <strong>47 cases</strong>
+            <h3>Held-out set</h3>
             <p>
-              Thirty passed the frozen first run. Twelve reviews exposed date,
-              baggage, policy and servicing gaps. One attempt each.
+              Written and frozen before the agent saw them. Exact checks decide
+              facts and actions. An independent judge grades the wording.
             </p>
-            <a href="/evals?run=live-hardening-judge-2026-09-20T09-36-59.244Z">Inspect conversations →</a>
+            <a href="/evals">See how each run changed →</a>
           </article>
           <article>
-            <strong>12 / 12</strong>
-            <h3>Issues later verified</h3>
+            <strong>42 / 47</strong>
+            <h3>Latest full run</h3>
             <p>
-              Every original review has a later targeted pass. The full 42-case
-              suite was not rerun, so this is correction evidence and not a
-              rewritten perfect score.
+              Sonnet 5 on the held-out set. One attempt per case, so this is
+              regression evidence, not a reliability rate.
             </p>
-            <a href="/evals">Compare baseline and corrections →</a>
+            <a href="/compare">Compare the models →</a>
           </article>
           <article>
-            <strong>78 / 78</strong>
+            <strong>311</strong>
             <h3>Deterministic code tests</h3>
             <p>
               No model calls. Covers tools, dates, state, API validation, policy
-              citations, persistent preferences, grounding and security.
+              citations, memory, grounding and security.
             </p>
           </article>
           <article>
-            <strong>$0.584</strong>
-            <h3>Bounded hardening cost</h3>
+            <strong>30 / 42</strong>
+            <h3>Retired development set</h3>
             <p>
-              Observed candidate and judge cost across the frozen baseline and
-              three focused correction runs.
+              The first judged run. Every issue was later verified, but the full
+              set was never rerun clean, so there is no 42 of 42 claim.
             </p>
+            <a href="/evals?run=live-hardening-judge-2026-09-20T09-36-59.244Z">Inspect conversations →</a>
           </article>
         </div>
       </section>
@@ -304,7 +337,7 @@
         <div class="module-kicker">05 · SCOPE</div>
         <div class="module-head">
           <div>
-            <h2>Done, local, and deliberately deferred</h2>
+            <h2>Working, switched off, and deliberately deferred</h2>
             <p>This is a search assistant prototype, not a booking product.</p>
           </div>
         </div>
@@ -319,10 +352,9 @@
               <li>Actual public staging search</li>
               <li>Deterministic flight-card formatting</li>
               <li>General privacy-policy retrieval with sources</li>
-              <li>
-                Persistent home airport, cabin and nonstop preference behind a
-                local authenticated service
-              </li>
+              <li>“Take me anywhere” deals from the product's public feed</li>
+              <li>A link from every result to checkout on CommonSwyft</li>
+              <li>Weekly check that the policy snapshot matches the live pages</li>
               <li>Support handoff and off-topic boundaries</li>
               <li>Invite-protected Cloud Run web chat</li>
               <li>Secret Manager for hosted credentials</li>
@@ -331,35 +363,30 @@
           </article>
           <article>
             <h3>
-              <span class="local">◐</span> Production-shaped, not deployed
+              <span class="local">◐</span> Built, switched off
             </h3>
             <ul>
-              <li>
-                Optional account preference fields in the authenticated Go
-                profile API
-              </li>
-              <li>Read, replace and forget semantics</li>
-              <li>Backward-compatible generated client and server contract</li>
-              <li>Two-user isolation and persistence tests</li>
+              <li>Conversation storage in Postgres, redacted, 90-day expiry</li>
+              <li>A stated home airport and the last origin as disclosed defaults</li>
+              <li>Recent searches listed by number at the start</li>
+              <li>Forget where I fly from, and forget my recent searches</li>
             </ul>
             <p class="scope-note">
-              The playground uses an account-shaped local development service.
-              The real Go/PostgreSQL change remains on a separate local branch;
-              nothing was pushed or deployed.
+              Tested against a development database. It stays off here until
+              the privacy page describes what is stored and for how long.
             </p>
           </article>
           <article>
             <h3><span class="todo">○</span> Backlog</h3>
             <ul>
-              <li>Real Clerk account linking for WhatsApp or other channels</li>
+              <li>Account sign-in and linking for WhatsApp or other channels</li>
               <li>Production monitoring, alerts and operational ownership</li>
               <li>MCP tools for compatible external assistants</li>
               <li>Round trip, multi-city and multiple travelers</li>
-              <li>“Take me anywhere” and richer discovery</li>
-              <li>Booking, checkout and payments</li>
+              <li>Richer destination discovery</li>
+              <li>Checkout for a specific quote, booking and payments</li>
               <li>Ticket-specific refunds and booking lookup</li>
               <li>Human approval and idempotency for consequential actions</li>
-              <li>Live policy publishing/synchronization</li>
               <li>Broader safety, privacy and adversarial evaluation</li>
               <li>Temporary WhatsApp number using the same harness</li>
             </ul>
@@ -379,31 +406,31 @@
         </div>
         <ol class="next-list">
           <li>
-            <b>Connect an authenticated account safely.</b
+            <b>Switch memory on.</b
             ><span
-              >Use Clerk account linking and a real per-user store for travel
-              preferences; the hosted demo currently uses a temporary profile.</span
+              >Add the privacy-page sentence on storage and retention, then
+              deploy with conversation storage on and watch for errors.</span
             >
           </li>
           <li>
-            <b>Run the frozen baseline against the deployed build.</b
+            <b>Put recent searches in the model's context.</b
             ><span
-              >Repeat the search, policy and boundary cases through Cloud Run so
-              the deployment itself is part of the evidence.</span
+              >So "the Tokyo one again" works, with new held-out cases that
+              stop an old trip leaking into a new one.</span
             >
           </li>
           <li>
-            <b>Add offer selection and checkout handoff.</b
+            <b>Checkout for a specific quote.</b
             ><span
-              >Revalidate one selected option, create an account-bound quote and
-              send the traveler to the existing authenticated web checkout.</span
+              >Needs the traveler signed in to CommonSwyft and an approved API
+              contract for quotes, expiry and revalidation.</span
             >
           </li>
           <li>
-            <b>Repeat the strongest open-weight candidate.</b
+            <b>Check the judge against people.</b
             ><span
-              >Add new phrasings for Terra, DeepSeek and GLM. Keep Terra
-              deployed unless another model shows a repeatable advantage.</span
+              >Compare its verdicts with human labels, since it shares a model
+              family with the default.</span
             >
           </li>
         </ol>
@@ -417,12 +444,12 @@
             <i>→</i>
             <article>
               <small>2 · HARNESS</small><b>Cloud Run executes</b>
-              <p>The personal experiment runs one bounded container in europe-west2.</p>
+              <p>The personal experiment runs one bounded container.</p>
             </article>
             <i>→</i>
             <article>
               <small>3 · ACCESS</small><b>Experiment login</b>
-              <p>A secure session cookie protects the demo; Clerk linking is backlog.</p>
+              <p>A secure session cookie protects the demo. Account sign-in is backlog.</p>
             </article>
             <i>→</i>
             <article>
@@ -432,31 +459,9 @@
           </div>
           <p class="scope-note">
             The current deployment uses Cloud Run, Secret Manager and OpenRouter.
-            It intentionally does not connect to Clerk, production account data,
-            booking, checkout or payments. Flight searches use the public staging API.
+            It intentionally does not connect to production account data,
+            booking or payments. Flight searches use the public staging API.
           </p>
-        </div>
-        <div class="monday">
-          <h3>A five-minute Monday walkthrough</h3>
-          <ol>
-            <li>Start with the user problem and the search-only scope.</li>
-            <li>
-              Show the architecture: model proposes, harness validates, product
-              API executes.
-            </li>
-            <li>
-              Open the model comparison and explain why repeated validation favored DeepSeek, then why
-              a live date failure moved the default back to Terra.
-            </li>
-            <li>
-              Try one live flight request, one follow-up, one policy question
-              and one saved preference.
-            </li>
-            <li>
-              End with the deployed live-search demo, then distinguish the
-              recorded evaluation lab from the production backlog.
-            </li>
-          </ol>
         </div>
       </section>
     </main>

@@ -1,5 +1,10 @@
 # Test matrix
 
+A snapshot of the evidence as of 20 September 2026, when Terra medium was the
+default and the deterministic suite had 106 checks. It now has 311. Later
+held-out runs and the move to Sonnet 5 are in the
+[evaluation timeline](README.md).
+
 | Layer | What it tests | Current evidence | Main limitation |
 |---|---|---:|---|
 | Deterministic suite | State, dates, validation, tools, policy grounding, preferences, security, customer-copy guardrails, API adapter, retries | 106 of 106 pass locally | Does not test model interpretation |
