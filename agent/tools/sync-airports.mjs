@@ -3,7 +3,7 @@
 // The product's own table is generated from OurAirports open data (public
 // domain). Only that factual reference data and the curated metro groups are
 // copied here. No product logic, credentials or customer material crosses the
-// boundary. See SECURITY-BOUNDARY.md.
+// boundary. See docs/SECURITY-BOUNDARY.md.
 //
 // Usage:
 //   node tools/sync-airports.mjs <path-to-flyai-app>/packages/core/src

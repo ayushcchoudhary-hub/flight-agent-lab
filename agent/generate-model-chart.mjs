@@ -19,6 +19,6 @@ for(const [value,label] of [[.0001,'$0.0001'],[.001,'$0.001'],[.01,'$0.01']]){co
 svg+=`<text class="axis" x="${(L+W-R)/2}" y="${H-62}" text-anchor="middle">Median elapsed time per scenario →</text><text class="axis" transform="translate(22 ${(T+H-B)/2}) rotate(-90)" text-anchor="middle">Observed cost per scenario, log scale →</text>`;
 for(const row of rows){const px=x(row.medianMs),py=y(row.meanCost),[dx,dy]=offsets[row.id]??[12,-12],fill=row.eligible?color(row):'#ffffff';svg+=`<circle class="${row.eligible?'eligible':'failed'}" cx="${px}" cy="${py}" r="8" fill="${fill}" stroke="${color(row)}"><title>${escape(row.label)}: ${row.passed}/${row.completed} passed, ${(row.medianMs/1000).toFixed(2)} seconds, $${row.meanCost.toFixed(5)} per scenario</title></circle><text class="label" x="${px+dx}" y="${py+dy}">${escape(row.label)}</text>`;}
 svg+=`<text class="note" x="${L}" y="${H-30}">${report.repeats} attempts per scenario. OpenRouter serving path. Missing-cost failures are omitted from this plot and remain in the table.</text></svg>`;
-const output=fileURLToPath(new URL('../evaluation/openrouter-tradeoff.svg',import.meta.url));
+const output=fileURLToPath(new URL('../docs/evaluation/openrouter-tradeoff.svg',import.meta.url));
 writeFileSync(output,svg+'\n');
 console.log(output);

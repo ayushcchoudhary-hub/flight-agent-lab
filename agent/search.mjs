@@ -199,7 +199,7 @@ function normalizeDiscoverArgs(args) {
 
 // An ambiguous date is a clarification, not a search. The model still calls
 // find_flights so the trip it already knows reaches application state, which
-// holds state precedence (see PROMPT-ARCHITECTURE.md). Held-out v2 A6 failed
+// holds state precedence (see docs/PROMPT-ARCHITECTURE.md). Held-out v2 A6 failed
 // because the model answered in prose instead and nothing was retained.
 function ambiguousDates(input, today) {
   if (!object(input) || input.mode !== 'ambiguous') return null;
@@ -538,7 +538,7 @@ function cabinLabel(state) {
   return name;
 }
 
-// Phase 1 of the checkout handoff (PRODUCT-ROADMAP.md): send the traveler to
+// Phase 1 of the checkout handoff (docs/PRODUCT-ROADMAP.md): send the traveler to
 // the same search on the product site, where selection, quoting and checkout
 // already live. The link carries route, date window and cabin only, never a
 // price, so the page always shows current fares. The grammar is the product's

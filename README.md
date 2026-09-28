@@ -40,7 +40,7 @@ the record of what was tried, what failed and what changed. Failed evaluation
 runs are preserved rather than rewritten. The code is published for reading and
 assessment rather than reuse; see [LICENSE](LICENSE).
 
-The [learning guide](LEARNING-GUIDE.md) is a plain-language walkthrough of every
+The [learning guide](docs/LEARNING-GUIDE.md) is a plain-language walkthrough of every
 major component and tradeoff. The [project handoff](HANDOFF.md) records the
 current state, access boundaries and next decision for another person or coding
 agent.
@@ -71,7 +71,7 @@ flowchart LR
 
 Supported behavior is frozen in [FROZEN-SCOPE.md](agent/FROZEN-SCOPE.md). The
 current prompt is `flight-search-v1.4.1`, described in
-[PROMPT-ARCHITECTURE.md](PROMPT-ARCHITECTURE.md).
+[PROMPT-ARCHITECTURE.md](docs/PROMPT-ARCHITECTURE.md).
 
 The assistant is a calm, concise and knowledgeable flight-search concierge. It
 asks only necessary questions, preserves supplied details, states limitations
@@ -91,7 +91,7 @@ one action from a four-tool allowlist:
 | `clarify_request` | Ask one question or explain a boundary |
 
 Application code owns credentials, state, API calls, response validation,
-formatting and call limits. See [ARCHITECTURE-DECISIONS.md](ARCHITECTURE-DECISIONS.md).
+formatting and call limits. See [ARCHITECTURE-DECISIONS.md](docs/ARCHITECTURE-DECISIONS.md).
 
 The default model is Terra (OpenAI `gpt-5.6-terra`) at medium reasoning effort.
 All current model calls use one OpenRouter adapter, including Terra. This keeps
@@ -111,13 +111,13 @@ SDK dependency has been removed.
   DeepSeek low passed 45 of 45 twice and cost less. Terra medium stayed the
   default because it passed one held-out date case that DeepSeek missed. That
   is a product decision on a single new case, not a statistical result. See
-  [evaluation/MODEL-COMPARISON.md](evaluation/MODEL-COMPARISON.md).
+  [evaluation/MODEL-COMPARISON.md](docs/evaluation/MODEL-COMPARISON.md).
 - **Held-out hardening with an independent judge.** 42 new conversations,
   exact checks plus a Claude Sonnet judge for customer experience. The frozen
   first run passed 30 of 42. The 12 failures were fixed mostly with harness
   rules rather than prompt changes, then verified case by case. A later full
   rerun passed 32 and stopped at B03 on a frozen expectation mismatch. There
-  is no 42-of-42 claim. See [evaluation/HARDENING.md](evaluation/HARDENING.md).
+  is no 42-of-42 claim. See [evaluation/HARDENING.md](docs/evaluation/HARDENING.md).
 - **Second held-out set.** 30 harder cases across place resolution, long
   follow-ups, cross-conversation preferences and payment boundaries. Terra
   passed 17 of 30 on the first run. The report separates product gaps from
@@ -126,7 +126,7 @@ SDK dependency has been removed.
 - **What is published.** Sanitized per-case reports with visible replies,
   grading, timing, token usage and judge audits. Raw captures, credentials and
   source hashes stay local, so a published run cannot be tied to an exact
-  commit. See [EVALUATION.md](EVALUATION.md) for what a pass does and does not
+  commit. See [EVALUATION.md](docs/EVALUATION.md) for what a pass does and does not
   prove.
 
 ![The evaluation page showing 17 of 30 cases passed, with a failing case open for inspection](docs/images/evaluation-detail.png)
@@ -135,9 +135,9 @@ The held-out v2 baseline: 30 cases checked, 17 passed, 13 failed, each failure
 open for inspection. Exact checks decide facts and actions. The independent judge
 grades only the visible reply and never sees the model identity.
 
-The [`evaluation/`](evaluation/) folder documents the test matrix, comparison
+The [`evaluation/`](docs/evaluation/) folder documents the test matrix, comparison
 protocol, published evidence and limits of the conclusions.
-The [product roadmap](PRODUCT-ROADMAP.md) explains why checkout handoff comes
+The [product roadmap](docs/PRODUCT-ROADMAP.md) explains why checkout handoff comes
 before autonomous payment and how WhatsApp can reuse the same harness.
 
 ![The model comparison page: DeepSeek is cheapest and fastest among full-pass configurations, and the page states why Terra stayed the default](docs/images/model-comparison.png)
@@ -148,17 +148,17 @@ stayed the default on a single held-out date failure. The deployed dashboard
 retains the earlier screening failures, the repeated runs and a labelled
 cross-path view of historical evidence for four OpenAI models: GPT-6 Astra and
 GPT-5.6 Sol, Terra and Luna. The static chart is in
-[`evaluation/openrouter-tradeoff.svg`](evaluation/openrouter-tradeoff.svg).
+[`evaluation/openrouter-tradeoff.svg`](docs/evaluation/openrouter-tradeoff.svg).
 
 ## Security boundary
 
 The project owns a narrow adapter contract and synthetic fixtures. It does not
 import from the private product repository. Secrets, account data, raw backend
 captures, internal documentation and source snapshots are excluded from Git.
-See [SECURITY-BOUNDARY.md](SECURITY-BOUNDARY.md) and the
-[publication checklist](PUBLICATION-CHECKLIST.md). The layered conduct,
+See [SECURITY-BOUNDARY.md](docs/SECURITY-BOUNDARY.md) and the
+[publication checklist](docs/PUBLICATION-CHECKLIST.md). The layered conduct,
 grounding, error and cost controls are documented in
-[GUARDRAILS.md](GUARDRAILS.md).
+[GUARDRAILS.md](docs/GUARDRAILS.md).
 
 ## Run locally
 
@@ -186,5 +186,5 @@ without adding value. Multi-agent coordination, chain-of-thought capture,
 open-ended retries and MCP are absent by design. Safe reads receive bounded
 retries, temporary model HTTP failures receive one budgeted retry, and
 operations with uncertain side effects are not retried. See
-[RESILIENCE.md](RESILIENCE.md). New capabilities require a clear user need, a
+[RESILIENCE.md](docs/RESILIENCE.md). New capabilities require a clear user need, a
 tool contract and regression cases before they enter scope.

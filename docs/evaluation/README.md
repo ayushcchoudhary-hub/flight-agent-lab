@@ -32,7 +32,7 @@ latency, token use and cost compared. Both are retained because they answer
 different questions.
 
 The current sanitized reports are under
-[`agent/published-eval-results`](../agent/published-eval-results). They retain
+[`agent/published-eval-results`](../../agent/published-eval-results). They retain
 test inputs, visible replies, grading, latency, token usage and judge audits. They exclude
 credentials, backend captures, source snapshots, request identifiers and
 private model thread identifiers.

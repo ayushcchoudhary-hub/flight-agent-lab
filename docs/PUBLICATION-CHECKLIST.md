@@ -20,4 +20,4 @@ Reviewed 2026-09-20 against every tracked file and every commit in history.
 - [x] Live demo credentials are stored in the cloud secret manager, never in Git
 - [x] A human reviews the complete tracked-file list before granting repository access (2026-09-20)
 
-The repository carries no reuse license. See [LICENSE](LICENSE).
+The repository carries no reuse license. See [LICENSE](../LICENSE).

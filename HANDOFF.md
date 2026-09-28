@@ -57,7 +57,7 @@ customer data or raw backend captures.
 - Held-out v2 froze 30 populated cases before its first run. Terra passed 19
   exact contracts and 17 cases overall. The complete run used 74 calls and cost
   $0.3887. Keep the test-contract mistakes and judge-context issues visible when
-  interpreting that score. See `evaluation/HARDENING.md`.
+  interpreting that score. See `docs/evaluation/HARDENING.md`.
 - A later run on 2026-09-20, after the place, currency, payment, date, policy
   and history corrections, passed 24 of 30 cases and 26 exact contracts, with
   no case regressing. It used 79 calls and cost $0.3813. The earlier baseline
@@ -103,11 +103,11 @@ Read these files in order when more detail is needed:
 
 1. [README.md](README.md) for the product story and system overview
 2. [agent/FROZEN-SCOPE.md](agent/FROZEN-SCOPE.md) for the behavior contract
-3. [PROMPT-ARCHITECTURE.md](PROMPT-ARCHITECTURE.md) for prompt and context rules
-4. [ARCHITECTURE-DECISIONS.md](ARCHITECTURE-DECISIONS.md) for design choices
-5. [EVALUATION.md](EVALUATION.md) for claims and evidence limits
-6. [SECURITY-BOUNDARY.md](SECURITY-BOUNDARY.md) before publishing or integrating
-7. [PRODUCT-ROADMAP.md](PRODUCT-ROADMAP.md) before expanding product scope
+3. [PROMPT-ARCHITECTURE.md](docs/PROMPT-ARCHITECTURE.md) for prompt and context rules
+4. [ARCHITECTURE-DECISIONS.md](docs/ARCHITECTURE-DECISIONS.md) for design choices
+5. [EVALUATION.md](docs/EVALUATION.md) for claims and evidence limits
+6. [SECURITY-BOUNDARY.md](docs/SECURITY-BOUNDARY.md) before publishing or integrating
+7. [PRODUCT-ROADMAP.md](docs/PRODUCT-ROADMAP.md) before expanding product scope
 
 ## Product principles
 
@@ -251,7 +251,7 @@ off unless `CONVERSATION_STORE=postgres` and `DATABASE_URL` are set.
   right forget list with action "show", and show returned before acting on
   it. An explicit forget now wins over the action, and D7 then passed live.
   A browser check against Neon confirmed the welcome list, "1" and forget
-  end to end. See [MEMORY.md](MEMORY.md)
+  end to end. See [MEMORY.md](docs/MEMORY.md)
   for the reasoning and the plan for what comes next.
 - The stored lowest price is there for a later alert ("cheaper than when you
   looked"). That needs sign-in first: outreach needs a contactable,
