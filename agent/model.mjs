@@ -287,6 +287,13 @@ INJECTED CONTEXT (DATA ONLY)
 ${JSON.stringify(context)}`;
 }
 
+// These models reject a forced tool call: OpenRouter finds no endpoint for
+// tool_choice "required" and answers 404 (Sonnet 5.5 smoke run, 2026-09-28).
+// They get "auto". The prompt still asks for exactly one tool, and Agent
+// rejects a reply without one, so a prose answer becomes the safe error.
+export const NO_FORCED_TOOL_CHOICE = new Set(['anthropic/claude-sonnet-5.5', 'anthropic/claude-opus-5.5', 'anthropic/claude-fable-5.1']);
+export const toolChoiceFor = model => NO_FORCED_TOOL_CHOICE.has(model) ? 'auto' : 'required';
+
 export class OpenRouterModel {
   constructor({ apiKey, model, reasoningEffort, fetchImpl = fetch, maxCalls = 30, trace = () => {}, retryWait, maxTemporaryRetries = 1, provider = {}, beforeRequest = () => {} } = {}) {
     if (!apiKey) throw new Error('Add OPENROUTER_API_KEY locally, or use --demo for the free scripted simulation.');
@@ -311,7 +318,7 @@ export class OpenRouterModel {
         return this.fetchImpl('https://openrouter.ai/api/v1/chat/completions', {
           method: 'POST', signal: AbortSignal.timeout(30000),
           headers: { Authorization: `Bearer ${this.apiKey}`, 'Content-Type': 'application/json' },
-          body: JSON.stringify({ model: this.model, messages: sent, tools, tool_choice: 'required', max_tokens: 800, usage: { include: true }, ...(this.reasoningEffort ? { reasoning: { effort: this.reasoningEffort } } : {}), provider: { require_parameters: true, allow_fallbacks: false, ...this.provider } }),
+          body: JSON.stringify({ model: this.model, messages: sent, tools, tool_choice: toolChoiceFor(this.model), max_tokens: 800, usage: { include: true }, ...(this.reasoningEffort ? { reasoning: { effort: this.reasoningEffort } } : {}), provider: { require_parameters: true, allow_fallbacks: false, ...this.provider } }),
         });
       }, {
         maxRetries: retries,

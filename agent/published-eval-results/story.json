@@ -161,6 +161,8 @@
     "live-hardening-judge-2026-09-23T21-29-07.529Z": "Sonnet 5 smoke test: A1 and G2 only, before the full run.",
     "live-hardening-judge-2026-09-27T09-44-38.053Z": "Prompt caching check for Claude models: 3 cases on Sonnet 5. After the first call, every call read 4,771 prompt tokens from cache.",
     "live-hardening-judge-2026-09-27T12-04-50.856Z": "Memory check on Sonnet 5: D1, D2, D4 and the new recent-search cases under provisional ids D5 to D9, now D6 to D10; the existing D5 ran too. 7 of 9 passed, 25 calls, $0.35. Both failures were the application: the model sent the right forget list with action show, and show dropped it. Fixed after this run.",
-    "live-hardening-judge-2026-09-27T12-09-37.385Z": "Verification of the forget fix on Sonnet 5: D7 (forget recent searches) passes, 3 calls, $0.03. The model again sent action show with the forget list, which is now acted on. D8 was not rerun to stay within the 30-call cap; a test replays its recorded calls."
+    "live-hardening-judge-2026-09-27T12-09-37.385Z": "Verification of the forget fix on Sonnet 5: D7 (forget recent searches) passes, 3 calls, $0.03. The model again sent action show with the forget list, which is now acted on. D8 was not rerun to stay within the 30-call cap; a test replays its recorded calls.",
+    "live-hardening-judge-2026-09-28T19-30-01.173Z": "First Sonnet 5.5 smoke check: A1, C3 and F1 all returned the safe error, 4 calls, $0. Not a model result: OpenRouter has no Sonnet 5.5 endpoint for tool_choice required and answered 404. Claude models that reject a forced tool call now get auto.",
+    "live-hardening-judge-2026-09-28T19-31-23.512Z": "Sonnet 5.5 smoke check after the tool_choice fix: A1 passed exact checks and judge, $0.11. The harness stopped before C3 because its conservative reservation reached the $0.30 cap. Enough to show the model works with the agent."
   }
 }

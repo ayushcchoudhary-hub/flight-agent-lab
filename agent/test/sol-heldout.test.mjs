@@ -197,3 +197,19 @@ test('Claude requests mark the fixed part of the system prompt for caching; Open
   assert.equal(openai.messages[0].content, prompt);
   assert.deepEqual(messages[0].content, prompt, 'the caller’s messages are not modified');
 });
+
+test('Models that reject a forced tool call get tool_choice auto; the rest stay required', async () => {
+  const { OpenRouterModel, Agent } = await import('../model.mjs');
+  const bodies = [];
+  let reply = call('clarify_request', { question: 'Where to?' });
+  const fetchImpl = async (url, init) => { bodies.push(JSON.parse(init.body)); return Response.json({ choices: [{ message: reply }], usage: {} }); };
+  const messages = [{ role: 'system', content: 'x' }, { role: 'user', content: 'hi' }];
+  for (const model of ['anthropic/claude-sonnet-5.5', 'anthropic/claude-sonnet-5', 'openai/gpt-6-sol']) await new OpenRouterModel({ apiKey: 'test', model, fetchImpl }).complete(messages);
+  assert.deepEqual(bodies.map(body => body.tool_choice), ['auto', 'required', 'required']);
+  // With auto the model may answer in prose. That must not reach the traveler.
+  reply = { role: 'assistant', content: 'Sure, where would you like to go?' };
+  const { c } = setup();
+  const result = await new Agent({ conversation: c, model: new OpenRouterModel({ apiKey: 'test', model: 'anthropic/claude-sonnet-5.5', fetchImpl }) }).respond('flights to Tokyo');
+  assert.equal(result.status, 'error');
+  assert.doesNotMatch(result.text, /Sure, where/);
+});
