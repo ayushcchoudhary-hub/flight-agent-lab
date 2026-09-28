@@ -18,11 +18,18 @@ Flight availability comes from the search adapter. Policy answers use retrieved
 approved passages. Account-specific questions would require an authenticated
 account tool and are intentionally absent.
 
-## Explicit memory
+## Narrow, disclosed memory
 
-Home airport, usual cabin and a soft nonstop preference may be saved only after
-an explicit user action. A one-off search never silently becomes a permanent
-preference. Current instructions override saved defaults.
+Memory holds origins, not trip choices. Stating a home airport saves it, and
+the last origin a browser searched from is offered back. Either is always
+disclosed when it fills a new trip. Cabin and nonstop defaults are saved only
+after the traveler accepts a proposal. Dates, cabin and budget never carry
+into a new trip. Recent searches are listed at the start of a conversation and
+can be run again by number, but never pre-fill a new request. "Forget" clears
+each kind. Current instructions always override a saved default.
+
+Storage is off on the live demo until the privacy page covers it. See
+[MEMORY.md](MEMORY.md) for the reasoning and the plan.
 
 ## Deterministic safety controls
 

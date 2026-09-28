@@ -41,7 +41,8 @@ starts a new baseline version.
 - Ticket-specific refundability or booking lookup.
 - Baggage guarantees, airline exclusions, or constraints absent from the search
   API contract.
-- Automatic preference inference from location or search history.
+- Automatic preference inference from location or search history, apart from
+  the remembered origin recorded under scope changes below.
 - Production inventory, production deployment, WhatsApp delivery, or a
   deployed account-backed preference connection.
 
@@ -49,8 +50,17 @@ starts a new baseline version.
 
 Each is recorded here with its date and the held-out cases that pin it.
 
+- 22 September 2026: a link from every results reply to the same search on
+  CommonSwyft, where selection and checkout happen. Held-out case F1. Prompt
+  contract `flight-search-v1.5.0`.
 - 22 September 2026: “take me anywhere” moved into scope. Held-out cases
   G1–G11. Prompt contract `flight-search-v1.6.0`.
+- 23 September 2026: memory of origins, when conversation storage is on.
+  Stating a home airport saves it without a separate step, and the last
+  origin a browser searched from is offered back as a disclosed default.
+  This replaces the explicit-save rule above for the home airport only. Cabin
+  and nonstop defaults remain proposals, and cabin, dates and budget are never
+  inferred from history. Held-out cases D1, D2 and D4.
 - 27 September 2026: recent searches, when conversation storage is on. The
   welcome lists a browser's recent trips by number and the traveler can
   forget them. They never pre-fill a new trip (held-out D1 unchanged).

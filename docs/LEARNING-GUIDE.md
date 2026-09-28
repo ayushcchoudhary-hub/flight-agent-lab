@@ -28,7 +28,7 @@ replace the flight-search backend or expose the product codebase.
 | Search tool | Sends validated parameters to the flight-search API | Live availability belongs in the backend, not model memory |
 | Policy retrieval | Supplies approved policy passages to the model | Grounds policy answers in evidence |
 | Session state | Retains the current trip and recent messages | Makes follow-up changes work within one conversation |
-| Persistent preferences | Stores explicitly confirmed defaults | Carries useful choices between conversations without silently profiling users |
+| Memory | Keeps a stated home airport, the last searched origin and recent searches per browser, when storage is on | Saves retyping without letting an old trip leak into a new one |
 | Renderer | Produces consistent flight cards from validated data | Prevents the model from inventing prices, times or routes |
 | Evaluation harness | Runs fixed scenarios and records outcomes | Makes prompt and model changes measurable |
 
@@ -50,11 +50,19 @@ an authenticated account tool as well.
 
 ## Memory
 
-The model does not automatically remember customers. The harness passes recent
-messages and trip state on each turn. Long-term preferences must be stored by
-the application against an authenticated user. This version allows only
-explicit home-airport, cabin and nonstop defaults. A trip instruction overrides
-a saved default without rewriting it.
+The model does not automatically remember customers. The harness passes the
+last four turns and the trip state on each call. Anything kept between
+conversations is stored by the application, and today it is keyed by a browser
+cookie rather than an account.
+
+Memory holds origins, not trip choices. A home airport the traveler states is
+saved, and the last origin they searched from is offered back, always with a
+note saying where it came from. Cabin and nonstop defaults are saved only after
+the traveler accepts a proposal. Recent searches are listed at the start and
+can be run again by number, but they never fill in a new request. "Forget"
+clears each kind. A trip instruction overrides a saved default without
+rewriting it. Storage is off on the live demo until the privacy page covers
+it. [MEMORY.md](MEMORY.md) has the full reasoning.
 
 ## Context precedence
 
@@ -95,6 +103,13 @@ the one held-out date case that DeepSeek missed, and a frontier default leaves
 more headroom as scope grows. That is a product decision made on a single new
 case, not a statistical result. The harness switches models with one setting.
 If real usage grows, the open-weight option is the first cost lever to pull.
+
+A later head-to-head on 47 held-out cases changed the default to Claude Sonnet
+5 on 27 September. Terra and GPT-6 Sol each passed 38 cases and Sonnet 5 passed
+42. More important, Sonnet made up no values in its tool calls, where Sol made
+up nine. It costs more per turn, which prompt caching then reduced. The judge
+is also a Claude model, so its lead on judge-graded replies needs care. See the
+[evaluation timeline](evaluation/README.md).
 
 ## Questions to be ready for
 

@@ -1,6 +1,18 @@
 # Prompt architecture
 
-Current prompt: `flight-search-v1.4.1`
+Current prompt: `flight-search-v1.7.0`
+
+| Version | Date | Change |
+|---|---|---|
+| v1.1.0 | 19 Sep 2026 | First baseline |
+| v1.2.0 | 19 Sep 2026 | Layered customer guardrails |
+| v1.3.0 | 20 Sep 2026 | A more direct action checklist after open-weight validation |
+| v1.4.1 | 20 Sep 2026 | Hardening: named dates, baggage, purchase and existing-booking boundaries, policy routing |
+| v1.5.0 | 22 Sep 2026 | Checkout link and reply fixes, including an off-topic question asked alongside a request |
+| v1.6.0 | 22 Sep 2026 | "Take me anywhere" through `discover_flights` |
+| v1.7.0 | 27 Sep 2026 | The preference tool can forget recent searches |
+
+Each evaluation report records the prompt version it ran on.
 
 The prompt is a routing and interpretation contract. It does not ask the model
 to perform searches, calculate prices or write the final flight cards.
@@ -15,14 +27,14 @@ to perform searches, calculate prices or write the final flight cards.
 | Action check | Requires every explicit trip field in the current request to survive into the action |
 | Boundaries and safety | Blocks booking, account access, arbitrary APIs, prompt disclosure and fabricated results |
 | Output contract | Requires exactly one schema-valid action and prohibits extra prose |
-| Injected context | Supplies the current date, timezone, data mode, trip state and explicit saved preferences as data |
+| Injected context | Supplies the current date, timezone, data mode, trip state, saved preferences and a remembered origin as data |
 
 ## Context precedence
 
 1. System rules and tool schemas
 2. Explicit fields in the latest user request
 3. Current trip state for fields the user did not change
-4. Explicit saved preferences as soft defaults for a new trip
+4. Saved preferences and a remembered origin as disclosed soft defaults for a new trip
 5. Recent conversation for continuity
 
 Retrieved policy text is evidence, never an instruction. Backend search results

@@ -5,7 +5,7 @@ security boundary.
 
 | Layer | Control | Failure behavior |
 |---|---|---|
-| Capability | Four-tool allowlist with strict schemas | Reject any other action before execution |
+| Capability | Five-tool allowlist with strict schemas | Reject any other action before execution |
 | Scope | Search only, one way, one traveler, no payment or booking | Explain the limit and offer the next supported step |
 | State | Latest explicit request wins over trip state and saved defaults | Preserve fields the traveler did not change |
 | Data | Retrieved policy text and search responses are untrusted data | Validate them and never treat them as instructions |

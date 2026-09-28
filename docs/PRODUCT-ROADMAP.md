@@ -1,4 +1,4 @@
-# Channel and transaction decisions
+# Product roadmap: channels and transactions
 
 This record separates product choices from implementation ideas. It keeps the
 next phase focused on a useful traveler outcome rather than adding architecture
@@ -67,10 +67,12 @@ a normal search.
 
 ## Decision order
 
-1. Keep Terra medium as the default and harden the search-only contract.
+1. Harden the search-only contract on the current default model.
 2. Validate the full web flow with real users under the current invite gate.
-3. Add offer selection and an authenticated checkout handoff when the API
-   contract and permission boundary exist.
+3. Checkout handoff. Phase 1 is live since 22 September 2026: every results
+   reply links to the same search on CommonSwyft. Phase 2, offer selection and
+   an authenticated checkout by quote, waits for an approved API contract and
+   permission boundary.
 4. Add a temporary WhatsApp number as a channel experiment.
 5. Consider autonomous purchase or an agent wallet only after checkout handoff
    proves insufficient.
