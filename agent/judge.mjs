@@ -16,7 +16,7 @@ export function parseJudgeOutput(content){
  return JSON.parse(text.replace(/^```(?:json)?\s*/i,'').replace(/\s*```$/,''));
 }
 export class OpenRouterJudge{
- constructor({apiKey,model='anthropic/claude-sonnet-4.6',effort='low',trace=()=>{},beforeRequest=()=>{}}={}){if(!apiKey)throw Error('Set OPENROUTER_API_KEY.');this.apiKey=apiKey;this.model=model;this.effort=effort;this.trace=trace;this.beforeRequest=beforeRequest;this.calls=0;}
+ constructor({apiKey,model='anthropic/claude-opus-5.5',effort='medium',trace=()=>{},beforeRequest=()=>{}}={}){if(!apiKey)throw Error('Set OPENROUTER_API_KEY.');this.apiKey=apiKey;this.model=model;this.effort=effort;this.trace=trace;this.beforeRequest=beforeRequest;this.calls=0;}
  // The judge never sees the exact-check result. That keeps the communication
  // score independent. The runner combines both gates in code.
  async evaluate({caseId,category,requirement,steps,notes=[]}){
@@ -24,8 +24,9 @@ export class OpenRouterJudge{
   const approvedSourceUrls=[...new Set(steps.flatMap(s=>(s.result.sources??[]).map(source=>source.url)))];
   const input={caseId,category,requirement,offScreenEvents:notes,approvedPolicyEvidence:approvedSourceUrls.length>0,approvedSourceUrls,conversation:steps.map(s=>({traveler:s.input,assistant:productionEquivalent(s.result.text),status:s.result.status}))};
   const messages=[{role:'system',content:JUDGE_SYSTEM_PROMPT},{role:'user',content:JSON.stringify(input)}];
-  const body={model:this.model,messages,max_tokens:this.effort==='low'?900:2500,reasoning:{effort:this.effort},response_format:{type:'json_schema',json_schema:{name:'flight_agent_judge',strict:true,schema}},provider:{require_parameters:true,allow_fallbacks:false,data_collection:'deny'},usage:{include:true}};
-  await this.beforeRequest({model:this.model,inputCharacters:JSON.stringify(messages).length,maxOutputTokens:900});this.calls++;
+  const maxTokens=this.effort==='low'?900:2500;
+  const body={model:this.model,messages,max_tokens:maxTokens,reasoning:{effort:this.effort},response_format:{type:'json_schema',json_schema:{name:'flight_agent_judge',strict:true,schema}},provider:{require_parameters:true,allow_fallbacks:false,data_collection:'deny'},usage:{include:true}};
+  await this.beforeRequest({model:this.model,inputCharacters:JSON.stringify(messages).length,maxOutputTokens:maxTokens});this.calls++;
   const started=Date.now(),response=await fetch('https://openrouter.ai/api/v1/chat/completions',{method:'POST',signal:AbortSignal.timeout(45000),headers:{Authorization:`Bearer ${this.apiKey}`,'Content-Type':'application/json'},body:JSON.stringify(body)});
   if(!response.ok)throw Error(`Judge returned HTTP ${response.status}.`);const data=await response.json();if(data.error)throw Error('Judge reported an error.');
   // Reasoning and the answer share max_tokens. Above low effort the reasoning
