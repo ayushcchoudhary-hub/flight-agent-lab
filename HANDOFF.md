@@ -20,13 +20,14 @@ customer data or raw backend captures.
 - The live experiment is an invite-protected Cloud Run service. Its URL,
   revision history and rollback command are kept in an ignored local
   `OPERATIONS.md`, not in this public repository.
-- Claude Sonnet 5.5 medium is the default model in code from 2026-09-28. The
-  live service still runs Sonnet 5 (default from 2026-09-27) until it is
-  redeployed with `OPENROUTER_MODEL=anthropic/claude-sonnet-5.5`. Sonnet 5
-  medium, Terra medium, DeepSeek V4.1 Flash low and GLM 5.3 high remain
-  optional controls in the chat.
-- Live since 2026-09-27: Sonnet 5, prompt caching, take me anywhere and the
-  guards against made-up values. Conversation storage stays off.
+- Claude Sonnet 5.5 medium is the default model from 2026-09-28, in code and
+  on the live service (`OPENROUTER_MODEL=anthropic/claude-sonnet-5.5`). Sonnet
+  5 medium (the default from 2026-09-27), Terra medium, DeepSeek V4.1 Flash
+  low and GLM 5.3 high remain optional controls in the chat.
+- Live since 2026-09-28: Sonnet 5.5, the eval trend chart and country airport
+  menus, on top of prompt caching, take me anywhere and the guards against
+  made-up values. Conversation storage stays off. The revision and rollback
+  command are in `OPERATIONS.md`.
 - Each result shows the product's cash comparison as "usually USD X" when the
   API priced one for the same flights (Google Flights), with one footnote
   naming the source. Pending, unavailable and expired comparisons are left out.
@@ -104,10 +105,9 @@ the real spend with caching, so both runs hit the $3.50 cap before the end
 and were finished in parts within the remaining budget: Sonnet 5.5 in two
 ($1.73 real), Sonnet 5 in three ($1.99 real), plus $0.11 of smoke checks.
 
-Sonnet 5.5 is the default in code and the first hosted option, with Sonnet
-5 kept as an option. The live service changes only on a redeploy with
-`OPENROUTER_MODEL` updated; the overview page's "Deployed on Cloud Run ·
-Claude Sonnet 5" line should change with it.
+Sonnet 5.5 is the default and the first hosted option, with Sonnet 5 kept
+as an option. It went live on 2026-09-28 (PRs #22 and #23). The A2 airport
+menu fix has deterministic tests; A2 has not been rerun live.
 
 Read these files in order when more detail is needed:
 
