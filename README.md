@@ -96,15 +96,15 @@ book a flight or create a payment. See
 [docs/ARCHITECTURE-DECISIONS.md](docs/ARCHITECTURE-DECISIONS.md) and
 [docs/PROMPT-ARCHITECTURE.md](docs/PROMPT-ARCHITECTURE.md).
 
-The default model is Claude Sonnet 5 at medium reasoning effort, since 27
-September 2026. Terra medium, DeepSeek V4.1 Flash low and GLM 5.3 high remain
-selectable in the live demo for comparison. All model calls go through one
+The default model is Claude Sonnet 5.5 at medium reasoning effort, since 28
+September 2026. Sonnet 5 medium, Terra medium, DeepSeek V4.1 Flash low and GLM
+5.3 high remain selectable in the live demo for comparison. All model calls go through one
 OpenRouter adapter. The current prompt contract is `flight-search-v1.7.0`.
 Supported behavior is defined in [agent/FROZEN-SCOPE.md](agent/FROZEN-SCOPE.md).
 
 ## Evaluation
 
-- **311 deterministic tests** cover routing, state, policy retrieval, memory,
+- **316 deterministic tests** cover routing, state, policy retrieval, memory,
   output grounding, security and adapter behavior. They run in CI on every
   push and need no API key.
 - **A held-out set written before the agent saw it**, graded two ways: exact
@@ -129,6 +129,12 @@ passed 42 and was the only model that invented no values in its tool calls
 (Sol 9, Terra 1), so it became the default. On exact checks the three are
 within one case, and the judge is a Claude model too, so Sonnet's lead should
 be read with that in mind.
+
+On 28 September Sonnet 5 and Sonnet 5.5 ran the same 52 cases on the same
+code, with prompt caching on both. Sonnet 5.5 passed 51 with every exact check
+and no made-up values, against Sonnet 5's 46 and 51. Its median model call
+took 1.6 seconds against 2.8, at about the same cost, so it became the
+default. Its one miss was a country airport menu, since fixed in the app.
 
 ![The Model comparison page: Terra, Sol and Sonnet 5 on the same 47 cases, with made-up values listed per model](docs/images/model-comparison.png)
 
