@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { isTemporaryStatus, retryDelayMs, requestWithRetry } from '../retry.mjs';
+import { isTemporaryStatus, retryDelayMs, requestWithRetry } from '../src/retry.mjs';
 
 test('retry policy recognizes only temporary HTTP statuses', () => {
   for (const status of [429, 502, 503, 504]) assert.equal(isTemporaryStatus(status), true);
@@ -16,10 +16,13 @@ test('retry delay honors Retry-After within the configured cap', () => {
 test('retry runner obeys its attempt bound', async () => {
   let attempts = 0;
   const retries = [];
-  const response = await requestWithRetry(async () => {
-    attempts++;
-    return new Response('', { status: attempts < 3 ? 503 : 200 });
-  }, { maxRetries: 2, wait: async () => {}, onRetry: event => retries.push(event) });
+  const response = await requestWithRetry(
+    async () => {
+      attempts++;
+      return new Response('', { status: attempts < 3 ? 503 : 200 });
+    },
+    { maxRetries: 2, wait: async () => {}, onRetry: (event) => retries.push(event) },
+  );
   assert.equal(response.status, 200);
   assert.equal(attempts, 3);
   assert.equal(retries.length, 2);

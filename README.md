@@ -175,6 +175,18 @@ The tests use synthetic fixtures and need no key either. Live flight search need
 credentials that are not in this repository. Live model runs read
 `OPENROUTER_API_KEY` from an ignored `.env` file or the environment.
 
+## Where things live
+
+| Folder | What it holds |
+|---|---|
+| `agent/src/` | The agent itself: understanding a request, search, memory, policy answers, storage |
+| `agent/apps/` | Things you start: the hosted demo server, the local dashboard, the command-line chat |
+| `agent/evals/` | Things that measure the agent: test cases, the judge, model comparisons, publishing |
+| `agent/tools/` | Maintenance: database setup, airport and policy-snapshot sync |
+| `agent/test/` | The deterministic test suite |
+| `agent/dashboard/` | The pages for the dashboard and the hosted demo |
+| `agent/published-eval-results/` | Sanitized reports from every published evaluation run |
+
 ## Why the design stays small
 
 The flow is dynamic enough to benefit from language understanding and tool
