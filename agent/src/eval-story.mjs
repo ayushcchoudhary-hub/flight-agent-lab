@@ -7,6 +7,7 @@ import { existsSync } from 'node:fs';
 import { readFile, readdir } from 'node:fs/promises';
 import { join } from 'node:path';
 import { unsupportedArguments } from './model.mjs';
+import { DEFAULT_MODEL } from './hosted-model-options.mjs';
 
 const RUN = /^live-hardening-judge-[\w.-]+$/;
 // A run interrupted by a provider error and finished with the remaining cases
@@ -25,6 +26,11 @@ const median = (xs) => {
     : null;
 };
 const outcome = (row) => (row.pass ? 'pass' : row.deterministicPass ? 'judge' : 'exact');
+// When a run started, from its id (live-hardening-judge-2026-09-23T21-29-40.155Z).
+export const runDate = (key) => {
+  const m = partsOf(key)[0].match(/(\d{4}-\d{2}-\d{2})T(\d{2})-(\d{2})-(\d{2})/);
+  return m ? `${m[1]}T${m[2]}:${m[3]}:${m[4]}Z` : null;
+};
 
 // Values the model put in a tool call that the traveler never said. A guard
 // that catches one keeps the reply right, so the case can still pass, but the
@@ -72,8 +78,15 @@ export function summarizeRun(run, report, cases) {
   const cost = (xs) =>
     xs.reduce((n, x) => n + (Number.isFinite(x.usage?.cost) ? x.usage.cost : 0), 0);
   const candidateCostUsd = cost(usage);
+  const passed = rows.filter((r) => r.pass).length;
+  const promptTokens = usage.reduce((n, u) => n + (u.usage?.prompt_tokens ?? 0), 0);
+  const cachedTokens = usage.reduce(
+    (n, u) => n + (u.usage?.prompt_tokens_details?.cached_tokens ?? 0),
+    0,
+  );
   return {
     run,
+    date: runDate(run),
     label: report.label ?? null,
     model: report.models?.[0] ?? null,
     effort: report.effort ?? null,
@@ -81,7 +94,7 @@ export function summarizeRun(run, report, cases) {
     judge: report.judge ? { model: report.judge.model, effort: report.judge.effort } : null,
     cases: cases.length,
     completed: rows.length,
-    passed: rows.filter((r) => r.pass).length,
+    passed,
     exact: rows.filter((r) => r.deterministicPass).length,
     judgeOnly: rows.filter((r) => !r.pass && r.deterministicPass).length,
     exactFailed: rows.filter((r) => !r.deterministicPass).length,
@@ -90,6 +103,16 @@ export function summarizeRun(run, report, cases) {
     judgeCostUsd: cost(judgeUsage),
     turns,
     costPer1000TurnsUsd: turns ? (candidateCostUsd / turns) * 1000 : null,
+    // A traveler turn from message to reply: model calls, guards and the
+    // (synthetic) flight API together, which is what the traveler waits for.
+    medianTurnMs: median(
+      rows.flatMap((r) => r.steps.map((s) => s.latencyMs)).filter(Number.isFinite),
+    ),
+    costPerPassedCaseUsd: passed ? candidateCostUsd / passed : null,
+    // Share of prompt tokens read from the provider's prompt cache. Claude
+    // requests mark the fixed prompt for caching from 2026-09-27; runs before
+    // that read nothing from cache.
+    cacheReadShare: promptTokens ? cachedTokens / promptTokens : null,
     madeUp: rows
       .map((r) => ({ id: r.caseId, fields: madeUpValues(r) }))
       .filter((x) => x.fields.length),
@@ -277,6 +300,34 @@ export async function loadStory(root) {
     before: story.before,
     milestones,
     headToHead,
+    trend: await trendOf(story, published, get),
+    defaultModel: DEFAULT_MODEL,
     supporting: story.supporting,
   };
+}
+
+// Every complete run of the held-out set, milestones and head-to-head runs
+// alike, in the order they ran. Supporting runs are partial or targeted and
+// would skew the rates, so they stay out. The set grew from 30 to 52 cases,
+// so the page shows rates, not counts.
+async function trendOf(story, published, get) {
+  const keys = [
+    ...new Set(
+      [...story.milestones.map((m) => m.run), ...story.headToHead.flatMap((p) => p.runs)]
+        .filter(published)
+        .map(runKey),
+    ),
+  ];
+  const titles = new Map([
+    ...story.headToHead.flatMap((p) => p.runs.map((run) => [runKey(run), p.title])),
+    ...story.milestones.map((m) => [runKey(m.run), m.title]),
+  ]);
+  const runs = await Promise.all(keys.map(get));
+  return runs
+    .map(({ outcomes, names, madeUp, ...r }) => ({
+      ...r,
+      title: titles.get(r.run),
+      madeUpValues: madeUp.reduce((n, x) => n + x.fields.length, 0),
+    }))
+    .sort((a, b) => String(a.date).localeCompare(String(b.date)));
 }

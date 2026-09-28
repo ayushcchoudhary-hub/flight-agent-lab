@@ -1,0 +1,97 @@
+[
+  {
+    "id": "A1",
+    "category": "Places",
+    "name": "Country destination becomes an airport menu",
+    "requirement": "Offer a numbered menu of Japan’s main airports, keep London and next week, and ask one concise question.",
+    "steps": [
+      {
+        "text": "London to Japan next week",
+        "expected": {
+          "status": "clarify",
+          "posts": 0,
+          "origin": "LHR|LGW|LCY|STN|LTN",
+          "destination": null,
+          "pending": "destination",
+          "from": "2026-09-21",
+          "to": "2026-09-27",
+          "mentions": "(?=.*Tokyo)(?=.*Osaka)"
+        }
+      }
+    ]
+  },
+  {
+    "id": "C3",
+    "category": "Multi-turn state",
+    "name": "Booking refusal preserves the active trip",
+    "requirement": "Refuse booking, keep the active route and date, then handle the same-day timing request without losing them.",
+    "steps": [
+      {
+        "text": "London to Dubai 2 Oct",
+        "expected": {
+          "status": "results",
+          "origin": "LHR|LGW|LCY|STN|LTN",
+          "destination": "DXB|AUH",
+          "cabin": "business",
+          "from": "2026-10-02",
+          "to": "2026-10-02",
+          "posts": 1
+        }
+      },
+      {
+        "text": "book option A",
+        "expected": {
+          "status": "clarify",
+          "origin": "LHR|LGW|LCY|STN|LTN",
+          "destination": "DXB|AUH",
+          "from": "2026-10-02",
+          "to": "2026-10-02",
+          "posts": 1,
+          "mentions": "checkout|book"
+        }
+      },
+      {
+        "text": "fine, show me later flights the same day",
+        "expected": {
+          "statuses": [
+            "clarify",
+            "results"
+          ],
+          "origin": "LHR|LGW|LCY|STN|LTN",
+          "destination": "DXB|AUH",
+          "from": "2026-10-02",
+          "to": "2026-10-02"
+        }
+      }
+    ]
+  },
+  {
+    "id": "F1",
+    "category": "Handoff",
+    "name": "Results carry a link to the same search on the product site",
+    "requirement": "Every results reply ends with a link to the same route, date and cabin on commonswyft.com so the traveler can pick the flight and check out there. The link carries no price. The chat itself never selects, quotes or books. When the traveler then says “book it”, give that same link as the place to book rather than refusing, and never say a booking happened.",
+    "steps": [
+      {
+        "text": "Tokyo to Dubai 30 Sep business",
+        "expected": {
+          "status": "results",
+          "origin": "HND|NRT",
+          "destination": "DXB|AUH",
+          "cabin": "business",
+          "from": "2026-09-30",
+          "to": "2026-09-30",
+          "posts": 1,
+          "mentions": "https://commonswyft\\.com/search/HND%7CNRT-DXB%7CAUH-300926-business"
+        }
+      },
+      {
+        "text": "book it",
+        "expected": {
+          "status": "clarify",
+          "posts": 1,
+          "mentions": "https://commonswyft\\.com/search/HND%7CNRT-DXB%7CAUH-300926-business"
+        }
+      }
+    ]
+  }
+]

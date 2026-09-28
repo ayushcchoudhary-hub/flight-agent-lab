@@ -6,6 +6,7 @@ import {
   findTool,
   resolveLocation,
   isoToday,
+  MAIN_AIRPORTS,
 } from '../src/search.mjs';
 import { makeFixtureAdapter } from '../src/fixtures.mjs';
 import { AIRPORTS } from '../src/shared.mjs';
@@ -493,6 +494,38 @@ test('a country resolves to a menu of its airports, hubs first', () => {
   assert.match(labels, /Tokyo/);
   assert.match(labels, /Osaka/);
   assert.equal(resolveLocation('UK')[0].code, 'LHR|LGW|LCY|STN|LTN');
+});
+
+// Held-out A2: the judge found the UK menu was an alphabetical slice, with
+// Aberdeen, Belfast and Bristol but no Manchester or Edinburgh. Matching a
+// country as text also put Martinique under France and Indianapolis under India.
+test('a country menu lists its main airports, and only airports in that country', () => {
+  const codes = (text) => resolveLocation(text).map((x) => x.code);
+  assert.deepEqual(codes('the UK'), ['LHR|LGW|LCY|STN|LTN', 'MAN', 'EDI', 'BHX', 'GLA']);
+  assert.deepEqual(codes('Japan'), ['HND|NRT', 'KIX|ITM|UKB', 'NGO', 'FUK', 'CTS']);
+  assert.deepEqual(codes('Germany').slice(0, 2), ['FRA', 'MUC']);
+  assert.equal(codes('France')[0], 'CDG|ORY');
+  assert.equal(codes('Spain')[0], 'MAD');
+  assert.equal(codes('India')[0], 'DEL');
+  assert.deepEqual(codes('South Korea'), codes('Korea'));
+  for (const text of ['France', 'Spain', 'India', 'Norway']) {
+    const country = text;
+    for (const choice of resolveLocation(text))
+      for (const code of choice.code.split('|'))
+        assert.equal(
+          AIRPORTS.find((a) => a.code === code).country,
+          country,
+          `${text} offered ${code}`,
+        );
+  }
+  // A city that is also a country stays a single answer.
+  assert.deepEqual(codes('Singapore'), ['SIN']);
+});
+
+test('every reviewed main airport exists and is in its country', () => {
+  for (const [country, list] of Object.entries(MAIN_AIRPORTS))
+    for (const code of list)
+      assert.equal(AIRPORTS.find((a) => a.code === code)?.country, country, `${country} ${code}`);
 });
 
 test('an unambiguous misspelling resolves without a menu', () => {

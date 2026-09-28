@@ -1,0 +1,412 @@
+{
+  "runId": "live-hardening-judge-2026-09-28T19-31-23.512Z",
+  "evaluationKind": "llm-judge-hardening",
+  "suite": "v2",
+  "label": "Sonnet 5.5 · smoke check",
+  "promptVersion": "flight-search-v1.7.0",
+  "judge": {
+    "model": "anthropic/claude-opus-5.5",
+    "effort": "medium",
+    "rubricVersion": "communication-quality-v1.2.0",
+    "criteria": [
+      "clarity",
+      "concision",
+      "tone",
+      "nextStep",
+      "limitationHonesty",
+      "noInternalLeakage"
+    ]
+  },
+  "clock": "2026-09-18",
+  "flightData": "synthetic",
+  "effort": "medium",
+  "models": [
+    "anthropic/claude-sonnet-5.5"
+  ],
+  "repeats": 1,
+  "cases": [
+    {
+      "id": "A1",
+      "category": "Places",
+      "name": "Country destination becomes an airport menu",
+      "requirement": "Offer a numbered menu of Japan’s main airports, keep London and next week, and ask one concise question.",
+      "steps": [
+        {
+          "text": "London to Japan next week",
+          "expected": {
+            "status": "clarify",
+            "posts": 0,
+            "origin": "LHR|LGW|LCY|STN|LTN",
+            "destination": null,
+            "pending": "destination",
+            "from": "2026-09-21",
+            "to": "2026-09-27",
+            "mentions": "(?=.*Tokyo)(?=.*Osaka)"
+          }
+        }
+      ]
+    },
+    {
+      "id": "C3",
+      "category": "Multi-turn state",
+      "name": "Booking refusal preserves the active trip",
+      "requirement": "Refuse booking, keep the active route and date, then handle the same-day timing request without losing them.",
+      "steps": [
+        {
+          "text": "London to Dubai 2 Oct",
+          "expected": {
+            "status": "results",
+            "origin": "LHR|LGW|LCY|STN|LTN",
+            "destination": "DXB|AUH",
+            "cabin": "business",
+            "from": "2026-10-02",
+            "to": "2026-10-02",
+            "posts": 1
+          }
+        },
+        {
+          "text": "book option A",
+          "expected": {
+            "status": "clarify",
+            "origin": "LHR|LGW|LCY|STN|LTN",
+            "destination": "DXB|AUH",
+            "from": "2026-10-02",
+            "to": "2026-10-02",
+            "posts": 1,
+            "mentions": "checkout|book"
+          }
+        },
+        {
+          "text": "fine, show me later flights the same day",
+          "expected": {
+            "statuses": [
+              "clarify",
+              "results"
+            ],
+            "origin": "LHR|LGW|LCY|STN|LTN",
+            "destination": "DXB|AUH",
+            "from": "2026-10-02",
+            "to": "2026-10-02"
+          }
+        }
+      ]
+    },
+    {
+      "id": "F1",
+      "category": "Handoff",
+      "name": "Results carry a link to the same search on the product site",
+      "requirement": "Every results reply ends with a link to the same route, date and cabin on commonswyft.com so the traveler can pick the flight and check out there. The link carries no price. The chat itself never selects, quotes or books. When the traveler then says “book it”, give that same link as the place to book rather than refusing, and never say a booking happened.",
+      "steps": [
+        {
+          "text": "Tokyo to Dubai 30 Sep business",
+          "expected": {
+            "status": "results",
+            "origin": "HND|NRT",
+            "destination": "DXB|AUH",
+            "cabin": "business",
+            "from": "2026-09-30",
+            "to": "2026-09-30",
+            "posts": 1,
+            "mentions": "https://commonswyft\\.com/search/HND%7CNRT-DXB%7CAUH-300926-business"
+          }
+        },
+        {
+          "text": "book it",
+          "expected": {
+            "status": "clarify",
+            "posts": 1,
+            "mentions": "https://commonswyft\\.com/search/HND%7CNRT-DXB%7CAUH-300926-business"
+          }
+        }
+      ]
+    }
+  ],
+  "status": "stopped",
+  "maxCostUsd": 0.3,
+  "maxCalls": 12,
+  "results": [
+    {
+      "caseId": "A1",
+      "name": "Country destination becomes an airport menu",
+      "category": "Places",
+      "requirement": "Offer a numbered menu of Japan’s main airports, keep London and next week, and ask one concise question.",
+      "model": "anthropic/claude-sonnet-5.5",
+      "repeat": 1,
+      "pass": true,
+      "deterministicPass": true,
+      "communicationPass": true,
+      "steps": [
+        {
+          "input": "London to Japan next week",
+          "expected": {
+            "status": "clarify",
+            "posts": 0,
+            "origin": "LHR|LGW|LCY|STN|LTN",
+            "destination": null,
+            "pending": "destination",
+            "from": "2026-09-21",
+            "to": "2026-09-27",
+            "mentions": "(?=.*Tokyo)(?=.*Osaka)"
+          },
+          "result": {
+            "status": "clarify",
+            "text": "Which destination did you mean?\n\n1. Osaka (all airports)\n2. Tokyo (all airports)\n3. Aomori Airport (AOJ)\n4. Fukuoka Airport (FUK)\n5. Hakodate Airport (HKD)\n\nReply with the number, or type any city or airport.\n\nI'll keep the flight from London · Business class · Mon, 21 Sept 2026 – Sun, 27 Sept 2026 unless you change it."
+          },
+          "latencyMs": 1916,
+          "grade": {
+            "pass": true,
+            "actual": {
+              "status": "clarify",
+              "origin": "LHR|LGW|LCY|STN|LTN",
+              "destination": null,
+              "cabin": "business",
+              "from": "2026-09-21",
+              "to": "2026-09-27",
+              "budget": null,
+              "pending": "destination",
+              "menuCount": 5,
+              "posts": 0,
+              "resultCount": 0,
+              "sort": "recommended",
+              "nonstopOnly": false,
+              "sources": [],
+              "savedPreferences": {}
+            },
+            "checks": [
+              {
+                "name": "status",
+                "expected": "clarify",
+                "actual": "clarify",
+                "pass": true
+              },
+              {
+                "name": "posts",
+                "expected": 0,
+                "actual": 0,
+                "pass": true
+              },
+              {
+                "name": "origin",
+                "expected": "LHR|LGW|LCY|STN|LTN",
+                "actual": "LHR|LGW|LCY|STN|LTN",
+                "pass": true
+              },
+              {
+                "name": "destination",
+                "expected": null,
+                "actual": null,
+                "pass": true
+              },
+              {
+                "name": "pending",
+                "expected": "destination",
+                "actual": "destination",
+                "pass": true
+              },
+              {
+                "name": "from",
+                "expected": "2026-09-21",
+                "actual": "2026-09-21",
+                "pass": true
+              },
+              {
+                "name": "to",
+                "expected": "2026-09-27",
+                "actual": "2026-09-27",
+                "pass": true
+              },
+              {
+                "name": "mentions",
+                "expected": "(?=.*Tokyo)(?=.*Osaka)",
+                "actual": "Which destination did you mean?\n\n1. Osaka (all airports)\n2. Tokyo (all airports)\n3. Aomori Airport (AOJ)\n4. Fukuoka Airport (FUK)\n5. Hakodate Airport (HKD)\n\nReply with the number, or type any city or airport.\n\nI'll keep the flight from London · Business class · Mon, 21 Sept 2026 – Sun, 27 Sept 2026 unless you change it.",
+                "pass": true
+              },
+              {
+                "name": "menu excludes opposite city",
+                "pass": true
+              },
+              {
+                "name": "Does not echo profanity or insult the user (limited lexical check)",
+                "pass": true
+              },
+              {
+                "name": "No claimed purchase completion",
+                "pass": true
+              }
+            ]
+          }
+        }
+      ],
+      "judge": {
+        "verdict": "pass",
+        "scores": {
+          "clarity": 5,
+          "concision": 5,
+          "tone": 5,
+          "nextStep": 5,
+          "limitationHonesty": 4,
+          "noInternalLeakage": 5
+        },
+        "rationale": "The reply asks one clear question and presents a numbered destination menu. It keeps London as the origin and turns 'next week' into explicit dates. It also discloses the documented Business default and explains how to reply or override. There is no leakage and the tone is friendly. The only soft spot is the airport selection: listing Aomori and Hakodate alongside Osaka and Tokyo makes it unclear whether these are the 'main' airports. Offering free-text entry reduces the impact.",
+        "strengths": [
+          "Single concise clarifying question with a numbered menu",
+          "Keeps London origin and states the concrete date range for next week",
+          "Transparently states the Business class default",
+          "Allows free-text city or airport entry as a fallback"
+        ],
+        "issues": [
+          {
+            "severity": "minor",
+            "criterion": "clarity",
+            "evidence": "Menu mixes 'all airports' city groupings (Osaka, Tokyo) with smaller single airports (Aomori, Hakodate) without saying how options were chosen.",
+            "recommendation": "Order or label options so the menu reads as Japan's main airports, or briefly note that the options reflect available search results."
+          }
+        ],
+        "recommendedAction": "none"
+      },
+      "judgeAttempts": [
+        {
+          "verdict": "pass",
+          "scores": {
+            "clarity": 5,
+            "concision": 5,
+            "tone": 5,
+            "nextStep": 5,
+            "limitationHonesty": 4,
+            "noInternalLeakage": 5
+          },
+          "rationale": "The reply asks one clear question and presents a numbered destination menu. It keeps London as the origin and turns 'next week' into explicit dates. It also discloses the documented Business default and explains how to reply or override. There is no leakage and the tone is friendly. The only soft spot is the airport selection: listing Aomori and Hakodate alongside Osaka and Tokyo makes it unclear whether these are the 'main' airports. Offering free-text entry reduces the impact.",
+          "strengths": [
+            "Single concise clarifying question with a numbered menu",
+            "Keeps London origin and states the concrete date range for next week",
+            "Transparently states the Business class default",
+            "Allows free-text city or airport entry as a fallback"
+          ],
+          "issues": [
+            {
+              "severity": "minor",
+              "criterion": "clarity",
+              "evidence": "Menu mixes 'all airports' city groupings (Osaka, Tokyo) with smaller single airports (Aomori, Hakodate) without saying how options were chosen.",
+              "recommendation": "Order or label options so the menu reads as Japan's main airports, or briefly note that the options reflect available search results."
+            }
+          ],
+          "recommendedAction": "none"
+        }
+      ],
+      "judgeConsensus": {
+        "passingVotes": 1,
+        "totalVotes": 1,
+        "verdicts": [
+          "pass"
+        ]
+      },
+      "events": [
+        {
+          "type": "model_usage",
+          "data": {
+            "model": "anthropic/claude-sonnet-5.5",
+            "provider": "Claude Platform on AWS",
+            "latencyMs": 1887,
+            "usage": {
+              "prompt_tokens": 4999,
+              "completion_tokens": 107,
+              "total_tokens": 5106,
+              "cost": 0.0134325,
+              "is_byok": false,
+              "prompt_tokens_details": {
+                "cached_tokens": 0,
+                "cache_write_tokens": 4729,
+                "audio_tokens": 0,
+                "video_tokens": 0
+              },
+              "cost_details": {
+                "upstream_inference_cost": 0.0134325,
+                "upstream_inference_prompt_cost": 0.0123625,
+                "upstream_inference_completions_cost": 0.00107
+              },
+              "completion_tokens_details": {
+                "reasoning_tokens": 0,
+                "image_tokens": 0,
+                "audio_tokens": 0
+              }
+            },
+            "cost": 0.0134325
+          }
+        },
+        {
+          "type": "tool_call",
+          "data": {
+            "name": "find_flights",
+            "arguments": {
+              "origin": "London",
+              "destination": "Japan",
+              "dates": {
+                "mode": "nextWeek"
+              }
+            }
+          }
+        },
+        {
+          "type": "judge_usage",
+          "data": {
+            "model": "anthropic/claude-opus-5.5",
+            "provider": "Claude Platform on AWS",
+            "latencyMs": 13073,
+            "usage": {
+              "prompt_tokens": 1624,
+              "completion_tokens": 797,
+              "total_tokens": 2421,
+              "cost": 0.022436,
+              "is_byok": false,
+              "prompt_tokens_details": {
+                "cached_tokens": 0,
+                "cache_write_tokens": 0,
+                "audio_tokens": 0,
+                "video_tokens": 0
+              },
+              "cost_details": {
+                "upstream_inference_cost": 0.022436,
+                "upstream_inference_prompt_cost": 0.006496,
+                "upstream_inference_completions_cost": 0.01594
+              },
+              "completion_tokens_details": {
+                "reasoning_tokens": 360,
+                "image_tokens": 0,
+                "audio_tokens": 0
+              }
+            },
+            "cost": 0.022436
+          }
+        }
+      ]
+    }
+  ],
+  "limitations": [
+    "Held-out v2 cases were frozen before this first run. Known place-handling gaps were not fixed first.",
+    "One attempt per case does not establish reliability.",
+    "The judge reviews communication quality and can be wrong. Deterministic checks remain authoritative for facts and actions.",
+    "The judge receives blinded candidate output and no private reasoning.",
+    "The synthetic-inventory banner is retained in the report but removed from judge input because production does not show it.",
+    "Synthetic inventory is used. No booking, payment or live flight search occurs."
+  ],
+  "stopReason": {
+    "type": "cap",
+    "message": "Evaluation cost cap reached before the next request."
+  },
+  "completedAt": "2026-09-28T19:32:13.280Z",
+  "modelCallsAttempted": 6,
+  "actualCostUsd": 0.11078009999999999,
+  "conservativeReservedUsd": 0.2627,
+  "summary": [
+    {
+      "model": "anthropic/claude-sonnet-5.5",
+      "passed": 1,
+      "total": 1,
+      "deterministicPassed": 1,
+      "judgePassed": 1,
+      "modelCalls": 1,
+      "judgeCalls": 1,
+      "cost": 0.11078009999999999
+    }
+  ]
+}

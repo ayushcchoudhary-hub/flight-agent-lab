@@ -1,4 +1,4 @@
-import { modelName, pickerGroups, renderStory } from './story.js';
+import { modelName, pickerGroups, renderStory, renderTrend } from './story.js';
 const $ = (s) => document.querySelector(s);
 const esc = (s) =>
   String(s ?? '').replace(
@@ -298,6 +298,7 @@ async function refresh() {
         supporting: {},
       };
       renderStory($('#story'), story, { onOpen: openRun });
+      renderTrend($('#trend'), story);
     }
     if (!list.runs?.length && !story.milestones.length) {
       $('#connection').textContent = 'No evaluation reports yet.';

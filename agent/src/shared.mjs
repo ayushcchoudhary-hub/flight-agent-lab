@@ -43,7 +43,9 @@ const COUNTRY_ALIASES = new Map([
   ['america', 'United States'],
   ['uae', 'United Arab Emirates'],
   ['holland', 'Netherlands'],
-  ['south korea', 'Korea, Republic of'],
+  ['korea', 'South Korea'],
+  ['turkiye', 'Turkey'],
+  ['türkiye', 'Turkey'],
 ]);
 export const countryAlias = (text) =>
   COUNTRY_ALIASES.get(

@@ -138,6 +138,25 @@
       ],
       "note": "Same 47 cases and judge. Not the same code: Sonnet ran later on c6bf7c0, which adds the guards against made-up values; Terra and Sol ran on 52d80c5 before them. Made-up values are counted from each model's own tool calls, so that column compares fairly. Sonnet's G9–G11 were rerun after the call cap cut them off.",
       "finding": "Sonnet 5 made up nothing: every tool call carried only what the traveler said. Its two exact failures are judgment calls, not inventions: it read “make it the 3rd” as 3 October instead of asking (C1), and it sent a price-guarantee question to the policy lookup, which had no answer (E8, now fixed in the app). It cost the most per turn because Claude prompts are not cached yet and use about twice the tokens."
+    },
+    {
+      "title": "Sonnet 5 vs Sonnet 5.5 · 52 cases",
+      "date": "28 Sept",
+      "commit": "f8a8ba9",
+      "runs": [
+        [
+          "live-hardening-judge-2026-09-28T19-49-48.466Z",
+          "live-hardening-judge-2026-09-28T19-59-08.539Z",
+          "live-hardening-judge-2026-09-28T20-05-38.509Z"
+        ],
+        [
+          "live-hardening-judge-2026-09-28T19-32-38.244Z",
+          "live-hardening-judge-2026-09-28T19-41-09.540Z"
+        ]
+      ],
+      "note": "Same 52 cases, same code, same judge, prompt caching on both, run the same evening. Both ran in parts because the harness reserves worst-case cost ahead of each call, about three times the real spend, and that reached the cap first: Sonnet 5 in three parts ($1.99 real), Sonnet 5.5 in two ($1.73 real). Per model call: median 1.56 s against 2.76 s, slowest tenth under 1.9 s against 3.2 s, and about the same cost ($0.0026 against $0.0028).",
+      "finding": "Neither made up a value. Sonnet 5's one exact failure is C1 again: it read “make it the 3rd” as 3 October instead of asking. Its other five misses are judge flags on wording (A2, A4, B4, C3, D8). Sonnet 5.5's only miss is A2, shared with Sonnet 5, and that is the application's UK airport menu: an alphabetical slice of five that leaves out Manchester, Edinburgh and Glasgow. Sonnet 5.5 needs tool_choice auto: OpenRouter has no endpoint that accepts a forced tool call for it.",
+      "decision": "Sonnet 5.5 becomes the default. Sonnet 5 stays as an option."
     }
   ],
   "supporting": {
@@ -161,6 +180,8 @@
     "live-hardening-judge-2026-09-23T21-29-07.529Z": "Sonnet 5 smoke test: A1 and G2 only, before the full run.",
     "live-hardening-judge-2026-09-27T09-44-38.053Z": "Prompt caching check for Claude models: 3 cases on Sonnet 5. After the first call, every call read 4,771 prompt tokens from cache.",
     "live-hardening-judge-2026-09-27T12-04-50.856Z": "Memory check on Sonnet 5: D1, D2, D4 and the new recent-search cases under provisional ids D5 to D9, now D6 to D10; the existing D5 ran too. 7 of 9 passed, 25 calls, $0.35. Both failures were the application: the model sent the right forget list with action show, and show dropped it. Fixed after this run.",
-    "live-hardening-judge-2026-09-27T12-09-37.385Z": "Verification of the forget fix on Sonnet 5: D7 (forget recent searches) passes, 3 calls, $0.03. The model again sent action show with the forget list, which is now acted on. D8 was not rerun to stay within the 30-call cap; a test replays its recorded calls."
+    "live-hardening-judge-2026-09-27T12-09-37.385Z": "Verification of the forget fix on Sonnet 5: D7 (forget recent searches) passes, 3 calls, $0.03. The model again sent action show with the forget list, which is now acted on. D8 was not rerun to stay within the 30-call cap; a test replays its recorded calls.",
+    "live-hardening-judge-2026-09-28T19-30-01.173Z": "First Sonnet 5.5 smoke check: A1, C3 and F1 all returned the safe error, 4 calls, $0. Not a model result: OpenRouter has no Sonnet 5.5 endpoint for tool_choice required and answered 404. Claude models that reject a forced tool call now get auto.",
+    "live-hardening-judge-2026-09-28T19-31-23.512Z": "Sonnet 5.5 smoke check after the tool_choice fix: A1 passed exact checks and judge, $0.11. The harness stopped before C3 because its conservative reservation reached the $0.30 cap. Enough to show the model works with the agent."
   }
 }

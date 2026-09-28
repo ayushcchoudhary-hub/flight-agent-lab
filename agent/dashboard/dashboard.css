@@ -918,3 +918,174 @@ footer {
     grid-auto-columns: 84px;
   }
 }
+/* Trend over time. Model-family hues validated all-pairs for color-vision
+   deficiency in both themes; the aqua misses 3:1 on white, so the legend,
+   tooltips and table name every model. */
+:root {
+  --m-claude: #2a78d6;
+  --m-terra: #eb6834;
+  --m-sol: #1baf7a;
+  --m-other: #8a94a3;
+}
+body.dark {
+  --m-claude: #3987e5;
+  --m-terra: #d95926;
+  --m-sol: #199e70;
+  --m-other: #7d8898;
+}
+.trend {
+  position: relative;
+}
+.trend-panels {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 14px;
+  margin-top: 14px;
+}
+.trend-panel {
+  margin: 0;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 12px 12px 4px;
+}
+.trend-panel figcaption {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+.trend-panel figcaption span {
+  font-size: 13px;
+  color: var(--muted);
+}
+.trend-panel figcaption b {
+  font-size: 22px;
+  letter-spacing: -0.4px;
+}
+.trend-panel figcaption small {
+  font-size: 11.5px;
+}
+.trend-panel svg {
+  width: 100%;
+  height: auto;
+  display: block;
+  overflow: visible;
+}
+.trend-rule {
+  stroke: var(--line);
+  stroke-width: 1;
+}
+.trend-axis {
+  fill: var(--muted);
+  font-size: 10.5px;
+}
+.trend-line {
+  fill: none;
+  stroke-width: 2;
+  stroke-linejoin: round;
+  opacity: 0.55;
+}
+.trend-line.claude,
+.trend-dot.claude {
+  stroke: var(--m-claude);
+}
+.trend-line.terra,
+.trend-dot.terra {
+  stroke: var(--m-terra);
+}
+.trend-line.sol,
+.trend-dot.sol {
+  stroke: var(--m-sol);
+}
+.trend-line.other,
+.trend-dot.other {
+  stroke: var(--m-other);
+}
+.trend-dot {
+  stroke-width: 2;
+  paint-order: stroke;
+}
+.trend-dot.claude {
+  fill: var(--m-claude);
+}
+.trend-dot.terra {
+  fill: var(--m-terra);
+}
+.trend-dot.sol {
+  fill: var(--m-sol);
+}
+.trend-dot.other {
+  fill: var(--m-other);
+}
+.trend-dot.hollow {
+  fill: var(--paper);
+  stroke-width: 2.5;
+}
+.trend-dot:not(.hollow) {
+  stroke: var(--paper);
+}
+.trend-hit {
+  fill: transparent;
+  cursor: pointer;
+}
+.trend-point:hover .trend-dot,
+.trend-point:focus .trend-dot {
+  r: 6.5;
+}
+.trend-point:focus {
+  outline: none;
+}
+.trend-point:focus-visible .trend-hit {
+  stroke: var(--blue);
+  stroke-width: 2;
+}
+.trend-key {
+  display: inline-block;
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  margin-right: 5px;
+  vertical-align: -1px;
+  border: 2px solid transparent;
+}
+.trend-key.claude {
+  background: var(--m-claude);
+}
+.trend-key.terra {
+  background: var(--m-terra);
+}
+.trend-key.sol {
+  background: var(--m-sol);
+}
+.trend-key.other {
+  background: var(--m-other);
+}
+.trend-key.hollow {
+  background: var(--paper);
+  border-color: var(--m-claude);
+}
+.trend-tip {
+  position: absolute;
+  z-index: 3;
+  pointer-events: none;
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  box-shadow: var(--shadow);
+  padding: 7px 10px;
+  display: flex;
+  flex-direction: column;
+  max-width: 240px;
+  font-size: 12.5px;
+}
+.trend-tip[hidden] {
+  display: none;
+}
+.trend-tip b {
+  font-size: 16px;
+}
+.trend-tip small {
+  color: var(--muted);
+}
+.trend .method {
+  margin-top: 10px;
+}

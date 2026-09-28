@@ -20,7 +20,7 @@ const value = (name, fallback) =>
   process.argv.find((v) => v.startsWith(`--${name}=`))?.slice(name.length + 3) ?? fallback;
 if (!process.argv.includes('--live'))
   throw Error('Pass --live to authorize bounded OpenRouter model calls.');
-const candidateModel = value('candidate', 'anthropic/claude-sonnet-5'),
+const candidateModel = value('candidate', 'anthropic/claude-sonnet-5.5'),
   candidateEffort = value('candidate-effort', 'medium');
 // Judge default raised 2026-09-21: sonnet-4.6 at low effort passed and failed
 // identical replies on consecutive runs; medium effort removed the flips and

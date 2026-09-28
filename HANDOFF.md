@@ -20,9 +20,11 @@ customer data or raw backend captures.
 - The live experiment is an invite-protected Cloud Run service. Its URL,
   revision history and rollback command are kept in an ignored local
   `OPERATIONS.md`, not in this public repository.
-- Claude Sonnet 5 medium is the default model from 2026-09-27, in code and on
-  the live service. Terra medium, DeepSeek V4.1 Flash low and GLM 5.3 high
-  remain optional controls in the live chat.
+- Claude Sonnet 5.5 medium is the default model in code from 2026-09-28. The
+  live service still runs Sonnet 5 (default from 2026-09-27) until it is
+  redeployed with `OPENROUTER_MODEL=anthropic/claude-sonnet-5.5`. Sonnet 5
+  medium, Terra medium, DeepSeek V4.1 Flash low and GLM 5.3 high remain
+  optional controls in the chat.
 - Live since 2026-09-27: Sonnet 5, prompt caching, take me anywhere and the
   guards against made-up values. Conversation storage stays off.
 - Each result shows the product's cash comparison as "usually USD X" when the
@@ -47,9 +49,11 @@ customer data or raw backend captures.
   service). `agent/FROZEN-SCOPE.md` is the contract.
 - Booking, payment, account servicing, autonomous purchasing, WhatsApp and MCP
   remain outside the implemented scope.
-- The deterministic suite currently contains 311 passing checks.
+- The deterministic suite currently contains 314 passing checks.
 - Held-out evaluation: 38 of 47 on Terra (23 Sep), 42 of 47 on Sonnet 5
-  with no made-up values. The dated history is in
+  with no made-up values. On the same 52 cases and code (28 Sep), Sonnet 5.5
+  passed 51 with 52 exact and Sonnet 5 passed 46 with 51 exact; neither made
+  up a value. The dated history is in
   [docs/evaluation/](docs/evaluation/README.md). When describing results:
   - The 42-case development set passed 30 on its frozen run. A full rerun
     stopped at B03 after 32, with nine cases unrun. Never call it 42 of 42.
@@ -66,6 +70,44 @@ reports by `agent/src/eval-story.mjs`. A test fails when a published hardening r
 has no place in the story, so each new run must be added as a milestone, a
 head-to-head run or a supporting run with a one-line reason. The Model
 comparison page opens on the latest head-to-head pair from the same file.
+Below the milestones, a trend section plots every milestone and head-to-head
+run in date order: pass rate, exact rate, median time per traveler turn,
+model cost per 1,000 turns and the share of prompt read from cache.
+
+## Sonnet 5.5 (2026-09-28)
+
+Released 2026-09-28 at Sonnet 5's price. It rejects a forced tool call
+(OpenRouter finds no endpoint for `tool_choice: required`), as do Opus 5.5
+and Fable 5.1, so the adapter sends those `auto` (`NO_FORCED_TOOL_CHOICE` in
+`agent/src/model.mjs`). The prompt still asks for one tool and a reply without
+one becomes the safe error.
+
+Both models ran the same 52 held-out cases on the same code (f8a8ba9) with
+the same judge and prompt caching, the same evening:
+
+| | Sonnet 5 | Sonnet 5.5 |
+|---|---|---|
+| Cases passed | 46 | 51 |
+| Exact checks passed | 51 | 52 |
+| Made-up values | 0 | 0 |
+| Median model call | 2.76 s | 1.56 s |
+| Model cost per 1,000 traveler turns | $3.30 | $2.97 |
+
+Sonnet 5's exact failure is C1 again ("make it the 3rd" read as 3 October).
+Its other misses are judge flags on wording (A2, A4, B4, C3, D8). Sonnet
+5.5's only miss is A2, which is the app's alphabetical UK airport menu,
+open since 2026-09-21. Per call the two cost about the same; the fall from
+Sonnet 5's earlier $11.19 per 1,000 turns is prompt caching, not the model.
+
+The harness reserves worst-case cost ahead of each call, about three times
+the real spend with caching, so both runs hit the $3.50 cap before the end
+and were finished in parts within the remaining budget: Sonnet 5.5 in two
+($1.73 real), Sonnet 5 in three ($1.99 real), plus $0.11 of smoke checks.
+
+Sonnet 5.5 is the default in code and the first hosted option, with Sonnet
+5 kept as an option. The live service changes only on a redeploy with
+`OPENROUTER_MODEL` updated; the overview page's "Deployed on Cloud Run ·
+Claude Sonnet 5" line should change with it.
 
 Read these files in order when more detail is needed:
 
