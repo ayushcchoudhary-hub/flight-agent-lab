@@ -7,6 +7,7 @@ import { existsSync } from 'node:fs';
 import { readFile, readdir } from 'node:fs/promises';
 import { join } from 'node:path';
 import { unsupportedArguments } from './model.mjs';
+import { DEFAULT_MODEL } from './hosted-model-options.mjs';
 
 const RUN = /^live-hardening-judge-[\w.-]+$/;
 // A run interrupted by a provider error and finished with the remaining cases
@@ -300,6 +301,7 @@ export async function loadStory(root) {
     milestones,
     headToHead,
     trend: await trendOf(story, published, get),
+    defaultModel: DEFAULT_MODEL,
     supporting: story.supporting,
   };
 }

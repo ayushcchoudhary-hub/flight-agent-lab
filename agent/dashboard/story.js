@@ -298,7 +298,7 @@ const niceCeil = (v) => {
 const day = (iso) =>
   new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', timeZone: 'UTC' });
 
-function trendPanel(panel, runs, p) {
+function trendPanel(panel, runs, p, defaultModel) {
   const W = 340,
     H = 150,
     L = 44,
@@ -340,11 +340,18 @@ function trendPanel(panel, runs, p) {
         : '',
     )
     .join('');
-  const last = runs.length - 1,
+  // The headline is the agent as it runs now: the latest run of the default
+  // model. A control model rerun later must not stand in for it.
+  const current = runs.findLastIndex((r) => r.model === defaultModel);
+  const last = current >= 0 ? current : runs.length - 1,
     first = values.findIndex(Number.isFinite);
   const since =
     first >= 0 && first < last ? ` · ${panel.fmt(values[first])} on ${day(runs[first].date)}` : '';
-  return `<figure class="trend-panel"><figcaption><span>${esc(panel.title)}</span><b>${esc(panel.fmt(values[last]))}</b><small class="quiet">latest, ${esc(modelName(runs[last].model))}${esc(since)} · ${panel.better} is better</small></figcaption>
+  const who =
+    current >= 0
+      ? `${modelName(defaultModel)}, the default`
+      : `latest, ${modelName(runs[last].model)}`;
+  return `<figure class="trend-panel"><figcaption><span>${esc(panel.title)}</span><b>${esc(panel.fmt(values[last]))}</b><small class="quiet">${esc(who)}${esc(since)} · ${panel.better} is better</small></figcaption>
     <svg viewBox="0 0 ${W} ${H}" role="group" aria-label="${esc(panel.title)} for each run">${grid}${ticks}${lines}${dots}</svg></figure>`;
 }
 
@@ -370,7 +377,7 @@ export function renderTrend(el, story) {
     )
     .join('');
   el.innerHTML = `<div class="section-head"><div><h2>Trend over time</h2><p class="quiet">Every complete run of the held-out set, in the order it ran. The set grew from 30 to 52 cases, so passes are a share. Lines join runs of the same model family.</p></div><div class="story-legend">${legend}</div></div>
-    <div class="trend-panels">${TREND_PANELS.map((panel, p) => trendPanel(panel, runs, p)).join('')}</div>
+    <div class="trend-panels">${TREND_PANELS.map((panel, p) => trendPanel(panel, runs, p, story.defaultModel)).join('')}</div>
     <div class="trend-tip" role="status" hidden></div>
     <details class="method"><summary>Show as a table</summary><div class="table-scroll"><table><thead><tr><th>Date</th><th>Model</th><th>Passed</th><th>Exact</th><th>Median turn</th><th>Median model call</th><th>Cost per 1,000 turns</th><th>Cost per passed case</th><th>From cache</th><th>Made-up values</th><th>Prompt</th></tr></thead><tbody>${rows}</tbody></table></div></details>
     <p class="quiet mini">Time per turn runs from the traveler's message to the reply. Flights are simulated, so it is mostly model time. Cost counts the candidate model only, not the judge. Claude requests are marked for prompt caching from 27 Sept, so Claude runs before then read nothing from cache and cost more per turn. The judge changed twice, so exact checks are the steadier trend. One attempt per case, so a point or two either way can be chance.</p>`;
