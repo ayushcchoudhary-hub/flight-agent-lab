@@ -138,6 +138,23 @@
       ],
       "note": "Same 47 cases and judge. Not the same code: Sonnet ran later on c6bf7c0, which adds the guards against made-up values; Terra and Sol ran on 52d80c5 before them. Made-up values are counted from each model's own tool calls, so that column compares fairly. Sonnet's G9–G11 were rerun after the call cap cut them off.",
       "finding": "Sonnet 5 made up nothing: every tool call carried only what the traveler said. Its two exact failures are judgment calls, not inventions: it read “make it the 3rd” as 3 October instead of asking (C1), and it sent a price-guarantee question to the policy lookup, which had no answer (E8, now fixed in the app). It cost the most per turn because Claude prompts are not cached yet and use about twice the tokens."
+    },
+    {
+      "title": "Sonnet 5 vs Sonnet 5.5",
+      "date": "28 Sept",
+      "commit": "c6bf7c0 / f8a8ba9",
+      "runs": [
+        [
+          "live-hardening-judge-2026-09-23T21-29-40.155Z",
+          "live-hardening-judge-2026-09-23T21-43-09.281Z"
+        ],
+        [
+          "live-hardening-judge-2026-09-28T19-32-38.244Z",
+          "live-hardening-judge-2026-09-28T19-41-09.540Z"
+        ]
+      ],
+      "note": "Same judge, not the same test. Sonnet 5 ran 47 cases on c6bf7c0 before prompt caching; Sonnet 5.5 ran 52 cases on f8a8ba9 with caching, the recent-search cases and the fixes since. Cases missing from one run show as not run. Sonnet 5.5 ran in two parts because the harness reserves worst-case cost ahead of each call and that reached the cap at 27 cases; the real spend was $1.73 of $3.50. Per model call with caching on both (Sonnet 5 on 27 Sept, 23 calls): median 1.5 s against 2.4 s, and the same cost, about $0.0027.",
+      "finding": "Sonnet 5.5 failed no exact check and made up nothing. The one judge flag, A2, is the application's UK airport menu: an alphabetical slice of five that leaves out Manchester, Edinburgh and Glasgow. The judge raised it on 21 Sept too. Sonnet 5.5 needs tool_choice auto: OpenRouter has no endpoint that accepts a forced tool call for it."
     }
   ],
   "supporting": {

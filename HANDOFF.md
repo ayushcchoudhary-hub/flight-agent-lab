@@ -47,9 +47,10 @@ customer data or raw backend captures.
   service). `agent/FROZEN-SCOPE.md` is the contract.
 - Booking, payment, account servicing, autonomous purchasing, WhatsApp and MCP
   remain outside the implemented scope.
-- The deterministic suite currently contains 311 passing checks.
+- The deterministic suite currently contains 314 passing checks.
 - Held-out evaluation: 38 of 47 on Terra (23 Sep), 42 of 47 on Sonnet 5
-  with no made-up values. The dated history is in
+  with no made-up values, 51 of 52 on Sonnet 5.5 (28 Sep) with 52 exact and
+  no made-up values. The dated history is in
   [docs/evaluation/](docs/evaluation/README.md). When describing results:
   - The 42-case development set passed 30 on its frozen run. A full rerun
     stopped at B03 after 32, with nine cases unrun. Never call it 42 of 42.
@@ -66,6 +67,31 @@ reports by `agent/eval-story.mjs`. A test fails when a published hardening run
 has no place in the story, so each new run must be added as a milestone, a
 head-to-head run or a supporting run with a one-line reason. The Model
 comparison page opens on the latest head-to-head pair from the same file.
+Below the milestones, a trend section plots every milestone and head-to-head
+run in date order: pass rate, exact rate, median time per traveler turn,
+model cost per 1,000 turns and the share of prompt read from cache.
+
+## Sonnet 5.5 (2026-09-28)
+
+Released 2026-09-28 at Sonnet 5's price. It rejects a forced tool call
+(OpenRouter finds no endpoint for `tool_choice: required`), as do Opus 5.5
+and Fable 5.1, so the adapter sends those `auto` (`NO_FORCED_TOOL_CHOICE` in
+`agent/model.mjs`). The prompt still asks for one tool and a reply without
+one becomes the safe error.
+
+On the 52 held-out cases (f8a8ba9) it passed 51, all 52 exact, with no
+made-up values. Median model call 1.5 s against Sonnet 5's 2.4 s. Cost per
+1,000 turns $2.97, the lowest recorded, but that drop is mostly prompt
+caching: Sonnet 5's full run predates caching, and with caching on both a
+call costs about $0.0027 on either model (Sonnet 5 cached sample: 23 calls
+on 2026-09-27). The one judge flag, A2, is the app's alphabetical UK airport
+menu, open since 2026-09-21. The run is in two parts because the harness
+reserves worst-case cost and hit its $3.50 cap at 27 cases; real spend was
+$1.73 (plus $0.11 for smoke checks). Sonnet 5 has not been rerun on the 52
+cases, so the pass counts are not a like-for-like comparison.
+
+Not yet a hosted option or the default: that needs an entry in
+`agent/hosted-model-options.mjs` and a redeploy.
 
 Read these files in order when more detail is needed:
 

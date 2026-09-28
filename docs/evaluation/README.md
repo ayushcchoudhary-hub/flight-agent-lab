@@ -8,7 +8,7 @@ computed from the sanitized reports in
 
 ## Evidence layers
 
-1. **Deterministic tests** (311, no API key needed) check application rules:
+1. **Deterministic tests** (314, no API key needed) check application rules:
    state merging, validation, endpoint restrictions, policy citations,
    response grounding, memory, retry bounds and customer-copy guardrails.
    Run them with `cd agent && pnpm test`.
@@ -112,6 +112,23 @@ failures were the application, not the model: it sent the right forget list
 with the action "show", and "show" returned before acting on it. After the fix,
 D7 passed live. D8 was not rerun to stay within the call cap. A deterministic
 test replays its recorded calls through the fixed code.
+
+### 28 September · Sonnet 5.5
+
+Sonnet 5.5 came out at Sonnet 5's price. Its first smoke run returned the
+safe error for every case at no cost: it rejects a forced tool call, so the
+adapter now sends it `tool_choice: auto`. On all 52 held-out cases it then
+passed 51, with every exact check passing and no made-up values. The one
+judge flag (A2) is the application's alphabetical UK airport menu, raised
+before on 21 September.
+
+Its median model call took 1.5 seconds against Sonnet 5's 2.4. Its cost per
+1,000 traveler turns, $2.97, is the lowest recorded, but most of that is
+prompt caching, which Sonnet 5's full run predates. With caching on both, a
+call costs about $0.0027 on either model. Sonnet 5 was not rerun on the 52
+cases, so the pass counts are not a like-for-like comparison. The Evals page
+now plots pass rate, time per turn, cost and cache share for every complete
+run over time.
 
 ## Limits
 
