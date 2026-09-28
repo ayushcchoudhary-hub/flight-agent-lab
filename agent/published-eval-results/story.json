@@ -140,21 +140,23 @@
       "finding": "Sonnet 5 made up nothing: every tool call carried only what the traveler said. Its two exact failures are judgment calls, not inventions: it read “make it the 3rd” as 3 October instead of asking (C1), and it sent a price-guarantee question to the policy lookup, which had no answer (E8, now fixed in the app). It cost the most per turn because Claude prompts are not cached yet and use about twice the tokens."
     },
     {
-      "title": "Sonnet 5 vs Sonnet 5.5",
+      "title": "Sonnet 5 vs Sonnet 5.5 · 52 cases",
       "date": "28 Sept",
-      "commit": "c6bf7c0 / f8a8ba9",
+      "commit": "f8a8ba9",
       "runs": [
         [
-          "live-hardening-judge-2026-09-23T21-29-40.155Z",
-          "live-hardening-judge-2026-09-23T21-43-09.281Z"
+          "live-hardening-judge-2026-09-28T19-49-48.466Z",
+          "live-hardening-judge-2026-09-28T19-59-08.539Z",
+          "live-hardening-judge-2026-09-28T20-05-38.509Z"
         ],
         [
           "live-hardening-judge-2026-09-28T19-32-38.244Z",
           "live-hardening-judge-2026-09-28T19-41-09.540Z"
         ]
       ],
-      "note": "Same judge, not the same test. Sonnet 5 ran 47 cases on c6bf7c0 before prompt caching; Sonnet 5.5 ran 52 cases on f8a8ba9 with caching, the recent-search cases and the fixes since. Cases missing from one run show as not run. Sonnet 5.5 ran in two parts because the harness reserves worst-case cost ahead of each call and that reached the cap at 27 cases; the real spend was $1.73 of $3.50. Per model call with caching on both (Sonnet 5 on 27 Sept, 23 calls): median 1.5 s against 2.4 s, and the same cost, about $0.0027.",
-      "finding": "Sonnet 5.5 failed no exact check and made up nothing. The one judge flag, A2, is the application's UK airport menu: an alphabetical slice of five that leaves out Manchester, Edinburgh and Glasgow. The judge raised it on 21 Sept too. Sonnet 5.5 needs tool_choice auto: OpenRouter has no endpoint that accepts a forced tool call for it."
+      "note": "Same 52 cases, same code, same judge, prompt caching on both, run the same evening. Both ran in parts because the harness reserves worst-case cost ahead of each call, about three times the real spend, and that reached the cap first: Sonnet 5 in three parts ($1.99 real), Sonnet 5.5 in two ($1.73 real). Per model call: median 1.56 s against 2.76 s, slowest tenth under 1.9 s against 3.2 s, and about the same cost ($0.0026 against $0.0028).",
+      "finding": "Neither made up a value. Sonnet 5's one exact failure is C1 again: it read “make it the 3rd” as 3 October instead of asking. Its other five misses are judge flags on wording (A2, A4, B4, C3, D8). Sonnet 5.5's only miss is A2, shared with Sonnet 5, and that is the application's UK airport menu: an alphabetical slice of five that leaves out Manchester, Edinburgh and Glasgow. Sonnet 5.5 needs tool_choice auto: OpenRouter has no endpoint that accepts a forced tool call for it.",
+      "decision": "Sonnet 5.5 becomes the default. Sonnet 5 stays as an option."
     }
   ],
   "supporting": {

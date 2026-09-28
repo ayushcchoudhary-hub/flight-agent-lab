@@ -122,13 +122,16 @@ passed 51, with every exact check passing and no made-up values. The one
 judge flag (A2) is the application's alphabetical UK airport menu, raised
 before on 21 September.
 
-Its median model call took 1.5 seconds against Sonnet 5's 2.4. Its cost per
-1,000 traveler turns, $2.97, is the lowest recorded, but most of that is
-prompt caching, which Sonnet 5's full run predates. With caching on both, a
-call costs about $0.0027 on either model. Sonnet 5 was not rerun on the 52
-cases, so the pass counts are not a like-for-like comparison. The Evals page
-now plots pass rate, time per turn, cost and cache share for every complete
-run over time.
+Sonnet 5 was then rerun on the same 52 cases and code, with caching, so the
+two compare directly. Sonnet 5 passed 46 with 51 exact checks and no made-up
+values. Its exact failure was C1 again ("make it the 3rd" read as 3
+October), and its other misses were judge flags on wording. Sonnet 5.5's
+median model call took 1.6 seconds against Sonnet 5's 2.8, at about the same
+cost per call. Its cost per 1,000 traveler turns, $2.97 against $3.30, is the
+lowest recorded. The larger fall from Sonnet 5's earlier $11.19 is prompt
+caching, not the model. Sonnet 5.5 became the default in code, with Sonnet 5
+kept as an option. The Evals page now plots pass rate, time per turn, cost
+and cache share for every complete run over time.
 
 ## Limits
 

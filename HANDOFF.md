@@ -20,9 +20,11 @@ customer data or raw backend captures.
 - The live experiment is an invite-protected Cloud Run service. Its URL,
   revision history and rollback command are kept in an ignored local
   `OPERATIONS.md`, not in this public repository.
-- Claude Sonnet 5 medium is the default model from 2026-09-27, in code and on
-  the live service. Terra medium, DeepSeek V4.1 Flash low and GLM 5.3 high
-  remain optional controls in the live chat.
+- Claude Sonnet 5.5 medium is the default model in code from 2026-09-28. The
+  live service still runs Sonnet 5 (default from 2026-09-27) until it is
+  redeployed with `OPENROUTER_MODEL=anthropic/claude-sonnet-5.5`. Sonnet 5
+  medium, Terra medium, DeepSeek V4.1 Flash low and GLM 5.3 high remain
+  optional controls in the chat.
 - Live since 2026-09-27: Sonnet 5, prompt caching, take me anywhere and the
   guards against made-up values. Conversation storage stays off.
 - Each result shows the product's cash comparison as "usually USD X" when the
@@ -49,8 +51,9 @@ customer data or raw backend captures.
   remain outside the implemented scope.
 - The deterministic suite currently contains 314 passing checks.
 - Held-out evaluation: 38 of 47 on Terra (23 Sep), 42 of 47 on Sonnet 5
-  with no made-up values, 51 of 52 on Sonnet 5.5 (28 Sep) with 52 exact and
-  no made-up values. The dated history is in
+  with no made-up values. On the same 52 cases and code (28 Sep), Sonnet 5.5
+  passed 51 with 52 exact and Sonnet 5 passed 46 with 51 exact; neither made
+  up a value. The dated history is in
   [docs/evaluation/](docs/evaluation/README.md). When describing results:
   - The 42-case development set passed 30 on its frozen run. A full rerun
     stopped at B03 after 32, with nine cases unrun. Never call it 42 of 42.
@@ -79,19 +82,32 @@ and Fable 5.1, so the adapter sends those `auto` (`NO_FORCED_TOOL_CHOICE` in
 `agent/model.mjs`). The prompt still asks for one tool and a reply without
 one becomes the safe error.
 
-On the 52 held-out cases (f8a8ba9) it passed 51, all 52 exact, with no
-made-up values. Median model call 1.5 s against Sonnet 5's 2.4 s. Cost per
-1,000 turns $2.97, the lowest recorded, but that drop is mostly prompt
-caching: Sonnet 5's full run predates caching, and with caching on both a
-call costs about $0.0027 on either model (Sonnet 5 cached sample: 23 calls
-on 2026-09-27). The one judge flag, A2, is the app's alphabetical UK airport
-menu, open since 2026-09-21. The run is in two parts because the harness
-reserves worst-case cost and hit its $3.50 cap at 27 cases; real spend was
-$1.73 (plus $0.11 for smoke checks). Sonnet 5 has not been rerun on the 52
-cases, so the pass counts are not a like-for-like comparison.
+Both models ran the same 52 held-out cases on the same code (f8a8ba9) with
+the same judge and prompt caching, the same evening:
 
-Not yet a hosted option or the default: that needs an entry in
-`agent/hosted-model-options.mjs` and a redeploy.
+| | Sonnet 5 | Sonnet 5.5 |
+|---|---|---|
+| Cases passed | 46 | 51 |
+| Exact checks passed | 51 | 52 |
+| Made-up values | 0 | 0 |
+| Median model call | 2.76 s | 1.56 s |
+| Model cost per 1,000 traveler turns | $3.30 | $2.97 |
+
+Sonnet 5's exact failure is C1 again ("make it the 3rd" read as 3 October).
+Its other misses are judge flags on wording (A2, A4, B4, C3, D8). Sonnet
+5.5's only miss is A2, which is the app's alphabetical UK airport menu,
+open since 2026-09-21. Per call the two cost about the same; the fall from
+Sonnet 5's earlier $11.19 per 1,000 turns is prompt caching, not the model.
+
+The harness reserves worst-case cost ahead of each call, about three times
+the real spend with caching, so both runs hit the $3.50 cap before the end
+and were finished in parts within the remaining budget: Sonnet 5.5 in two
+($1.73 real), Sonnet 5 in three ($1.99 real), plus $0.11 of smoke checks.
+
+Sonnet 5.5 is the default in code and the first hosted option, with Sonnet
+5 kept as an option. The live service changes only on a redeploy with
+`OPENROUTER_MODEL` updated; the overview page's "Deployed on Cloud Run ·
+Claude Sonnet 5" line should change with it.
 
 Read these files in order when more detail is needed:
 
