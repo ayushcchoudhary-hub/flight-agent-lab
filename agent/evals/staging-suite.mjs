@@ -1,13 +1,13 @@
 import { mkdirSync,writeFileSync,readFileSync,renameSync } from 'node:fs';
 import { createHash } from 'node:crypto';
-import { fileURLToPath } from 'node:url';
-import { makeStagingAdapter,readStagingToken } from './staging.mjs';
-import { SearchConversation,isoToday } from './search.mjs';
-import { Agent, OpenRouterModel, PROMPT_VERSION } from './model.mjs';
+import { makeStagingAdapter,readStagingToken } from '../src/staging.mjs';
+import { SearchConversation,isoToday } from '../src/search.mjs';
+import { Agent, OpenRouterModel, PROMPT_VERSION } from '../src/model.mjs';
 
-import { shiftIso } from './shared.mjs';
+import { shiftIso } from '../src/shared.mjs';
 import { gradeStep,CITY_CODES } from './eval-cases.mjs';
-import { verifyFlightData } from './verify-flight-data.mjs';
+import { verifyFlightData } from '../src/verify-flight-data.mjs';
+import { agentPath } from '../paths.mjs';
 if(!process.argv.includes('--staging')) throw new Error('Use --staging for the bounded, search-only integration suite.');
 await readStagingToken();
 const clock=isoToday(),date=shiftIso(clock,14),rollingEnd=shiftIso(clock,7),model='openai/gpt-5.6-terra',effort='medium';
@@ -23,10 +23,10 @@ const cases=[
   {text:'Heathrow only please.',expected:{...trip(),origin:'LHR',budget:3000,posts:2}},
   {text:'Economy instead, keep everything else.',expected:{...trip(),origin:'LHR',cabin:'economy',budget:3000,posts:3}}]},
 ];
-const runId=new Date().toISOString().replaceAll(':','-'),folder=`live-staging-${runId}`,base=fileURLToPath(new URL(`./eval-results/${folder}/`,import.meta.url));
+const runId=new Date().toISOString().replaceAll(':','-'),folder=`live-staging-${runId}`,base=agentPath('eval-results',folder)+'/';
 mkdirSync(base,{recursive:true,mode:0o700});
 const captures=[];
-const report={runId,promptVersion:PROMPT_VERSION,label:'STAGING · six flows · real backend + reply checks',flightData:'staging',clock,effort,models:[model],repeats:1,adapter:'Authenticated staging searches',limitations:['One pass per flow; not a repeatability benchmark.','Empty inventory is a valid result, but cannot prove offer-field fidelity.','Staging prices are not guaranteed production availability.'],sourceHashes:Object.fromEntries(['search.mjs','model.mjs','staging.mjs','staging-suite.mjs','verify-flight-data.mjs','eval-cases.mjs'].map(f=>[f,createHash('sha256').update(readFileSync(new URL(f,import.meta.url))).digest('hex')])),results:[]};
+const report={runId,promptVersion:PROMPT_VERSION,label:'STAGING · six flows · real backend + reply checks',flightData:'staging',clock,effort,models:[model],repeats:1,adapter:'Authenticated staging searches',limitations:['One pass per flow; not a repeatability benchmark.','Empty inventory is a valid result, but cannot prove offer-field fidelity.','Staging prices are not guaranteed production availability.'],sourceHashes:Object.fromEntries(['src/search.mjs','src/model.mjs','src/staging.mjs','evals/staging-suite.mjs','src/verify-flight-data.mjs','evals/eval-cases.mjs'].map(f=>[f,createHash('sha256').update(readFileSync(agentPath(f))).digest('hex')])),results:[]};
 const save=(name,data)=>{writeFileSync(base+name+'.tmp',JSON.stringify(data,null,2),{mode:0o600});renameSync(base+name+'.tmp',base+name);};
 save('cases.json',cases);save('report.json',report);
 console.log(`Dashboard: http://127.0.0.1:5180/?run=${folder}`);

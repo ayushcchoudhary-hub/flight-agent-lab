@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {gradeV2Step} from '../hardening-v2.mjs';
+import {gradeV2Step} from '../evals/hardening-v2.mjs';
 
 const conversation={publicState:()=>({origin:null,destination:null,cabin:'business',dates:null,sort:'cheapest',nonstopOnly:true,pending:null,maxPriceUsd:null})};
 const adapter={mode:'synthetic',calls:[]};
@@ -12,7 +12,7 @@ test('held-out v2 grading checks richer evidence and allowed outcomes',()=>{
 });
 
 // A8 accepts either route to the same honest answer.
-import {HARDENING_CASES_V2} from '../hardening-cases-v2.mjs';
+import {HARDENING_CASES_V2} from '../evals/hardening-cases-v2.mjs';
 test('held-out A8 accepts the overlap check or a direct clarifying question, never a search',()=>{
  const expected=HARDENING_CASES_V2.find(c=>c.id==='A8').steps[0].expected;
  const blank={publicState:()=>({origin:null,destination:null,cabin:'business',dates:null,pending:null,maxPriceUsd:null})},none={mode:'synthetic',calls:[]};

@@ -1,9 +1,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { SearchConversation } from '../search.mjs';
-import { makeFixtureAdapter } from '../fixtures.mjs';
-import { Agent, repairExplicitToolArguments } from '../model.mjs';
-import { renderPolicyAnswer, retrievePolicy } from '../policy.mjs';
+import { SearchConversation } from '../src/search.mjs';
+import { makeFixtureAdapter } from '../src/fixtures.mjs';
+import { Agent, repairExplicitToolArguments } from '../src/model.mjs';
+import { renderPolicyAnswer, retrievePolicy } from '../src/policy.mjs';
 
 // Held-out v2 failures from the GPT-6 Sol head-to-head on 2026-09-23 (run
 // live-hardening-judge-2026-09-23T09-53-41.562Z). Every tool call below is the
@@ -142,7 +142,7 @@ test('G9 (Terra): a cabin nobody mentioned is dropped from a deals request', asy
 });
 
 test('made-up values are counted per case even when a guard caught them', async () => {
-  const { madeUpValues } = await import('../eval-story.mjs');
+  const { madeUpValues } = await import('../src/eval-story.mjs');
   const row = (input, events) => ({ steps: [{ input }], events });
   // Recorded before the guard existed: found by checking the tool call itself.
   assert.deepEqual(madeUpValues(row('I’m in London, take me anywhere', [{ type: 'tool_call', data: { name: 'discover_flights', arguments: { origin: 'London', region: 'Europe', maxPriceUsd: 1000 } } }])), ['region', 'maxPriceUsd']);
@@ -182,7 +182,7 @@ test('an eval spending cap stops the run instead of becoming a graded error repl
 // ---- Prompt caching for Claude models (Sonnet 5 default, 2026-09-27).
 
 test('Claude requests mark the fixed part of the system prompt for caching; OpenAI requests are unchanged', async () => {
-  const { OpenRouterModel, systemPrompt, CONTEXT_MARKER } = await import('../model.mjs');
+  const { OpenRouterModel, systemPrompt, CONTEXT_MARKER } = await import('../src/model.mjs');
   const { c } = setup();
   const prompt = systemPrompt(c, 'Europe/London');
   assert.ok(prompt.includes(CONTEXT_MARKER), 'the injected context marker must stay in the prompt');

@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {retrievePolicy,renderPolicyAnswer,groundedPolicyAnswer,supportReply} from '../policy.mjs';
-import {Agent} from '../model.mjs';
+import {retrievePolicy,renderPolicyAnswer,groundedPolicyAnswer,supportReply} from '../src/policy.mjs';
+import {Agent} from '../src/model.mjs';
 const evidence=retrievePolicy({query:'privacy'});
 const call=(name,args)=>({role:'assistant',tool_calls:[{id:'test',type:'function',function:{name,arguments:JSON.stringify(args)}}]});
 test('retrieval preserves analytics qualifications and terms placeholder',()=>{

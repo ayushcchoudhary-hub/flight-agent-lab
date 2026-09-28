@@ -1,10 +1,10 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { SearchConversation, blockedByFilter, findTool, resolveLocation, isoToday } from '../search.mjs';
-import { makeFixtureAdapter } from '../fixtures.mjs';
-import { AIRPORTS } from '../shared.mjs';
-import { Agent, OpenRouterModel, PROMPT_VERSION, ScriptedDemoModel, bookingHandoff, compactForHistory, deterministicBoundary, fitHistory, repairExplicitToolArguments, systemPrompt } from '../model.mjs';
-import { redact } from '../trace.mjs';
+import { SearchConversation, blockedByFilter, findTool, resolveLocation, isoToday } from '../src/search.mjs';
+import { makeFixtureAdapter } from '../src/fixtures.mjs';
+import { AIRPORTS } from '../src/shared.mjs';
+import { Agent, OpenRouterModel, PROMPT_VERSION, ScriptedDemoModel, bookingHandoff, compactForHistory, deterministicBoundary, fitHistory, repairExplicitToolArguments, systemPrompt } from '../src/model.mjs';
+import { redact } from '../src/trace.mjs';
 
 const setup = (scenario = 'normal', today = '2026-09-18') => {
   const adapter = makeFixtureAdapter(scenario);
@@ -718,7 +718,7 @@ test('a leading article does not defeat place resolution',()=>{
 
 // Phase 1 checkout handoff: every results reply links to the same search on
 // the product site. The path must parse under the product's own URL grammar.
-import { productSearchPath } from '../search.mjs';
+import { productSearchPath } from '../src/search.mjs';
 const PRODUCT_PATH_RE=/^\/search\/([A-Z]{3}(?:\|[A-Z]{3})*)-([A-Z]{3}(?:\|[A-Z]{3})*)-(\d{6})(?:-r(\d{6}))?(?:-([a-z]+))?(?:-f([0137]))?$/i;
 test('a results reply links to the same search on the product site',async()=>{
   const {c}=setup();

@@ -1,10 +1,12 @@
 import { readFile, readdir } from 'node:fs/promises';
+import { join } from 'node:path';
+import { EVAL_RESULTS } from '../paths.mjs';
 export const queryKey = q => JSON.stringify(['origin','destination','dateFrom','dateTo','selectedDate','cabin'].map(k => k === 'cabin' ? q[k] || 'any' : q[k]));
-export async function loadCaptures(root = new URL('./eval-results/', import.meta.url)) {
+export async function loadCaptures(root = EVAL_RESULTS) {
   const entries=[];
   for(const directory of await readdir(root,{withFileTypes:true})) {
     if(!directory.isDirectory() || !directory.name.startsWith('live-staging-')) continue;
-    try { const data=JSON.parse(await readFile(new URL(`${directory.name}/captures.json`,root),'utf8')); entries.push(...data); } catch(e) { if(e.code!=='ENOENT') throw e; }
+    try { const data=JSON.parse(await readFile(join(root,directory.name,'captures.json'),'utf8')); entries.push(...data); } catch(e) { if(e.code!=='ENOENT') throw e; }
   }
   return entries.sort((a,b)=>a.capturedAt.localeCompare(b.capturedAt));
 }

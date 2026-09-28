@@ -1,12 +1,12 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { randomUUID } from 'node:crypto';
-import { createMemoryStore, RECENT_SEARCHES_KEPT } from '../store.mjs';
-import { createChatService } from '../chat-service.mjs';
-import { makeFixtureAdapter } from '../fixtures.mjs';
-import { isoToday } from '../search.mjs';
-import { preferenceAction } from '../preferences.mjs';
-import { shiftIso } from '../shared.mjs';
+import { createMemoryStore, RECENT_SEARCHES_KEPT } from '../src/store.mjs';
+import { createChatService } from '../src/chat-service.mjs';
+import { makeFixtureAdapter } from '../src/fixtures.mjs';
+import { isoToday } from '../src/search.mjs';
+import { preferenceAction } from '../src/preferences.mjs';
+import { shiftIso } from '../src/shared.mjs';
 
 // Recent searches (2026-09-27): a returning browser sees the trips it ran,
 // numbered in the welcome, and can run one again by number. They are shown
@@ -169,11 +169,11 @@ test('forget recentSearches is an explicit action only', () => {
 // ---- Held-out D6-D10 are satisfiable. The intended tool calls, replayed
 // through the eval harness's own memory between sessions, pass every exact
 // check. A live failure is then the model, not the case or the harness.
-import { SearchConversation } from '../search.mjs';
-import { Agent } from '../model.mjs';
-import { applyPreferences } from '../preferences.mjs';
-import { HARDENING_CASES_V2, HARDENING_V2_CLOCK } from '../hardening-cases-v2.mjs';
-import { gradeV2Step, rememberFromStep, applyMemory, offerRecentFromMemory } from '../hardening-v2.mjs';
+import { SearchConversation } from '../src/search.mjs';
+import { Agent } from '../src/model.mjs';
+import { applyPreferences } from '../src/preferences.mjs';
+import { HARDENING_CASES_V2, HARDENING_V2_CLOCK } from '../evals/hardening-cases-v2.mjs';
+import { gradeV2Step, rememberFromStep, applyMemory, offerRecentFromMemory } from '../evals/hardening-v2.mjs';
 
 const INTENDED = {
   'London to New York economy': { name: 'find_flights', arguments: { origin: 'London', destination: 'New York', cabin: 'economy' } },

@@ -15,8 +15,9 @@
 // unknown, never "unchanged".
 import { readFileSync, writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
+import { POLICY_SNAPSHOT } from '../paths.mjs';
 
-const SNAPSHOT = new URL('./policy-snapshot.json', import.meta.url);
+const SNAPSHOT = POLICY_SNAPSHOT;
 const PAGES = [{ key: 'privacy', path: '/privacy', title: 'Privacy Policy' }, { key: 'terms', path: '/terms', title: 'Terms & Conditions' }];
 const MAX_BYTES = 10_000_000;
 

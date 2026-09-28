@@ -1,5 +1,5 @@
 import {mkdirSync,readFileSync,writeFileSync} from 'node:fs';
-import {fileURLToPath} from 'node:url';
+import { agentPath } from '../paths.mjs';
 
 const value=name=>process.argv.find(item=>item.startsWith(`--${name}=`))?.slice(name.length+3);
 const openrouterId=value('openrouter');
@@ -7,11 +7,11 @@ const validationId=value('validation');
 if(!openrouterId||!/^compare-openrouter-[\w.-]+$/.test(openrouterId))throw new Error('Pass --openrouter=compare-openrouter-...');
 if(!validationId||!/^compare-openrouter-validation-[\w.-]+$/.test(validationId))throw new Error('Pass --validation=compare-openrouter-validation-...');
 const codexId='compare-2026-09-19T10-06-49.201Z';
-const load=id=>JSON.parse(readFileSync(new URL(`./eval-results/${id}/report.json`,import.meta.url),'utf8'));
+const load=id=>JSON.parse(readFileSync(agentPath('eval-results',id,'report.json'),'utf8'));
 const codex=load(codexId),openrouter=load(openrouterId),validation=load(validationId);
 if(codex.status!=='complete'||openrouter.status!=='complete'||validation.status!=='complete')throw new Error('Every source run must be complete.');
 const runId='compare-summary-'+new Date().toISOString().replaceAll(':','-');
-const root=fileURLToPath(new URL(`./eval-results/${runId}/`,import.meta.url));
+const root=agentPath('eval-results',runId)+'/';
 mkdirSync(root,{recursive:true,mode:0o700});
 const pathConfigs=(source,path)=>source.configs.map(config=>({...config,servingPath:path,sourceRepeats:source.repeats}));
 const pathSummary=(source,path)=>source.summary.map(summary=>({...summary,servingPath:path,sourceRepeats:source.repeats}));

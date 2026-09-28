@@ -1,10 +1,10 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { makeStagingAdapter, STAGING_BASE } from '../staging.mjs';
-import { makeFixtureAdapter } from '../fixtures.mjs';
-import { SearchConversation } from '../search.mjs';
-import { verifyFlightData } from '../verify-flight-data.mjs';
-import { Agent, ScriptedDemoModel } from '../model.mjs';
+import { makeStagingAdapter, STAGING_BASE } from '../src/staging.mjs';
+import { makeFixtureAdapter } from '../src/fixtures.mjs';
+import { SearchConversation } from '../src/search.mjs';
+import { verifyFlightData } from '../src/verify-flight-data.mjs';
+import { Agent, ScriptedDemoModel } from '../src/model.mjs';
 
 const query = { origin: 'LHR', destination: 'JFK', dateFrom: '2026-10-01', dateTo: '2026-10-01', selectedDate: '2026-10-01', cabin: 'business' };
 async function mockTransport() {

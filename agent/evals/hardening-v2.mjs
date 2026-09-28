@@ -1,6 +1,6 @@
 import {gradeStep} from './edge-cases.mjs';
-import {recentSearchFrom,renderRecentSearches} from './search.mjs';
-import {RECENT_SEARCHES_KEPT} from './store.mjs';
+import {recentSearchFrom,renderRecentSearches} from '../src/search.mjs';
+import {RECENT_SEARCHES_KEPT} from '../src/store.mjs';
 
 const baseKeys=new Set(['status','statuses','origin','destination','cabin','from','to','budget','pending','menuCount','posts','resultCount','minResults','mentions']);
 const same=(actual,expected)=>Object.entries(expected).every(([key,value])=>actual?.[key]===value);

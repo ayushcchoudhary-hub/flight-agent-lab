@@ -1,12 +1,12 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { SearchConversation, discoverTool } from '../search.mjs';
-import { makeFixtureAdapter, fixtureDeals } from '../fixtures.mjs';
-import { fetchDiscover, clearDiscoverCache } from '../staging.mjs';
-import { validateDiscoverResponse, NO_ECONOMY_DEALS } from '../discover.mjs';
-import { applyPreferences } from '../preferences.mjs';
-import { createChatService } from '../chat-service.mjs';
-import { compactForHistory } from '../model.mjs';
+import { SearchConversation, discoverTool } from '../src/search.mjs';
+import { makeFixtureAdapter, fixtureDeals } from '../src/fixtures.mjs';
+import { fetchDiscover, clearDiscoverCache } from '../src/staging.mjs';
+import { validateDiscoverResponse, NO_ECONOMY_DEALS } from '../src/discover.mjs';
+import { applyPreferences } from '../src/preferences.mjs';
+import { createChatService } from '../src/chat-service.mjs';
+import { compactForHistory } from '../src/model.mjs';
 
 // "Take me anywhere": ranked deals from the product's public deals feed.
 const TODAY = '2026-09-18';
@@ -285,9 +285,9 @@ test('recorded history keeps the deals a follow-up needs, not the prose', async 
 // Every Discover held-out case must be satisfiable by the intended tool call.
 // Replaying that call through the real agent, conversation and grader catches
 // a wrong expectation for free, before a paid run blames the model for it.
-import { Agent } from '../model.mjs';
-import { HARDENING_CASES_V2, HARDENING_V2_CLOCK } from '../hardening-cases-v2.mjs';
-import { gradeV2Step } from '../hardening-v2.mjs';
+import { Agent } from '../src/model.mjs';
+import { HARDENING_CASES_V2, HARDENING_V2_CLOCK } from '../evals/hardening-cases-v2.mjs';
+import { gradeV2Step } from '../evals/hardening-v2.mjs';
 const INTENDED = {
   'take me anywhere': {},
   'I’m in London, take me anywhere': { origin: 'London' },

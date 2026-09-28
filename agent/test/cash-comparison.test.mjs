@@ -1,9 +1,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { SearchConversation, usualCashUsd, CASH_FOOTNOTE } from '../search.mjs';
-import { makeFixtureAdapter } from '../fixtures.mjs';
-import { verifyFlightData } from '../verify-flight-data.mjs';
-import { displayPriceUsd } from '../shared.mjs';
+import { SearchConversation, usualCashUsd, CASH_FOOTNOTE } from '../src/search.mjs';
+import { makeFixtureAdapter } from '../src/fixtures.mjs';
+import { verifyFlightData } from '../src/verify-flight-data.mjs';
+import { displayPriceUsd } from '../src/shared.mjs';
 
 // Each award result from the product carries a cash price for the exact same
 // flights (retailComparison). Staging on 2026-09-27 priced every London to New

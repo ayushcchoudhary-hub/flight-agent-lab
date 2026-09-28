@@ -12,6 +12,7 @@
 // product repository.
 import { readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { agentPath } from '../paths.mjs';
 
 const source = process.argv[2];
 if (!source) {
@@ -84,5 +85,5 @@ ${groups.map(row).join(',\n')},
 ];
 `;
 
-writeFileSync(new URL('../airports.generated.mjs', import.meta.url), out);
+writeFileSync(agentPath('src', 'airports.generated.mjs'), out);
 console.log(`Wrote ${airports.length} airports and ${groups.length} metro groups.`);

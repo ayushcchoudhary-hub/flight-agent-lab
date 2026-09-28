@@ -1,8 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {flightDetails} from '../flight-details.mjs';
-import {SearchConversation} from '../search.mjs';
-import {verifyFlightData} from '../verify-flight-data.mjs';
+import {flightDetails} from '../src/flight-details.mjs';
+import {SearchConversation} from '../src/search.mjs';
+import {verifyFlightData} from '../src/verify-flight-data.mjs';
 test('flight times match website wall clocks; explicit segment duration wins over misleading UTC subtraction',()=>{
  const d=flightDetails({origin:'LHR',destination:'JFK',flightNumbers:'BA183',departsAt:'2026-10-03T19:25:00Z',arrivesAt:'2026-10-03T22:25:00Z',segments:[{durationMin:480}]});
  assert.deepEqual(d.departure,{date:'2026-10-03',time:'7:25 PM'});assert.deepEqual(d.arrival,{date:'2026-10-03',time:'10:25 PM'});assert.equal(d.durationMinutes,480);assert.match(d.text,/8h 0m/);

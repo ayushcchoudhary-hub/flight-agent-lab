@@ -1,19 +1,19 @@
-import './register.mjs';
+import '../register.mjs';
 import {createHmac,timingSafeEqual} from 'node:crypto';
 import http from 'node:http';
 import {readFile,readdir,stat} from 'node:fs/promises';
-import {fileURLToPath} from 'node:url';
 import {join} from 'node:path';
 import {existsSync} from 'node:fs';
-import {isRunKey,loadStory,readReport} from './eval-story.mjs';
-import {createChatService} from './chat-service.mjs';
-import {storeFromEnvironment,isVisitorId} from './store.mjs';
+import {isRunKey,loadStory,readReport} from '../src/eval-story.mjs';
+import {createChatService} from '../src/chat-service.mjs';
+import {storeFromEnvironment,isVisitorId} from '../src/store.mjs';
 import {randomUUID as newVisitorId} from 'node:crypto';
-import {OpenRouterModel} from './model.mjs';
-import {DEFAULT_MODEL,HOSTED_MODEL_OPTIONS,hostedModelSettings} from './hosted-model-options.mjs';
-import {clientErrorMessage,createCredentialGuard} from './hosted-security.mjs';
+import {OpenRouterModel} from '../src/model.mjs';
+import {DEFAULT_MODEL,HOSTED_MODEL_OPTIONS,hostedModelSettings} from '../src/hosted-model-options.mjs';
+import {clientErrorMessage,createCredentialGuard} from '../src/hosted-security.mjs';
+import { AGENT_ROOT } from '../paths.mjs';
 
-const root=fileURLToPath(new URL('.',import.meta.url));
+const root=AGENT_ROOT;
 const host=process.env.HOST||'0.0.0.0';
 const port=Number(process.env.PORT||8080);
 const publicOrigin=(process.env.PUBLIC_ORIGIN||'').replace(/\/$/,'');

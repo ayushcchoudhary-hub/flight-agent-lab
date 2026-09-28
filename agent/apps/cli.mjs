@@ -1,16 +1,16 @@
 import { createInterface } from 'node:readline/promises';
 import { stdin, stdout, loadEnvFile } from 'node:process';
 import { existsSync } from 'node:fs';
-import { fileURLToPath } from 'node:url';
 import { randomUUID } from 'node:crypto';
-import { makeStagingAdapter, readStagingToken } from './staging.mjs';
-import { makeFixtureAdapter } from './fixtures.mjs';
-import { SearchConversation, isoToday, validDate, welcomeFor } from './search.mjs';
-import { Agent, OpenRouterModel, ScriptedDemoModel } from './model.mjs';
-import { fileTrace } from './trace.mjs';
-import { hostedModelSettings } from './hosted-model-options.mjs';
+import { makeStagingAdapter, readStagingToken } from '../src/staging.mjs';
+import { makeFixtureAdapter } from '../src/fixtures.mjs';
+import { SearchConversation, isoToday, validDate, welcomeFor } from '../src/search.mjs';
+import { Agent, OpenRouterModel, ScriptedDemoModel } from '../src/model.mjs';
+import { fileTrace } from '../src/trace.mjs';
+import { hostedModelSettings } from '../src/hosted-model-options.mjs';
+import { AGENT_ROOT } from '../paths.mjs';
 
-const base = fileURLToPath(new URL('.', import.meta.url));
+const base = AGENT_ROOT;
 const demo = process.argv.includes('--demo');
 // Offline mode intentionally never reads credentials.
 if (!demo && existsSync(base + '.env')) loadEnvFile(base + '.env');

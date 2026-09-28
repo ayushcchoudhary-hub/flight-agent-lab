@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { SAFE_SEARCH_FAILURE, normalizeCustomerCopy, reviewCustomerCopy, safeCustomerCopy, safeSearchError } from '../customer-copy.mjs';
+import { SAFE_SEARCH_FAILURE, normalizeCustomerCopy, reviewCustomerCopy, safeCustomerCopy, safeSearchError } from '../src/customer-copy.mjs';
 
 test('customer copy normalizes prohibited punctuation without changing meaning', () => {
   assert.equal(normalizeCustomerCopy('I can help — tell me the route; then the date.'), 'I can help. tell me the route. then the date.');

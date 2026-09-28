@@ -1,14 +1,15 @@
 import {readFileSync,writeFileSync,mkdirSync,renameSync} from 'node:fs';
-import {fileURLToPath} from 'node:url';
 import {createHash} from 'node:crypto';
-import {Agent,OpenRouterModel,PROMPT_VERSION} from './model.mjs';
-import {SearchConversation} from './search.mjs';
-import {makeReplayAdapter} from './replay.mjs';
-import {makeFixtureAdapter} from './fixtures.mjs';
+import {Agent,OpenRouterModel,PROMPT_VERSION} from '../src/model.mjs';
+import {SearchConversation} from '../src/search.mjs';
+import {makeReplayAdapter} from '../src/replay.mjs';
+import {makeFixtureAdapter} from '../src/fixtures.mjs';
 import {EVAL_CASES,gradeStep} from './eval-cases.mjs';
-import {verifyFlightData} from './verify-flight-data.mjs';
+import {verifyFlightData} from '../src/verify-flight-data.mjs';
 import {summarize,estimateCost} from './benchmark-stats.mjs';
 import {OPENROUTER_CONFIGS,OPENROUTER_SMOKE_CASES,priceRates,requestCostUpperBound,validateCatalog} from './openrouter-options.mjs';
+import {join} from 'node:path';
+import { agentPath } from '../paths.mjs';
 
 const arg=(name,fallback)=>process.argv.find(value=>value.startsWith(`--${name}=`))?.slice(name.length+3)??fallback;
 const live=process.argv.includes('--live');
@@ -49,18 +50,18 @@ if(maximumPlannedCost>maxCostUsd)throw new Error(`The conservative plan maximum 
 if(plan.maximumScheduledCalls>modelCallCap)throw new Error(`The plan schedules ${plan.maximumScheduledCalls} calls before temporary retries, above the ${modelCallCap}-call cap. No model calls were made.`);
 
 const source='live-staging-2026-09-19T03-32-45.495Z';
-const sourceRoot=new URL(`./eval-results/${source}/`,import.meta.url);
-const captures=JSON.parse(readFileSync(new URL('captures.json',sourceRoot)));
-const stagingCases=JSON.parse(readFileSync(new URL('cases.json',sourceRoot)));
-const clock=JSON.parse(readFileSync(new URL('report.json',sourceRoot))).clock;
+const sourceRoot=agentPath('eval-results',source);
+const captures=JSON.parse(readFileSync(join(sourceRoot,'captures.json')));
+const stagingCases=JSON.parse(readFileSync(join(sourceRoot,'cases.json')));
+const clock=JSON.parse(readFileSync(join(sourceRoot,'report.json'))).clock;
 const mapping={R1:'S1',R2:'S2',M1:'M2',M2:'M1',M3:'M3',F1:'F1'};
 const cases=selectedEvalCases.map(item=>mapping[item.id]?{...structuredClone(stagingCases.find(row=>row.id===mapping[item.id])),id:item.id,dataSource:'recorded staging'}:{...structuredClone(item),dataSource:'synthetic edge/route fixture'});
 const runId=(screening?'compare-openrouter-':'compare-openrouter-validation-')+new Date().toISOString().replaceAll(':','-');
-const root=fileURLToPath(new URL(`./eval-results/${runId}/`,import.meta.url));
+const root=agentPath('eval-results',runId)+'/';
 mkdirSync(root,{recursive:true,mode:0o700});mkdirSync(root+'source',{mode:0o700});
-const files=['openrouter-benchmark.mjs','openrouter-options.mjs','benchmark-stats.mjs','model.mjs','search.mjs','shared.mjs','flight-details.mjs','verify-flight-data.mjs','replay.mjs','fixtures.mjs','eval-cases.mjs'];
-const sourceHashes={};for(const file of files){const bytes=readFileSync(new URL(file,import.meta.url));sourceHashes[file]=createHash('sha256').update(bytes).digest('hex');writeFileSync(root+'source/'+file,bytes);}
-const captureBytes=readFileSync(new URL('captures.json',sourceRoot));writeFileSync(root+'captures.json',captureBytes,{mode:0o600});
+const files=['evals/openrouter-benchmark.mjs','evals/openrouter-options.mjs','evals/benchmark-stats.mjs','src/model.mjs','src/search.mjs','src/shared.mjs','src/flight-details.mjs','src/verify-flight-data.mjs','src/replay.mjs','src/fixtures.mjs','evals/eval-cases.mjs'];
+const sourceHashes={};for(const file of files){const bytes=readFileSync(agentPath(file));sourceHashes[file]=createHash('sha256').update(bytes).digest('hex');writeFileSync(root+'source/'+file,bytes);}
+const captureBytes=readFileSync(join(sourceRoot,'captures.json'));writeFileSync(root+'captures.json',captureBytes,{mode:0o600});
 const report={runId,promptVersion:PROMPT_VERSION,experimentKind:screening?'openrouter-screen':'openrouter-validation',phase:screening?'Open-weight screen':'Candidate validation',startedAt:new Date().toISOString(),status:'running',clock,configs:configs.map(({pricing,...config})=>config),repeats,cases,plannedCalls:plan.maximumScheduledCalls,modelCallCap,maxCostUsd,modelCallsAttempted:0,actualCostUsd:0,conservativeUnreportedCostUsd:0,source,sourceHashes,captureHash:createHash('sha256').update(captureBytes).digest('hex'),rates,results:[],disabled:[],decisionTitle:screening?'Open-weight candidates versus the Terra control':'Repeated validation against the Terra control',decisionNote:'Use correctness as the gate. Then compare latency, actual OpenRouter cost and token use. Every repeat starts with fresh conversation state.',limitations:['Development cases, not held-out tests.','The same prompts are used across configurations.','Six cases use a pinned staging-derived fixture and nine use synthetic fixtures. No live flight searches occur.','Latency includes the OpenRouter gateway and its selected provider. It is not model-only compute time.','Provider fallbacks and automatic model substitution are disabled.','Actual response cost is preferred. Missing usage reserves a conservative upper bound.',screening?'One attempt screens compatibility. It is not a reliability estimate.':`${repeats} repeats measure consistency on these development cases. They are not a production reliability estimate.`,'Historical Codex-path measurements use a different serving path and should not be treated as a controlled latency comparison.']};
 const save=()=>{report.summary=summarize(report);writeFileSync(root+'report.tmp',JSON.stringify(report,null,2),{mode:0o600});renameSync(root+'report.tmp',root+'report.json');};save();
 console.log(`Comparison: http://127.0.0.1:5180/compare?run=${runId}`);

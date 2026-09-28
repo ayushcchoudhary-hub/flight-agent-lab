@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {JUDGE_RUBRIC_VERSION,JUDGE_SYSTEM_PROMPT,evaluateJudgeConsensus,parseJudgeOutput} from '../judge.mjs';
+import {JUDGE_RUBRIC_VERSION,JUDGE_SYSTEM_PROMPT,evaluateJudgeConsensus,parseJudgeOutput} from '../evals/judge.mjs';
 
 test('judge parser accepts strict JSON, fenced JSON and provider text parts',()=>{
  const value={verdict:'pass'};

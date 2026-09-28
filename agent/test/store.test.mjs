@@ -1,9 +1,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { randomUUID } from 'node:crypto';
-import { createMemoryStore, storeFromEnvironment, turnRecords, isVisitorId } from '../store.mjs';
-import { createChatService } from '../chat-service.mjs';
-import { makeFixtureAdapter } from '../fixtures.mjs';
+import { createMemoryStore, storeFromEnvironment, turnRecords, isVisitorId } from '../src/store.mjs';
+import { createChatService } from '../src/chat-service.mjs';
+import { makeFixtureAdapter } from '../src/fixtures.mjs';
 
 // Conversation storage and memory. Off by default; when on, text is redacted,
 // only the origin is remembered, and a storage failure never reaches a chat.
@@ -151,11 +151,11 @@ test('expired conversations are purged, current ones kept', async () => {
 
 // D1 with memory: replay the intended calls through the harness's own memory
 // helpers, so the case is known satisfiable before a paid run.
-import { SearchConversation } from '../search.mjs';
-import { Agent } from '../model.mjs';
-import { applyPreferences } from '../preferences.mjs';
-import { HARDENING_CASES_V2, HARDENING_V2_CLOCK } from '../hardening-cases-v2.mjs';
-import { gradeV2Step, rememberFromStep, applyMemory } from '../hardening-v2.mjs';
+import { SearchConversation } from '../src/search.mjs';
+import { Agent } from '../src/model.mjs';
+import { applyPreferences } from '../src/preferences.mjs';
+import { HARDENING_CASES_V2, HARDENING_V2_CLOCK } from '../evals/hardening-cases-v2.mjs';
+import { gradeV2Step, rememberFromStep, applyMemory } from '../evals/hardening-v2.mjs';
 test('held-out D1 is satisfiable: London carries over disclosed, economy does not', async () => {
   const item = HARDENING_CASES_V2.find(c => c.id === 'D1'), memory = {}, saved = {};
   // Model-style calls: every field present, as the model sends them.

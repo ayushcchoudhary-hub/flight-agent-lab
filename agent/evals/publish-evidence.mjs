@@ -1,5 +1,5 @@
 import {existsSync,mkdirSync,readFileSync,rmSync,writeFileSync} from 'node:fs';
-import {fileURLToPath} from 'node:url';
+import { AGENT_ROOT } from '../paths.mjs';
 
 // A deliberate allowlist. Adding a run requires a human review and regeneration.
 const runs=[
@@ -27,7 +27,7 @@ const publicationOverrides={
  'live-hardening-judge-2026-09-20T15-23-53.919Z':{label:'Terra hardening · interrupted independence rerun',status:'interrupted',stopReason:{type:'manual_interrupt',afterCase:'S07'},modelCallsAttempted:14,actualCostUsd:0.070808},
  'live-hardening-judge-2026-09-20T15-38-37.144Z':{label:'Terra hardening · contract-aware rerun stopped at B03'},
 };
-const root=fileURLToPath(new URL('.',import.meta.url));
+const root=AGENT_ROOT;
 const source=`${root}eval-results/`,target=`${root}published-eval-results/`;
 const requested=process.argv.find(value=>value.startsWith('--runs='))?.slice('--runs='.length).split(',').filter(Boolean)??[];
 for(const run of requested)if(!runs.includes(run))throw Error(`Run is not approved for publication: ${run}`);

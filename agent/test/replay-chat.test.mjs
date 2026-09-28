@@ -1,10 +1,10 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { makeFixtureAdapter } from '../fixtures.mjs';
-import { makeReplayAdapter,queryKey } from '../replay.mjs';
-import { createChatService } from '../chat-service.mjs';
-import { ScriptedDemoModel } from '../model.mjs';
-import { HOSTED_MODEL_OPTIONS } from '../hosted-model-options.mjs';
+import { makeFixtureAdapter } from '../src/fixtures.mjs';
+import { makeReplayAdapter,queryKey } from '../src/replay.mjs';
+import { createChatService } from '../src/chat-service.mjs';
+import { ScriptedDemoModel } from '../src/model.mjs';
+import { HOSTED_MODEL_OPTIONS } from '../src/hosted-model-options.mjs';
 const emptyPreferenceStore={label:'empty test profile',read:async()=>({}),replace:async p=>p};
 const chatService=options=>createChatService({preferenceStore:emptyPreferenceStore,...options});
 const query={origin:'LHR|LGW|LCY|STN|LTN',destination:'JFK|EWR|LGA',dateFrom:'2026-09-19',dateTo:'2026-09-26',selectedDate:'2026-09-19',cabin:'business'};

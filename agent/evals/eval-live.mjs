@@ -1,11 +1,11 @@
 import { mkdirSync, writeFileSync, readFileSync } from 'node:fs';
-import { fileURLToPath } from 'node:url';
 import { createHash } from 'node:crypto';
 
-import { Agent, OpenRouterModel, PROMPT_VERSION } from './model.mjs';
-import { SearchConversation } from './search.mjs';
-import { makeFixtureAdapter } from './fixtures.mjs';
+import { Agent, OpenRouterModel, PROMPT_VERSION } from '../src/model.mjs';
+import { SearchConversation } from '../src/search.mjs';
+import { makeFixtureAdapter } from '../src/fixtures.mjs';
 import { EVAL_CASES, EVAL_CLOCK, gradeStep } from './eval-cases.mjs';
+import { agentPath } from '../paths.mjs';
 
 const option=(name,fallback)=>process.argv.find(x=>x.startsWith(`--${name}=`))?.split('=').slice(1).join('=')??fallback;
 if(!process.argv.includes('--live')) throw new Error('Explicit --live required: this uses your OpenRouter account.');
@@ -16,10 +16,10 @@ const selected=option('cases','').split(',').filter(Boolean);
 const cases=selected.length?EVAL_CASES.filter(c=>selected.includes(c.id)):EVAL_CASES;
 if(!Number.isInteger(repeats)||repeats<1||repeats>5||models.length>3||!cases.length) throw new Error('Use 1–5 repeats, 1–3 models and valid case IDs.');
 const runId=new Date().toISOString().replaceAll(':','-');
-const base=fileURLToPath(new URL(`./eval-results/live-${runId}/`,import.meta.url));
+const base=agentPath('eval-results',`live-${runId}`)+'/';
 mkdirSync(base,{recursive:true});
-const sourceFiles=['search.mjs','model.mjs','fixtures.mjs','eval-cases.mjs'];
-const sourceHashes=Object.fromEntries(sourceFiles.map(name=>[name,createHash('sha256').update(readFileSync(new URL(name,import.meta.url))).digest('hex')]));
+const sourceFiles=['src/search.mjs','src/model.mjs','src/fixtures.mjs','evals/eval-cases.mjs'];
+const sourceHashes=Object.fromEntries(sourceFiles.map(name=>[name,createHash('sha256').update(readFileSync(agentPath(name))).digest('hex')]));
 const report={runId,label:option('label','Local model evaluation'),promptVersion:PROMPT_VERSION,sourceHashes,clock:EVAL_CLOCK,effort,models,repeats,concurrency:1,adapter:'OpenRouter Chat Completions with structured tools; synthetic flight API',
   limitations:['Five repetitions are a small reliability sample, not a production accuracy estimate.','Same prompts repeated; not a held-out benchmark.','Latency includes the OpenRouter gateway, selected provider and model generation.','Cached input may affect latency across repeats.','Token counts and reported request cost come from OpenRouter when available.','Model selects an action; application generates flight-result wording.'],results:[]};
 writeFileSync(base+'cases.json',JSON.stringify(cases,null,2));
@@ -76,7 +76,7 @@ for(const run of report.results.filter(r=>r.repeat===1||!r.pass)) {
   for(const step of run.steps) lines.push(`**You:** ${step.input}`,'','```text',step.result.text,'```','',`Expected: ${JSON.stringify(step.expected)}`,`Actual: ${JSON.stringify(step.grade.actual)}`,'',...step.grade.checks.filter(c=>!c.pass).map(c=>`**Failed:** ${c.name}`),'');
 }
 writeFileSync(base+'report.md',lines.join('\n'));
-writeFileSync(fileURLToPath(new URL('./eval-results/latest-live.json',import.meta.url)),JSON.stringify({path:base,summary:report.summary},null,2));
+writeFileSync(agentPath('eval-results','latest-live.json'),JSON.stringify({path:base,summary:report.summary},null,2));
 console.log(`Report: ${base}report.md`);
 console.log(JSON.stringify(report.summary,null,2));
 if(report.results.some(r=>!r.pass))process.exitCode=1;

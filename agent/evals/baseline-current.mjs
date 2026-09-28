@@ -1,13 +1,13 @@
 import {spawn} from 'node:child_process';
 import {createHash} from 'node:crypto';
 import {mkdirSync,readdirSync,readFileSync,writeFileSync} from 'node:fs';
-import {fileURLToPath} from 'node:url';
-import {PROMPT_VERSION} from './model.mjs';
+import {PROMPT_VERSION} from '../src/model.mjs';
+import { AGENT_ROOT, EVAL_RESULTS, agentPath } from '../paths.mjs';
 
 if(!process.argv.includes('--live'))throw new Error('Pass --live: this baseline uses the configured OpenRouter account for about 30 model calls.');
 const startedAt=new Date();
-const root=fileURLToPath(new URL('.',import.meta.url));
-const before=new Set(readdirSync(new URL('./eval-results/',import.meta.url)));
+const root=AGENT_ROOT;
+const before=new Set(readdirSync(EVAL_RESULTS));
 const node=process.execPath;
 async function run(name,args){
  await new Promise((resolve,reject)=>{
@@ -16,17 +16,17 @@ async function run(name,args){
  });
 }
 
-await run('search and edge acceptance',['edge-eval.mjs','--live','--models=openai/gpt-5.6-terra','--effort=medium','--repeats=1','--label=Frozen MVP baseline · Terra medium via OpenRouter']);
-await run('policy checks',['policy-smoke.mjs']);
-await run('preference checks',['preference-smoke.mjs']);
+await run('search and edge acceptance',['evals/edge-eval.mjs','--live','--models=openai/gpt-5.6-terra','--effort=medium','--repeats=1','--label=Frozen MVP baseline · Terra medium via OpenRouter']);
+await run('policy checks',['evals/policy-smoke.mjs']);
+await run('preference checks',['evals/preference-smoke.mjs']);
 
-const created=readdirSync(new URL('./eval-results/',import.meta.url)).filter(x=>!before.has(x)&&x.startsWith('live-')).sort();
+const created=readdirSync(EVAL_RESULTS).filter(x=>!before.has(x)&&x.startsWith('live-')).sort();
 if(created.length!==1)throw new Error('Could not identify exactly one acceptance report.');
-const acceptance=JSON.parse(readFileSync(new URL(`./eval-results/${created[0]}/report.json`,import.meta.url)));
-const policy=JSON.parse(readFileSync(new URL('./eval-results/policy-smoke/report.json',import.meta.url)));
-const preferences=JSON.parse(readFileSync(new URL('./eval-results/preference-smoke/report.json',import.meta.url)));
-const files=['FROZEN-SCOPE.md','edge-cases.mjs','edge-eval.mjs','model.mjs','policy.mjs','preferences.mjs','search.mjs'];
-const hashes=Object.fromEntries(files.map(name=>[name,createHash('sha256').update(readFileSync(new URL(name,import.meta.url))).digest('hex')]));
+const acceptance=JSON.parse(readFileSync(agentPath('eval-results',created[0],'report.json')));
+const policy=JSON.parse(readFileSync(agentPath('eval-results','policy-smoke','report.json')));
+const preferences=JSON.parse(readFileSync(agentPath('eval-results','preference-smoke','report.json')));
+const files=['FROZEN-SCOPE.md','evals/edge-cases.mjs','evals/edge-eval.mjs','src/model.mjs','src/policy.mjs','src/preferences.mjs','src/search.mjs'];
+const hashes=Object.fromEntries(files.map(name=>[name,createHash('sha256').update(readFileSync(agentPath(name))).digest('hex')]));
 const policyPass=policy.results.every(x=>x.result.status!=='error');
 const preferencePass=preferences.results[0]?.result?.proposedPreferences?.homeAirport==='LHR'&&preferences.tripPreserved===true&&preferences.results[1]?.result?.status==='policy';
 const report={
@@ -38,8 +38,8 @@ const report={
 };
 report.totalModelCalls=[report.acceptance.modelCalls,report.policy.modelCalls,report.preferences.modelCalls].reduce((a,b)=>a+(b??0),0);
 report.pass=report.acceptance.passed===report.acceptance.total&&report.policy.passed===report.policy.total&&report.preferences.passed===report.preferences.total;
-const id='baseline-'+startedAt.toISOString().replaceAll(':','-');mkdirSync(new URL(`./eval-results/${id}/`,import.meta.url),{recursive:true,mode:0o700});
-writeFileSync(new URL(`./eval-results/${id}/report.json`,import.meta.url),JSON.stringify(report,null,2),{mode:0o600});
-writeFileSync(new URL(`./eval-results/${id}/report.md`,import.meta.url),`# ${report.label}\n\n- Result: **${report.pass?'PASS':'FAIL'}**\n- Search and edge scenarios: **${report.acceptance.passed}/${report.acceptance.total}**\n- Policy scenarios: **${report.policy.passed}/${report.policy.total}**\n- Preference scenarios: **${report.preferences.passed}/${report.preferences.total}**\n- Model calls: **${report.totalModelCalls}**\n- Acceptance detail: \`${report.acceptance.run}\`\n\nOne attempt per scenario is diagnostic evidence, not a production accuracy estimate.\n`);
+const id='baseline-'+startedAt.toISOString().replaceAll(':','-');mkdirSync(agentPath('eval-results',id),{recursive:true,mode:0o700});
+writeFileSync(agentPath('eval-results',id,'report.json'),JSON.stringify(report,null,2),{mode:0o600});
+writeFileSync(agentPath('eval-results',id,'report.md'),`# ${report.label}\n\n- Result: **${report.pass?'PASS':'FAIL'}**\n- Search and edge scenarios: **${report.acceptance.passed}/${report.acceptance.total}**\n- Policy scenarios: **${report.policy.passed}/${report.policy.total}**\n- Preference scenarios: **${report.preferences.passed}/${report.preferences.total}**\n- Model calls: **${report.totalModelCalls}**\n- Acceptance detail: \`${report.acceptance.run}\`\n\nOne attempt per scenario is diagnostic evidence, not a production accuracy estimate.\n`);
 console.log(JSON.stringify({id,...report},null,2));
 if(!report.pass)process.exitCode=1;

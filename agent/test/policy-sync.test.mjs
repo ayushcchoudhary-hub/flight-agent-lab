@@ -1,8 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { extractPolicyPage, fetchLivePolicy, comparePolicy, rebuildSnapshot, normalizePolicyText } from '../policy-sync.mjs';
-import { groundedPolicyAnswer } from '../policy.mjs';
+import { extractPolicyPage, fetchLivePolicy, comparePolicy, rebuildSnapshot, normalizePolicyText } from '../tools/policy-sync.mjs';
+import { groundedPolicyAnswer } from '../src/policy.mjs';
 
 // The live site is a single-page app, so the policy wording sits in its
 // script bundle. This is a made-up bundle with the same shape: an h1, plain
@@ -84,7 +84,7 @@ test('spacing and a space before punctuation are not a policy change', () => {
 // The fixed privacy answers in policy.mjs cite passages by id. After a
 // rebuild, an answer whose wording left the site must stop answering.
 test('a fixed answer whose passage changed falls back to retrieval after a rebuild', () => {
-  const snapshot = JSON.parse(readFileSync(new URL('../policy-snapshot.json', import.meta.url), 'utf8'));
+  const snapshot = JSON.parse(readFileSync(new URL('../src/policy-snapshot.json', import.meta.url), 'utf8'));
   const question = 'how long do you keep my searches?';
   assert.ok(groundedPolicyAnswer(question, snapshot), 'answers today');
   const live = { privacy: { url: 'https://staging.commonswyft.com/privacy', paragraphs: [] }, terms: { url: 'https://staging.commonswyft.com/terms', paragraphs: [] } };

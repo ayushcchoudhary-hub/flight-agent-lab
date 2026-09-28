@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {clientErrorMessage,createCredentialGuard} from '../hosted-security.mjs';
+import {clientErrorMessage,createCredentialGuard} from '../src/hosted-security.mjs';
 
 test('hosted server hides unexpected error detail but keeps intentional recovery guidance',()=>{
  assert.equal(clientErrorMessage(new Error('database-password-leaked')),'Request failed. Please try again.');

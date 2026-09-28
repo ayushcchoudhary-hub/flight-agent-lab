@@ -1,12 +1,12 @@
 import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
 import { loadEnvFile } from 'node:process';
-import { fileURLToPath } from 'node:url';
-import { makeStagingAdapter, readStagingToken, STAGING_BASE } from './staging.mjs';
-import { SearchConversation, isoToday } from './search.mjs';
-import { shiftIso } from './shared.mjs';
-import { verifyFlightData } from './verify-flight-data.mjs';
+import { makeStagingAdapter, readStagingToken, STAGING_BASE } from '../src/staging.mjs';
+import { SearchConversation, isoToday } from '../src/search.mjs';
+import { shiftIso } from '../src/shared.mjs';
+import { verifyFlightData } from '../src/verify-flight-data.mjs';
+import { AGENT_ROOT } from '../paths.mjs';
 
-const root = fileURLToPath(new URL('.', import.meta.url));
+const root = AGENT_ROOT;
 if (existsSync(root + '.env')) loadEnvFile(root + '.env');
 if (!process.argv.includes('--staging')) throw new Error('Pass --staging to submit one flight search to CommonSwyft staging.');
 await readStagingToken();

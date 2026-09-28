@@ -1,7 +1,7 @@
 import { mkdirSync, writeFileSync } from 'node:fs';
-import { fileURLToPath } from 'node:url';
-import { SearchConversation } from './search.mjs';
-import { makeFixtureAdapter } from './fixtures.mjs';
+import { SearchConversation } from '../src/search.mjs';
+import { makeFixtureAdapter } from '../src/fixtures.mjs';
+import { agentPath } from '../paths.mjs';
 
 // Fixed expected outcomes evaluate tool/application behavior, NOT a language
 // model's ability to infer the right calls. Paid model evaluation is separate.
@@ -27,7 +27,7 @@ for (const item of cases) {
   report.results.push({ id: item.id, name: item.name, pass, inputs: item.inputs, result, trace });
 }
 report.passed = report.results.filter(r => r.pass).length;
-const base = fileURLToPath(new URL('./eval-results/', import.meta.url));
+const base = agentPath('eval-results') + '/';
 mkdirSync(base, { recursive: true });
 writeFileSync(base + 'application-evals.json', JSON.stringify(report, null, 2));
 writeFileSync(base + 'application-evals.md', '# Application eval results\n\n**Synthetic tools; no model calls. These are not LLM evaluation results.**\n\n' + report.results.map(r => `- ${r.pass ? 'PASS' : 'FAIL'} ${r.id}: ${r.name}`).join('\n') + '\n');

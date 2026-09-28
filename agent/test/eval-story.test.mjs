@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { readFileSync, readdirSync, existsSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { join } from 'node:path';
-import { checkStory, delta, disagreements, isRunKey, loadStory, mergeReports, summarizeRun } from '../eval-story.mjs';
+import { checkStory, delta, disagreements, isRunKey, loadStory, mergeReports, summarizeRun } from '../src/eval-story.mjs';
 
 const root = fileURLToPath(new URL('..', import.meta.url));
 const published = join(root, 'published-eval-results');

@@ -1,9 +1,9 @@
 import test from 'node:test';import assert from 'node:assert/strict';import {mkdtemp,rm} from 'node:fs/promises';import {tmpdir} from 'node:os';import {join} from 'node:path';
-import {localPreferenceStore,accountPreferenceStore,applyPreferences,preferenceAction,validatePreferences} from '../preferences.mjs';
-import {createPreferencesDevBackend} from '../preferences-dev-backend.mjs';
-import {SearchConversation} from '../search.mjs';
-import {makeFixtureAdapter} from '../fixtures.mjs';
-import {repairExplicitToolArguments} from '../model.mjs';
+import {localPreferenceStore,accountPreferenceStore,applyPreferences,preferenceAction,validatePreferences} from '../src/preferences.mjs';
+import {createPreferencesDevBackend} from '../apps/preferences-dev-backend.mjs';
+import {SearchConversation} from '../src/search.mjs';
+import {makeFixtureAdapter} from '../src/fixtures.mjs';
+import {repairExplicitToolArguments} from '../src/model.mjs';
 test('preferences survive a new store, replace atomically and can be forgotten',async()=>{const dir=await mkdtemp(join(tmpdir(),'flight-prefs-'));try{const path=join(dir,'p.json');const store=localPreferenceStore(path);assert.deepEqual(await store.read(),{});await store.replace({homeAirport:'LHR',cabin:'economy',preferNonstop:true});assert.equal((await localPreferenceStore(path).read()).homeAirport,'LHR');await store.replace({cabin:'business'});assert.deepEqual(await store.read(),{cabin:'business'});await store.replace({});assert.deepEqual(await store.read(),{});}finally{await rm(dir,{recursive:true,force:true});}});
 test('defaults are soft, current trip changes do not rewrite stored preferences',async()=>{const p={homeAirport:'LHR',cabin:'economy',preferNonstop:true};const c=new SearchConversation({adapter:{mode:'replay'}});applyPreferences(c,p);assert.equal(c.state.origin.code,'LHR');assert.equal(c.state.sort,'nonstop');assert.equal(c.state.nonstopOnly,false);await c.find({origin:'LGW',cabin:'business'});assert.equal(c.state.cabin,'business');assert.equal(p.cabin,'economy');});
 // Changed 2026-09-23: stating a home airport saves it. Cabin and nonstop defaults stay proposals.
@@ -11,7 +11,7 @@ test('a stated home airport is saved; a cabin default is only proposed; validati
 test('backend adapter is loopback-only and modifies only the optional section',async()=>{assert.throws(()=>accountPreferenceStore({baseURL:'https://staging.commonswyft.com',token:'test'}));let body;const store=accountPreferenceStore({baseURL:'http://127.0.0.1:8099',token:'test',fetchImpl:async(url,init)=>{body=JSON.parse(init.body);assert.equal(url.pathname,'/v1/me');return {ok:true,json:async()=>({profile:{travelPreferences:body.travelPreferences}})};}});assert.deepEqual(await store.replace({cabin:'economy'}),{cabin:'economy'});assert.deepEqual(body,{travelPreferences:{cabin:'economy'}});});
 
 test('new chat sessions reload saved defaults while existing trips stay unchanged',async()=>{
- const {createChatService}=await import('../chat-service.mjs');let saved={homeAirport:'LHR',cabin:'economy'};
+ const {createChatService}=await import('../src/chat-service.mjs');let saved={homeAirport:'LHR',cabin:'economy'};
  const service=createChatService({preferenceStore:{label:'test profile',read:async()=>saved,replace:async p=>(saved=p)},capturesLoader:async()=>[],stagingFactory:()=>({mode:'staging',snapshots:[],calls:[]}),modelFactory:()=>({complete:async()=>({tool_calls:[{id:'x',type:'function',function:{name:'travel_preferences',arguments:'{"action":"show"}'}}]})})});
  const first=await service.start('staging-public');assert.match(first.text,/LHR/);
  await service.savePreferences({homeAirport:'JFK',cabin:'business'});

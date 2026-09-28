@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {requestCostUpperBound,validateCatalog} from '../openrouter-options.mjs';
+import {requestCostUpperBound,validateCatalog} from '../evals/openrouter-options.mjs';
 
 const base={id:'model',name:'Model',canonical_slug:'model-2026',hugging_face_id:'org/model',supported_parameters:['tools','tool_choice','reasoning_effort'],reasoning:{supported_efforts:['low','high']},pricing:{prompt:'0.000001',completion:'0.000002'}};
 

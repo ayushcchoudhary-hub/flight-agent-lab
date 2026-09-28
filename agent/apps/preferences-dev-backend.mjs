@@ -1,22 +1,23 @@
 import http from 'node:http';
 import {randomBytes,timingSafeEqual} from 'node:crypto';
 import {mkdir,readFile,rename,writeFile} from 'node:fs/promises';
-import {dirname} from 'node:path';
-import {validatePreferences} from './preferences.mjs';
+import {dirname,join} from 'node:path';
+import {validatePreferences} from '../src/preferences.mjs';
+import { LOCAL_STATE } from '../paths.mjs';
 
-const defaultRoot=new URL('./local-state/',import.meta.url);
+const defaultRoot=LOCAL_STATE;
 const equal=(a,b)=>{const x=Buffer.from(a),y=Buffer.from(b);return x.length===y.length&&timingSafeEqual(x,y);};
 async function readJSON(path,fallback){try{return JSON.parse(await readFile(path,'utf8'));}catch(e){if(e.code==='ENOENT')return fallback;throw e;}}
 async function atomicJSON(path,value){await mkdir(dirname(path),{recursive:true,mode:0o700});const tmp=path+'.tmp';await writeFile(tmp,JSON.stringify(value,null,2),{mode:0o600});await rename(tmp,path);}
 
-export async function createPreferencesDevBackend({host='127.0.0.1',port=5181,dataFile=new URL('account-preferences.json',defaultRoot).pathname,accounts}={}){
- const tokenFile=new URL('preferences-backend-token',defaultRoot).pathname;
+export async function createPreferencesDevBackend({host='127.0.0.1',port=5181,dataFile=join(defaultRoot,'account-preferences.json'),accounts}={}){
+ const tokenFile=join(defaultRoot,'preferences-backend-token');
  const usesDefaultAccount=!accounts;
  if(!accounts){let token;try{token=(await readFile(tokenFile,'utf8')).trim();}catch(e){if(e.code!=='ENOENT')throw e;token=randomBytes(32).toString('base64url');await mkdir(dirname(tokenFile),{recursive:true,mode:0o700});await writeFile(tokenFile,token,{mode:0o600});}accounts=new Map([[token,'local-demo-user']]);}
  if(usesDefaultAccount){
   const existing=await readJSON(dataFile,null);
   if(existing===null){
-   const legacy=await readJSON(new URL('preferences.json',defaultRoot).pathname,null);
+   const legacy=await readJSON(join(defaultRoot,'preferences.json'),null);
    if(legacy!==null)await atomicJSON(dataFile,{'local-demo-user':validatePreferences(legacy)});
   }
  }

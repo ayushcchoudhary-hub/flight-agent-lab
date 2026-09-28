@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { repairExplicitToolArguments } from '../model.mjs';
+import { repairExplicitToolArguments } from '../src/model.mjs';
 
 // Held-out phrasings for the tool-argument repair layer. These were written
 // after an external review found that the first version removed any field whose

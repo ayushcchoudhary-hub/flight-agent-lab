@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { isTemporaryStatus, retryDelayMs, requestWithRetry } from '../retry.mjs';
+import { isTemporaryStatus, retryDelayMs, requestWithRetry } from '../src/retry.mjs';
 
 test('retry policy recognizes only temporary HTTP statuses', () => {
   for (const status of [429, 502, 503, 504]) assert.equal(isTemporaryStatus(status), true);

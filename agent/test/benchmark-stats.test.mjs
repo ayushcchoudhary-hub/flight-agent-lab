@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {RATES,estimateCost,quantile,summarize} from '../benchmark-stats.mjs';
+import {RATES,estimateCost,quantile,summarize} from '../evals/benchmark-stats.mjs';
 test('cost uses separate input, cached and output rates without counting cache twice',()=>{
  assert.equal(estimateCost('gpt-6-astra',{input_tokens:1000,cached_input_tokens:500,output_tokens:100}),.0105);
  assert.equal(estimateCost('gpt-5.6-luna',{input_tokens:1000,cached_input_tokens:0,output_tokens:100}),.00032);

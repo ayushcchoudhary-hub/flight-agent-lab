@@ -1,8 +1,9 @@
 import { labelForValue } from './shared.mjs';
 import {readFile,mkdir,writeFile,rename} from 'node:fs/promises';
-import {dirname} from 'node:path';
+import {dirname,join} from 'node:path';
 import {randomUUID} from 'node:crypto';
 import {resolveLocation} from './search.mjs';
+import { LOCAL_STATE } from '../paths.mjs';
 export function validatePreferences(p) {
  if(!p||Array.isArray(p)||typeof p!=='object'||Object.keys(p).some(k=>!['homeAirport','cabin','preferNonstop'].includes(k)))throw Error('Unsupported preference.');
  if(p.homeAirport!==undefined&&(!/^[A-Z]{3}(\|[A-Z]{3})*$/.test(p.homeAirport)||!resolveLocation(p.homeAirport).some(a=>a.code===p.homeAirport)))throw Error('Choose a recognized airport or city.');
@@ -10,7 +11,7 @@ export function validatePreferences(p) {
  if(p.preferNonstop!==undefined&&typeof p.preferNonstop!=='boolean')throw Error('Nonstop preference must be true or false.');
  return {...p};
 }
-export function localPreferenceStore(path=new URL('./local-state/preferences.json',import.meta.url)) {
+export function localPreferenceStore(path=join(LOCAL_STATE,'preferences.json')) {
  const file=path instanceof URL?path.pathname:path;
  return { label:'Local test profile · not linked to CommonSwyft',
  async read(){try{return validatePreferences(JSON.parse(await readFile(file,'utf8')));}catch(e){if(e.code==='ENOENT')return {};throw Error('Saved preferences could not be read.');}},

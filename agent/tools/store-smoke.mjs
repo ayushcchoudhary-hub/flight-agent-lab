@@ -5,7 +5,7 @@
 import assert from 'node:assert/strict';
 import { randomUUID } from 'node:crypto';
 import pg from 'pg';
-import { createPostgresStore, turnRecords } from '../store.mjs';
+import { createPostgresStore, turnRecords } from '../src/store.mjs';
 
 const store = createPostgresStore({ url: process.env.DATABASE_URL, retentionDays: 90 });
 const a = randomUUID(), b = randomUUID();

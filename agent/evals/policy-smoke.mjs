@@ -1,4 +1,4 @@
-import {Agent,OpenRouterModel} from './model.mjs';
+import {Agent,OpenRouterModel} from '../src/model.mjs';
 
 import {mkdirSync,writeFileSync} from 'node:fs';
 const events=[];const trace=(type,data)=>events.push({type,data});
