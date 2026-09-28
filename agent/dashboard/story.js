@@ -5,6 +5,12 @@ const MODEL_NAMES = { 'openai/gpt-5.6-terra': 'Terra', 'openai/gpt-6-sol': 'Sol'
 export const modelName = m => MODEL_NAMES[m] ?? String(m ?? '').split('/').pop();
 const FIELD_NAMES = { region: 'region', maxPriceUsd: 'budget', aside: 'stray note', cabin: 'cabin', origin: 'garbled origin', destination: 'garbled destination' };
 const OUTCOME = { pass: 'Passed', judge: 'Judge flagged wording', exact: 'Failed an exact check', missing: 'Not run' };
+// The pages' CSP allows no inline style attributes, so bar sizes travel as
+// data attributes and are applied here through the CSSOM, which it allows.
+const applySizes = root => root.querySelectorAll('[data-height],[data-width]').forEach(node => {
+  if (node.dataset.height) node.style.height = node.dataset.height;
+  if (node.dataset.width) node.style.width = node.dataset.width;
+});
 const chip = (item, run, kind = '') => `<button class="case-chip ${kind}" data-run="${esc(run)}" data-case="${esc(item.id)}" title="${esc(item.name)}">${esc(item.id)}</button>`;
 
 export function storyRunLabel(story, key) {
@@ -33,9 +39,9 @@ function bar(m, i, maxCases, selected) {
   return `<button class="story-col ${selected ? 'selected' : ''}" data-index="${i}" aria-label="${esc(`${m.title}: ${m.passed} of ${m.cases} passed, ${m.exact} exact`)}">
     <span class="story-score"><b>${m.passed}</b>/${m.cases}</span>
     <span class="story-bar">
-      <span class="seg exact" style="height:${h(m.exactFailed)}"></span>
-      <span class="seg judge" style="height:${h(m.judgeOnly)}"></span>
-      <span class="seg pass" style="height:${h(m.passed)}"></span>
+      <span class="seg exact" data-height="${h(m.exactFailed)}"></span>
+      <span class="seg judge" data-height="${h(m.judgeOnly)}"></span>
+      <span class="seg pass" data-height="${h(m.passed)}"></span>
     </span>
     <span class="story-exact">exact ${m.exact}/${m.cases}</span>
     <span class="story-step">${i + 1} · ${esc(m.date)}</span>
@@ -82,6 +88,7 @@ export function renderStory(el, story, { selected = story.milestones.length - 1,
       <div class="story-chart">${story.milestones.map((m, i) => bar(m, i, maxCases, i === index)).join('')}</div>
       <div class="story-detail">${detail(story.milestones[index], index, story)}</div>
       <p class="quiet mini story-before">${esc(story.before)} Exact checks decide whether routes, dates, state and tools are right. The judge only grades wording, and it changed twice, so the exact count under each bar is the steadier number to follow.</p>`;
+    applySizes(el);
     el.querySelectorAll('.story-col').forEach(b => b.onclick = () => draw(Number(b.dataset.index)));
     el.querySelectorAll('[data-case]').forEach(b => b.onclick = () => onOpen(b.dataset.run, b.dataset.case));
     el.querySelector('[data-open]').onclick = e => onOpen(e.currentTarget.dataset.open);
@@ -106,7 +113,7 @@ export function renderHeadToHead(el, story, index = story.headToHead.length - 1)
     const cheapest = Math.min(...runs.map(r => r.costPer1000TurnsUsd)), fastest = Math.min(...runs.map(r => r.medianCallMs));
     const madeUpCount = r => r.madeUp.reduce((n, x) => n + x.fields.length, 0), fewestMadeUp = Math.min(...runs.map(madeUpCount));
     const card = r => `<article class="h2h-card"><h3>${esc(modelName(r.model))} <span class="quiet">${esc(r.effort ?? '')}</span></h3>
-      <div class="h2h-metric"><small>Cases passed</small><b class="${r.passed === best('passed') ? 'lead' : ''}">${r.passed}<span class="quiet">/${r.cases}</span></b><span class="h2h-bar"><span class="pass" style="width:${r.passed / r.cases * 100}%"></span><span class="judge" style="width:${r.judgeOnly / r.cases * 100}%"></span><span class="exact" style="width:${r.exactFailed / r.cases * 100}%"></span></span></div>
+      <div class="h2h-metric"><small>Cases passed</small><b class="${r.passed === best('passed') ? 'lead' : ''}">${r.passed}<span class="quiet">/${r.cases}</span></b><span class="h2h-bar"><span class="pass" data-width="${r.passed / r.cases * 100}%"></span><span class="judge" data-width="${r.judgeOnly / r.cases * 100}%"></span><span class="exact" data-width="${r.exactFailed / r.cases * 100}%"></span></span></div>
       <div class="h2h-metric"><small>Exact checks passed</small><b class="${r.exact === best('exact') ? 'lead' : ''}">${r.exact}<span class="quiet">/${r.cases}</span></b></div>
       <div class="h2h-metric"><small>Made-up values <span class="quiet">(caught by the app)</span></small><b class="${madeUpCount(r) === fewestMadeUp ? 'lead' : ''}">${madeUpCount(r) ? `${madeUpCount(r)}<span class="quiet"> in ${r.madeUp.length} case${r.madeUp.length === 1 ? '' : 's'}</span>` : 'None'}</b>${r.madeUp.length ? `<span class="h2h-madeup">${r.madeUp.map(x => `<a href="/evals?run=${encodeURIComponent(r.run)}&case=${encodeURIComponent(x.id)}" title="${esc(x.fields.join(', '))}">${esc(x.id)}: ${esc([...new Set(x.fields)].map(f => FIELD_NAMES[f] ?? f).join(', '))}</a>`).join('')}</span>` : ''}</div>
       <div class="h2h-metric"><small>Median model call</small><b class="${r.medianCallMs === fastest ? 'lead' : ''}">${secs(r.medianCallMs)}</b></div>
@@ -120,6 +127,7 @@ export function renderHeadToHead(el, story, index = story.headToHead.length - 1)
       <h3 class="h2h-sub">Where they differ <span class="quiet">${pair.disagreements.length} of ${runs[0].cases} cases</span></h3>
       ${pair.disagreements.length ? `<div class="table-scroll"><table class="h2h-table"><thead><tr><th>Case</th>${runs.map(r => `<th>${esc(modelName(r.model))}</th>`).join('')}</tr></thead><tbody>${pair.disagreements.map(d => `<tr><td><b>${esc(d.id)}</b> ${esc(d.name)}</td>${runs.map(r => `<td><a class="outcome ${d.outcomes[r.run]}" href="/evals?run=${encodeURIComponent(r.run)}&case=${encodeURIComponent(d.id)}">${esc(OUTCOME[d.outcomes[r.run]])}</a></td>`).join('')}</tr>`).join('')}</tbody></table></div>` : '<p class="quiet">Both models got the same outcome on every case.</p>'}
       <p class="quiet mini">One attempt per case, so a difference of one or two cases can be chance. Cost counts the candidate model only; the judge is the same for both. Made-up values are things the model put in a search that the traveler never said, such as a region, a budget or a mangled city name. The app catches these and drops or repairs them, so a case can still pass, but they show how much the model invents. Resent dates are not counted.</p>`;
+    applySizes(el);
     el.querySelectorAll('[data-pair]').forEach(b => b.onclick = () => draw(Number(b.dataset.pair)));
   };
   draw(index);
