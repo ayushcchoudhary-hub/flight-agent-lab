@@ -142,7 +142,8 @@ development-set runs, the model screens and every limit, is in
 
 The Evals page opens on the same timeline. Selecting a run shows what changed,
 why, and which cases it fixed, newly flagged or newly broke. Every number is
-computed from the published reports, never typed by hand.
+computed from the published reports, never typed by hand. You can open these
+pages locally with one command. See [Run it yourself](#run-it-yourself).
 
 ## Security boundary
 
@@ -153,9 +154,10 @@ See [docs/SECURITY-BOUNDARY.md](docs/SECURITY-BOUNDARY.md),
 [docs/GUARDRAILS.md](docs/GUARDRAILS.md) and the
 [publication checklist](docs/PUBLICATION-CHECKLIST.md).
 
-## Run locally
+## Run it yourself
 
-Requires Node.js 24 and pnpm.
+The live demo is password-protected, but its evaluation pages run on your own
+machine with no password and no API key. Requires Node.js 24 and pnpm.
 
 ```sh
 cd agent
@@ -164,8 +166,12 @@ pnpm test
 pnpm run dashboard
 ```
 
-The tests and the recorded dashboard use synthetic fixtures and published
-reports, so anyone can reproduce them without a key. Live flight search needs
+Then open <http://127.0.0.1:5180>. The Evals and Model comparison pages load
+the published reports in this repository, so you can open any run and read
+every conversation, the exact checks and the judge's audit. Viewing them makes
+no model calls.
+
+The tests use synthetic fixtures and need no key either. Live flight search needs
 credentials that are not in this repository. Live model runs read
 `OPENROUTER_API_KEY` from an ignored `.env` file or the environment.
 
