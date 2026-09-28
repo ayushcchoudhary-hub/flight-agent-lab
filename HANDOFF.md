@@ -19,10 +19,9 @@ customer data or raw backend captures.
 
 - The live experiment is invite protected at
   <https://commonswyft-agent-experiment-868895912650.europe-west2.run.app>.
-- Claude Sonnet 5 medium is the default model from 2026-09-27 (code; the live
-  service keeps its current model until it is redeployed with
-  `OPENROUTER_MODEL` updated). Terra medium, DeepSeek V4.1 Flash low and GLM
-  5.3 high remain optional controls in the live chat.
+- Claude Sonnet 5 medium is the default model from 2026-09-27, in code and on
+  the live service. Terra medium, DeepSeek V4.1 Flash low and GLM 5.3 high
+  remain optional controls in the live chat.
 - Live since 2026-09-27: revision `00034-deh` (main at 8b0fe65) serves 100%
   of traffic with Sonnet 5, prompt caching, take me anywhere and the guards
   against made-up values. Conversation storage stays off. Roll back with
@@ -42,53 +41,24 @@ customer data or raw backend captures.
   human labels is the open item.
 - All model traffic uses the OpenRouter adapter.
 - The current prompt contract is `flight-search-v1.7.0` (2026-09-27: the
-  preference tool can forget recent searches). Recorded runs before that
-  date used `flight-search-v1.6.0`.
-- The supported product scope is one-way flight search, policy retrieval,
-  session follow-ups and explicit preference proposals.
+  preference tool can forget recent searches). Each report records the
+  version it ran on. The history is in `docs/PROMPT-ARCHITECTURE.md`.
+- The supported product scope is one-way flight search, "take me anywhere"
+  deals, a link to checkout on CommonSwyft, policy retrieval, session
+  follow-ups, preference proposals and origin memory (built, off on the live
+  service). `agent/FROZEN-SCOPE.md` is the contract.
 - Booking, payment, account servicing, autonomous purchasing, WhatsApp and MCP
   remain outside the implemented scope.
 - The deterministic suite currently contains 311 passing checks.
-- The first 42-case Terra hardening run passed 30 cases. Every observed issue
-  later received a focused passing verification. A later full rerun passed 32
-  cases, then stopped at B03 after a safe policy handoff failed the frozen
-  expected status. Nine cases were not run. Do not describe the result as 42 of
-  42.
-- Held-out v2 froze 30 populated cases before its first run. Terra passed 19
-  exact contracts and 17 cases overall. The complete run used 74 calls and cost
-  $0.3887. Keep the test-contract mistakes and judge-context issues visible when
-  interpreting that score. See `docs/evaluation/HARDENING.md`.
-- A later run on 2026-09-20, after the place, currency, payment, date, policy
-  and history corrections, passed 24 of 30 cases and 26 exact contracts, with
-  no case regressing. It used 79 calls and cost $0.3813. The earlier baseline
-  above stands as recorded; this is a later verification, not a replacement.
-  Six cases still fail. A5, C1, C2 and C5 are model interpretation, not
-  application defects: the model corrects "Sidney" to "Sydney" before the
-  resolver sees it, reads "make it the 3rd" as picking option three, collapses
-  a date range when applying a filter, and reads "and back to business" as a
-  return flight. D2 and D4 pass every exact check and the judge asks for
-  clearer disclosure. Two frozen expectations were corrected rather than the
-  agent changed, and the reasoning is recorded beside the cases.
-- A run on 2026-09-21, after the ambiguity rule (ask rather than search on a
-  guess), verbatim place names, removal of invented dates and cabin-source
-  labels, passed all 30 exact contracts and 27 of 30 cases. 87 calls,
-  $0.6314. The judge ran at medium effort for the first time; at low effort
-  it had passed and failed identical replies on consecutive runs. Three
-  flags remain, all judge findings on wording: the UK menu stops at five
-  with no hint that more exist, "Using the same results" reads wrongly when
-  a filter change shows different rows, and a retention question gets a bare
-  support redirect although the snapshot says analytics excludes search
-  terms. Judge medium effort needs max_tokens above 900 or its JSON
-  truncates; the harness now sets 2500 above low.
-- A same-code head-to-head on 2026-09-23 (47 cases, Opus 5.5 judge, commit
-  52d80c5) tied on cases passed: Terra 38 and Sol 38. Terra passed 46 exact
-  contracts and Sol 45. Sol's median model call was faster (2.6 s against
-  3.1 s) and its model cost per 1,000 traveler turns lower ($3.51 against
-  $4.13). All three exact failures were the model adding something the
-  traveler did not say. Terra ran in two parts after a provider timeout at
-  case 16. Sonnet 5 later ran the same 47 cases on the guard code (c6bf7c0): 42 passed,
-  45 exact, no made-up values (Sol 9, Terra 1). Its lead over Terra and Sol is
-  in judge-graded cases; on exact checks the three are within one case.
+- Held-out evaluation: 38 of 47 on Terra (23 Sep), 42 of 47 on Sonnet 5
+  with no made-up values. The dated history is in
+  [docs/evaluation/](docs/evaluation/README.md). When describing results:
+  - The 42-case development set passed 30 on its frozen run. A full rerun
+    stopped at B03 after 32, with nine cases unrun. Never call it 42 of 42.
+  - The held-out v2 baseline (17 of 30) stands as recorded. Later runs are
+    verifications, not replacements.
+  - The judge changed twice and the case count grew from 30 to 47, so later
+    scores are not directly comparable with earlier ones.
 
 The Evals page opens on a milestone chart: one bar per complete run of the
 held-out set, with what changed, why, and which cases were fixed, newly
@@ -164,8 +134,8 @@ git ls-files
 
 ## Access a successor may need
 
-Repository review and deterministic development require only access to the
-private GitHub repository. Live model evaluation also requires an independently
+Repository review and deterministic development need nothing beyond the public
+GitHub repository. Live model evaluation also requires an independently
 provided OpenRouter key with a low spending cap.
 
 Deployment requires access to the personal Google Cloud project and its Cloud
@@ -271,18 +241,19 @@ off unless `CONVERSATION_STORE=postgres` and `DATABASE_URL` are set.
 - A storage failure is traced and never reaches the traveler.
 - `agent/tools/store-smoke.mjs` checks all of this against a real database.
 
-Before switching it on:
+Remaining before switching it on: add a privacy-page sentence on
+conversation storage, recent searches and their retention.
 
-1. Add a privacy-page sentence on conversation storage, recent searches
-   and their retention.
-2. Done 2026-09-27 on the Neon development database (project
-   `flight-agent-lab`): `002_recent_searches.sql` applied, `agent_runtime`
-   granted row access to `recent_searches`, and `tools/store-smoke.mjs`
-   passed all 16 checks. The database held no rows before. For a new
-   database, run `tools/create-app-role.mjs` after the migrations instead.
-3. Held-out case D1 was updated on 2026-09-23 to the memory rule: the last
-   origin carries over as a disclosed default, economy does not. The eval
-   harness applies the same memory between sessions.
+Already done:
+
+- 2026-09-27, Neon development database (project `flight-agent-lab`):
+  `002_recent_searches.sql` applied, `agent_runtime` granted row access to
+  `recent_searches`, and `tools/store-smoke.mjs` passed all 16 checks. The
+  database held no rows before. For a new database, run
+  `tools/create-app-role.mjs` after the migrations instead.
+- 2026-09-23: held-out case D1 updated to the memory rule. The last origin
+  carries over as a disclosed default, economy does not. The eval harness
+  applies the same memory between sessions.
 
 ## Policy snapshot freshness (2026-09-27)
 
@@ -308,7 +279,7 @@ checkout handoff, but only after an approved API contract defines identity,
 authorization, quote expiry, revalidation and idempotency. Direct payment and
 agent wallets are not prerequisites for that slice.
 
-For further hardening, run a small held-out Terra set with the existing exact
-checks and independent judge. Review the judge output before changing prompts.
+For further hardening, run a small new held-out set on the default model with
+the existing exact checks and independent judge. Review the judge output before changing prompts.
 Use findings to make targeted corrections, then preserve both the original and
 verification reports.

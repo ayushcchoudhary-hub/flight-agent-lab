@@ -63,6 +63,18 @@ fresh held-out set replaced it. Details: [HARDENING.md](HARDENING.md).
 | 23 Sep | Empty values, memory | 47 | 37 | 44 | Empty values ignored. Last-used origin remembered and disclosed. Stating a home airport saves it |
 | 23 Sep | Home disclosure, invented cabins | 47 | 38 | 46 | A cabin the traveler never mentioned is dropped |
 
+After the 20 September corrections, four failures were the model's reading
+rather than an application defect: it corrected "Sidney" to "Sydney" before
+the place resolver saw it, read "make it the 3rd" as picking option three,
+collapsed a date range when applying a filter, and read "and back to business"
+as a return flight. The next run made the agent ask instead of guessing. After
+21 September three judge flags remained, all on wording: a country menu that
+stops at five airports with no hint that more exist, "Using the same results"
+when a filter change shows different rows, and a bare support redirect for a
+retention question the policy snapshot partly answers. Above low effort the
+judge needs room to reason: at 900 output tokens its JSON was cut off, so the
+harness allows 2,500.
+
 Case counts grow from 30 to 47 and the judge changes twice, so a later score is
 not directly comparable with an earlier one. The Evals page shows, case by
 case, what each run fixed, newly flagged or newly broke. Two frozen
