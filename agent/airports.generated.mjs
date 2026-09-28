@@ -1,5 +1,5 @@
 // GENERATED FILE. Do not edit by hand.
-// Regenerate with: node tools/sync-airports.mjs <flyai-app>/packages/core/src
+// Regenerate with: node tools/sync-airports.mjs <product airport data directory>
 //
 // Airport rows originate from OurAirports open data (public domain) by way of
 // the product's generated table. Metro groups are the product's curated list.

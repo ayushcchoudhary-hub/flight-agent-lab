@@ -17,16 +17,14 @@ customer data or raw backend captures.
 
 ## Current state
 
-- The live experiment is invite protected at
-  <https://commonswyft-agent-experiment-868895912650.europe-west2.run.app>.
+- The live experiment is an invite-protected Cloud Run service. Its URL,
+  revision history and rollback command are kept in an ignored local
+  `OPERATIONS.md`, not in this public repository.
 - Claude Sonnet 5 medium is the default model from 2026-09-27, in code and on
   the live service. Terra medium, DeepSeek V4.1 Flash low and GLM 5.3 high
   remain optional controls in the live chat.
-- Live since 2026-09-27: revision `00034-deh` (main at 8b0fe65) serves 100%
-  of traffic with Sonnet 5, prompt caching, take me anywhere and the guards
-  against made-up values. Conversation storage stays off. Roll back with
-  `gcloud run services update-traffic commonswyft-agent-experiment --region
-  europe-west2 --to-revisions commonswyft-agent-experiment-00026-run=100`.
+- Live since 2026-09-27: Sonnet 5, prompt caching, take me anywhere and the
+  guards against made-up values. Conversation storage stays off.
 - Each result shows the product's cash comparison as "usually USD X" when the
   API priced one for the same flights (Google Flights), with one footnote
   naming the source. Pending, unavailable and expired comparisons are left out.
@@ -146,9 +144,8 @@ runtime service account already has secret access.
 
 Protected CommonSwyft account features require a separately approved staging
 authentication and API agreement. Read access to the product repositories
-helps with context (the API contract lives in `flyai-app`,
-`packages/api-contract/openapi.yaml`) but is not required to continue the
-agent lab. Nothing from them is copied here.
+helps with context, such as the API contract, but is not required to continue
+the agent lab. Nothing from them is copied here.
 
 ## Context that is not transferred automatically
 
@@ -163,24 +160,16 @@ copied into a handoff bundle.
 
 ## Checkout handoff: where it stands (2026-09-22)
 
-Phase 1 is live (PR #7, revision 00026-run onwards): every results reply
-links to the same search on commonswyft.com, so selection, quoting and
-checkout happen on the product site. Held-out case F1 pins it.
+Phase 1 is live: every results reply links to the same search on
+commonswyft.com, so selection, quoting and checkout happen on the product
+site. Held-out case F1 pins it.
 
-Phase 2, a checkout link by quote id, needs a Clerk session for the member:
-`POST /checkout-quotes` is Clerk-authenticated and binds the quote to the
-account. Options discussed, none decided:
-
-- Serve the chat page from a CommonSwyft subdomain (Clerk shares sessions
-  with subdomains by default). Needs one DNS record from CommonSwyft and a
-  domain mapping or load balancer on this project; the backend stays here.
-- Clerk OAuth, if CommonSwyft has its OAuth server enabled: the member
-  consents once and the agent holds a scoped token. No domain change.
-- A Clerk satellite domain does not fit: it requires a domain this project
-  controls DNS for, and run.app is not one.
-
-Questions for the CommonSwyft team are drafted in the chat history for
-2026-09-21 and should be recorded here once answered.
+Phase 2, a checkout link for a specific quote, needs the traveler to be
+signed in to the product, because a quote is bound to an account. Two
+approaches are open, none decided: serve the chat from a product subdomain so
+the sign-in session is shared, or have the traveler grant the agent a scoped
+token through OAuth. Either needs agreement with the CommonSwyft team.
+Details are in the local `OPERATIONS.md`.
 
 ## Conversation storage and memory: built, off (2026-09-22)
 
@@ -193,8 +182,8 @@ off unless `CONVERSATION_STORE=postgres` and `DATABASE_URL` are set.
 - The application login is created by `agent/tools/create-app-role.mjs` in
   SQL, with row access only. Do not create it through a provider console:
   Neon adds console-created roles to an admin group.
-- Development database: Neon, Frankfurt, Postgres 16. Production would move
-  to the product's Postgres; the schema has nothing provider-specific.
+- Development database: Neon, Postgres 16. Production would move to the
+  product's Postgres; the schema has nothing provider-specific.
 - Text is redacted before it is written (emails, keys, card, phone and
   passport numbers). Conversations expire after 90 days and are purged hourly.
 - A visitor is a random browser cookie, set only when storage is on. A
@@ -246,8 +235,7 @@ conversation storage, recent searches and their retention.
 
 Already done:
 
-- 2026-09-27, Neon development database (project `flight-agent-lab`):
-  `002_recent_searches.sql` applied, `agent_runtime` granted row access to
+- 2026-09-27, Neon development database: `002_recent_searches.sql` applied, `agent_runtime` granted row access to
   `recent_searches`, and `tools/store-smoke.mjs` passed all 16 checks. The
   database held no rows before. For a new database, run
   `tools/create-app-role.mjs` after the migrations instead.
