@@ -1,71 +1,411 @@
-import {renderHeadToHead} from './story.js';
-const $=s=>document.querySelector(s),esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const fmt=(n,d=0)=>Number.isFinite(n)?n.toLocaleString(undefined,{maximumFractionDigits:d}):'Unknown',sec=n=>Number.isFinite(n)?(n/1000).toFixed(2)+' s':'—',usd=n=>Number.isFinite(n)?'$'+n.toFixed(4):'Unknown';
-const colors={'gpt-6-astra':'#4876c9','gpt-5.6-sol':'#b77532','gpt-5.6-terra':'#29916c','gpt-5.6-luna':'#a568bf','openai/gpt-5.6-terra':'#29916c','deepseek/deepseek-v4.1-flash':'#6a67ce','mistralai/mistral-small-2603':'#e07a36','qwen/qwen3.6-35b-a3b':'#168b8f','z-ai/glm-5.3-flash':'#ba4d83','z-ai/glm-5.3':'#843d9c'};
-const colorFor=model=>colors[model]??'#517fae';
-let report,selectedConfig,selectedCase,selectedRepeat=1,lastVersion='',polling=false;
-let dark=localStorage.getItem('flight-lab-theme')==='dark';function theme(){document.body.classList.toggle('dark',dark);$('#theme').textContent=dark?'Light mode':'Dark mode';}theme();$('#theme').onclick=()=>{dark=!dark;localStorage.setItem('flight-lab-theme',dark?'dark':'light');theme();};
-async function json(path){const r=await fetch(path);if(!r.ok)throw new Error('Comparison is not available yet.');return r.json();}
-const stat=(title,value,sub)=>`<div class="stat"><small>${esc(title)}</small><div class="value">${esc(value)}</div><div class="sub">${esc(sub)}</div></div>`;
-function show(){
- const rows=report.summary,done=report.results.length;
- const planned=rows.reduce((total,row)=>total+(row.planned??report.cases.length*(row.sourceRepeats??report.repeats)),0),eligible=rows.filter(r=>r.eligible),complete=report.status==='complete';
- const cheapest=eligible.filter(x=>x.meanCost!==null).sort((a,b)=>a.meanCost-b.meanCost)[0],fastest=[...eligible].sort((a,b)=>a.medianMs-b.medianMs)[0];
- $('#decision-title').textContent=report.decisionTitle??'Our choice: Terra medium';
- $('#decision-note').textContent=report.decisionNote??'We chose faster observed responses over Luna low’s lower estimated API cost. Astra showed no correctness advantage on these development cases. All three passed every completed attempt in the stopped validation run. This does not guarantee performance on unseen requests.';
- $('#overview').innerHTML=stat(report.phase,report.experimentKind==='cross-path-reference'?`${report.cases.length} scenarios · mixed repeat plans`:`${report.cases.length} scenarios × ${report.repeats}${report.status==='stopped'?' planned':''}`,`${report.configs.length} configurations · ${done} attempts completed`)+(report.status==='stopped'?stat('Completed attempts passed',`${rows.reduce((n,r)=>n+r.passed,0)}/${done}`,`${rows.reduce((n,r)=>n+r.failed,0)} failed · ${planned-done} planned attempts not completed`):stat('Lowest estimated cost among full-pass configurations',complete&&cheapest?cheapest.label:'Awaiting complete run',complete&&cheapest?`${usd(cheapest.meanCost)} / scenario · ${(cheapest.sourceRepeats??report.repeats)===1?'screening only':'repeated development checks'}`:'Incomplete and failed configurations are excluded'))+stat('Fastest median among full-pass configurations',complete&&fastest?fastest.label:report.status==='stopped'?'Stopped early':'Awaiting complete run',complete&&fastest?`${sec(fastest.medianMs)} / scenario`:'Failures and timeouts remain visible below');
- const cross=report.experimentKind==='cross-path-reference';
- const recordedCalls=report.results.reduce((n,r)=>n+r.events.filter(e=>['model_usage','model_failure'].includes(e.type)).length,0),callCap=report.modelCallCap??250;
- const calls=report.modelCallsAttempted??recordedCalls;
- $('#progress').max=cross?Math.max(1,calls):callCap;$('#progress').value=cross?calls:Math.min(calls,callCap);$('#progress-label').textContent=cross?`${report.results.length} preserved attempts from ${report.sourceRuns?.length??'multiple'} completed source runs. Viewing this report makes no model calls.`:`${calls} ${report.modelCallsAttempted===undefined?'recorded':'attempted'} model calls / ${callCap}-call cap per comparison batch · ${report.status}. ${report.interruptionNote?'Cancelled in-flight usage may be missing. ':''}${report.modelCallCap===undefined?'250 is the current budget policy; this historical run was stopped under its original plan. ':''}No new run is scheduled.`;
- $('#method-note').textContent=cross?'Historical OpenAI benchmark and current OpenRouter screen · different serving paths · comparison is directional, not controlled.':`Fixed clock ${report.clock} · 6 cases use recorded staging; 9 use synthetic fixtures · real model calls, no live flight searches. ${report.repeats===1?'One repeat screens candidates; it cannot establish consistency.':'Repeated attempts reveal variation; only completed attempts are graded. This is not a production reliability estimate.'}`;
- if(!rows.some(x=>x.id===selectedConfig))selectedConfig=rows[0]?.id;
- drawScatter();drawBars();drawRanking();drawMatrix();drawConfig();if(selectedCase)drawCase(false);
- const fingerprint=report.captureHash?` Capture fingerprint: <code>${esc(report.captureHash.slice(0,16))}</code>.`:'';
- const publication=report.publication?` ${esc(report.publication)}`:'';
- $('#method').innerHTML=`<p>Different scenarios test coverage; repeating the same scenario tests consistency. Repeats do not make the underlying model less variable. They make our estimate more useful. New phrasings and unseen edge cases are a separate generalization test. Each attempt starts a fresh conversation. Configuration order rotates between scenarios and runs are sequential. No response is retried to replace a failure. Provider behavior, cache warming and load can affect timing and estimated cost. This is an observed experiment, not a controlled hardware benchmark. The same recorded inventory and synthetic fixtures are used across configurations.</p><p>Here the model interprets intent and proposes an action. The harness supplies defaults, validates arguments, calls the search tool and formats the reply. Passing this set does not establish performance on every kind of agent task. Use the latency range within a selected scenario to understand repeat-to-repeat variation. The overall latency chart also includes differences in scenario length. Raw tokens and observed time are measurements. Dollars are estimates.</p><ul>${[...(report.limitations??[]),...(report.interruptionNote?[report.interruptionNote]:[])].map(x=>`<li>${esc(x)}</li>`).join('')}</ul><p>Staging source: ${esc(report.source)}.${fingerprint}${publication}</p>`;
- const paid=report.experimentKind?.startsWith('openrouter');
- const pricingLead=cross?'Mixed evidence. OpenRouter rows use reported request cost when available. Historical Codex rows use API-equivalent estimates from observed tokens.':paid?'Observed OpenRouter cost. When OpenRouter reports request cost, that value is used. Catalog rates provide the fallback and the pre-run safety bound.':'Estimated API-equivalent cost, not your Codex subscription bill. These calls use your Codex allowance. We apply published rates to the observed token workload, which includes Codex prompt overhead. Actual API deployment costs may differ.';
- $('#pricing').innerHTML=`<p><b>${pricingLead}</b></p><p>Cost = ((input − cached input) × input rate + cached input × cached rate + output × output rate) ÷ 1,000,000. Cached tokens are already part of input. Reasoning is not added twice.</p><table class="rates"><tr><th>USD / million tokens</th><th>Input</th><th>Cached</th><th>Output</th></tr>${Object.entries(report.rates.models).map(([m,p])=>`<tr><td>${esc(m)}</td><td>$${p.input}</td><td>$${p.cached}</td><td>$${p.output}</td></tr>`).join('')}</table><p><a href="${esc(report.rates.source)}" target="_blank" rel="noreferrer">Pricing source</a> · checked ${esc(report.rates.checkedAt)} · ${esc(report.rates.tier)}. Missing usage is unknown, not free. Rates are stored with the run.</p>`;
+import { renderHeadToHead } from './story.js';
+const $ = (s) => document.querySelector(s),
+  esc = (s) =>
+    String(s ?? '').replace(
+      /[&<>"']/g,
+      (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c],
+    );
+const fmt = (n, d = 0) =>
+    Number.isFinite(n) ? n.toLocaleString(undefined, { maximumFractionDigits: d }) : 'Unknown',
+  sec = (n) => (Number.isFinite(n) ? (n / 1000).toFixed(2) + ' s' : '—'),
+  usd = (n) => (Number.isFinite(n) ? '$' + n.toFixed(4) : 'Unknown');
+const colors = {
+  'gpt-6-astra': '#4876c9',
+  'gpt-5.6-sol': '#b77532',
+  'gpt-5.6-terra': '#29916c',
+  'gpt-5.6-luna': '#a568bf',
+  'openai/gpt-5.6-terra': '#29916c',
+  'deepseek/deepseek-v4.1-flash': '#6a67ce',
+  'mistralai/mistral-small-2603': '#e07a36',
+  'qwen/qwen3.6-35b-a3b': '#168b8f',
+  'z-ai/glm-5.3-flash': '#ba4d83',
+  'z-ai/glm-5.3': '#843d9c',
+};
+const colorFor = (model) => colors[model] ?? '#517fae';
+let report,
+  selectedConfig,
+  selectedCase,
+  selectedRepeat = 1,
+  lastVersion = '',
+  polling = false;
+let dark = localStorage.getItem('flight-lab-theme') === 'dark';
+function theme() {
+  document.body.classList.toggle('dark', dark);
+  $('#theme').textContent = dark ? 'Light mode' : 'Dark mode';
 }
-function drawScatter(){
- const metric=$('#metric').value,key=metric==='cost'?'meanCost':'meanTokens',rows=report.summary.filter(x=>x.completed&&Number.isFinite(x[key])&&Number.isFinite(x.medianMs));
- if(!rows.length){$('#scatter').innerHTML='<div class="empty">Waiting for measured results…</div>';return;}
- $('#scatter-title').textContent=metric==='cost'?'Speed versus cost':'Speed versus token usage';
- const W=720,H=340,L=85,R=38,T=38,B=62,maxX=Math.max(...rows.map(x=>x.medianMs))*1.2;
- const values=rows.map(row=>row[key]).filter(value=>value>0),minValue=Math.min(...values),maxValue=Math.max(...values),useLog=metric==='cost'&&maxValue/minValue>50;
- const minLog=useLog?Math.floor(Math.log10(minValue)):0,maxLog=useLog?Math.ceil(Math.log10(maxValue)):0;
- const maxY=useLog?maxValue*1.2:maxValue*1.2||1;
- const x=value=>L+value/maxX*(W-L-R);
- const y=value=>useLog?H-B-(Math.log10(value)-minLog)/(maxLog-minLog)*(H-T-B):H-B-value/maxY*(H-T-B);
- const yTicks=useLog?Array.from({length:maxLog-minLog+1},(_,index)=>10**(minLog+index)):Array.from({length:5},(_,index)=>index/4*maxY);
- const xTicks=Array.from({length:5},(_,index)=>index/4*maxX);
- let svg=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Scatter plot of median scenario latency against ${metric==='cost'?'cost':'mean tokens'}. Values also appear in the accessible table below.">`;
- for(const value of yTicks)svg+=`<line class="gridline" x1="${L}" x2="${W-R}" y1="${y(value)}" y2="${y(value)}"/><text text-anchor="end" x="${L-10}" y="${y(value)+4}">${metric==='cost'?usd(value):fmt(value)}</text>`;
- for(const value of xTicks)svg+=`<text text-anchor="middle" x="${x(value)}" y="${H-B+25}">${(value/1000).toFixed(1)}s</text>`;
- rows.forEach((row,index)=>{const label=`${row.label}: ${row.passed}/${row.completed} completed attempts passed; ${sec(row.medianMs)}; ${metric==='cost'?usd(row[key]):fmt(row[key])}`;svg+=`<circle class="dot" tabindex="0" role="button" aria-label="${esc(label)}" data-config="${esc(row.id)}" cx="${x(row.medianMs)}" cy="${y(row[key])}" r="${selectedConfig===row.id?9:6}" fill="${row.eligible?colorFor(row.model):'var(--paper)'}" stroke="${colorFor(row.model)}"><title>${esc(label)}</title></circle><text class="dot-label" x="${x(row.medianMs)+10}" y="${y(row[key])+(index%2?-10:16)}">${index+1}</text>`;});
- svg+=`<text x="${W/2}" y="${H-10}" text-anchor="middle">Median elapsed seconds per scenario →</text></svg>`;$('#scatter').innerHTML=svg;
- $('#chart-legend').innerHTML=`<span>${useLog?'Cost uses a log scale so low-cost candidates remain visible. ':''}Filled dots passed their complete source plan. Hollow dots failed or stopped early.</span>`+rows.map((row,index)=>`<button class="secondary" data-config="${esc(row.id)}">${index+1} · ${esc(row.label)}${row.servingPath?` · ${esc(row.servingPath)}`:''}</button>`).join('')+(report.summary.some(x=>x.completed&&x[key]===null)?'<span>Configurations with unknown usage are omitted from this plot and retained in the table.</span>':'');
- bindConfigs($('#scatter'));bindConfigs($('#chart-legend'));
+theme();
+$('#theme').onclick = () => {
+  dark = !dark;
+  localStorage.setItem('flight-lab-theme', dark ? 'dark' : 'light');
+  theme();
+};
+async function json(path) {
+  const r = await fetch(path);
+  if (!r.ok) throw new Error('Comparison is not available yet.');
+  return r.json();
 }
-function bindConfigs(root){root.querySelectorAll('[data-config]').forEach(el=>{el.onclick=()=>{selectedConfig=el.dataset.config;drawConfig();drawScatter();drawRanking();};if(el.tagName.toLowerCase()==='circle')el.onkeydown=e=>{if(['Enter',' '].includes(e.key)){e.preventDefault();el.onclick();}};});}
-function drawBars(){
- const latency=report.summary.filter(r=>r.completed&&Number.isFinite(r.medianMs)&&Number.isFinite(r.p10Ms)&&Number.isFinite(r.p90Ms)).sort((a,b)=>a.medianMs-b.medianMs);
- const latencyMax=Math.max(1,...latency.map(r=>r.p90Ms))*1.08,fastest=latency[0];
- $('#latency-bars').innerHTML=latency.length?`<div class="range-takeaway"><b>${esc(fastest.label)} had the fastest typical response at ${sec(fastest.medianMs)}.</b><span>These ranges combine different scenarios, so use them as an observed comparison rather than a speed guarantee.</span></div><div class="range-axis"><span>Faster</span><span>${sec(latencyMax)}</span></div>${latency.map(r=>{const x=v=>Math.max(0,Math.min(500,v/latencyMax*500)),label=`${r.label}. Typical response ${sec(r.medianMs)}. Middle 80 percent from ${sec(r.p10Ms)} to ${sec(r.p90Ms)}.`;return `<div class="range-row"><button data-config="${esc(r.id)}">${esc(r.label)}</button><svg class="range-track" viewBox="0 0 500 28" role="img" aria-label="${esc(label)}"><rect class="range-bg" x="0" y="7" width="500" height="14" rx="7"/><line class="range-spread" x1="${x(r.p10Ms)}" x2="${x(r.p90Ms)}" y1="14" y2="14"/><circle class="range-median" cx="${x(r.medianMs)}" cy="14" r="6"><title>${esc(label)}</title></circle></svg><span class="range-value"><b>${sec(r.medianMs)}</b><small>${sec(r.p10Ms)} to ${sec(r.p90Ms)}</small></span></div>`}).join('')}`:'<div class="empty">No timing measurements are available.</div>';
- bindConfigs($('#latency-bars'));
- const tokens=report.summary,max=Math.max(1,...tokens.map(r=>r.meanTokens??0));
- $('#token-bars').innerHTML=tokens.map(r=>`<div class="bar-row"><button data-config="${esc(r.id)}">${esc(r.label)}</button><svg class="bar-track" viewBox="0 0 200 15" preserveAspectRatio="none" aria-hidden="true"><rect class="bar-fill" x="0" y="2" width="${(r.meanTokens??0)/max*200}" height="11" rx="3"/></svg><span class="bar-value">${fmt(r.meanTokens)}</span></div>`).join('');
- bindConfigs($('#token-bars'));
+const stat = (title, value, sub) =>
+  `<div class="stat"><small>${esc(title)}</small><div class="value">${esc(value)}</div><div class="sub">${esc(sub)}</div></div>`;
+function show() {
+  const rows = report.summary,
+    done = report.results.length;
+  const planned = rows.reduce(
+      (total, row) =>
+        total + (row.planned ?? report.cases.length * (row.sourceRepeats ?? report.repeats)),
+      0,
+    ),
+    eligible = rows.filter((r) => r.eligible),
+    complete = report.status === 'complete';
+  const cheapest = eligible
+      .filter((x) => x.meanCost !== null)
+      .sort((a, b) => a.meanCost - b.meanCost)[0],
+    fastest = [...eligible].sort((a, b) => a.medianMs - b.medianMs)[0];
+  $('#decision-title').textContent = report.decisionTitle ?? 'Our choice: Terra medium';
+  $('#decision-note').textContent =
+    report.decisionNote ??
+    'We chose faster observed responses over Luna low’s lower estimated API cost. Astra showed no correctness advantage on these development cases. All three passed every completed attempt in the stopped validation run. This does not guarantee performance on unseen requests.';
+  $('#overview').innerHTML =
+    stat(
+      report.phase,
+      report.experimentKind === 'cross-path-reference'
+        ? `${report.cases.length} scenarios · mixed repeat plans`
+        : `${report.cases.length} scenarios × ${report.repeats}${report.status === 'stopped' ? ' planned' : ''}`,
+      `${report.configs.length} configurations · ${done} attempts completed`,
+    ) +
+    (report.status === 'stopped'
+      ? stat(
+          'Completed attempts passed',
+          `${rows.reduce((n, r) => n + r.passed, 0)}/${done}`,
+          `${rows.reduce((n, r) => n + r.failed, 0)} failed · ${planned - done} planned attempts not completed`,
+        )
+      : stat(
+          'Lowest estimated cost among full-pass configurations',
+          complete && cheapest ? cheapest.label : 'Awaiting complete run',
+          complete && cheapest
+            ? `${usd(cheapest.meanCost)} / scenario · ${(cheapest.sourceRepeats ?? report.repeats) === 1 ? 'screening only' : 'repeated development checks'}`
+            : 'Incomplete and failed configurations are excluded',
+        )) +
+    stat(
+      'Fastest median among full-pass configurations',
+      complete && fastest
+        ? fastest.label
+        : report.status === 'stopped'
+          ? 'Stopped early'
+          : 'Awaiting complete run',
+      complete && fastest
+        ? `${sec(fastest.medianMs)} / scenario`
+        : 'Failures and timeouts remain visible below',
+    );
+  const cross = report.experimentKind === 'cross-path-reference';
+  const recordedCalls = report.results.reduce(
+      (n, r) =>
+        n + r.events.filter((e) => ['model_usage', 'model_failure'].includes(e.type)).length,
+      0,
+    ),
+    callCap = report.modelCallCap ?? 250;
+  const calls = report.modelCallsAttempted ?? recordedCalls;
+  $('#progress').max = cross ? Math.max(1, calls) : callCap;
+  $('#progress').value = cross ? calls : Math.min(calls, callCap);
+  $('#progress-label').textContent = cross
+    ? `${report.results.length} preserved attempts from ${report.sourceRuns?.length ?? 'multiple'} completed source runs. Viewing this report makes no model calls.`
+    : `${calls} ${report.modelCallsAttempted === undefined ? 'recorded' : 'attempted'} model calls / ${callCap}-call cap per comparison batch · ${report.status}. ${report.interruptionNote ? 'Cancelled in-flight usage may be missing. ' : ''}${report.modelCallCap === undefined ? '250 is the current budget policy; this historical run was stopped under its original plan. ' : ''}No new run is scheduled.`;
+  $('#method-note').textContent = cross
+    ? 'Historical OpenAI benchmark and current OpenRouter screen · different serving paths · comparison is directional, not controlled.'
+    : `Fixed clock ${report.clock} · 6 cases use recorded staging; 9 use synthetic fixtures · real model calls, no live flight searches. ${report.repeats === 1 ? 'One repeat screens candidates; it cannot establish consistency.' : 'Repeated attempts reveal variation; only completed attempts are graded. This is not a production reliability estimate.'}`;
+  if (!rows.some((x) => x.id === selectedConfig)) selectedConfig = rows[0]?.id;
+  drawScatter();
+  drawBars();
+  drawRanking();
+  drawMatrix();
+  drawConfig();
+  if (selectedCase) drawCase(false);
+  const fingerprint = report.captureHash
+    ? ` Capture fingerprint: <code>${esc(report.captureHash.slice(0, 16))}</code>.`
+    : '';
+  const publication = report.publication ? ` ${esc(report.publication)}` : '';
+  $('#method').innerHTML =
+    `<p>Different scenarios test coverage; repeating the same scenario tests consistency. Repeats do not make the underlying model less variable. They make our estimate more useful. New phrasings and unseen edge cases are a separate generalization test. Each attempt starts a fresh conversation. Configuration order rotates between scenarios and runs are sequential. No response is retried to replace a failure. Provider behavior, cache warming and load can affect timing and estimated cost. This is an observed experiment, not a controlled hardware benchmark. The same recorded inventory and synthetic fixtures are used across configurations.</p><p>Here the model interprets intent and proposes an action. The harness supplies defaults, validates arguments, calls the search tool and formats the reply. Passing this set does not establish performance on every kind of agent task. Use the latency range within a selected scenario to understand repeat-to-repeat variation. The overall latency chart also includes differences in scenario length. Raw tokens and observed time are measurements. Dollars are estimates.</p><ul>${[...(report.limitations ?? []), ...(report.interruptionNote ? [report.interruptionNote] : [])].map((x) => `<li>${esc(x)}</li>`).join('')}</ul><p>Staging source: ${esc(report.source)}.${fingerprint}${publication}</p>`;
+  const paid = report.experimentKind?.startsWith('openrouter');
+  const pricingLead = cross
+    ? 'Mixed evidence. OpenRouter rows use reported request cost when available. Historical Codex rows use API-equivalent estimates from observed tokens.'
+    : paid
+      ? 'Observed OpenRouter cost. When OpenRouter reports request cost, that value is used. Catalog rates provide the fallback and the pre-run safety bound.'
+      : 'Estimated API-equivalent cost, not your Codex subscription bill. These calls use your Codex allowance. We apply published rates to the observed token workload, which includes Codex prompt overhead. Actual API deployment costs may differ.';
+  $('#pricing').innerHTML =
+    `<p><b>${pricingLead}</b></p><p>Cost = ((input − cached input) × input rate + cached input × cached rate + output × output rate) ÷ 1,000,000. Cached tokens are already part of input. Reasoning is not added twice.</p><table class="rates"><tr><th>USD / million tokens</th><th>Input</th><th>Cached</th><th>Output</th></tr>${Object.entries(
+      report.rates.models,
+    )
+      .map(
+        ([m, p]) =>
+          `<tr><td>${esc(m)}</td><td>$${p.input}</td><td>$${p.cached}</td><td>$${p.output}</td></tr>`,
+      )
+      .join(
+        '',
+      )}</table><p><a href="${esc(report.rates.source)}" target="_blank" rel="noreferrer">Pricing source</a> · checked ${esc(report.rates.checkedAt)} · ${esc(report.rates.tier)}. Missing usage is unknown, not free. Rates are stored with the run.</p>`;
 }
-function drawRanking(){const showPath=report.experimentKind==='cross-path-reference';$('#ranking').innerHTML='<thead><tr><th>Model / effort</th>'+(showPath?'<th>Serving path</th>':'')+'<th>Passes / completed</th><th>Median time</th><th>P10–P90 time</th><th>Mean tokens</th><th>Est. API $ / scenario</th><th>Eligibility</th></tr></thead><tbody>'+report.summary.map(r=>`<tr class="${selectedConfig===r.id?'selected-row':''}"><td><button data-config="${esc(r.id)}">${esc(r.label)}</button></td>${showPath?`<td>${esc(r.servingPath)}</td>`:''}<td>${r.completed?`${r.passed}/${r.completed}`:"—"} <span class="quiet">${r.failed} failed · ${Math.max(0,r.planned-r.completed)} ${report.status==='running'?'remaining':'not completed'}</span></td><td>${sec(r.medianMs)}</td><td>${sec(r.p10Ms)}–${sec(r.p90Ms)}</td><td>${fmt(r.meanTokens)}</td><td>${usd(r.meanCost)}</td><td>${r.eligible?'✓ All planned checks passed':r.failed?`${r.failed} failed attempts`:report.status==='stopped'?'Stopped early':'Incomplete'}</td></tr>`).join('')+'</tbody>';bindConfigs($('#ranking'));}
-function drawConfig(){const c=report.summary.find(x=>x.id===selectedConfig);if(!c)return;const repeats=c.sourceRepeats??report.repeats;$('#config-detail').innerHTML=`<h2>${esc(c.label)}</h2>${c.servingPath?`<p><b>${esc(c.servingPath)}</b> serving path</p>`:''}<p class="number">${c.completed?`${c.passed} / ${c.completed} passed`:"No completed attempts"}</p><p>${c.failed} failed · ${Math.max(0,c.planned-c.completed)} planned attempts ${report.status==='running'?'remaining':'not completed'}. Unrun attempts are not failures.</p><p><b>${sec(c.medianMs)}</b> median scenario time</p><p><b>${fmt(c.meanTokens)}</b> mean tokens per scenario</p><p><b>${usd(c.meanCost)}</b> estimated API cost per scenario</p><p class="mini">${c.eligible?'Eligible on this development set. '+(repeats===1?'Repeat validation is still needed.':`${repeats} repeats are a small development sample.`):'Partial run: results describe completed attempts only. The original repeat target was not reached.'}</p><p class="mini">Select a cell below to inspect failures and within-case timing spread. Changing reasoning here is an experiment; the playground keeps your selected setting.</p>`;}
-function drawMatrix(){$('#matrix').innerHTML='<thead><tr><th>Scenario</th>'+report.configs.map(c=>`<th>${esc(c.label)}</th>`).join('')+'</tr></thead><tbody>'+report.cases.map(k=>`<tr><td><b>${esc(k.id)} · ${esc(k.title??k.name??k.steps[0].text)}</b><span class="matrix-source">${esc(k.dataSource)}</span></td>${report.summary.map(c=>{const p=c.perCase.find(x=>x.id===k.id),expected=c.sourceRepeats??report.repeats,times=report.results.filter(x=>x.configId===c.id&&x.caseId===k.id).map(x=>x.steps.reduce((n,s)=>n+s.latencyMs,0)).sort((a,b)=>a-b),mid=Math.floor(times.length/2),median=times.length?(times[mid]+times[Math.floor((times.length-1)/2)])/2:null;return `<td><button data-case="${esc(k.id)}" data-c="${esc(c.id)}" class="score ${!p.total?'pending':p.passed===p.total?'good':'bad'}"><strong>${p.passed}/${p.total}</strong><small>${p.total<expected?`${expected-p.total} ${report.status==='running'?'pending':'not completed'}`:'complete'}</small>${p.total?`<span class="case-id">${sec(median)} median</span>`:''}</button></td>`;}).join('')}</tr>`).join('')+'</tbody>';$('#matrix').querySelectorAll('[data-case]').forEach(b=>b.onclick=()=>{selectedCase=b.dataset.case;selectedConfig=b.dataset.c;selectedRepeat=1;drawCase(true);drawConfig();drawScatter();drawRanking();});}
-function drawCase(scroll){const k=report.cases.find(x=>x.id===selectedCase),c=report.configs.find(x=>x.id===selectedConfig);if(!k||!c)return;const expected=c.sourceRepeats??report.repeats,rows=report.results.filter(x=>x.caseId===k.id&&x.configId===c.id),r=rows.find(x=>x.repeat===selectedRepeat)??rows[0],times=rows.map(x=>x.steps.reduce((n,s)=>n+s.latencyMs,0));
- $('#case-detail').innerHTML=`<div class="detail-body"><a href="#top" class="mini">↑ Back to charts</a><h2>${esc(k.id)} · ${esc(c.label)}</h2><p class="quiet">${esc(k.dataSource)} · ${rows.length}/${expected} attempts · ${times.length?`within-case elapsed range ${sec(Math.min(...times))}–${sec(Math.max(...times))}`:'pending'}</p><div class="repeats">${rows.map(x=>`<button data-repeat="${x.repeat}" class="repeat ${x.repeat===r?.repeat?'selected':''}">${x.repeat} ${x.pass?'✓':'×'}</button>`).join('')}</div>${r?r.steps.map((s,i)=>`<div class="detail-grid"><div><h3>Turn ${i+1} · ${sec(s.latencyMs)}</h3><div class="message user"><p class="speaker">User</p><div class="bubble">${esc(s.input)}</div></div><div class="message"><p class="speaker">Agent reply</p><div class="bubble">${esc(s.result.text)}</div></div></div><div><details open><summary>Expected behavior</summary><ul>${Object.entries(s.expected).map(([key,value])=>`<li><b>${esc({status:'Response type',origin:'Origin airports',destination:'Destination airports',cabin:'Cabin',from:'Requested date from',to:'Requested date through',posts:'Search requests',minPrice:'Minimum price',maxPrice:'Maximum price',budget:'Budget (USD)',need:'Ask for',pending:'Ask for next',menuCount:'Choices to offer',minResults:'At least this many offers',resultCount:'Exact offer count',statuses:'Allowed response types',mentions:'Response wording pattern',messageIncludes:'Response should mention'}[key]??key)}:</b> ${esc(value===null?'Not set':Array.isArray(value)?value.join(', '):typeof value==='object'?JSON.stringify(value):value)}</li>`).join('')}</ul></details><details open><summary>${s.grade.pass?'✓ Passed':'× Failed'} · ${s.grade.checks.length} checks</summary>${s.grade.checks.map(g=>`<div class="check ${g.pass?'pass':'fail'}">${g.pass?'✓':'×'} ${esc(g.name)}${!g.pass?`<pre>${esc(JSON.stringify(g,null,2))}</pre>`:''}</div>`).join('')}</details></div></div>`).join('')+`<details><summary>Recorded model usage and tool events</summary><pre>${esc(JSON.stringify(r.events,null,2))}</pre></details>`:'<p>No completed attempt yet.</p>'}</div>`;
- $('#case-detail').querySelectorAll('[data-repeat]').forEach(b=>b.onclick=()=>{selectedRepeat=Number(b.dataset.repeat);drawCase(false);});if(scroll)$('#case-detail').scrollIntoView({behavior:'smooth',block:'start'});
+function drawScatter() {
+  const metric = $('#metric').value,
+    key = metric === 'cost' ? 'meanCost' : 'meanTokens',
+    rows = report.summary.filter(
+      (x) => x.completed && Number.isFinite(x[key]) && Number.isFinite(x.medianMs),
+    );
+  if (!rows.length) {
+    $('#scatter').innerHTML = '<div class="empty">Waiting for measured results…</div>';
+    return;
+  }
+  $('#scatter-title').textContent =
+    metric === 'cost' ? 'Speed versus cost' : 'Speed versus token usage';
+  const W = 720,
+    H = 340,
+    L = 85,
+    R = 38,
+    T = 38,
+    B = 62,
+    maxX = Math.max(...rows.map((x) => x.medianMs)) * 1.2;
+  const values = rows.map((row) => row[key]).filter((value) => value > 0),
+    minValue = Math.min(...values),
+    maxValue = Math.max(...values),
+    useLog = metric === 'cost' && maxValue / minValue > 50;
+  const minLog = useLog ? Math.floor(Math.log10(minValue)) : 0,
+    maxLog = useLog ? Math.ceil(Math.log10(maxValue)) : 0;
+  const maxY = useLog ? maxValue * 1.2 : maxValue * 1.2 || 1;
+  const x = (value) => L + (value / maxX) * (W - L - R);
+  const y = (value) =>
+    useLog
+      ? H - B - ((Math.log10(value) - minLog) / (maxLog - minLog)) * (H - T - B)
+      : H - B - (value / maxY) * (H - T - B);
+  const yTicks = useLog
+    ? Array.from({ length: maxLog - minLog + 1 }, (_, index) => 10 ** (minLog + index))
+    : Array.from({ length: 5 }, (_, index) => (index / 4) * maxY);
+  const xTicks = Array.from({ length: 5 }, (_, index) => (index / 4) * maxX);
+  let svg = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Scatter plot of median scenario latency against ${metric === 'cost' ? 'cost' : 'mean tokens'}. Values also appear in the accessible table below.">`;
+  for (const value of yTicks)
+    svg += `<line class="gridline" x1="${L}" x2="${W - R}" y1="${y(value)}" y2="${y(value)}"/><text text-anchor="end" x="${L - 10}" y="${y(value) + 4}">${metric === 'cost' ? usd(value) : fmt(value)}</text>`;
+  for (const value of xTicks)
+    svg += `<text text-anchor="middle" x="${x(value)}" y="${H - B + 25}">${(value / 1000).toFixed(1)}s</text>`;
+  rows.forEach((row, index) => {
+    const label = `${row.label}: ${row.passed}/${row.completed} completed attempts passed; ${sec(row.medianMs)}; ${metric === 'cost' ? usd(row[key]) : fmt(row[key])}`;
+    svg += `<circle class="dot" tabindex="0" role="button" aria-label="${esc(label)}" data-config="${esc(row.id)}" cx="${x(row.medianMs)}" cy="${y(row[key])}" r="${selectedConfig === row.id ? 9 : 6}" fill="${row.eligible ? colorFor(row.model) : 'var(--paper)'}" stroke="${colorFor(row.model)}"><title>${esc(label)}</title></circle><text class="dot-label" x="${x(row.medianMs) + 10}" y="${y(row[key]) + (index % 2 ? -10 : 16)}">${index + 1}</text>`;
+  });
+  svg += `<text x="${W / 2}" y="${H - 10}" text-anchor="middle">Median elapsed seconds per scenario →</text></svg>`;
+  $('#scatter').innerHTML = svg;
+  $('#chart-legend').innerHTML =
+    `<span>${useLog ? 'Cost uses a log scale so low-cost candidates remain visible. ' : ''}Filled dots passed their complete source plan. Hollow dots failed or stopped early.</span>` +
+    rows
+      .map(
+        (row, index) =>
+          `<button class="secondary" data-config="${esc(row.id)}">${index + 1} · ${esc(row.label)}${row.servingPath ? ` · ${esc(row.servingPath)}` : ''}</button>`,
+      )
+      .join('') +
+    (report.summary.some((x) => x.completed && x[key] === null)
+      ? '<span>Configurations with unknown usage are omitted from this plot and retained in the table.</span>'
+      : '');
+  bindConfigs($('#scatter'));
+  bindConfigs($('#chart-legend'));
 }
-async function poll(){if(polling)return;polling=true;try{const id=$('#runs').value;if(!id)return;const next=await json('/api/comparison?id='+encodeURIComponent(id)),version=next.runId+next.results.length+next.status;if(id!==$('#runs').value)return;report=next;$('#runs').selectedOptions[0].textContent=`${report.phase} · ${report.runId.replace('compare-','')}`;$('#connection').textContent=`Updated ${new Date().toLocaleTimeString()} · ${report.status}`;$('#alert').hidden=true;if(lastVersion!==version){lastVersion=version;show();}}catch(e){$('#alert').hidden=false;$('#alert').textContent=e.message;}finally{polling=false;}}
-$('#metric').onchange=()=>{if(report)drawScatter();};$('#runs').onchange=()=>{lastVersion='';selectedCase=null;$('#case-detail').innerHTML='<div class="empty">Select a scenario above.</div>';history.replaceState({},'',`?run=${encodeURIComponent($('#runs').value)}`);poll();};
-async function init(){try{const data=await json('/api/comparisons');$('#runs').innerHTML=data.runs.map(x=>`<option value="${esc(x)}">${esc(x.replace('compare-',''))}</option>`).join('');const requested=new URL(location).searchParams.get('run');if(data.runs.includes(requested))$('#runs').value=requested;await poll();}catch(e){$('#connection').textContent=e.message;}}init();setInterval(poll,5000);
-fetch('/api/story').then(r=>r.ok?r.json():null).then(story=>story&&renderHeadToHead($('#h2h'),story)).catch(()=>{});
+function bindConfigs(root) {
+  root.querySelectorAll('[data-config]').forEach((el) => {
+    el.onclick = () => {
+      selectedConfig = el.dataset.config;
+      drawConfig();
+      drawScatter();
+      drawRanking();
+    };
+    if (el.tagName.toLowerCase() === 'circle')
+      el.onkeydown = (e) => {
+        if (['Enter', ' '].includes(e.key)) {
+          e.preventDefault();
+          el.onclick();
+        }
+      };
+  });
+}
+function drawBars() {
+  const latency = report.summary
+    .filter(
+      (r) =>
+        r.completed &&
+        Number.isFinite(r.medianMs) &&
+        Number.isFinite(r.p10Ms) &&
+        Number.isFinite(r.p90Ms),
+    )
+    .sort((a, b) => a.medianMs - b.medianMs);
+  const latencyMax = Math.max(1, ...latency.map((r) => r.p90Ms)) * 1.08,
+    fastest = latency[0];
+  $('#latency-bars').innerHTML = latency.length
+    ? `<div class="range-takeaway"><b>${esc(fastest.label)} had the fastest typical response at ${sec(fastest.medianMs)}.</b><span>These ranges combine different scenarios, so use them as an observed comparison rather than a speed guarantee.</span></div><div class="range-axis"><span>Faster</span><span>${sec(latencyMax)}</span></div>${latency
+        .map((r) => {
+          const x = (v) => Math.max(0, Math.min(500, (v / latencyMax) * 500)),
+            label = `${r.label}. Typical response ${sec(r.medianMs)}. Middle 80 percent from ${sec(r.p10Ms)} to ${sec(r.p90Ms)}.`;
+          return `<div class="range-row"><button data-config="${esc(r.id)}">${esc(r.label)}</button><svg class="range-track" viewBox="0 0 500 28" role="img" aria-label="${esc(label)}"><rect class="range-bg" x="0" y="7" width="500" height="14" rx="7"/><line class="range-spread" x1="${x(r.p10Ms)}" x2="${x(r.p90Ms)}" y1="14" y2="14"/><circle class="range-median" cx="${x(r.medianMs)}" cy="14" r="6"><title>${esc(label)}</title></circle></svg><span class="range-value"><b>${sec(r.medianMs)}</b><small>${sec(r.p10Ms)} to ${sec(r.p90Ms)}</small></span></div>`;
+        })
+        .join('')}`
+    : '<div class="empty">No timing measurements are available.</div>';
+  bindConfigs($('#latency-bars'));
+  const tokens = report.summary,
+    max = Math.max(1, ...tokens.map((r) => r.meanTokens ?? 0));
+  $('#token-bars').innerHTML = tokens
+    .map(
+      (r) =>
+        `<div class="bar-row"><button data-config="${esc(r.id)}">${esc(r.label)}</button><svg class="bar-track" viewBox="0 0 200 15" preserveAspectRatio="none" aria-hidden="true"><rect class="bar-fill" x="0" y="2" width="${((r.meanTokens ?? 0) / max) * 200}" height="11" rx="3"/></svg><span class="bar-value">${fmt(r.meanTokens)}</span></div>`,
+    )
+    .join('');
+  bindConfigs($('#token-bars'));
+}
+function drawRanking() {
+  const showPath = report.experimentKind === 'cross-path-reference';
+  $('#ranking').innerHTML =
+    '<thead><tr><th>Model / effort</th>' +
+    (showPath ? '<th>Serving path</th>' : '') +
+    '<th>Passes / completed</th><th>Median time</th><th>P10–P90 time</th><th>Mean tokens</th><th>Est. API $ / scenario</th><th>Eligibility</th></tr></thead><tbody>' +
+    report.summary
+      .map(
+        (r) =>
+          `<tr class="${selectedConfig === r.id ? 'selected-row' : ''}"><td><button data-config="${esc(r.id)}">${esc(r.label)}</button></td>${showPath ? `<td>${esc(r.servingPath)}</td>` : ''}<td>${r.completed ? `${r.passed}/${r.completed}` : '—'} <span class="quiet">${r.failed} failed · ${Math.max(0, r.planned - r.completed)} ${report.status === 'running' ? 'remaining' : 'not completed'}</span></td><td>${sec(r.medianMs)}</td><td>${sec(r.p10Ms)}–${sec(r.p90Ms)}</td><td>${fmt(r.meanTokens)}</td><td>${usd(r.meanCost)}</td><td>${r.eligible ? '✓ All planned checks passed' : r.failed ? `${r.failed} failed attempts` : report.status === 'stopped' ? 'Stopped early' : 'Incomplete'}</td></tr>`,
+      )
+      .join('') +
+    '</tbody>';
+  bindConfigs($('#ranking'));
+}
+function drawConfig() {
+  const c = report.summary.find((x) => x.id === selectedConfig);
+  if (!c) return;
+  const repeats = c.sourceRepeats ?? report.repeats;
+  $('#config-detail').innerHTML =
+    `<h2>${esc(c.label)}</h2>${c.servingPath ? `<p><b>${esc(c.servingPath)}</b> serving path</p>` : ''}<p class="number">${c.completed ? `${c.passed} / ${c.completed} passed` : 'No completed attempts'}</p><p>${c.failed} failed · ${Math.max(0, c.planned - c.completed)} planned attempts ${report.status === 'running' ? 'remaining' : 'not completed'}. Unrun attempts are not failures.</p><p><b>${sec(c.medianMs)}</b> median scenario time</p><p><b>${fmt(c.meanTokens)}</b> mean tokens per scenario</p><p><b>${usd(c.meanCost)}</b> estimated API cost per scenario</p><p class="mini">${c.eligible ? 'Eligible on this development set. ' + (repeats === 1 ? 'Repeat validation is still needed.' : `${repeats} repeats are a small development sample.`) : 'Partial run: results describe completed attempts only. The original repeat target was not reached.'}</p><p class="mini">Select a cell below to inspect failures and within-case timing spread. Changing reasoning here is an experiment; the playground keeps your selected setting.</p>`;
+}
+function drawMatrix() {
+  $('#matrix').innerHTML =
+    '<thead><tr><th>Scenario</th>' +
+    report.configs.map((c) => `<th>${esc(c.label)}</th>`).join('') +
+    '</tr></thead><tbody>' +
+    report.cases
+      .map(
+        (k) =>
+          `<tr><td><b>${esc(k.id)} · ${esc(k.title ?? k.name ?? k.steps[0].text)}</b><span class="matrix-source">${esc(k.dataSource)}</span></td>${report.summary
+            .map((c) => {
+              const p = c.perCase.find((x) => x.id === k.id),
+                expected = c.sourceRepeats ?? report.repeats,
+                times = report.results
+                  .filter((x) => x.configId === c.id && x.caseId === k.id)
+                  .map((x) => x.steps.reduce((n, s) => n + s.latencyMs, 0))
+                  .sort((a, b) => a - b),
+                mid = Math.floor(times.length / 2),
+                median = times.length
+                  ? (times[mid] + times[Math.floor((times.length - 1) / 2)]) / 2
+                  : null;
+              return `<td><button data-case="${esc(k.id)}" data-c="${esc(c.id)}" class="score ${!p.total ? 'pending' : p.passed === p.total ? 'good' : 'bad'}"><strong>${p.passed}/${p.total}</strong><small>${p.total < expected ? `${expected - p.total} ${report.status === 'running' ? 'pending' : 'not completed'}` : 'complete'}</small>${p.total ? `<span class="case-id">${sec(median)} median</span>` : ''}</button></td>`;
+            })
+            .join('')}</tr>`,
+      )
+      .join('') +
+    '</tbody>';
+  $('#matrix')
+    .querySelectorAll('[data-case]')
+    .forEach(
+      (b) =>
+        (b.onclick = () => {
+          selectedCase = b.dataset.case;
+          selectedConfig = b.dataset.c;
+          selectedRepeat = 1;
+          drawCase(true);
+          drawConfig();
+          drawScatter();
+          drawRanking();
+        }),
+    );
+}
+function drawCase(scroll) {
+  const k = report.cases.find((x) => x.id === selectedCase),
+    c = report.configs.find((x) => x.id === selectedConfig);
+  if (!k || !c) return;
+  const expected = c.sourceRepeats ?? report.repeats,
+    rows = report.results.filter((x) => x.caseId === k.id && x.configId === c.id),
+    r = rows.find((x) => x.repeat === selectedRepeat) ?? rows[0],
+    times = rows.map((x) => x.steps.reduce((n, s) => n + s.latencyMs, 0));
+  $('#case-detail').innerHTML =
+    `<div class="detail-body"><a href="#top" class="mini">↑ Back to charts</a><h2>${esc(k.id)} · ${esc(c.label)}</h2><p class="quiet">${esc(k.dataSource)} · ${rows.length}/${expected} attempts · ${times.length ? `within-case elapsed range ${sec(Math.min(...times))}–${sec(Math.max(...times))}` : 'pending'}</p><div class="repeats">${rows.map((x) => `<button data-repeat="${x.repeat}" class="repeat ${x.repeat === r?.repeat ? 'selected' : ''}">${x.repeat} ${x.pass ? '✓' : '×'}</button>`).join('')}</div>${
+      r
+        ? r.steps
+            .map(
+              (s, i) =>
+                `<div class="detail-grid"><div><h3>Turn ${i + 1} · ${sec(s.latencyMs)}</h3><div class="message user"><p class="speaker">User</p><div class="bubble">${esc(s.input)}</div></div><div class="message"><p class="speaker">Agent reply</p><div class="bubble">${esc(s.result.text)}</div></div></div><div><details open><summary>Expected behavior</summary><ul>${Object.entries(
+                  s.expected,
+                )
+                  .map(
+                    ([key, value]) =>
+                      `<li><b>${esc({ status: 'Response type', origin: 'Origin airports', destination: 'Destination airports', cabin: 'Cabin', from: 'Requested date from', to: 'Requested date through', posts: 'Search requests', minPrice: 'Minimum price', maxPrice: 'Maximum price', budget: 'Budget (USD)', need: 'Ask for', pending: 'Ask for next', menuCount: 'Choices to offer', minResults: 'At least this many offers', resultCount: 'Exact offer count', statuses: 'Allowed response types', mentions: 'Response wording pattern', messageIncludes: 'Response should mention' }[key] ?? key)}:</b> ${esc(value === null ? 'Not set' : Array.isArray(value) ? value.join(', ') : typeof value === 'object' ? JSON.stringify(value) : value)}</li>`,
+                  )
+                  .join(
+                    '',
+                  )}</ul></details><details open><summary>${s.grade.pass ? '✓ Passed' : '× Failed'} · ${s.grade.checks.length} checks</summary>${s.grade.checks.map((g) => `<div class="check ${g.pass ? 'pass' : 'fail'}">${g.pass ? '✓' : '×'} ${esc(g.name)}${!g.pass ? `<pre>${esc(JSON.stringify(g, null, 2))}</pre>` : ''}</div>`).join('')}</details></div></div>`,
+            )
+            .join('') +
+          `<details><summary>Recorded model usage and tool events</summary><pre>${esc(JSON.stringify(r.events, null, 2))}</pre></details>`
+        : '<p>No completed attempt yet.</p>'
+    }</div>`;
+  $('#case-detail')
+    .querySelectorAll('[data-repeat]')
+    .forEach(
+      (b) =>
+        (b.onclick = () => {
+          selectedRepeat = Number(b.dataset.repeat);
+          drawCase(false);
+        }),
+    );
+  if (scroll) $('#case-detail').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+async function poll() {
+  if (polling) return;
+  polling = true;
+  try {
+    const id = $('#runs').value;
+    if (!id) return;
+    const next = await json('/api/comparison?id=' + encodeURIComponent(id)),
+      version = next.runId + next.results.length + next.status;
+    if (id !== $('#runs').value) return;
+    report = next;
+    $('#runs').selectedOptions[0].textContent =
+      `${report.phase} · ${report.runId.replace('compare-', '')}`;
+    $('#connection').textContent = `Updated ${new Date().toLocaleTimeString()} · ${report.status}`;
+    $('#alert').hidden = true;
+    if (lastVersion !== version) {
+      lastVersion = version;
+      show();
+    }
+  } catch (e) {
+    $('#alert').hidden = false;
+    $('#alert').textContent = e.message;
+  } finally {
+    polling = false;
+  }
+}
+$('#metric').onchange = () => {
+  if (report) drawScatter();
+};
+$('#runs').onchange = () => {
+  lastVersion = '';
+  selectedCase = null;
+  $('#case-detail').innerHTML = '<div class="empty">Select a scenario above.</div>';
+  history.replaceState({}, '', `?run=${encodeURIComponent($('#runs').value)}`);
+  poll();
+};
+async function init() {
+  try {
+    const data = await json('/api/comparisons');
+    $('#runs').innerHTML = data.runs
+      .map((x) => `<option value="${esc(x)}">${esc(x.replace('compare-', ''))}</option>`)
+      .join('');
+    const requested = new URL(location).searchParams.get('run');
+    if (data.runs.includes(requested)) $('#runs').value = requested;
+    await poll();
+  } catch (e) {
+    $('#connection').textContent = e.message;
+  }
+}
+init();
+setInterval(poll, 5000);
+fetch('/api/story')
+  .then((r) => (r.ok ? r.json() : null))
+  .then((story) => story && renderHeadToHead($('#h2h'), story))
+  .catch(() => {});

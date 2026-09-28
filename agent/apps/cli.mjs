@@ -22,33 +22,71 @@ const session = fileTrace(base + 'traces', randomUUID());
 const trace = session.emit;
 let model;
 try {
-  const settings=hostedModelSettings(process.env.AGENT_MODEL||undefined,process.env.AGENT_REASONING);
-  model = demo ? new ScriptedDemoModel() : new OpenRouterModel({ apiKey: process.env.OPENROUTER_API_KEY, model: settings.model, reasoningEffort: settings.effort, trace });
-} catch (error) { console.error(error.message); process.exit(1); }
+  const settings = hostedModelSettings(
+    process.env.AGENT_MODEL || undefined,
+    process.env.AGENT_REASONING,
+  );
+  model = demo
+    ? new ScriptedDemoModel()
+    : new OpenRouterModel({
+        apiKey: process.env.OPENROUTER_API_KEY,
+        model: settings.model,
+        reasoningEffort: settings.effort,
+        trace,
+      });
+} catch (error) {
+  console.error(error.message);
+  process.exit(1);
+}
 const staging = !demo && process.argv.includes('--staging');
 if (staging) await readStagingToken(); // Fail before making any model call.
 const adapter = staging ? makeStagingAdapter({ trace }) : makeFixtureAdapter('normal', trace);
-const conversation = new SearchConversation({ adapter, today: () => fixedDate || isoToday(timezone), trace });
+const conversation = new SearchConversation({
+  adapter,
+  today: () => fixedDate || isoToday(timezone),
+  trace,
+});
 const agent = new Agent({ conversation, model, timezone, trace });
-trace('session', { mode: model.mode, model: model.model ?? null, flightData: adapter.mode, timezone, fixedDate: fixedDate ?? null });
-console.log(`\nCommonSwyft search lab — ${demo ? 'SCRIPTED DEMO (no LLM, no cost)' : `LIVE MODEL: ${model.model} (${model.mode}); ${adapter.mode} flights`}`);
+trace('session', {
+  mode: model.mode,
+  model: model.model ?? null,
+  flightData: adapter.mode,
+  timezone,
+  fixedDate: fixedDate ?? null,
+});
+console.log(
+  `\nCommonSwyft search lab — ${demo ? 'SCRIPTED DEMO (no LLM, no cost)' : `LIVE MODEL: ${model.model} (${model.mode}); ${adapter.mode} flights`}`,
+);
 console.log(welcomeFor(adapter.mode));
 console.log('\nCommands: /state · /reset · /trace · /tool {JSON} · /quit');
 if (demo) console.log('Start with: To New York → 1 → Heathrow only → economy instead → cheapest');
 console.log('Use fictional travel details only. Local traces contain your trip preferences.\n');
 const rl = createInterface({ input: stdin, output: stdout, terminal: stdin.isTTY });
-rl.setPrompt('You > '); if (stdin.isTTY && !rl.closed) rl.prompt();
+rl.setPrompt('You > ');
+if (stdin.isTTY && !rl.closed) rl.prompt();
 for await (const line of rl) {
   const text = line.trim();
-  if (!text) { if (stdin.isTTY && !rl.closed) rl.prompt(); continue; }
+  if (!text) {
+    if (stdin.isTTY && !rl.closed) rl.prompt();
+    continue;
+  }
   if (text === '/quit') break;
   if (text === '/trace') console.log(session.path);
   else if (text === '/state') console.log(JSON.stringify(conversation.publicState(), null, 2));
-  else if (text === '/reset') { conversation.state = new SearchConversation({ adapter: conversation.adapter }).state; agent.turns = []; console.log('Trip reset.'); }
-  else if (text.startsWith('/tool ')) {
-    try { const result = await conversation.find(JSON.parse(text.slice(6))); trace('manual_tool_result', result); console.log(result.text); }
-    catch { console.log('Use valid JSON, e.g. /tool {"origin":"London","destination":"New York"}'); }
+  else if (text === '/reset') {
+    conversation.state = new SearchConversation({ adapter: conversation.adapter }).state;
+    agent.turns = [];
+    console.log('Trip reset.');
+  } else if (text.startsWith('/tool ')) {
+    try {
+      const result = await conversation.find(JSON.parse(text.slice(6)));
+      trace('manual_tool_result', result);
+      console.log(result.text);
+    } catch {
+      console.log('Use valid JSON, e.g. /tool {"origin":"London","destination":"New York"}');
+    }
   } else console.log(`\nAgent > ${(await agent.respond(text)).text}\n`);
   if (stdin.isTTY && !rl.closed) rl.prompt();
 }
-rl.close(); console.log(`Trace saved: ${session.path}`);
+rl.close();
+console.log(`Trace saved: ${session.path}`);

@@ -18,9 +18,14 @@
     "eval:chart": "node evals/generate-model-chart.mjs",
     "eval:harden": "node --import ./register.mjs evals/hardening-judge-eval.mjs",
     "policy:check": "node tools/policy-sync.mjs",
-    "policy:sync": "node tools/policy-sync.mjs --write"
+    "policy:sync": "node tools/policy-sync.mjs --write",
+    "format": "prettier --write \"**/*.mjs\" \"dashboard/*.js\" \"dashboard/*.css\"",
+    "format:check": "prettier --check \"**/*.mjs\" \"dashboard/*.js\" \"dashboard/*.css\""
   },
   "dependencies": {
     "pg": "^8.23.0"
+  },
+  "devDependencies": {
+    "prettier": "3.9.9"
   }
 }

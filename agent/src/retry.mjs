@@ -1,11 +1,15 @@
 const TEMPORARY_STATUS = new Set([429, 502, 503, 504]);
-const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 export function isTemporaryStatus(status) {
   return TEMPORARY_STATUS.has(status);
 }
 
-export function retryDelayMs(response, attempt, { baseMs = 250, maxMs = 2000, random = Math.random } = {}) {
+export function retryDelayMs(
+  response,
+  attempt,
+  { baseMs = 250, maxMs = 2000, random = Math.random } = {},
+) {
   const retryAfter = response?.headers?.get('retry-after');
   if (retryAfter) {
     const seconds = Number(retryAfter);
@@ -17,13 +21,16 @@ export function retryDelayMs(response, attempt, { baseMs = 250, maxMs = 2000, ra
   return Math.min(maxMs, Math.round(baseMs * 2 ** attempt * jitter));
 }
 
-export async function requestWithRetry(request, {
-  maxRetries = 0,
-  retryTransportErrors = false,
-  wait = sleep,
-  onRetry = () => {},
-  delayOptions,
-} = {}) {
+export async function requestWithRetry(
+  request,
+  {
+    maxRetries = 0,
+    retryTransportErrors = false,
+    wait = sleep,
+    onRetry = () => {},
+    delayOptions,
+  } = {},
+) {
   for (let attempt = 0; ; attempt++) {
     let response;
     try {

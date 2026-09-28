@@ -1,8 +1,8 @@
-import {existsSync,mkdirSync,readFileSync,rmSync,writeFileSync} from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { AGENT_ROOT } from '../paths.mjs';
 
 // A deliberate allowlist. Adding a run requires a human review and regeneration.
-const runs=[
+const runs = [
   'live-2026-09-18T22-21-35.141Z',
   'live-2026-09-19T20-42-55.300Z',
   'live-2026-09-19T21-48-02.128Z',
@@ -23,53 +23,149 @@ const runs=[
   'live-hardening-judge-2026-09-20T15-38-37.144Z',
   'live-hardening-judge-2026-09-20T15-56-09.018Z',
 ];
-const publicationOverrides={
- 'live-hardening-judge-2026-09-20T15-23-53.919Z':{label:'Terra hardening · interrupted independence rerun',status:'interrupted',stopReason:{type:'manual_interrupt',afterCase:'S07'},modelCallsAttempted:14,actualCostUsd:0.070808},
- 'live-hardening-judge-2026-09-20T15-38-37.144Z':{label:'Terra hardening · contract-aware rerun stopped at B03'},
+const publicationOverrides = {
+  'live-hardening-judge-2026-09-20T15-23-53.919Z': {
+    label: 'Terra hardening · interrupted independence rerun',
+    status: 'interrupted',
+    stopReason: { type: 'manual_interrupt', afterCase: 'S07' },
+    modelCallsAttempted: 14,
+    actualCostUsd: 0.070808,
+  },
+  'live-hardening-judge-2026-09-20T15-38-37.144Z': {
+    label: 'Terra hardening · contract-aware rerun stopped at B03',
+  },
 };
-const root=AGENT_ROOT;
-const source=`${root}eval-results/`,target=`${root}published-eval-results/`;
-const requested=process.argv.find(value=>value.startsWith('--runs='))?.slice('--runs='.length).split(',').filter(Boolean)??[];
-for(const run of requested)if(!runs.includes(run))throw Error(`Run is not approved for publication: ${run}`);
-const selectedRuns=requested.length?requested:runs;
+const root = AGENT_ROOT;
+const source = `${root}eval-results/`,
+  target = `${root}published-eval-results/`;
+const requested =
+  process.argv
+    .find((value) => value.startsWith('--runs='))
+    ?.slice('--runs='.length)
+    .split(',')
+    .filter(Boolean) ?? [];
+for (const run of requested)
+  if (!runs.includes(run)) throw Error(`Run is not approved for publication: ${run}`);
+const selectedRuns = requested.length ? requested : runs;
 
-function sanitizeEvent(event){
-  if(!['model_usage','judge_usage','model_failure','agent_failure','model_retry','tool_call','tool_argument_repair','tool_argument_unverified','flight_api','flight_api_retry','search_result','policy_retrieval','policy_answer','policy_failure'].includes(event?.type))return null;
-  if(event.type==='tool_call')return {type:'tool_call',data:{name:event.data?.name,arguments:event.data?.arguments}};
-  if(event.type==='tool_argument_repair'||event.type==='tool_argument_unverified')return {type:event.type,data:{field:event.data?.field,fields:event.data?.fields,reason:event.data?.reason}};
-  const data=event.data??{};
-  if(event.type==='flight_api')return {type:event.type,data:{method:data.method,path:data.path,mode:data.mode,...(data.mode==='synthetic'&&data.body?{body:data.body}:{})}};
-  if(event.type==='search_result')return {type:event.type,data:{query:data.query,cached:data.cached,count:data.count}};
-  if(['policy_retrieval','policy_answer','policy_failure'].includes(event.type))return {type:event.type,data};
-  if(event.type==='model_retry')return {type:event.type,data:{model:data.model,attempt:data.attempt,reason:data.reason,delayMs:data.delayMs}};
-  if(event.type==='flight_api_retry')return {type:event.type,data:{method:data.method,path:data.path,attempt:data.attempt,reason:data.reason,delayMs:data.delayMs}};
-  return {type:event.type,data:{
-    ...(data.adapter?{adapter:data.adapter}:{}),...(data.promptVersion?{promptVersion:data.promptVersion}:{}),
-    model:data.model,requestedModel:data.requestedModel,provider:data.provider,effort:data.effort,latencyMs:data.latencyMs,usage:data.usage??null,
-    ...(data.message?{message:String(data.message).replace(/[A-Za-z0-9_-]{24,}/g,'[redacted]')}:{}),
-  }};
+function sanitizeEvent(event) {
+  if (
+    ![
+      'model_usage',
+      'judge_usage',
+      'model_failure',
+      'agent_failure',
+      'model_retry',
+      'tool_call',
+      'tool_argument_repair',
+      'tool_argument_unverified',
+      'flight_api',
+      'flight_api_retry',
+      'search_result',
+      'policy_retrieval',
+      'policy_answer',
+      'policy_failure',
+    ].includes(event?.type)
+  )
+    return null;
+  if (event.type === 'tool_call')
+    return {
+      type: 'tool_call',
+      data: { name: event.data?.name, arguments: event.data?.arguments },
+    };
+  if (event.type === 'tool_argument_repair' || event.type === 'tool_argument_unverified')
+    return {
+      type: event.type,
+      data: { field: event.data?.field, fields: event.data?.fields, reason: event.data?.reason },
+    };
+  const data = event.data ?? {};
+  if (event.type === 'flight_api')
+    return {
+      type: event.type,
+      data: {
+        method: data.method,
+        path: data.path,
+        mode: data.mode,
+        ...(data.mode === 'synthetic' && data.body ? { body: data.body } : {}),
+      },
+    };
+  if (event.type === 'search_result')
+    return {
+      type: event.type,
+      data: { query: data.query, cached: data.cached, count: data.count },
+    };
+  if (['policy_retrieval', 'policy_answer', 'policy_failure'].includes(event.type))
+    return { type: event.type, data };
+  if (event.type === 'model_retry')
+    return {
+      type: event.type,
+      data: {
+        model: data.model,
+        attempt: data.attempt,
+        reason: data.reason,
+        delayMs: data.delayMs,
+      },
+    };
+  if (event.type === 'flight_api_retry')
+    return {
+      type: event.type,
+      data: {
+        method: data.method,
+        path: data.path,
+        attempt: data.attempt,
+        reason: data.reason,
+        delayMs: data.delayMs,
+      },
+    };
+  return {
+    type: event.type,
+    data: {
+      ...(data.adapter ? { adapter: data.adapter } : {}),
+      ...(data.promptVersion ? { promptVersion: data.promptVersion } : {}),
+      model: data.model,
+      requestedModel: data.requestedModel,
+      provider: data.provider,
+      effort: data.effort,
+      latencyMs: data.latencyMs,
+      usage: data.usage ?? null,
+      ...(data.message
+        ? { message: String(data.message).replace(/[A-Za-z0-9_-]{24,}/g, '[redacted]') }
+        : {}),
+    },
+  };
 }
-function sanitizeReport(report){
-  const safe=structuredClone(report);
+function sanitizeReport(report) {
+  const safe = structuredClone(report);
   delete safe.captureHash;
   delete safe.sourceHashes;
-  safe.publication='Sanitized review copy. Credentials, backend captures, source snapshots, request IDs and model thread IDs are excluded.';
-  safe.results=(safe.results??[]).map(row=>({...row,events:(row.events??[]).map(sanitizeEvent).filter(Boolean)}));
+  safe.publication =
+    'Sanitized review copy. Credentials, backend captures, source snapshots, request IDs and model thread IDs are excluded.';
+  safe.results = (safe.results ?? []).map((row) => ({
+    ...row,
+    events: (row.events ?? []).map(sanitizeEvent).filter(Boolean),
+  }));
   return safe;
 }
 
-if(!requested.length)rmSync(target,{recursive:true,force:true});
-mkdirSync(target,{recursive:true});
-for(const run of selectedRuns){
-  const folder=`${target}${run}/`;mkdirSync(folder,{recursive:true});
-  const report=sanitizeReport(JSON.parse(readFileSync(`${source}${run}/report.json`,'utf8')));
-  Object.assign(report,publicationOverrides[run]??{});
-  writeFileSync(`${folder}report.json`,JSON.stringify(report,null,2)+'\n');
-  if(run.startsWith('live-')){
-    const casesPath=`${source}${run}/cases.json`;
-    const cases=existsSync(casesPath)?JSON.parse(readFileSync(casesPath,'utf8')):report.cases;
-    writeFileSync(`${folder}cases.json`,JSON.stringify(cases,null,2)+'\n');
+if (!requested.length) rmSync(target, { recursive: true, force: true });
+mkdirSync(target, { recursive: true });
+for (const run of selectedRuns) {
+  const folder = `${target}${run}/`;
+  mkdirSync(folder, { recursive: true });
+  const report = sanitizeReport(JSON.parse(readFileSync(`${source}${run}/report.json`, 'utf8')));
+  Object.assign(report, publicationOverrides[run] ?? {});
+  writeFileSync(`${folder}report.json`, JSON.stringify(report, null, 2) + '\n');
+  if (run.startsWith('live-')) {
+    const casesPath = `${source}${run}/cases.json`;
+    const cases = existsSync(casesPath)
+      ? JSON.parse(readFileSync(casesPath, 'utf8'))
+      : report.cases;
+    writeFileSync(`${folder}cases.json`, JSON.stringify(cases, null, 2) + '\n');
   }
 }
-if(!requested.length)writeFileSync(`${target}README.md`,`# Published evaluation evidence\n\nThese reports are generated by \`agent/publish-evidence.mjs\` from an explicit allowlist. They retain scenarios, customer-facing replies, grading, timing and token usage. Credentials, raw backend captures, source snapshots, request identifiers and private model thread identifiers are excluded.\n`);
+if (!requested.length)
+  writeFileSync(
+    `${target}README.md`,
+    `# Published evaluation evidence\n\nThese reports are generated by \`agent/publish-evidence.mjs\` from an explicit allowlist. They retain scenarios, customer-facing replies, grading, timing and token usage. Credentials, raw backend captures, source snapshots, request identifiers and private model thread identifiers are excluded.\n`,
+  );
 console.log(`Published ${selectedRuns.length} sanitized runs.`);

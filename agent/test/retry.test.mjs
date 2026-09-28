@@ -16,10 +16,13 @@ test('retry delay honors Retry-After within the configured cap', () => {
 test('retry runner obeys its attempt bound', async () => {
   let attempts = 0;
   const retries = [];
-  const response = await requestWithRetry(async () => {
-    attempts++;
-    return new Response('', { status: attempts < 3 ? 503 : 200 });
-  }, { maxRetries: 2, wait: async () => {}, onRetry: event => retries.push(event) });
+  const response = await requestWithRetry(
+    async () => {
+      attempts++;
+      return new Response('', { status: attempts < 3 ? 503 : 200 });
+    },
+    { maxRetries: 2, wait: async () => {}, onRetry: (event) => retries.push(event) },
+  );
   assert.equal(response.status, 200);
   assert.equal(attempts, 3);
   assert.equal(retries.length, 2);
