@@ -25,7 +25,7 @@ holds the reasoning and the plan.
 | Last searched origin | Memory (a fact) | `visitor_memory.last_origin` | Key lookup at chat start | Yes, as a disclosed default |
 | **Recent searches** (added 2026-09-27) | Memory (past events) | `recent_searches` | Key lookup, newest three | **No.** Shown in the welcome, run by number |
 | Transcripts | Record for evaluation | `messages` | Never read back | No |
-| Privacy and terms | Knowledge | `policy-snapshot.json` | Whole document on a policy question | Yes, as evidence, then quotes checked |
+| Privacy and terms | Knowledge | `src/policy-snapshot.json` | Whole document on a policy question | Yes, as evidence, then quotes checked |
 | Flights and prices | Live data | Flight API | Fetched on every search | Result fields only |
 
 Everything in Postgres exists only when `CONVERSATION_STORE=postgres`. The
