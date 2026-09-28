@@ -24,7 +24,7 @@ const COUNTRY_ALIASES = new Map([
   ['great britain', 'United Kingdom'], ['england', 'United Kingdom'],
   ['usa', 'United States'], ['u.s.', 'United States'], ['u.s.a.', 'United States'],
   ['america', 'United States'], ['uae', 'United Arab Emirates'],
-  ['holland', 'Netherlands'], ['south korea', 'Korea, Republic of'],
+  ['holland', 'Netherlands'], ['korea', 'South Korea'], ['turkiye', 'Turkey'], ['türkiye', 'Turkey'],
 ]);
 export const countryAlias = text => COUNTRY_ALIASES.get(String(text ?? '').trim().toLowerCase()) ?? null;
 

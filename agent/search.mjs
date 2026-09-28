@@ -37,6 +37,55 @@ function searchableEntries() {
   ];
 }
 
+// A country is a menu of its own main airports. Matching it as text put
+// Martinique and Fort Frances under France, Port of Spain under Spain and
+// Indianapolis under India, and ordering by size then name listed Aberdeen
+// and Belfast for the UK without Manchester or Edinburgh (held-out A2).
+// The countries travelers ask about most carry a reviewed list of their
+// busiest airports; a code inside a metro group shows as that group. Other
+// countries list their largest airports.
+export const MAIN_AIRPORTS = {
+  'United Kingdom': ['LHR', 'MAN', 'EDI', 'BHX', 'GLA', 'BRS'],
+  'Japan': ['HND', 'KIX', 'NGO', 'FUK', 'CTS', 'OKA'],
+  'United States': ['JFK', 'LAX', 'ORD', 'SFO', 'MIA', 'ATL'],
+  'Canada': ['YYZ', 'YVR', 'YUL', 'YYC'],
+  'France': ['CDG', 'NCE', 'LYS', 'MRS', 'TLS'],
+  'Germany': ['FRA', 'MUC', 'BER', 'DUS', 'HAM'],
+  'Spain': ['MAD', 'BCN', 'PMI', 'AGP', 'ALC'],
+  'Italy': ['FCO', 'MXP', 'VCE', 'NAP', 'BLQ'],
+  'India': ['DEL', 'BOM', 'BLR', 'MAA', 'HYD'],
+  'China': ['PEK', 'PVG', 'CAN', 'SZX', 'CTU'],
+  'Australia': ['SYD', 'MEL', 'BNE', 'PER', 'ADL'],
+  'United Arab Emirates': ['DXB', 'AUH', 'SHJ'],
+  'South Korea': ['ICN', 'PUS', 'CJU'],
+  'Thailand': ['BKK', 'HKT', 'CNX'],
+  'Turkey': ['IST', 'SAW', 'AYT'],
+  'Mexico': ['MEX', 'CUN', 'GDL', 'MTY', 'SJD'],
+  'Brazil': ['GRU', 'GIG', 'BSB', 'CNF', 'SSA'],
+  'Portugal': ['LIS', 'OPO', 'FAO', 'FNC'],
+  'Greece': ['ATH', 'HER', 'SKG', 'RHO', 'CFU'],
+  'Netherlands': ['AMS', 'EIN', 'RTM'],
+  'Switzerland': ['ZRH', 'GVA'],
+  'Ireland': ['DUB', 'ORK', 'SNN'],
+  'South Africa': ['JNB', 'CPT', 'DUR'],
+  'New Zealand': ['AKL', 'CHC', 'WLG', 'ZQN'],
+  'Indonesia': ['CGK', 'DPS', 'SUB'],
+  'Vietnam': ['SGN', 'HAN', 'DAD'],
+  'Malaysia': ['KUL', 'PEN', 'BKI'],
+  'Philippines': ['MNL', 'CEB'],
+  'Saudi Arabia': ['RUH', 'JED', 'DMM'],
+  'Egypt': ['CAI', 'HRG', 'SSH'],
+};
+const COUNTRIES = new Map(AIRPORTS.map(a => [normal(a.country), a.country]));
+const SIZE = { large_airport: 1, medium_airport: 2, small_airport: 3 };
+function countryMenu(country) {
+  const entries = searchableEntries().filter(entry => entry.country === country);
+  const groupOf = code => entries.find(entry => entry.popular && entry.matchCodes.includes(code));
+  const main = (MAIN_AIRPORTS[country] ?? []).map(code => groupOf(code) ?? entries.find(entry => entry.code === code)).filter(Boolean);
+  const rest = collapseToGroups(entries).sort((a, b) => (a.popular ? 0 : SIZE[a.type] ?? 9) - (b.popular ? 0 : SIZE[b.type] ?? 9) || String(a.city).localeCompare(String(b.city)));
+  return [...new Map([...main, ...rest].map(entry => [entry.code, entry])).values()].slice(0, 5).map(choiceOf);
+}
+
 export function resolveLocation(text) {
   if (typeof text !== 'string' || !text.trim() || text.length > 120) return [];
   // Places now arrive exactly as typed, so "the UK" and "the States" carry
@@ -74,6 +123,8 @@ export function resolveLocation(text) {
     const rivals = collapseToGroups(hubsAmong(nearMatches(entries, term))).slice(0, 4);
     return rivals.length ? [only, ...rivals.map(choiceOf)] : [only];
   }
+  const country = COUNTRIES.get(normal(term));
+  if (country) return countryMenu(country);
   // A known airport name (e.g. Heathrow) is narrower than its metro group.
   const named = AIRPORTS.filter(a => (a.name ?? '').toLowerCase().includes(normal(term)));
   if (named.length === 1) return [{ code: named[0].code, label: fullAirport(named[0].code) }];
