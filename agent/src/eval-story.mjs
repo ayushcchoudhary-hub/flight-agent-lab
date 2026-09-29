@@ -86,7 +86,7 @@ export function summarizeRun(run, report, cases) {
   );
   return {
     run,
-    date: runDate(run),
+    startedAt: runDate(run),
     label: report.label ?? null,
     model: report.models?.[0] ?? null,
     effort: report.effort ?? null,
@@ -329,5 +329,5 @@ async function trendOf(story, published, get) {
       title: titles.get(r.run),
       madeUpValues: madeUp.reduce((n, x) => n + x.fields.length, 0),
     }))
-    .sort((a, b) => String(a.date).localeCompare(String(b.date)));
+    .sort((a, b) => String(a.startedAt).localeCompare(String(b.startedAt)));
 }

@@ -94,6 +94,34 @@
         "A8 accepts a clarifying question as well as the overlap check"
       ],
       "why": "Fixes the three exact failures from the run before: G5 and A8 now pass, and C1 is correct with a judge note on wording. One new exact failure: in G9 the model asked for economy deals the traveler never mentioned. Run in two parts after a provider timeout at case 16."
+    },
+    {
+      "run": [
+        "live-hardening-judge-2026-09-23T21-29-40.155Z",
+        "live-hardening-judge-2026-09-23T21-43-09.281Z"
+      ],
+      "date": "23 Sept",
+      "title": "Sonnet 5, no made-up values",
+      "changed": [
+        "Model: Claude Sonnet 5 medium instead of Terra medium",
+        "Guards drop values the traveler never said: a region, a budget, a cabin, a garbled place"
+      ],
+      "why": "Same 47 cases and judge as the Terra run before. Sonnet 5 passed 42 and made up no values in any tool call, where Terra made up 1 and Sol 9. Its exact failures were judgment calls: it read “make it the 3rd” as 3 October (C1) and sent a price-guarantee question to the policy lookup (E8). It became the default on 27 Sept, once prompt caching brought its cost per turn down. G9–G11 were rerun after the call cap cut them off."
+    },
+    {
+      "run": [
+        "live-hardening-judge-2026-09-28T19-32-38.244Z",
+        "live-hardening-judge-2026-09-28T19-41-09.540Z"
+      ],
+      "date": "28 Sept",
+      "title": "Sonnet 5.5, recent searches",
+      "changed": [
+        "Model: Claude Sonnet 5.5 medium, sent tool_choice auto",
+        "Prompt caching for Claude requests",
+        "Five new cases for recent searches and forgetting (D6 to D10)",
+        "An explicit forget is acted on whatever action the model sends"
+      ],
+      "why": "Every exact check passed and no values were made up. The only miss was A2, where the judge flagged the app’s alphabetical UK airport menu. That menu was fixed after this run. On the same 52 cases and code, Sonnet 5 passed 46. Sonnet 5.5’s median model call took 1.6 s against 2.8 s at about the same cost, so it became the default. Run in two parts because the harness’s cost reservation reached its cap at 27 cases."
     }
   ],
   "headToHead": [

@@ -210,6 +210,12 @@ test('milestone numbers come from the reports, not from the story file', async (
   assert.equal(baseline.run, 'live-hardening-judge-2026-09-20T15-56-09.018Z');
   assert.deepEqual([baseline.passed, baseline.exact, baseline.cases], [17, 19, 30]);
   assert.equal(baseline.delta, null);
+  // The story's label is shown under each bar. A computed field of the same
+  // name once replaced it with "2026-09-20T15:56:09Z" on the live page.
+  assert.deepEqual(
+    loaded.milestones.map((m) => m.date),
+    story.milestones.map((m) => m.date),
+  );
   const next = loaded.milestones[1];
   assert.deepEqual(
     next.delta.fixed.map((x) => x.id),
@@ -229,8 +235,8 @@ test('the trend lists each complete run once, oldest first, and leaves supportin
   );
   assert.deepEqual(new Set(trend.map((r) => r.run)), complete);
   assert.deepEqual(
-    trend.map((r) => r.date),
-    [...trend.map((r) => r.date)].sort(),
+    trend.map((r) => r.startedAt),
+    [...trend.map((r) => r.startedAt)].sort(),
   );
   for (const id of Object.keys(story.supporting))
     assert.ok(!trend.some((r) => r.run.split('+').includes(id)), id);
@@ -270,7 +276,7 @@ test('turn time, cost per passed case and cache share come from the recorded cal
     { results: rows, models: ['m'] },
     [{ id: 'A' }, { id: 'B' }],
   );
-  assert.equal(s.date, '2026-09-28T19:30:01Z');
+  assert.equal(s.startedAt, '2026-09-28T19:30:01Z');
   assert.equal(s.medianTurnMs, 2000);
   assert.equal(s.costPerPassedCaseUsd.toFixed(3), '0.020');
   assert.equal(s.cacheReadShare.toFixed(3), (8000 / 15000).toFixed(3));
