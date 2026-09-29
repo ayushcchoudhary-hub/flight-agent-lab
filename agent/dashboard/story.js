@@ -319,8 +319,8 @@ function trendPanel(panel, runs, p, defaultModel) {
   // A date under the first run of each day only, so labels never collide.
   const ticks = runs
     .map((r, i) =>
-      i === 0 || day(r.date) !== day(runs[i - 1].date)
-        ? `<text class="trend-axis" x="${x(i)}" y="${H - 8}" text-anchor="middle">${esc(day(r.date))}</text>`
+      i === 0 || day(r.startedAt) !== day(runs[i - 1].startedAt)
+        ? `<text class="trend-axis" x="${x(i)}" y="${H - 8}" text-anchor="middle">${esc(day(r.startedAt))}</text>`
         : '',
     )
     .join('');
@@ -336,7 +336,7 @@ function trendPanel(panel, runs, p, defaultModel) {
   const dots = runs
     .map((r, i) =>
       Number.isFinite(values[i])
-        ? `<g class="trend-point" tabindex="0" data-panel="${p}" data-index="${i}" role="img" aria-label="${esc(`${day(r.date)}, ${modelName(r.model)}: ${panel.fmt(values[i])}`)}"><circle class="trend-hit" cx="${x(i)}" cy="${y(values[i])}" r="12"/><circle class="trend-dot ${FAMILY(r.model)}${HOLLOW.has(r.model) ? ' hollow' : ''}" cx="${x(i)}" cy="${y(values[i])}" r="5"/></g>`
+        ? `<g class="trend-point" tabindex="0" data-panel="${p}" data-index="${i}" role="img" aria-label="${esc(`${day(r.startedAt)}, ${modelName(r.model)}: ${panel.fmt(values[i])}`)}"><circle class="trend-hit" cx="${x(i)}" cy="${y(values[i])}" r="12"/><circle class="trend-dot ${FAMILY(r.model)}${HOLLOW.has(r.model) ? ' hollow' : ''}" cx="${x(i)}" cy="${y(values[i])}" r="5"/></g>`
         : '',
     )
     .join('');
@@ -346,7 +346,9 @@ function trendPanel(panel, runs, p, defaultModel) {
   const last = current >= 0 ? current : runs.length - 1,
     first = values.findIndex(Number.isFinite);
   const since =
-    first >= 0 && first < last ? ` · ${panel.fmt(values[first])} on ${day(runs[first].date)}` : '';
+    first >= 0 && first < last
+      ? ` · ${panel.fmt(values[first])} on ${day(runs[first].startedAt)}`
+      : '';
   const who =
     current >= 0
       ? `${modelName(defaultModel)}, the default`
@@ -373,7 +375,7 @@ export function renderTrend(el, story) {
   const rows = runs
     .map(
       (r) =>
-        `<tr><td>${esc(day(r.date))}</td><td>${esc(modelName(r.model))} ${esc(r.effort ?? '')}</td><td>${r.passed}/${r.cases}</td><td>${r.exact}/${r.cases}</td><td>${secs(r.medianTurnMs)}</td><td>${secs(r.medianCallMs)}</td><td>${money(r.costPer1000TurnsUsd)}</td><td>${cell(r.costPerPassedCaseUsd)}</td><td>${pct(r.cacheReadShare)}</td><td>${r.madeUpValues}</td><td>${esc(r.promptVersion ?? '')}</td></tr>`,
+        `<tr><td>${esc(day(r.startedAt))}</td><td>${esc(modelName(r.model))} ${esc(r.effort ?? '')}</td><td>${r.passed}/${r.cases}</td><td>${r.exact}/${r.cases}</td><td>${secs(r.medianTurnMs)}</td><td>${secs(r.medianCallMs)}</td><td>${money(r.costPer1000TurnsUsd)}</td><td>${cell(r.costPerPassedCaseUsd)}</td><td>${pct(r.cacheReadShare)}</td><td>${r.madeUpValues}</td><td>${esc(r.promptVersion ?? '')}</td></tr>`,
     )
     .join('');
   el.innerHTML = `<div class="section-head"><div><h2>Trend over time</h2><p class="quiet">Every complete run of the held-out set, in the order it ran. The set grew from 30 to 52 cases, so passes are a share. Lines join runs of the same model family.</p></div><div class="story-legend">${legend}</div></div>
@@ -388,7 +390,7 @@ export function renderTrend(el, story) {
     const v = document.createElement('b');
     v.textContent = panel.fmt(panel.key(r));
     const who = document.createElement('span');
-    who.textContent = `${modelName(r.model)} · ${day(r.date)} · ${r.passed}/${r.cases} passed`;
+    who.textContent = `${modelName(r.model)} · ${day(r.startedAt)} · ${r.passed}/${r.cases} passed`;
     const what = document.createElement('small');
     what.textContent = r.title ?? r.label ?? '';
     tip.replaceChildren(v, who, what);
